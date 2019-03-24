@@ -1,0 +1,82 @@
+class PicButton : Element 
+{
+  function attached() {
+    this.$content(<button.expand>+</button><button.collapse>-</button>);
+  }
+ 
+
+  event click $(button.prev-img) {
+  }
+  event click $(button.next-img) {
+    
+  }
+}
+
+class Button : Element 
+{
+  function attached() {
+    
+  }
+
+  function SwapImage(imageJsonData) 
+  {
+    var id = imageJsonData.id;
+    var filepath = imageJsonData.filepath;
+    var probVectorLevel = imageJsonData.pro;
+
+    // Delete existing items
+    $(ul.keyword-list).clear();
+    
+    // Update img srd attribute
+    $(img.active-img).attributes["src"] =  filepath;
+
+    $(#picId).$content({ id });
+    $(#picFilename).$content({ filepath });
+
+    for (var vectorIndex in probVectorLevel) 
+    {
+      var vi;
+      var wordnetId;
+      var probability;
+      var className;
+
+      var ii = probVectorLevel[vectorIndex];
+
+      vi = ii.vectorIndex;
+      wordnetId = ii.wordnetId;
+      probability = ii.probabilityValue;
+      className = ii.className;
+
+
+      $(ul.keyword-list).$append(<li class="list-item"><span> index: { vi } </span> <h3> { className } </h3> <small>wordnetID: { wordnetId } </small> <small> prob: { probability } </small> </li>);
+    }
+
+  }
+
+  event click $(button.next-img) 
+  {
+    // Get next image data
+    var imageJsonData = view.GetNextImage();
+
+    // Swap it
+    SwapImage(imageJsonData);
+  }
+
+  event click $(button.prev-img) 
+  {
+    var imageJsonData = view.GetPrevImage();
+
+    // Swap it
+    SwapImage(imageJsonData);
+  }
+
+  event click $(button.rand-img) 
+  {
+    var imageJsonData = view.GetRandomImage();
+
+    // Swap it
+    SwapImage(imageJsonData);
+
+  }
+
+}

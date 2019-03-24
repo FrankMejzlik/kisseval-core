@@ -1,0 +1,155 @@
+*  {box-sizing: border-box;font-family: sans-serif;}
+ 
+section.header {
+    text-align: center;
+    padding: 13px 0 10px 0 ;
+    margin-bottom: 20px;
+    background-color: #2bbb73;
+}
+
+.header .title {
+    
+}
+
+ body {
+     margin: 0;
+     background-color: #b5e2a7;
+ }
+.keyword-list {
+    width: 100%;
+    position: relative;
+    display: block;
+    margin-top: 31px;
+    padding-top: 30px;
+    border-top: 1px solid #aaa;
+    font-size: 0;
+    padding-bottom: 50px;
+}
+
+.keyword-list li h3 {
+    font-size:18px;
+}
+
+.keyword-list li {
+    border: 1px solid #444444;
+    width:32%;display:inline-block;text-align: center;font-weight: 600;font-size: 20px;padding: 5px 5px 5px 5px;}
+
+
+    .keyword-list li small {
+    
+        display: block;
+            margin:0;
+            padding: 0;
+        font-weight: 300;
+            
+        font-size: 12px;
+        }
+
+.keyword-list li span {
+    
+display: block;
+    margin:0;
+    padding: 0;
+font-weight: 300;
+    
+font-size: 14;
+}
+
+ ul {
+     padding: 0;
+     margin:  0;
+ }
+
+
+/* Standard CSS */
+.pic-slider {
+    position: relative;
+    width: 100%;
+}
+
+.slider-button  {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    padding: 16px;
+    top: calc(50% - 25px);
+    background-color: #aaaaaa;
+    border-style: outset;
+    border-color: transparent;
+    border: 0;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.slider-button:hover,
+.slider-button:focus {
+    background-color: #ffffff;
+}
+
+.pic-header {
+    text-align: center;
+}
+
+.prev-img {
+    left: 0;
+}
+
+.next-img {
+    right: 0;
+}
+
+
+
+.img-slide {
+    text-align:center;
+    /* max-width: 600px; */
+    margin: auto 10px auto 10px;
+    display: block;
+    max-height: 400px;
+}
+
+.img-slide img {
+    
+max-width: 700px;
+    
+max-height: 400px;
+    
+min-height: 400px;
+    
+display: inline-block;
+}
+
+.rand-btn-container {
+    text-align: center;
+    width: 100%;
+    display: block;
+    padding: 20px 15px;
+}
+
+.rand-btn-container button {
+    width: auto;
+    height: 50px;
+    cursor: pointer;
+    margin-right: 30px;
+    font-size: 20px;
+    display: inline-block;
+}
+
+/* Sciter CSS */
+picbutton {
+    /** Relative path to file **/
+    prototype: PicButton url(../hello.tis);
+    display: block;
+}
+
+
+button {
+    /** Relative path to file **/
+    prototype: Button url(../hello.tis);
+    display: block;
+}
+
+
+
+
