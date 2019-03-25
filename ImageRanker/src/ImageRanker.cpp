@@ -1,14 +1,142 @@
 #include "ImageRanker.h"
 
 
+
+bool KeywordsContainer::ParseKeywordClassesFile(std::string_view filepath)
+{
+  // Open file with list of files in images dir
+  std::ifstream inFile(filepath.data(), std::ios::in);
+
+  // If failed to open file
+  if (!inFile)
+  {
+    throw std::runtime_error(std::string("Error opening file :") + filepath.data());
+  }
+
+  std::string lineBuffer;
+
+  // While there is something to read
+  while (std::getline(inFile, lineBuffer))
+  {
+
+    // Extract file name
+    std::stringstream lineBufferStream(lineBuffer);
+
+    std::vector<std::string> tokens;
+    std::string token;
+    size_t i = 0ULL;
+
+    while (std::getline(lineBufferStream, token, CSV_DELIMITER))
+    {
+      tokens.push_back(token);
+
+      ++i;
+    }
+
+
+    // Index of vector
+    std::stringstream vectIndSs(tokens[0]);
+    std::stringstream wordnetIdSs(tokens[1]);
+
+    size_t vectorIndex;
+    size_t wordnetId;
+    std::string indexClassname = tokens[2];
+
+    
+    // Get index that this description starts
+    size_t descStartIndex = _allDescriptions.size();
+    size_t descEndIndex = descStartIndex + tokens[5].size() - 1ULL;
+
+    // Append description to all of them
+    _allDescriptions.append(tokens[5]);
+    _allDescriptions.push_back('\0');
+    
+    vectIndSs >> vectorIndex;
+    wordnetIdSs >> wordnetId;
+
+    
+
+    // Create sstream from concatenated string of synonyms
+    std::stringstream classnames(indexClassname);
+    std::string finalWord;
+
+
+    // Insert all synonyms as well
+    while (std::getline(classnames, finalWord, SYNONYM_DELIMITER))
+    {
+      // Insert this record into table
+      _keywords.emplace_back(std::make_unique<Keyword>(wordnetId, vectorIndex, std::move(finalWord), descStartIndex, tokens[3].size()));  
+
+      // Insert into wordnetId -> Keyword
+      _wordnetIdToKeywords.insert(std::make_pair(wordnetId, _keywords.back().get()));
+    }
+  }
+  return true;
+}
+
+
+std::vector< std::tuple<size_t, std::string, std::string> > KeywordsContainer::GetNearKeywords(const std::string& prefix)
+{
+  KeywordsContainer::KeywordLessThanStringComparator comparator;
+  size_t left = 0ULL;
+  size_t right = _keywords.size() - 1ULL;
+
+  size_t i = right / 2;
+
+  while (true)
+  {
+    // Test if middle one is less than
+    bool leftIsLess = comparator(_keywords[i]->m_word, prefix);
+
+    if (leftIsLess)
+    {
+      left = i + 1;
+    }
+    else
+    {
+      right = i;
+    }
+
+    if (right - left < 1)
+    {
+      break;
+    }
+
+    i = (right + left) / 2;
+
+  }
+  
+  std::vector< std::tuple<size_t, std::string, std::string> > resultWordnetIds;
+  resultWordnetIds.reserve(NUM_SUGESTIONS);
+
+  // Get desired number of results
+  for (size_t j = 0ULL; j < NUM_SUGESTIONS; ++j)
+  {
+    resultWordnetIds.push_back(std::make_tuple(_keywords[left + j]->m_wordnetId, _keywords[left + j]->m_word, GetKeywordDescriptionByWordnetId(_keywords[left + j]->m_wordnetId)));
+  }
+  
+  return resultWordnetIds;
+}
+
+
+
 ImageRanker::ImageRanker(
+  std::string_view imagesPath,
   std::string_view probabilityVectorFilepath,
   std::string_view deepFeaturesFilepath,
   std::string_view keywordClassesFilepath
-)
-{
+):
+  _keywords(keywordClassesFilepath)
+{}
 
+size_t ImageRanker::GetRandomImageId() const
+{ 
+  // Get random index
+  return static_cast<size_t>(GetRandomInteger(0, NUM_ROWS) * INDEX_OFFSET);
 }
+
+
+
 
 std::vector< std::pair< size_t, std::vector<float> > > ImageRanker::ParseSoftmaxBinFile(std::string_view filepath) const
 {
@@ -122,6 +250,9 @@ std::vector< std::pair< size_t, std::unordered_map<size_t, float> > > ImageRanke
 
   return rows;
 }
+
+
+
 
 
 std::unordered_map<size_t, std::pair<size_t, std::string> > ImageRanker::ParseKeywordClassesTextFile(std::string_view filepath) const

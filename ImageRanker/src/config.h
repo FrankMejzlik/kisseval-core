@@ -19,3 +19,8 @@
 #define KEYWORD_CLASSES_FILENAME "keyword_classes.txt"
 #define DEEP_FEATURES_FILENAME "VBS2019_classification_NasNetMobile_20000.deep-features"
 #define SOFTMAX_BIN_FILENAME "VBS2019_classification_NasNetLarge_20000.softmax"
+
+#define SYNONYM_DELIMITER '#'
+#define CSV_DELIMITER '~'
+
+#define NUM_SUGESTIONS 5ULL

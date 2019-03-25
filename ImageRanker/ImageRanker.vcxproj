@@ -133,7 +133,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions);SOLUTION_PATH=R"($(SolutionDir))"</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\sciter-sdk\include;$(ProjectDir);$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\sciter-sdk\include;$(ProjectDir)/src;$(ProjectDir);$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile />
     </ClCompile>
@@ -222,16 +222,16 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ImagesContainer.h" />
-    <ClInclude Include="ImageRanker.h" />
+    <ClInclude Include="src\ImagesContainer.h" />
+    <ClInclude Include="src\ImageRanker.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="config.h" />
+    <ClInclude Include="src\config.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ImagesContainer.cpp" />
+    <ClCompile Include="src\ImagesContainer.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ImageRanker.cpp" />
+    <ClCompile Include="src\ImageRanker.cpp" />
     <ClCompile Include="sciter-win-main.cpp" />
   </ItemGroup>
   <ItemGroup>

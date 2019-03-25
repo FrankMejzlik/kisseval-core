@@ -17,31 +17,43 @@ public:
     window(SW_TITLEBAR | SW_RESIZEABLE | SW_CONTROLS | SW_MAIN | SW_ENABLE_DEBUG),
     _currentImageIndex(0ULL),
     _isInitialized(false),
-    _ranker(
+    _imageRanker(
+      IMAGES_PATH,
       CONCATENATE_DEFINES(DATA_PATH, SOFTMAX_BIN_FILENAME),
       CONCATENATE_DEFINES(DATA_PATH, DEEP_FEATURES_FILENAME),
       CONCATENATE_DEFINES(DATA_PATH, KEYWORD_CLASSES_FILENAME)
     )
   {
-    //// Load softmax data 
-    //_deepFeaturesData = _ranker.ParseSoftmaxBinFile(CONCATENATE_DEFINES(DATA_PATH, SOFTMAX_BIN_FILENAME));
 
-    //// Load deep features data 
-    //_deepFeaturesData = _ranker.ParseSoftmaxBinFile(CONCATENATE_DEFINES(DATA_PATH, DEEP_FEATURES_FILENAME));
+  #if 1
 
-    //// Load class names
-    //_indexToClassnames = _ranker.ParseKeywordClassesTextFile(CONCATENATE_DEFINES(DATA_PATH, KEYWORD_CLASSES_FILENAME));
+    // Test GetNearKeywords()
+    for (size_t i = 0ULL; i < 100LL; ++i)
+    {
+      std::string prefix = "do";
 
-    //// Load hypernyms data
-    //_hypernysmData = _ranker.ParseHypernymKeywordClassesTextFile(CONCATENATE_DEFINES(DATA_PATH, KEYWORD_CLASSES_FILENAME));
+
+      auto sugg = _imageRanker.GetNearKeywords(prefix);
+
+      for (auto&& tuple : sugg)
+      {
+        size_t id = std::get<0>(tuple);
+        std::string word = std::get<1>(tuple);
+        std::string desc = std::get<2>(tuple);
+      }
+
+    }
+  #endif
 
   #if GENERATE_COLLECTOR_INPUT_DATA
 
-    // Generate ImageId => ImgFilename data for collector
-    GenerateImgToSrcDataForCollector(_softmaxData);
-    
-    // Generate VectorIndex => Description data for collector
-    GenerateVecIndexToDescriptionDataForCollector(_indexToClassnames, _hypernysmData);
+    //// Generate ImageId => ImgFilename data for collector
+    //GenerateImgToSrcDataForCollector(_softmaxData);
+    //
+    //// Generate VectorIndex => Description data for collector
+    //GenerateVecIndexToDescriptionDataForCollector(_indexToClassnames, _hypernysmData);
+
+
 
   #endif
 
@@ -72,7 +84,7 @@ public:
       size_t fileStructureIndex = picPair.first / INDEX_OFFSET;
 
       // Get filepath
-      std::string filepath = _ranker.GetImageFilepathByIndex(fileStructureIndex, true);
+      std::string filepath = _imageRanker.GetImageFilepathByIndex(fileStructureIndex, true);
       
       outFile << "\t\t{" << std::endl;
       
@@ -190,7 +202,7 @@ public:
   sciter::value GetRandomImage() const
   { 
     // Get random index
-    const size_t index = static_cast<size_t>(_ranker.GetRandomInteger(0, NUM_ROWS) * INDEX_OFFSET);
+    const size_t index = static_cast<size_t>(_imageRanker.GetRandomInteger(0, NUM_ROWS) * INDEX_OFFSET);
 
     // Get index that correcponds to index in this dataset file structure
     size_t fileStructureIndex = index / INDEX_OFFSET;
@@ -203,7 +215,7 @@ public:
 
     
     // Get name of file
-    std::string filepath = _ranker.GetImageFilepathByIndex(fileStructureIndex);
+    std::string filepath = _imageRanker.GetImageFilepathByIndex(fileStructureIndex);
 
 
     // Construct JSON data file for TIScript
@@ -270,7 +282,7 @@ public:
     std::unordered_map<size_t, float> probabilities = imageProbabilitesIt.second;
 
     // Get name of file
-    std::string filepath = _ranker.GetImageFilepathByIndex(fileStructureIndex);
+    std::string filepath = _imageRanker.GetImageFilepathByIndex(fileStructureIndex);
 
     // Construct JSON data file for TIScript
     sciter::value retval;
@@ -366,9 +378,7 @@ private:
   std::unordered_map<size_t, std::pair<size_t, std::string> > _indexToClassnames;
   std::unordered_map<size_t, std::pair<size_t, std::string> >_hypernysmData;
 
-  ImageRanker _ranker;
-
-
+  ImageRanker _imageRanker;
 };
 
 #include "resources.cpp" // resources packaged into binary blob.

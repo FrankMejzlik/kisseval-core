@@ -21,13 +21,13 @@
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ImageRanker.h">
+    <ClInclude Include="src\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="config.h">
+    <ClInclude Include="src\ImageRanker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ImagesContainer.h">
+    <ClInclude Include="src\ImagesContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -35,13 +35,13 @@
     <ClCompile Include="sciter-win-main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ImageRanker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ImagesContainer.cpp">
+    <ClCompile Include="src\ImagesContainer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImageRanker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -54,9 +54,9 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ui\main.htm" />
-    <None Include="ui\hello.tis" />
     <None Include="ui\css\styles.css" />
+    <None Include="ui\hello.tis" />
+    <None Include="ui\main.htm" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ImageRanker.rc">
