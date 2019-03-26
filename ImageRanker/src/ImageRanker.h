@@ -12,7 +12,6 @@
 #include <sstream>
 #include <random>
 #include <algorithm>
-#include <windows.h>
 #include <map>
 #include <locale>
 

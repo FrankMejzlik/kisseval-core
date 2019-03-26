@@ -19,9 +19,9 @@ public:
     _isInitialized(false),
     _imageRanker(
       IMAGES_PATH,
-      CONCATENATE_DEFINES(DATA_PATH, SOFTMAX_BIN_FILENAME),
-      CONCATENATE_DEFINES(DATA_PATH, DEEP_FEATURES_FILENAME),
-      CONCATENATE_DEFINES(DATA_PATH, KEYWORD_CLASSES_FILENAME)
+      DATA_PATH SOFTMAX_BIN_FILENAME,
+      DATA_PATH DEEP_FEATURES_FILENAME,
+      DATA_PATH KEYWORD_CLASSES_FILENAME
     )
   {
 
@@ -70,7 +70,7 @@ public:
   bool GenerateImgToSrcDataForCollector(std::vector< std::pair< size_t, std::unordered_map<size_t, float> > > inputMap)
   {
     // Open file for writing
-    std::ofstream outFile(CONCATENATE_DEFINES(COLLECTOR_INPUT_OUTPUT_DATA_PATH, "images.in"), std::ios::out);
+    std::ofstream outFile(COLLECTOR_INPUT_OUTPUT_DATA_PATH "images.in", std::ios::out);
 
     // Start out JSON file
     outFile << "{" << std::endl;
@@ -123,7 +123,7 @@ public:
   )
   {
     // Open file for writing
-    std::ofstream outFile(CONCATENATE_DEFINES(COLLECTOR_INPUT_OUTPUT_DATA_PATH, "vecIndexToDescription.in"), std::ios::out);
+    std::ofstream outFile(COLLECTOR_INPUT_OUTPUT_DATA_PATH "vecIndexToDescription.in", std::ios::out);
     
 
     // Start out JSON file

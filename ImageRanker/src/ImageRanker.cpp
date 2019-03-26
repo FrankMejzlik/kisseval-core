@@ -381,7 +381,7 @@ std::unordered_map<size_t, std::pair<size_t, std::string> > ImageRanker::ParseHy
 
 std::string ImageRanker::GetImageFilepathByIndex(size_t imgIndex, bool relativePaths) const
 {
-  constexpr const char fileFilepath[] = CONCATENATE_DEFINES(DATA_PATH, IMAGES_LIST_FILENAME);
+  constexpr const char fileFilepath[] = DATA_PATH IMAGES_LIST_FILENAME;
 
   // Open file with list of files in images dir
   std::ifstream inFile(fileFilepath, std::ios::in);
