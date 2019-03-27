@@ -53,6 +53,7 @@ public:
   Keyword* MapDescIndexToKeyword() const;
 
   bool PushKeywordsToDatabase(Database& db);
+  
 
   std::string GetKeywordByWordnetId(size_t wordnetId);
 

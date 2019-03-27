@@ -29,7 +29,7 @@ size_t Database::EstablishConnection()
 { 
 #if USE_REMOTE_DB
 
-  result = mysql_real_connect(
+  _mysqlConnection = mysql_real_connect(
     _mysqlConnection,
     "li1504-72.members.linode.com",
     "image-ranker", "s5XurJ3uS3E52Gzm",

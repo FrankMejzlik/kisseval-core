@@ -22,9 +22,16 @@
 
 struct Image
 {
-  size_t _wordnetId;
+  Image() = delete;
+  Image(size_t id, std::string&& filename, std::vector<float>&& probVector):
+    _imageId(id),
+    _filename(std::move(filename)),
+    _probabilityVector(std::move(probVector))
+  {}
+
+  size_t _imageId;
   std::string _filename;
-  std::vector< std::pair<Keyword, float> >_probabilityVector;
+  std::vector<float>_probabilityVector;
 };
 
 
@@ -86,7 +93,7 @@ public:
 
     
 
-    std::vector< std::pair< size_t, std::vector<float> > > ParseSoftmaxBinFile(std::string_view filepath) const;
+    std::map<size_t, Image> ParseSoftmaxBinFile(std::string_view filepath) const;
 
     std::vector< std::pair< size_t, std::unordered_map<size_t, float> > > ParseSoftmaxBinFileFiltered(std::string_view filepath, float minProbabilty) const;
 

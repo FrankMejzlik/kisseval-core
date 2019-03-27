@@ -10,7 +10,11 @@ ImageRanker::ImageRanker(
 #if USE_DATA_FROM_DATABASE
   
 #else
-  _keywords(keywordClassesFilepath)
+  // Parse keywords from file
+  _keywords(keywordClassesFilepath),
+
+  // Parse images and probabilities from file
+  _images(ParseSoftmaxBinFile(probabilityVectorFilepath))
 #endif 
 {
   // Connect to database
@@ -28,12 +32,70 @@ ImageRanker::ImageRanker(
 
 #endif
 
-
+#if PUSH_DATA_TO_DB
   PushDataToDatabase();
-
-
+#endif
+ 
 }
 
+bool ImageRanker::PushImagesToDatabase()
+{
+  /*===========================
+    Push into `images` & `probability_vectors` table
+    ===========================*/
+  {
+    // Start query
+    std::string queryImages{ "INSERT IGNORE INTO images (`id`, `filename`) VALUES" };
+    std::string queryProbs{ "INSERT IGNORE INTO probability_vectors (`image_id`, `vector_index`, `probability`) VALUES" };
+
+    queryProbs.reserve(800000000ULL);
+
+    // Keywords then
+    for (auto&& idImagePair : _images)
+    {
+      std::string filename{_db.EscapeString(idImagePair.second._filename) };
+
+      queryImages.append("(");
+      queryImages.append(std::to_string(idImagePair.second._imageId));
+      queryImages.append(", '");
+      queryImages.append(filename);
+      queryImages.append("'),");
+
+      // Iterate through probability vector
+      size_t i = 0ULL;
+      for (auto&& prob: idImagePair.second._probabilityVector)
+      {
+        queryProbs.append("(");
+        queryProbs.append(std::to_string(idImagePair.second._imageId));
+        queryProbs.append(", ");
+        queryProbs.append(std::to_string(i));
+        queryProbs.append(", ");
+        queryProbs.append(std::to_string(prob));
+        queryProbs.append("),");
+
+        ++i;
+      }
+      // Delete last comma
+      queryProbs.pop_back();
+      // Add semicolon
+      queryProbs.append(";");
+      _db.NoResultQuery(queryProbs);
+      queryProbs.clear();
+    }
+
+    
+
+    // Delete last comma
+    queryImages.pop_back();
+    // Add semicolon
+    queryImages.append(";");
+
+    // Send query
+    _db.NoResultQuery(queryImages);
+  }
+
+  return true;
+}
 
 
 size_t ImageRanker::GetRandomImageId() const
@@ -47,8 +109,8 @@ bool ImageRanker::PushDataToDatabase()
 {
   bool result{true};
 
-  result = result && PushKeywordsToDatabase();
-  result = result && PushImagesToDatabase();
+  result = PushKeywordsToDatabase();
+  result = PushImagesToDatabase();
 
   return result;
 }
@@ -60,12 +122,9 @@ bool ImageRanker::PushKeywordsToDatabase()
   return false;
 }
 
-bool ImageRanker::PushImagesToDatabase()
-{
-  return false;
-}
 
-std::vector< std::pair< size_t, std::vector<float> > > ImageRanker::ParseSoftmaxBinFile(std::string_view filepath) const
+
+std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepath) const
 {
   // Create buffer from file
   Buffer buffer = LoadFileToBuffer(filepath);
@@ -79,10 +138,9 @@ std::vector< std::pair< size_t, std::vector<float> > > ImageRanker::ParseSoftmax
   // Where rows data start
   size_t currOffset = 40ULL;
 
-  // Declare vector of pairs
-  std::vector< std::pair< size_t, std::vector<float> > > rows;
-  // Reserve space for it to aproximate number of wors
-  rows.reserve(NUM_ROWS);
+  // Declare result vector
+  std::map<size_t, Image> images;
+
 
   // Size of buffer in bytes
   size_t bufferSize = buffer.size();
@@ -111,11 +169,14 @@ std::vector< std::pair< size_t, std::vector<float> > > ImageRanker::ParseSoftmax
       currOffset += sizeof(float);
     }
 
+    // Get image filename 
+    std::string filename{ GetImageFilepathByIndex(id / 50, true) };
+
     // Push final row
-    rows.push_back(std::make_pair(id, floats));
+    images.emplace(std::make_pair(id, Image(id, std::move(filename), std::move(floats))));
   }
 
-  return rows;
+  return images;
 }
 
 std::vector< std::pair< size_t, std::unordered_map<size_t, float> > > ImageRanker::ParseSoftmaxBinFileFiltered(std::string_view filepath, float minProbabilty) const 

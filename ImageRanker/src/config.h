@@ -1,8 +1,13 @@
 #pragma once
 
+#include <stdint.h>
+
+
+#define SIZE_T_ERROR_VALUE   SIZE_MAX
 #define REPEAT_MAIN 1
 
-#define USE_REMOTE_DB 0
+#define PUSH_DATA_TO_DB 0
+#define USE_REMOTE_DB 1
 
 #define USE_DATA_FROM_DATABASE 0
 

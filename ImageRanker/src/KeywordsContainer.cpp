@@ -63,7 +63,7 @@ bool KeywordsContainer::ParseKeywordClassesFile(std::string_view filepath)
     // If pure hypernym
     if (tokens[0] == "H")
     {
-      vectorIndex = 0ULL;
+      vectorIndex = SIZE_T_ERROR_VALUE;
     }
     else
     {
@@ -214,11 +214,28 @@ bool KeywordsContainer::PushKeywordsToDatabase(Database& db)
       query.append("( ");
       query.append(std::to_string(pKeyword->m_wordnetId));
       query.append(", ");
-      query.append(std::to_string(pKeyword->m_vectorIndex));
+
+
+      if (pKeyword->m_vectorIndex == SIZE_T_ERROR_VALUE)
+      {
+        query.append("NULL");
+      }
+      else
+      {
+        query.append(std::to_string(pKeyword->m_vectorIndex));
+      }
+
+      if (pKeyword->m_vectorIndex == 0ULL)
+      {
+        std::cout << "aa" << std::endl;
+      }
+      
       query.append(", '");
       query.append(desctiption);
       query.append("'),");
     }
+
+    
 
     // Delete last comma
     query.pop_back();
@@ -233,6 +250,7 @@ bool KeywordsContainer::PushKeywordsToDatabase(Database& db)
 
   return false;
 }
+
 
 std::string KeywordsContainer::GetKeywordByWordnetId(size_t wordnetId)
 {
