@@ -11,52 +11,14 @@
 #include <unordered_map>
 #include <sstream>
 #include <random>
-#include <algorithm>
+
 #include <map>
+#include <set>
 #include <locale>
 
 #include "config.h"
-
-struct Keyword
-{
-  Keyword(
-    size_t wordnetId, 
-    size_t vectorIndex, 
-    const std::string& word,
-    size_t descStartIndex,
-    size_t descEndIndex
-  ):
-    m_wordnetId(wordnetId),
-    m_vectorIndex(vectorIndex),
-    m_word(word),
-    m_pHypernym(nullptr),
-    m_descStartIndex(descStartIndex),
-    m_descEndIndex(descEndIndex)
-  {}
-
-  Keyword(
-    size_t wordnetId, 
-    size_t vectorIndex, 
-    std::string&& word,
-    size_t descStartIndex,
-    size_t descEndIndex
-  ):
-    m_wordnetId(wordnetId),
-    m_word(std::move(word)),
-    m_pHypernym(nullptr),
-    m_descStartIndex(descStartIndex),
-    m_descEndIndex(descEndIndex)
-  {}
-
-
-  size_t m_wordnetId;
-  size_t m_vectorIndex;
-  size_t m_descStartIndex;
-  size_t m_descEndIndex;
-  std::string m_word;
-  Keyword* m_pHypernym;
-  std::vector<Keyword*> m_pHyponyms;
-};
+#include "Database.h"
+#include "KeywordsContainer.h"
 
 struct Image
 {
@@ -65,95 +27,6 @@ struct Image
   std::vector< std::pair<Keyword, float> >_probabilityVector;
 };
 
-class KeywordsContainer
-{
-public:
-  KeywordsContainer(std::string_view keywordClassesFilepath)
-  {
-    // Parse data
-    ParseKeywordClassesFile(keywordClassesFilepath);
-
-    // Sort keywords
-    std::sort(_keywords.begin(), _keywords.end(), KeywordLessThan);
-  }
-
-  std::vector<std::tuple<size_t, std::string, std::string>> GetNearKeywords(const std::string& prefix);
-
-  Keyword* MapDescIndexToKeyword() const;
-
-
-  std::string GetKeywordByWordnetId(size_t wordnetId)
-  {
-    auto resultIt = _wordnetIdToKeywords.find(wordnetId);
-
-    if (resultIt == _wordnetIdToKeywords.end())
-    {
-      std::string("NOT FOUND");
-    }
-    
-    return resultIt->second->m_word;
-  }
-
-  std::string GetKeywordDescriptionByWordnetId(size_t wordnetId)
-  {
-
-    auto resultIt = _wordnetIdToKeywords.find(wordnetId);
-
-    if (resultIt == _wordnetIdToKeywords.end())
-    {
-      std::string("NOT FOUND");
-    }
-
-    size_t startDescIndex = resultIt->second->m_descStartIndex;
-    //size_t endDescIndex = resultIt->second->m_descEndIndex;
-
-    char* pDesc = (_allDescriptions.data()) + startDescIndex;
-
-
-    return std::string(pDesc);
-  }
-
-private:
-  bool ParseKeywordClassesFile(std::string_view filepath);
-
-  /*!
-   * Functor for comparing our string=>wordnetId structure
-   * 
-   */
-  struct KeywordLessThanComparator {
-    bool operator()(const std::unique_ptr<Keyword>& a, const std::unique_ptr<Keyword>& b) const
-    {   
-      // Compare strings
-      auto result = a->m_word.compare(b->m_word);
-
-      return result <= -1;
-    }   
-  } KeywordLessThan;
-
-
-  struct KeywordLessThanStringComparator {
-    bool operator()(const std::string& a, const std::string& b) const
-    {   
-      // Compare strings
-      auto result = a.compare(b);
-
-      return result <= -1;
-    }   
-  };
-
-private:
-  std::vector< std::unique_ptr<Keyword> > _keywords;
-
-  //! Maps wordnetID to Keyword
-  std::map<size_t, Keyword*> _wordnetIdToKeywords;
-
-  //! One huge string of all descriptions for fast keyword search
-  std::string _allDescriptions;
-
-  //! Maps index from probability vector to Keyword
-  std::map<size_t, Keyword*> _vecIndexToKeyword;
-
-};
 
 class ImageRanker
 {
@@ -173,7 +46,11 @@ public:
   );
 
   size_t GetRandomImageId() const;
-  
+
+
+  bool PushDataToDatabase();
+  bool PushKeywordsToDatabase();
+  bool PushImagesToDatabase();
 
   std::vector< std::tuple<size_t, std::string, std::string> > GetNearKeywords(const std::string& prefix)
   {
@@ -244,7 +121,9 @@ public:
 
 
 public:
+  Database _db;
 
   KeywordsContainer _keywords;
+  std::map<size_t, Image> _images;
 
 };

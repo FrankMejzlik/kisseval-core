@@ -2,15 +2,19 @@
 
 #define REPEAT_MAIN 1
 
+#define USE_REMOTE_DB 0
+
+#define USE_DATA_FROM_DATABASE 0
+
 #define NUM_ROWS 20000ULL
 
 #define INDEX_OFFSET 50ULL
 
-#define SOLUTION_PATH "//home//devwesp//source//repos//image-ranker-collector//"
+#define SOLUTION_PATH "c:\\Users\\devwe\\source\\repos\\ImageRanker\\"
 
-#define DATA_PATH "//home//devwesp//source//repos//image-ranker-collector//data//"
-#define IMAGES_PATH "//home//devwesp//source//repos//image-ranker-collector////data//images//"
-#define COLLECTOR_INPUT_OUTPUT_DATA_PATH "//home//devwesp//source//repos//image-ranker-collector////data//to_collector//"
+#define DATA_PATH "c:\\Users\\devwe\\source\\repos\\ImageRanker\\data\\"
+#define IMAGES_PATH "c:\\Users\\devwe\\source\\repos\\ImageRanker\\data\\images\\"
+#define COLLECTOR_INPUT_OUTPUT_DATA_PATH "c:\\Users\\devwe\\source\\repos\\ImageRanker\\data\\to_collector\\"
 
 #define GENERATE_COLLECTOR_INPUT_DATA 1
 
@@ -23,3 +27,6 @@
 #define CSV_DELIMITER '~'
 
 #define NUM_SUGESTIONS 5ULL
+
+#define LOG(x) std::cout << x << std::endl
+

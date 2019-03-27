@@ -131,15 +131,17 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions);SOLUTION_PATH=R"($(SolutionDir))"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\sciter-sdk\include;$(ProjectDir)/src;$(ProjectDir);$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\Program Files\MariaDB\MariaDB Connector C 64-bit\include\;$(ProjectDir)external\sciter-sdk\include;$(ProjectDir)/src;$(ProjectDir);$(SolutionDir);c:\Program Files\MariaDB\MariaDB Connector C 64-bit\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile />
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>c:\Program Files\MariaDB\MariaDB Connector C 64-bit\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>mariadbclient.lib;libmariadb.lib;Ws2_32.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
@@ -198,9 +200,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions);SOLUTION_PATH=R"($(SolutionDir))"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\sciter-sdk\include;$(ProjectDir);$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\Program Files\MariaDB\MariaDB Connector C 64-bit\include\;$(ProjectDir)external\sciter-sdk\include;$(ProjectDir);$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile />
     </ClCompile>
@@ -209,6 +211,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>c:\Program Files\MariaDB\MariaDB Connector C 64-bit\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>mariadbclient.lib;libmariadb.lib;Ws2_32.lib;Shlwapi.lib;winsock2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
@@ -222,14 +226,16 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\ImagesContainer.h" />
+    <ClInclude Include="src\Database.h" />
+    <ClInclude Include="src\KeywordsContainer.h" />
     <ClInclude Include="src\ImageRanker.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="src\config.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ImagesContainer.cpp" />
+    <ClCompile Include="src\Database.cpp" />
+    <ClCompile Include="src\KeywordsContainer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\ImageRanker.cpp" />
     <ClCompile Include="sciter-win-main.cpp" />

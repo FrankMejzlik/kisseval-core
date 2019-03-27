@@ -7,7 +7,7 @@
 #include "sciter-x.h"
 #include "sciter-x-window.hpp"
 
-
+#include "Database.h"
 #include "ImageRanker.h"
 
 
@@ -24,8 +24,10 @@ public:
       DATA_PATH KEYWORD_CLASSES_FILENAME
     )
   {
+    //size_t result = db.NoResultQuery("INSERT INTO images (id, filename) VALUES (13, 'fuga'), (14, 'fugaa');");
 
-  #if 1
+
+  #if 0
 
     // Test GetNearKeywords()
     for (size_t i = 0ULL; i < 100LL; ++i)
