@@ -7,31 +7,14 @@ ImageRanker::ImageRanker(
   std::string_view deepFeaturesFilepath,
   std::string_view keywordClassesFilepath
 ):
-  _images()
-#if GET_DATA_FROM_DB
-  
-#else
   // Parse keywords from file
   _keywords(keywordClassesFilepath),
 
   // Parse images and probabilities from file
-  _images(ParseSoftmaxBinFile(probabilityVectorFilepath))
-#endif 
+  _images(ParseSoftmaxBinFile(probabilityVectorFilepath)),
+  _primaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
+  _secondaryDb(SECONDARY_DB_HOST, SECONDARY_DB_PORT, SECONDARY_DB_USERNAME, SECONDARY_DB_PASSWORD, SECONDARY_DB_DB_NAME)
 {
-  // Connect to database
-  auto result{ _db.EstablishConnection() };
-  if (result != 0ULL)
-  {
-    LOG("Connecting to DB failed.");
-  }
-
-#if GET_DATA_FROM_DB
-  //_keywords.LoadFromDatabase();
-#else
-
-
-
-#endif
 
 #if PUSH_DATA_TO_DB
   PushDataToDatabase();
@@ -39,12 +22,41 @@ ImageRanker::ImageRanker(
  
 }
 
+
+ImageRanker::ImageRanker(
+  std::string_view imagesPath
+) :
+  _primaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
+  _secondaryDb(SECONDARY_DB_HOST, SECONDARY_DB_PORT, SECONDARY_DB_USERNAME, SECONDARY_DB_PASSWORD, SECONDARY_DB_DB_NAME)
+{
+  // Connect to database
+  auto result{ _primaryDb.EstablishConnection() };
+  if (result != 0ULL)
+  {
+    LOG("Connecting to primary DB failed.");
+  }
+
+#if USE_SECONDARY_DB
+
+  // Connect to secondary database
+  auto result{ _secondaryDb.EstablishConnection() };
+  if (result != 0ULL)
+  {
+    LOG("Connecting to secondary DB failed.");
+  }
+
+#endif
+
+  // Load from database
+  LoadKeywordsFromDatabase(DATA_SOURCE_DB);
+  LoadImagesFromDatabase(DATA_SOURCE_DB);
+}
+
 size_t ImageRanker::GetRandomImageId() const
 { 
   // Get random index
   return static_cast<size_t>(GetRandomInteger(0, NUM_ROWS) * INDEX_OFFSET);
 }
-
 
 
 std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepath) const
@@ -379,6 +391,39 @@ std::vector<std::byte> ImageRanker::LoadFileToBuffer(std::string_view filepath) 
 
   // Return (move) final buffer
   return buffer;
+}
+
+
+bool ImageRanker::LoadKeywordsFromDatabase(Database::Type type)
+{
+  Database* pDb{nullptr};
+
+  if (type == Database::cPrimary)
+  {
+    pDb = &_primaryDb;
+  }
+  else if (type == Database::cSecondary)
+  {
+    pDb = &_secondaryDb;
+  }
+  else
+  {
+    LOG("NOT IMPLEMENTED!");
+    return false;
+  }
+  
+  std::string query{"SELECT * FROM `keywords`;"};
+
+  auto result = pDb->ResultQuery(query);
+
+
+
+  return false;
+}
+
+bool ImageRanker::LoadImagesFromDatabase(Database::Type type)
+{
+  return false;
 }
 
 

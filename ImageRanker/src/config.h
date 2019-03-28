@@ -21,6 +21,8 @@
 
 //! If 1, data will be loaded from database(s)
 #define GET_DATA_FROM_DB 1
+#define USE_SECONDARY_DB 0
+#define DATA_SOURCE_DB Database::cPrimary
 
 /*!
  * Set what databases will be used as primary/secondary

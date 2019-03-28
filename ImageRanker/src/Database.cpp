@@ -2,7 +2,18 @@
 
 
 
-Database::Database() :
+Database::Database(
+  std::string_view host,
+  size_t port,
+  std::string_view username,
+  std::string_view password,
+  std::string_view dbName
+) :
+  _host(host),
+  _port(port),
+  _username(username),
+  _password(password),
+  _dbName(dbName),
   _mysqlConnection(mysql_init(NULL))
 {};
 
@@ -27,27 +38,13 @@ size_t Database::GetErrorCode() const
 
 size_t Database::EstablishConnection()
 { 
-#if GET_DATA_FROM_DB
-
   _mysqlConnection = mysql_real_connect(
     _mysqlConnection,
-    "li1504-72.members.linode.com",
-    "image-ranker", "s5XurJ3uS3E52Gzm",
-    "image-ranker-collector-data", 3306,
+    _host.data(),
+    _username.data(), _password.data(),
+    _dbName.data(), static_cast<unsigned long>(_port),
     "NULL", 0
   );
-
-#else
-
-  _mysqlConnection = mysql_real_connect(
-    _mysqlConnection,
-    "localhost",
-    "image-ranker", "s5XurJ3uS3E52Gzm",
-    "image-ranker-collector-data", 3306,
-    "NULL", 0
-  );
-
-#endif
 
   // If connection failed
   if (!_mysqlConnection)

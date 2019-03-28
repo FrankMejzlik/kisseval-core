@@ -3,7 +3,26 @@
 
 #include <iostream>
 
+#include "ImageRanker.h"
+
 int main()
 {
-    std::cout << "Hello World!\n"; 
+
+#if GET_DATA_FROM_DB
+
+  ImageRanker ranker{IMAGES_PATH};
+
+#else 
+
+  ImageRanker ranker{
+    IMAGES_PATH,
+    DATA_PATH SOFTMAX_BIN_FILENAME,
+    DATA_PATH DEEP_FEATURES_FILENAME,
+    DATA_PATH KEYWORD_CLASSES_FILENAME
+  };
+
+#endif
+
+
+
 }

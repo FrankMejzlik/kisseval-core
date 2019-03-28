@@ -10,8 +10,23 @@
 
 class Database
 {
+  // Structs
 public:
-  Database();
+  enum Type
+  {
+    cPrimary,
+    cSecondary
+  };
+
+public:
+  Database() = delete;
+  Database(
+    std::string_view host,
+    size_t port,
+    std::string_view username,
+    std::string_view password,
+    std::string_view dbName
+  );
   ~Database() noexcept;
 
 
@@ -27,6 +42,13 @@ public:
 
   private:
     MYSQL* _mysqlConnection;
+
+    std::string_view _host;
+    size_t _port;
+    std::string _username;
+    std::string _password;
+    std::string _dbName;
+
 };
 
 

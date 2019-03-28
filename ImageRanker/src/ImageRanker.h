@@ -45,12 +45,21 @@ public:
   // Methods
 public:
   ImageRanker() = delete;
+
+  //! Constructor with data from files
   ImageRanker(
     std::string_view imagesPath,
     std::string_view probabilityVectorFilepath,
     std::string_view deepFeaturesFilepath,
     std::string_view keywordClassesFilepath
   );
+
+  //! Constructor with data from database
+  ImageRanker(
+    std::string_view imagesPath
+  );
+
+  ~ImageRanker() noexcept = default;
 
   size_t GetRandomImageId() const;
 
@@ -59,6 +68,10 @@ public:
   bool PushKeywordsToDatabase();
   bool PushImagesToDatabase();
 #endif
+
+
+  bool LoadKeywordsFromDatabase(Database::Type type);
+  bool LoadImagesFromDatabase(Database::Type type);
 
   std::vector< std::tuple<size_t, std::string, std::string> > GetNearKeywords(const std::string& prefix)
   {
@@ -129,7 +142,9 @@ public:
 
 
 public:
-  Database _db;
+  Database _primaryDb;
+
+  Database _secondaryDb;
 
   KeywordsContainer _keywords;
   std::map<size_t, Image> _images;
