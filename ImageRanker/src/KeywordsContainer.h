@@ -52,8 +52,9 @@ public:
 
   Keyword* MapDescIndexToKeyword() const;
 
+#if !GET_DATA_FROM_DB
   bool PushKeywordsToDatabase(Database& db);
-  
+#endif
 
   std::string GetKeywordByWordnetId(size_t wordnetId);
 
@@ -99,7 +100,7 @@ private:
   //! Maps index from probability vector to Keyword
   std::map<size_t, Keyword*> _vecIndexToKeyword;
 
-#if !USE_DATA_FROM_DATABASE
+#if !GET_DATA_FROM_DB
   std::set<std::string> _words;
 #endif
 

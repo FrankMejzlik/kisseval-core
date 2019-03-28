@@ -54,10 +54,11 @@ public:
 
   size_t GetRandomImageId() const;
 
-
+#if !GET_DATA_FROM_DB
   bool PushDataToDatabase();
   bool PushKeywordsToDatabase();
   bool PushImagesToDatabase();
+#endif
 
   std::vector< std::tuple<size_t, std::string, std::string> > GetNearKeywords(const std::string& prefix)
   {

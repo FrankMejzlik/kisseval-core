@@ -114,7 +114,7 @@ bool KeywordsContainer::ParseKeywordClassesFile(std::string_view filepath)
     // Insert all synonyms as well
     while (std::getline(classnames, finalWord, SYNONYM_DELIMITER))
     {
-    #if !USE_DATA_FROM_DATABASE
+    #if !GET_DATA_FROM_DB
       // Insert this word representation into all words
       _words.insert(finalWord);
     #endif
@@ -172,6 +172,9 @@ std::vector< std::tuple<size_t, std::string, std::string> > KeywordsContainer::G
   return resultWordnetIds;
 }
 
+
+
+#if !GET_DATA_FROM_DB
 
 bool KeywordsContainer::PushKeywordsToDatabase(Database& db)
 {
@@ -251,6 +254,7 @@ bool KeywordsContainer::PushKeywordsToDatabase(Database& db)
   return false;
 }
 
+#endif
 
 std::string KeywordsContainer::GetKeywordByWordnetId(size_t wordnetId)
 {

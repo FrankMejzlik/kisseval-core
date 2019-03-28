@@ -7,7 +7,8 @@ ImageRanker::ImageRanker(
   std::string_view deepFeaturesFilepath,
   std::string_view keywordClassesFilepath
 ):
-#if USE_DATA_FROM_DATABASE
+  _images()
+#if GET_DATA_FROM_DB
   
 #else
   // Parse keywords from file
@@ -24,8 +25,8 @@ ImageRanker::ImageRanker(
     LOG("Connecting to DB failed.");
   }
 
-#if USE_DATA_FROM_DATABASE
-  _keywords.LoadFromDatabase();
+#if GET_DATA_FROM_DB
+  //_keywords.LoadFromDatabase();
 #else
 
 
@@ -38,88 +39,10 @@ ImageRanker::ImageRanker(
  
 }
 
-bool ImageRanker::PushImagesToDatabase()
-{
-  /*===========================
-    Push into `images` & `probability_vectors` table
-    ===========================*/
-  {
-    // Start query
-    std::string queryImages{ "INSERT IGNORE INTO images (`id`, `filename`) VALUES" };
-    std::string queryProbs{ "INSERT IGNORE INTO probability_vectors (`image_id`, `vector_index`, `probability`) VALUES" };
-
-    queryProbs.reserve(800000000ULL);
-
-    // Keywords then
-    for (auto&& idImagePair : _images)
-    {
-      std::string filename{_db.EscapeString(idImagePair.second._filename) };
-
-      queryImages.append("(");
-      queryImages.append(std::to_string(idImagePair.second._imageId));
-      queryImages.append(", '");
-      queryImages.append(filename);
-      queryImages.append("'),");
-
-      // Iterate through probability vector
-      size_t i = 0ULL;
-      for (auto&& prob: idImagePair.second._probabilityVector)
-      {
-        queryProbs.append("(");
-        queryProbs.append(std::to_string(idImagePair.second._imageId));
-        queryProbs.append(", ");
-        queryProbs.append(std::to_string(i));
-        queryProbs.append(", ");
-        queryProbs.append(std::to_string(prob));
-        queryProbs.append("),");
-
-        ++i;
-      }
-      // Delete last comma
-      queryProbs.pop_back();
-      // Add semicolon
-      queryProbs.append(";");
-      _db.NoResultQuery(queryProbs);
-      queryProbs.clear();
-    }
-
-    
-
-    // Delete last comma
-    queryImages.pop_back();
-    // Add semicolon
-    queryImages.append(";");
-
-    // Send query
-    _db.NoResultQuery(queryImages);
-  }
-
-  return true;
-}
-
-
 size_t ImageRanker::GetRandomImageId() const
 { 
   // Get random index
   return static_cast<size_t>(GetRandomInteger(0, NUM_ROWS) * INDEX_OFFSET);
-}
-
-
-bool ImageRanker::PushDataToDatabase()
-{
-  bool result{true};
-
-  result = PushKeywordsToDatabase();
-  result = PushImagesToDatabase();
-
-  return result;
-}
-
-bool ImageRanker::PushKeywordsToDatabase()
-{
-  bool result = _keywords.PushKeywordsToDatabase(_db);
-
-  return false;
 }
 
 
@@ -238,10 +161,6 @@ std::vector< std::pair< size_t, std::unordered_map<size_t, float> > > ImageRanke
 
   return rows;
 }
-
-
-
-
 
 std::unordered_map<size_t, std::pair<size_t, std::string> > ImageRanker::ParseKeywordClassesTextFile(std::string_view filepath) const
 {
@@ -493,3 +412,85 @@ float ImageRanker::ParseFloatLE(const Buffer& buffer, size_t startIndex) const
   // Return reinterpreted data
   return *(reinterpret_cast<float*>(&byteFloat));
 }
+
+
+#if !GET_DATA_FROM_DB
+
+bool ImageRanker::PushImagesToDatabase()
+{
+  /*===========================
+  Push into `images` & `probability_vectors` table
+  ===========================*/
+  {
+    // Start query
+    std::string queryImages{ "INSERT IGNORE INTO images (`id`, `filename`) VALUES" };
+    std::string queryProbs{ "INSERT IGNORE INTO probability_vectors (`image_id`, `vector_index`, `probability`) VALUES" };
+
+    queryProbs.reserve(800000000ULL);
+
+    // Keywords then
+    for (auto&& idImagePair : _images)
+    {
+      std::string filename{_db.EscapeString(idImagePair.second._filename) };
+
+      queryImages.append("(");
+      queryImages.append(std::to_string(idImagePair.second._imageId));
+      queryImages.append(", '");
+      queryImages.append(filename);
+      queryImages.append("'),");
+
+      // Iterate through probability vector
+      size_t i = 0ULL;
+      for (auto&& prob: idImagePair.second._probabilityVector)
+      {
+        queryProbs.append("(");
+        queryProbs.append(std::to_string(idImagePair.second._imageId));
+        queryProbs.append(", ");
+        queryProbs.append(std::to_string(i));
+        queryProbs.append(", ");
+        queryProbs.append(std::to_string(prob));
+        queryProbs.append("),");
+
+        ++i;
+      }
+      // Delete last comma
+      queryProbs.pop_back();
+      // Add semicolon
+      queryProbs.append(";");
+      _db.NoResultQuery(queryProbs);
+      queryProbs.clear();
+    }
+
+
+
+    // Delete last comma
+    queryImages.pop_back();
+    // Add semicolon
+    queryImages.append(";");
+
+    // Send query
+    _db.NoResultQuery(queryImages);
+  }
+
+  return true;
+}
+
+
+bool ImageRanker::PushDataToDatabase()
+{
+  bool result{true};
+
+  result = PushKeywordsToDatabase();
+  result = PushImagesToDatabase();
+
+  return result;
+}
+
+bool ImageRanker::PushKeywordsToDatabase()
+{
+  bool result = _keywords.PushKeywordsToDatabase(_db);
+
+  return false;
+}
+
+#endif

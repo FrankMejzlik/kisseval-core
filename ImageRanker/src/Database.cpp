@@ -27,7 +27,7 @@ size_t Database::GetErrorCode() const
 
 size_t Database::EstablishConnection()
 { 
-#if USE_REMOTE_DB
+#if GET_DATA_FROM_DB
 
   _mysqlConnection = mysql_real_connect(
     _mysqlConnection,
@@ -73,7 +73,7 @@ std::string Database::EscapeString(const std::string& stringToEscape) const
 {
   char buffer[1024];
 
-  mysql_real_escape_string(_mysqlConnection, buffer, stringToEscape.data(), stringToEscape.size());
+  mysql_real_escape_string(_mysqlConnection, buffer, stringToEscape.data(), static_cast<unsigned long>(stringToEscape.size()));
 
   return std::string{ buffer };
 }
