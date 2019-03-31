@@ -21,6 +21,12 @@ int main()
     DATA_PATH KEYWORD_CLASSES_FILENAME
   };
 
+  std::vector<ImageRanker::GameSessionInputQuery> input;
+  input.push_back(ImageRanker::GameSessionInputQuery(123ULL, 0ULL, "dog&cat&wood"));
+  input.push_back(ImageRanker::GameSessionInputQuery(124ULL, 50ULL, "brick&entity"));
+
+  auto output = ranker.SubmitUserQueriesWithResults(input);
+
 #endif
 
   return -0;

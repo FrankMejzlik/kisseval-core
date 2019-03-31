@@ -23,6 +23,19 @@ KeywordsContainer::KeywordsContainer(std::vector< std::vector<std::string>>&& da
 }
 
 
+
+std::string KeywordsContainer::GetKeywordByVectorIndex(size_t index) const
+{
+  auto result = _vecIndexToKeyword.find(index);
+
+  if (result == _vecIndexToKeyword.end())
+  {
+    return std::string();
+  }
+
+  return result->second->m_word;
+}
+
 bool KeywordsContainer::ParseKeywordDbDataStructure(std::vector< std::vector<std::string>>&& data)
 {
   /*
@@ -224,7 +237,8 @@ bool KeywordsContainer::ParseKeywordClassesFile(std::string_view filepath)
       // Insert into wordnetId -> Keyword
       _wordnetIdToKeywords.insert(std::make_pair(wordnetId, _keywords.back().get()));
 
-   
+      // Insert into vector index -> Keyword
+      _vecIndexToKeyword.insert(std::make_pair(vectorIndex, _keywords.back().get()));
     }
   }
   return true;
