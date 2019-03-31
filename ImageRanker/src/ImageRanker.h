@@ -49,6 +49,8 @@ public:
   //! Array of those is submited from front-end app game
   using GameSessionInputQuery = std::tuple<size_t, size_t, std::string>;
 
+  using ImageReference = std::pair<size_t, std::string>;
+
   enum QueryOrigin
   {
     cDeveloper,
@@ -74,38 +76,27 @@ public:
 
   ~ImageRanker() noexcept = default;
 
-  size_t GetRandomImageId() const;
 
+  /*!
+   * This processes input queries that come from users, generates results and sends them back
+   */
+  std::vector<GameSessionQueryResult> SubmitUserQueriesWithResults(std::vector<GameSessionInputQuery> inputQueries, QueryOrigin origin = QueryOrigin::cPublic);
+
+
+  ImageReference GetRandomImage() const;
+  std::vector< std::tuple<size_t, std::string, std::string> > GetNearKeywords(const std::string& prefix);
+
+  
+private:
 #if PUSH_DATA_TO_DB
   bool PushDataToDatabase();
   bool PushKeywordsToDatabase();
   bool PushImagesToDatabase();
 #endif
 
-
-  bool LoadKeywordsFromDatabase(Database::Type type);
-  bool LoadImagesFromDatabase(Database::Type type);
-
-  std::vector< std::tuple<size_t, std::string, std::string> > GetNearKeywords(const std::string& prefix)
-  {
-    // Force lowercase
-    std::locale loc;
-    std::string lower;
-
-    for (auto elem : prefix)
-    {
-      lower.push_back(std::tolower(elem,loc));
-    }
-
-    return _keywords.GetNearKeywords(lower);
-  }
+  size_t GetRandomImageId() const;
 
   
-  /*!
-   * This processes input queries that come from users, generates results and sends them back 
-   */
-  std::vector<GameSessionQueryResult> SubmitUserQueriesWithResults(std::vector<GameSessionInputQuery> inputQueries, QueryOrigin origin = QueryOrigin::cPublic);
-
 
   std::string GetKeywordByWordnetId(size_t wordnetId)
   {
@@ -122,11 +113,8 @@ public:
   std::string GetImageFilepathByIndex(size_t imgIndex, bool relativePaths = false) const;
 
   int GetRandomInteger(int from, int to) const;
-
-
-
-private:
-
+  bool LoadKeywordsFromDatabase(Database::Type type);
+  bool LoadImagesFromDatabase(Database::Type type);
   std::vector<std::pair<std::string, float>> GetHighestProbKeywords(size_t imageId, size_t N) const;
 
   std::vector<std::string> TokenizeAndQuery(std::string_view query) const;

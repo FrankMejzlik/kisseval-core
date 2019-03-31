@@ -31,7 +31,6 @@ ImageRanker::ImageRanker(
  
 }
 
-
 ImageRanker::ImageRanker(
   std::string_view imagesPath
 ) :
@@ -68,6 +67,27 @@ size_t ImageRanker::GetRandomImageId() const
 }
 
 
+ImageRanker::ImageReference ImageRanker::GetRandomImage() const
+{
+  size_t imageId{GetRandomImageId()};
+
+  return ImageReference{ imageId, GetImageFilenameById(imageId) };
+}
+
+
+std::vector< std::tuple<size_t, std::string, std::string> > ImageRanker::GetNearKeywords(const std::string& prefix)
+{
+  // Force lowercase
+  std::locale loc;
+  std::string lower;
+
+  for (auto elem : prefix)
+  {
+    lower.push_back(std::tolower(elem, loc));
+  }
+
+  return _keywords.GetNearKeywords(lower);
+}
 
 std::vector<ImageRanker::GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(std::vector<ImageRanker::GameSessionInputQuery> inputQueries, QueryOrigin origin)
 {
@@ -229,7 +249,7 @@ std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepa
     }
 
     // Get image filename 
-    std::string filename{ GetImageFilepathByIndex(id / 50, true) };
+    std::string filename{ GetImageFilepathByIndex(id / INDEX_OFFSET, true) };
 
     // Sort probabilites
     std::sort(
@@ -459,8 +479,10 @@ std::string ImageRanker::GetImageFilepathByIndex(size_t imgIndex, bool relativeP
     throw std::runtime_error(std::string("Error opening file :") + fileFilepath);
   }
 
-  size_t desiredByteIndex = imgIndex * 90ULL;
+  size_t desiredByteIndex = imgIndex * FILES_FILE_LINE_LENGTH;
 
+  //size_t desiredByteIndex = 0ULL;
+  
   // Every line has 90 bytes
   // Jump to correct line
   inFile.seekg(desiredByteIndex);
@@ -473,8 +495,13 @@ std::string ImageRanker::GetImageFilepathByIndex(size_t imgIndex, bool relativeP
   std::stringstream ss(line);
 
   std::string columnData;
-  // Throw away 4 columns
-  ss >> columnData; ss >> columnData; ss >> columnData; ss >> columnData;
+
+  // Throw away correct number of columns
+  for (size_t i = 0ULL; i < COLUMN_INDEX_OF_FILENAME; ++i)
+  {
+    ss >> columnData;
+  }
+    
   // Get file name
   ss >> columnData;
 
@@ -745,9 +772,9 @@ bool ImageRanker::PushImagesToDatabase()
         queryProbs.append("(");
         queryProbs.append(std::to_string(idImagePair.second._imageId));
         queryProbs.append(", ");
-        queryProbs.append(std::to_string(i));
+        queryProbs.append(std::to_string(prob.first));
         queryProbs.append(", ");
-        queryProbs.append(std::to_string(prob));
+        queryProbs.append(std::to_string(prob.second));
         queryProbs.append("),");
 
         ++i;

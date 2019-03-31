@@ -7,6 +7,7 @@
 #include <sstream>
 #include <fstream>
 #include <map>
+#include <locale>
 #include <set>
 
 #include "config.h"
@@ -88,7 +89,13 @@ private:
     bool operator()(const std::string& a, const std::string& b) const
     {   
       // Compare strings
-      auto result = a.compare(b);
+
+      std::string aa{a};
+      std::string bb{ b };
+      std::transform(aa.begin(), aa.end(), aa.begin(), ::tolower);
+      std::transform(bb.begin(), bb.end(), aa.begin(), ::tolower);
+
+      auto result = aa.compare(bb);
 
       return result <= -1;
     }   

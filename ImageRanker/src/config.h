@@ -34,7 +34,7 @@
  * 3: linode data1
  * 4: linode data2
  */
-#define PRIMARY_DB_ID 1
+#define PRIMARY_DB_ID 2
 #define SECONDARY_DB_ID 2
 
 
@@ -143,30 +143,74 @@
 /*!
  * Files with data
  */
+#define USING_DATASET 2
+
+#if USING_DATASET == 1
+  /***************************
+    Dataset 1
+  *************************/
+  //! Number of images in file data
+  #define NUM_ROWS 20000ULL
+  //! ID offset from file data
+  #define INDEX_OFFSET 50ULL
+
+  #define IMAGES_LIST_FILENAME "dir_images.txt"
+  #define COLUMN_INDEX_OF_FILENAME 4
+  #define FILES_FILE_LINE_LENGTH 90ULL
+  #define KEYWORD_CLASSES_FILENAME "keyword_classes.txt"
+  #define DEEP_FEATURES_FILENAME "VBS2019_classification_NasNetMobile_20000.deep-features"
+  #define SOFTMAX_BIN_FILE "VBS2019_classification_NasNetLarge_20000.softmax"
+
+  #if DEVELOPMENT
+
+    #define SOLUTION_PATH "c:\\Users\\frank\\source\\repos\\ImageRanker\\"
+    #define DATA_PATH SOLUTION_PATH "data\\"
+    #define IMAGES_PATH SOLUTION_PATH "images\\"
+    #define COLLECTOR_INPUT_OUTPUT_DATA_PATH SOLUTION_PATH "data\\to_collector\\"
+
+  #elif STAGING
+
+    #define SOLUTION_PATH "/home/devwesp/source/repos/ImageRankerCollector/"
+    #define DATA_PATH "/home/devwesp/source/repos/ImageRankerCollector/data/"
+    #define IMAGES_PATH "/home/devwesp/source/repos/ImageRankerCollector/public/images/"
+
+  #endif
+
+#elif USING_DATASET == 2
+
+  /*************************
+    Dataset 2
+  *************************/
+  //! Number of images in file data
+  #define NUM_ROWS 20000ULL
+  //! ID offset from file data
+  #define INDEX_OFFSET 1ULL
+
+  //#define IMAGES_LIST_FILENAME "files.txt"
+  #define IMAGES_LIST_FILENAME "dir_images.txt"  
+  #define COLUMN_INDEX_OF_FILENAME 4
+  #define FILES_FILE_LINE_LENGTH 90ULL
+  #define KEYWORD_CLASSES_FILENAME "keyword_classes.txt"
+  #define DEEP_FEATURES_FILENAME "Studenti_NasNetLarge.deep-features"
+  //#define SOFTMAX_BIN_FILE "Studenti_NasNetLarge.softmax"
+  #define SOFTMAX_BIN_FILE "Studenti_NasNetLarge.pre-softmax"
 
 
-//! Number of images in file data
-#define NUM_ROWS 20000ULL
-//! ID offset from file data
-#define INDEX_OFFSET 50ULL
 
-#define IMAGES_LIST_FILENAME "dir_images.txt"
-#define KEYWORD_CLASSES_FILENAME "keyword_classes.txt"
-#define DEEP_FEATURES_FILENAME "VBS2019_classification_NasNetMobile_20000.deep-features"
-#define IMAGE_PROB_VECTOR_BIN_FILENAME "VBS2019_classification_NasNetLarge_20000.softmax"
+  #if DEVELOPMENT
 
-#if DEVELOPMENT
+    #define SOLUTION_PATH "c:\\Users\\frank\\source\\repos\\ImageRanker\\"
+    #define DATA_PATH SOLUTION_PATH "data2\\"
+    #define IMAGES_PATH SOLUTION_PATH "images\\"
+    #define COLLECTOR_INPUT_OUTPUT_DATA_PATH SOLUTION_PATH "data\\to_collector\\"
 
-  #define SOLUTION_PATH "c:\\Users\\frank\\source\\repos\\ImageRanker\\"
-  #define DATA_PATH SOLUTION_PATH "data\\"
-  #define IMAGES_PATH SOLUTION_PATH "images\\"
-  #define COLLECTOR_INPUT_OUTPUT_DATA_PATH SOLUTION_PATH "data\\to_collector\\"
+  #elif STAGING
 
-#elif STAGING
+    #define SOLUTION_PATH "/home/devwesp/source/repos/ImageRankerCollector/"
+    #define DATA_PATH "/home/devwesp/source/repos/ImageRankerCollector/data2/"
+    #define IMAGES_PATH "/home/devwesp/source/repos/ImageRankerCollector/public/images/"
 
-  #define SOLUTION_PATH "/home/devwesp/source/repos/ImageRankerCollector/"
-  #define DATA_PATH "/home/devwesp/source/repos/ImageRankerCollector/data/"
-  #define IMAGES_PATH "/home/devwesp/source/repos/ImageRankerCollector/public/images/"
+  #endif
 
 #endif
 
