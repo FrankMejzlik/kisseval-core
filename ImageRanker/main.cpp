@@ -27,6 +27,16 @@ int main()
 
   auto output = ranker.SubmitUserQueriesWithResults(input);
 
+
+  auto result = ranker.GetNearKeywords("ca");
+
+  for (auto&& r : result)
+  {
+    std::cout << std::get<1>(r) <<std::endl;
+  }
+
+  
+
 #endif
 
   return -0;

@@ -51,6 +51,10 @@ public:
 
   using ImageReference = std::pair<size_t, std::string>;
 
+  //!
+  /*! <wordnetID, keyword, description> */
+  using KeywordReference = std::vector<std::tuple<size_t, std::string, std::string>>;
+
   enum QueryOrigin
   {
     cDeveloper,
@@ -84,7 +88,7 @@ public:
 
 
   ImageReference GetRandomImage() const;
-  std::vector< std::tuple<size_t, std::string, std::string> > GetNearKeywords(const std::string& prefix);
+  KeywordReference GetNearKeywords(const std::string& prefix);
 
   
 private:

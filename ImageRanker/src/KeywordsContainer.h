@@ -93,7 +93,7 @@ private:
       std::string aa{a};
       std::string bb{ b };
       std::transform(aa.begin(), aa.end(), aa.begin(), ::tolower);
-      std::transform(bb.begin(), bb.end(), aa.begin(), ::tolower);
+      std::transform(bb.begin(), bb.end(), bb.begin(), ::tolower);
 
       auto result = aa.compare(bb);
 

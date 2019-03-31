@@ -75,18 +75,9 @@ ImageRanker::ImageReference ImageRanker::GetRandomImage() const
 }
 
 
-std::vector< std::tuple<size_t, std::string, std::string> > ImageRanker::GetNearKeywords(const std::string& prefix)
+ImageRanker::KeywordReference ImageRanker::GetNearKeywords(const std::string& prefix)
 {
-  // Force lowercase
-  std::locale loc;
-  std::string lower;
-
-  for (auto elem : prefix)
-  {
-    lower.push_back(std::tolower(elem, loc));
-  }
-
-  return _keywords.GetNearKeywords(lower);
+  return _keywords.GetNearKeywords(prefix);
 }
 
 std::vector<ImageRanker::GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(std::vector<ImageRanker::GameSessionInputQuery> inputQueries, QueryOrigin origin)
