@@ -38,110 +38,107 @@
 #define SECONDARY_DB_ID 2
 
 
-#if GET_DATA_FROM_DB 
-   
-  /*!
-   * PRIMARY DB
-   */
-  //! 0: localhost testing
-  #if PRIMARY_DB_ID == 0
+/*!
+  * PRIMARY DB
+  */
+//! 0: localhost testing
+#if PRIMARY_DB_ID == 0
 
-    #define PRIMARY_DB_HOST "localhost"
-    #define PRIMARY_DB_PORT 3306ULL
-    #define PRIMARY_DB_USERNAME "image-ranker"
-    #define PRIMARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
-    #define PRIMARY_DB_DB_NAME "image-ranker-collector-test"
+  #define PRIMARY_DB_HOST "localhost"
+  #define PRIMARY_DB_PORT 3306ULL
+  #define PRIMARY_DB_USERNAME "image-ranker"
+  #define PRIMARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
+  #define PRIMARY_DB_DB_NAME "image-ranker-collector-test"
 
-  //! 1: localhost data1
-  #elif PRIMARY_DB_ID == 1
+//! 1: localhost data1
+#elif PRIMARY_DB_ID == 1
 
-    #define PRIMARY_DB_HOST "localhost"
-    #define PRIMARY_DB_PORT 3306ULL
-    #define PRIMARY_DB_USERNAME "image-ranker"
-    #define PRIMARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
-    #define PRIMARY_DB_DB_NAME "image-ranker-collector-data"    
+  #define PRIMARY_DB_HOST "localhost"
+  #define PRIMARY_DB_PORT 3306ULL
+  #define PRIMARY_DB_USERNAME "image-ranker"
+  #define PRIMARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
+  #define PRIMARY_DB_DB_NAME "image-ranker-collector-data"    
 
-  //! 2: localhost data2
-  #elif PRIMARY_DB_ID == 2
+//! 2: localhost data2
+#elif PRIMARY_DB_ID == 2
 
-    #define PRIMARY_DB_HOST "localhost"
-    #define PRIMARY_DB_PORT 3306ULL
-    #define PRIMARY_DB_USERNAME "image-ranker"
-    #define PRIMARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
-    #define PRIMARY_DB_DB_NAME "image-ranker-collector-data2"
+  #define PRIMARY_DB_HOST "localhost"
+  #define PRIMARY_DB_PORT 3306ULL
+  #define PRIMARY_DB_USERNAME "image-ranker"
+  #define PRIMARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
+  #define PRIMARY_DB_DB_NAME "image-ranker-collector-data2"
 
-  //! 3: linode data2
-  #elif PRIMARY_DB_ID == 3
+//! 3: linode data2
+#elif PRIMARY_DB_ID == 3
   
-    #define PRIMARY_DB_HOST "li1504-72.members.linode.com"
-    #define PRIMARY_DB_PORT 3306ULL
-    #define PRIMARY_DB_USERNAME "image-ranker"
-    #define PRIMARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
-    #define PRIMARY_DB_DB_NAME "image-ranker-collector-data"
+  #define PRIMARY_DB_HOST "li1504-72.members.linode.com"
+  #define PRIMARY_DB_PORT 3306ULL
+  #define PRIMARY_DB_USERNAME "image-ranker"
+  #define PRIMARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
+  #define PRIMARY_DB_DB_NAME "image-ranker-collector-data"
 
-  //! 4: linode data2
-  #elif PRIMARY_DB_ID == 4
+//! 4: linode data2
+#elif PRIMARY_DB_ID == 4
 
-    #define PRIMARY_DB_HOST "li1504-72.members.linode.com"
-    #define PRIMARY_DB_PORT 3306ULL
-    #define PRIMARY_DB_USERNAME "image-ranker"
-    #define PRIMARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
-    #define PRIMARY_DB_DB_NAME "image-ranker-collector-data2"
-
-  #endif
-
-
-  /*!
-   * SECONDARY DB
-   */
-  //! 0: localhost testing
-  #if SECONDARY_DB_ID == 0
-
-    #define SECONDARY_DB_HOST "localhost"
-    #define SECONDARY_DB_PORT 3306ULL
-    #define SECONDARY_DB_USERNAME "image-ranker"
-    #define SECONDARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
-    #define SECONDARY_DB_DB_NAME "image-ranker-collector-test"
-
-    //! 1: localhost data1
-  #elif SECONDARY_DB_ID == 1
-
-    #define SECONDARY_DB_HOST "localhost"
-    #define SECONDARY_DB_PORT 3306ULL
-    #define SECONDARY_DB_USERNAME "image-ranker"
-    #define SECONDARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
-    #define SECONDARY_DB_DB_NAME "image-ranker-collector-data"    
-
-    //! 2: localhost data2
-  #elif SECONDARY_DB_ID == 2
-
-    #define SECONDARY_DB_HOST "localhost"
-    #define SECONDARY_DB_PORT 3306ULL
-    #define SECONDARY_DB_USERNAME "image-ranker"
-    #define SECONDARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
-    #define SECONDARY_DB_DB_NAME "image-ranker-collector-data2"
-
-    //! 3: linode data2
-  #elif SECONDARY_DB_ID == 3
-
-    #define SECONDARY_DB_HOST "li1504-72.members.linode.com"
-    #define SECONDARY_DB_PORT 3306ULL
-    #define SECONDARY_DB_USERNAME "image-ranker"
-    #define SECONDARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
-    #define SECONDARY_DB_DB_NAME "image-ranker-collector-data"
-
-    //! 4: linode data2
-  #elif SECONDARY_DB_ID == 4
-
-    #define SECONDARY_DB_HOST "li1504-72.members.linode.com"
-    #define SECONDARY_DB_PORT 3306ULL
-    #define SECONDARY_DB_USERNAME "image-ranker"
-    #define SECONDARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
-    #define SECONDARY_DB_DB_NAME "image-ranker-collector-data2"
-
-  #endif
+  #define PRIMARY_DB_HOST "li1504-72.members.linode.com"
+  #define PRIMARY_DB_PORT 3306ULL
+  #define PRIMARY_DB_USERNAME "image-ranker"
+  #define PRIMARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
+  #define PRIMARY_DB_DB_NAME "image-ranker-collector-data2"
 
 #endif
+
+
+/*!
+  * SECONDARY DB
+  */
+//! 0: localhost testing
+#if SECONDARY_DB_ID == 0
+
+  #define SECONDARY_DB_HOST "localhost"
+  #define SECONDARY_DB_PORT 3306ULL
+  #define SECONDARY_DB_USERNAME "image-ranker"
+  #define SECONDARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
+  #define SECONDARY_DB_DB_NAME "image-ranker-collector-test"
+
+  //! 1: localhost data1
+#elif SECONDARY_DB_ID == 1
+
+  #define SECONDARY_DB_HOST "localhost"
+  #define SECONDARY_DB_PORT 3306ULL
+  #define SECONDARY_DB_USERNAME "image-ranker"
+  #define SECONDARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
+  #define SECONDARY_DB_DB_NAME "image-ranker-collector-data"    
+
+  //! 2: localhost data2
+#elif SECONDARY_DB_ID == 2
+
+  #define SECONDARY_DB_HOST "localhost"
+  #define SECONDARY_DB_PORT 3306ULL
+  #define SECONDARY_DB_USERNAME "image-ranker"
+  #define SECONDARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
+  #define SECONDARY_DB_DB_NAME "image-ranker-collector-data2"
+
+  //! 3: linode data2
+#elif SECONDARY_DB_ID == 3
+
+  #define SECONDARY_DB_HOST "li1504-72.members.linode.com"
+  #define SECONDARY_DB_PORT 3306ULL
+  #define SECONDARY_DB_USERNAME "image-ranker"
+  #define SECONDARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
+  #define SECONDARY_DB_DB_NAME "image-ranker-collector-data"
+
+  //! 4: linode data2
+#elif SECONDARY_DB_ID == 4
+
+  #define SECONDARY_DB_HOST "li1504-72.members.linode.com"
+  #define SECONDARY_DB_PORT 3306ULL
+  #define SECONDARY_DB_USERNAME "image-ranker"
+  #define SECONDARY_DB_PASSWORD "s5XurJ3uS3E52Gzm"
+  #define SECONDARY_DB_DB_NAME "image-ranker-collector-data2"
+
+#endif
+
 
 /*!
  * Files with data
@@ -156,14 +153,14 @@
 #define IMAGES_LIST_FILENAME "dir_images.txt"
 #define KEYWORD_CLASSES_FILENAME "keyword_classes.txt"
 #define DEEP_FEATURES_FILENAME "VBS2019_classification_NasNetMobile_20000.deep-features"
-#define SOFTMAX_BIN_FILENAME "VBS2019_classification_NasNetLarge_20000.softmax"
+#define IMAGE_PROB_VECTOR_BIN_FILENAME "VBS2019_classification_NasNetLarge_20000.softmax"
 
 #if DEVELOPMENT
 
-  #define SOLUTION_PATH "c:\\Users\\devwe\\source\\repos\\ImageRanker\\"
-  #define DATA_PATH "c:\\Users\\devwe\\source\\repos\\ImageRanker\\data\\"
-  #define IMAGES_PATH "c:\\Users\\devwe\\source\\repos\\ImageRanker\\data\\images\\"
-  #define COLLECTOR_INPUT_OUTPUT_DATA_PATH "c:\\Users\\devwe\\source\\repos\\ImageRanker\\data\\to_collector\\"
+  #define SOLUTION_PATH "c:\\Users\\frank\\source\\repos\\ImageRanker\\"
+  #define DATA_PATH SOLUTION_PATH "data\\"
+  #define IMAGES_PATH SOLUTION_PATH "images\\"
+  #define COLLECTOR_INPUT_OUTPUT_DATA_PATH SOLUTION_PATH "data\\to_collector\\"
 
 #elif STAGING
 

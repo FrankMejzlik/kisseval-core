@@ -17,6 +17,14 @@ ImageRanker::ImageRanker(
 {
 
 #if PUSH_DATA_TO_DB
+
+  // Connect to database
+  auto result{ _primaryDb.EstablishConnection() };
+  if (result != 0ULL)
+  {
+    LOG("Connecting to primary DB failed.");
+  }
+
   PushDataToDatabase();
 #endif
  
@@ -412,17 +420,96 @@ bool ImageRanker::LoadKeywordsFromDatabase(Database::Type type)
     return false;
   }
   
-  std::string query{"SELECT * FROM `keywords`;"};
+  std::string query{"SELECT `keywords`.`wordnet_id`, `keywords`.`vector_index`, `words`.`word`, `keywords`.`description` FROM `keywords` INNER JOIN `keyword_word` ON `keywords`.`wordnet_id` = `keyword_word`.`keyword_id` INNER JOIN `words` ON `keyword_word`.`word_id` = `words`.`id`;"};
 
   auto result = pDb->ResultQuery(query);
 
+  // Add hypernym and hyponym data to id
+  for (auto&& row : result.second)
+  {
+    // Hypernyms
+    std::string queryHypernyms{ "SELECT `hypernym_id` FROM `keywords_hypernyms` WHERE `keyword_id` = " + row[0] + ";" };
+    auto resultHyper = pDb->ResultQuery(queryHypernyms);
+    std::string hypernyms{ "" };
+    for (auto&& hyper : resultHyper.second)
+    {
+      hypernyms += hyper.front();
+      hypernyms += ";";
+    }
+
+    row.push_back(hypernyms);
+    
+
+    // Hyponyms
+    std::string queryHyponyms{ "SELECT `hyponyms_id` FROM `keywords_hyponyms` WHERE `keyword_id` = " + row[0] + ";" };
+    auto resultHypo = pDb->ResultQuery(queryHyponyms);
+    std::string hyponyms{ "" };
+    for (auto&& hypo : resultHypo.second)
+    {
+      hyponyms += hypo.front();
+      hyponyms += ";";
+    }
+
+    row.push_back(hyponyms);
+  }
+
+  // Load Keywords into data structures
+  _keywords = KeywordsContainer(std::move(result.second));
 
 
-  return false;
+  return true;
 }
 
 bool ImageRanker::LoadImagesFromDatabase(Database::Type type)
 {
+  Database* pDb{ nullptr };
+
+  if (type == Database::cPrimary)
+  {
+    pDb = &_primaryDb;
+  }
+  else if (type == Database::cSecondary)
+  {
+    pDb = &_secondaryDb;
+  }
+  else
+  {
+    LOG("NOT IMPLEMENTED!");
+    return false;
+  }
+
+  // Fetch data from db
+  std::string query{ "SELECT * FROM `images`;" };
+  auto result = pDb->ResultQuery(query);
+
+  // Iterate through all images
+  for (auto&& row : result.second)
+  {
+    std::stringstream imageIdSs{ row[0] };
+    size_t imageId;
+    imageIdSs >> imageId;
+      
+    std::string filename{ row[1] };
+
+    std::vector<float> probabilityVector;
+
+    std::string queryProVec{ "SELECT `probability` FROM `probability_vectors` WHERE `image_id` = " + std::to_string(imageId) + " ORDER BY `vector_index`;" };
+    auto resultProbVec = pDb->ResultQuery(queryProVec);
+
+    // Construct probability vector
+    for (auto&& prob : resultProbVec.second)
+    {
+      std::stringstream probSs{ prob.front() };
+
+      float probability;
+      probSs >> probability;
+
+      probabilityVector.push_back(probability);
+    }
+
+    _images.insert(std::make_pair(imageId, Image{ imageId, std::move(filename), std::move(probabilityVector) }));
+
+  }
   return false;
 }
 
@@ -459,7 +546,7 @@ float ImageRanker::ParseFloatLE(const Buffer& buffer, size_t startIndex) const
 }
 
 
-#if !GET_DATA_FROM_DB
+#if PUSH_DATA_TO_DB
 
 bool ImageRanker::PushImagesToDatabase()
 {
@@ -469,24 +556,38 @@ bool ImageRanker::PushImagesToDatabase()
   {
     // Start query
     std::string queryImages{ "INSERT IGNORE INTO images (`id`, `filename`) VALUES" };
-    std::string queryProbs{ "INSERT IGNORE INTO probability_vectors (`image_id`, `vector_index`, `probability`) VALUES" };
-
-    queryProbs.reserve(800000000ULL);
+    
 
     // Keywords then
     for (auto&& idImagePair : _images)
     {
-      std::string filename{_db.EscapeString(idImagePair.second._filename) };
+      std::string filename{ _primaryDb.EscapeString(idImagePair.second._filename) };
 
       queryImages.append("(");
       queryImages.append(std::to_string(idImagePair.second._imageId));
       queryImages.append(", '");
       queryImages.append(filename);
       queryImages.append("'),");
+    }
+
+    // Delete last comma
+    queryImages.pop_back();
+    // Add semicolon
+    queryImages.append(";");
+
+    // Send query
+    _primaryDb.NoResultQuery(queryImages);
+
+
+    for (auto&& idImagePair : _images)
+    {
+      std::string filename{ _primaryDb.EscapeString(idImagePair.second._filename) };
+
+      std::string queryProbs{ "INSERT IGNORE INTO probability_vectors (`image_id`, `vector_index`, `probability`) VALUES" };
 
       // Iterate through probability vector
       size_t i = 0ULL;
-      for (auto&& prob: idImagePair.second._probabilityVector)
+      for (auto&& prob : idImagePair.second._probabilityVector)
       {
         queryProbs.append("(");
         queryProbs.append(std::to_string(idImagePair.second._imageId));
@@ -502,19 +603,8 @@ bool ImageRanker::PushImagesToDatabase()
       queryProbs.pop_back();
       // Add semicolon
       queryProbs.append(";");
-      _db.NoResultQuery(queryProbs);
-      queryProbs.clear();
+      _primaryDb.NoResultQuery(queryProbs);
     }
-
-
-
-    // Delete last comma
-    queryImages.pop_back();
-    // Add semicolon
-    queryImages.append(";");
-
-    // Send query
-    _db.NoResultQuery(queryImages);
   }
 
   return true;
@@ -533,7 +623,7 @@ bool ImageRanker::PushDataToDatabase()
 
 bool ImageRanker::PushKeywordsToDatabase()
 {
-  bool result = _keywords.PushKeywordsToDatabase(_db);
+  bool result = _keywords.PushKeywordsToDatabase(_primaryDb);
 
   return false;
 }

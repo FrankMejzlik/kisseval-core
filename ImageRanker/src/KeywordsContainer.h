@@ -30,6 +30,7 @@ struct Keyword
     m_descEndIndex(descEndIndex),
     m_hypernyms(hypernyms),
     m_hyponyms(hyponyms)
+
   {}
 
 
@@ -48,11 +49,14 @@ public:
   KeywordsContainer() = default;
   KeywordsContainer(std::string_view keywordClassesFilepath);
 
+  //! Constructor from database data
+  KeywordsContainer(std::vector< std::vector<std::string>>&& data);
+
   std::vector<std::tuple<size_t, std::string, std::string>> GetNearKeywords(const std::string& prefix);
 
   Keyword* MapDescIndexToKeyword() const;
 
-#if !GET_DATA_FROM_DB
+#if PUSH_DATA_TO_DB
   bool PushKeywordsToDatabase(Database& db);
 #endif
 
@@ -62,6 +66,7 @@ public:
 
 private:
   bool ParseKeywordClassesFile(std::string_view filepath);
+  bool ParseKeywordDbDataStructure(std::vector< std::vector<std::string>>&& data);
 
   /*!
   * Functor for comparing our string=>wordnetId structure
@@ -100,7 +105,9 @@ private:
   //! Maps index from probability vector to Keyword
   std::map<size_t, Keyword*> _vecIndexToKeyword;
 
-#if !GET_DATA_FROM_DB
+#if PUSH_DATA_TO_DB
+  
+  std::vector<std::pair<size_t, std::string>> _keywordToWord;
   std::set<std::string> _words;
 #endif
 

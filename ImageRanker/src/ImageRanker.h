@@ -63,7 +63,7 @@ public:
 
   size_t GetRandomImageId() const;
 
-#if !GET_DATA_FROM_DB
+#if PUSH_DATA_TO_DB
   bool PushDataToDatabase();
   bool PushKeywordsToDatabase();
   bool PushImagesToDatabase();

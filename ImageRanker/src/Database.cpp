@@ -104,9 +104,11 @@ std::pair< size_t, std::vector< std::vector<std::string>>> Database::ResultQuery
 
 
   MYSQL_RES* data = mysql_store_result(_mysqlConnection);
+  size_t numRows = (size_t)mysql_num_rows(data);
   size_t numCols = (size_t)mysql_num_fields(data);
 
   std::vector< std::vector<std::string>> retData;
+  retData.reserve(numRows);
 
   MYSQL_ROW rawRow;
 
@@ -114,11 +116,18 @@ std::pair< size_t, std::vector< std::vector<std::string>>> Database::ResultQuery
   while ((rawRow = mysql_fetch_row(data)))
   {
     std::vector<std::string> row;
-    row.resize(numCols);
+    row.reserve(numCols);
 
     for(size_t i = 0ULL; i < numCols; ++i)
     {
-      row.push_back(row[i]);
+      // If null value
+      if (!rawRow[i])
+      {
+        row.push_back("");
+        continue;
+      }
+
+      row.push_back(rawRow[i]);
     }
 
     retData.push_back(row);
