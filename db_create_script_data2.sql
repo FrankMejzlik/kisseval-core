@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `image-ranker-collector-data2`.`words` (
   PRIMARY KEY (`id`),
   UNIQUE INDEX `word_UNIQUE` (`word` ASC))
 ENGINE = InnoDB
-AUTO_INCREMENT = 90227
+AUTO_INCREMENT = 93836
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_czech_ci;
 
@@ -158,15 +158,15 @@ CREATE TABLE IF NOT EXISTS `image-ranker-collector-data2`.`queries` (
   `query` LONGTEXT CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_bin' NOT NULL,
   `image_id` INT(11) NOT NULL,
   `type` INT(11) NOT NULL DEFAULT 0,
-  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
   PRIMARY KEY (`id`),
-  INDEX `fkImageId_idx` (`image_id` ASC) VISIBLE,
+  INDEX `fkImageId_idx` (`image_id` ASC),
   CONSTRAINT `fk_queries_image_id_to_images_id`
     FOREIGN KEY (`image_id`)
     REFERENCES `image-ranker-collector-data2`.`images` (`id`)
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 15
+AUTO_INCREMENT = 126
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_czech_ci;
 

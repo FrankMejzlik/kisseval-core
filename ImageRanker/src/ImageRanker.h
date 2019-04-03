@@ -45,9 +45,9 @@ public:
   using Buffer = std::vector<std::byte>;
   //! This is returned to front end app when some quesries are submited
   //! <SessionID, image filename, user keywords, net <keyword, probability> >
-  using GameSessionQueryResult = std::tuple<size_t, std::string, std::vector<std::string>, std::vector<std::pair<std::string, float>>>;
+  using GameSessionQueryResult = std::tuple<std::string, std::string, std::vector<std::string>, std::vector<std::pair<std::string, float>>>;
   //! Array of those is submited from front-end app game
-  using GameSessionInputQuery = std::tuple<size_t, size_t, std::string>;
+  using GameSessionInputQuery = std::tuple<std::string, size_t, std::string>;
 
   using ImageReference = std::pair<size_t, std::string>;
 
@@ -70,7 +70,12 @@ public:
     std::string_view imagesPath,
     std::string_view probabilityVectorFilepath,
     std::string_view deepFeaturesFilepath,
-    std::string_view keywordClassesFilepath
+    std::string_view keywordClassesFilepath,
+    std::string_view imagesListFilepath,
+    size_t columnIndexFilename,
+    size_t imageListFileLineLength,
+    size_t numRows,
+    size_t idOffset
   );
 
   //! Constructor with data from database
@@ -123,7 +128,7 @@ private:
 
   std::vector<std::string> TokenizeAndQuery(std::string_view query) const;
 
-  std::map<size_t, Image> ParseSoftmaxBinFile(std::string_view filepath) const;
+  std::map<size_t, Image> ParseSoftmaxBinFile(std::string_view filepath, std::string_view imageFilesFilepath) const;
 
   std::vector< std::pair< size_t, std::unordered_map<size_t, float> > > ParseSoftmaxBinFileFiltered(std::string_view filepath, float minProbabilty) const;
 
@@ -156,13 +161,25 @@ private:
   */
   float ParseFloatLE(const Buffer& buffer, size_t startIndex) const;
 
+  std::vector<std::string> ParseImageFilenamesTextFile(std::string_view filepath) const;
 
-public:
+private:
   Database _primaryDb;
 
   Database _secondaryDb;
 
   KeywordsContainer _keywords;
   std::map<size_t, Image> _images;
+  
+
+  std::string _imagesListFilepath;
+  std::string _imagesPath;
+  size_t _columnIndexFilename;
+  size_t _imageListFileLineLength;
+
+  size_t _numRows;
+  size_t _idOffset;
+
+
 
 };

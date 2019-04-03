@@ -7,6 +7,8 @@
 #define PRODUCTION 0
 
 
+#define MIN_DESC_SEARCH_LENGTH 3
+
 //! What is delimiter for synonyms in data files
 #define SYNONYM_DELIMITER '#'
 
@@ -17,7 +19,7 @@
 #define NUM_SUGESTIONS 5ULL
 
 //! If set to 1, loaded data from files will be inserted into PRIMARY db
-#define PUSH_DATA_TO_DB 0
+#define PUSH_DATA_TO_DB 1
 
 //! If 1, data will be loaded from database(s)
 #define GET_DATA_FROM_DB 0
@@ -34,7 +36,7 @@
  * 3: linode data1
  * 4: linode data2
  */
-#define PRIMARY_DB_ID 2
+#define PRIMARY_DB_ID 4
 #define SECONDARY_DB_ID 2
 
 
@@ -163,7 +165,7 @@
 
   #if DEVELOPMENT
 
-    #define SOLUTION_PATH "c:\\Users\\frank\\source\\repos\\ImageRanker\\"
+    #define SOLUTION_PATH "c:\\Users\\devwe\\source\\repos\\ImageRanker\\"
     #define DATA_PATH SOLUTION_PATH "data\\"
     #define IMAGES_PATH SOLUTION_PATH "images\\"
     #define COLLECTOR_INPUT_OUTPUT_DATA_PATH SOLUTION_PATH "data\\to_collector\\"
@@ -199,7 +201,7 @@
 
   #if DEVELOPMENT
 
-    #define SOLUTION_PATH "c:\\Users\\frank\\source\\repos\\ImageRanker\\"
+    #define SOLUTION_PATH "c:\\Users\\devwe\\source\\repos\\ImageRanker\\"
     #define DATA_PATH SOLUTION_PATH "data2\\"
     #define IMAGES_PATH SOLUTION_PATH "images\\"
     #define COLLECTOR_INPUT_OUTPUT_DATA_PATH SOLUTION_PATH "data\\to_collector\\"

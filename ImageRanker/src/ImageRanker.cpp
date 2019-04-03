@@ -5,16 +5,29 @@ ImageRanker::ImageRanker(
   std::string_view imagesPath,
   std::string_view probabilityVectorFilepath,
   std::string_view deepFeaturesFilepath,
-  std::string_view keywordClassesFilepath
+  std::string_view keywordClassesFilepath,
+  std::string_view imagesListFilepath,
+  size_t columnIndexFilename,
+  size_t imageListFileLineLength,
+  size_t numRows,
+  size_t idOffset
 ):
+  _imagesListFilepath(imagesListFilepath),
+  _columnIndexFilename(columnIndexFilename),
+  _imageListFileLineLength(imageListFileLineLength),
+  _imagesPath(imagesPath),
+  _numRows(numRows),
+  _idOffset(idOffset),
+
   // Parse keywords from file
   _keywords(keywordClassesFilepath),
 
   // Parse images and probabilities from file
-  _images(ParseSoftmaxBinFile(probabilityVectorFilepath)),
+  //_images(),
   _primaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
   _secondaryDb(SECONDARY_DB_HOST, SECONDARY_DB_PORT, SECONDARY_DB_USERNAME, SECONDARY_DB_PASSWORD, SECONDARY_DB_DB_NAME)
 {
+  _images = ParseSoftmaxBinFile(probabilityVectorFilepath, _imagesListFilepath);
 
   // Connect to database
   auto result{ _primaryDb.EstablishConnection() };
@@ -63,7 +76,7 @@ ImageRanker::ImageRanker(
 size_t ImageRanker::GetRandomImageId() const
 { 
   // Get random index
-  return static_cast<size_t>(GetRandomInteger(0, NUM_ROWS) * INDEX_OFFSET);
+  return static_cast<size_t>(GetRandomInteger(0, (int)_numRows) * _idOffset);
 }
 
 
@@ -77,7 +90,16 @@ ImageRanker::ImageReference ImageRanker::GetRandomImage() const
 
 ImageRanker::KeywordReference ImageRanker::GetNearKeywords(const std::string& prefix)
 {
-  return _keywords.GetNearKeywords(prefix);
+  // Force lowercase
+  std::locale loc;
+  std::string lower;
+
+  for (auto elem : prefix)
+  {
+    lower.push_back(std::tolower(elem, loc));
+  }
+
+  return _keywords.GetNearKeywords(lower);
 }
 
 std::vector<ImageRanker::GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(std::vector<ImageRanker::GameSessionInputQuery> inputQueries, QueryOrigin origin)
@@ -194,8 +216,50 @@ std::vector<std::string> ImageRanker::TokenizeAndQuery(std::string_view query) c
   return resultTokens;
 }
 
-std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepath) const
+std::vector<std::string> ImageRanker::ParseImageFilenamesTextFile(std::string_view filepath) const
 {
+  // Open file with list of files in images dir
+  std::ifstream inFile(_imagesListFilepath, std::ios::in);
+
+  // If failed to open file
+  if (!inFile)
+  {
+    throw std::runtime_error(std::string("Error opening file :") + _imagesListFilepath);
+  }
+
+  std::vector<std::string> result;
+  result.reserve(_numRows);
+
+  std::string line;
+
+  // While there are lines in file
+  while (std::getline(inFile, line))
+  {
+    // Extract file name
+    std::stringstream ss(line);
+
+    std::string columnData;
+
+    // Throw away correct number of columns
+    for (size_t i = 0ULL; i < _columnIndexFilename; ++i)
+    {
+      ss >> columnData;
+    }
+
+    // Get file name
+    ss >> columnData;
+
+    result.emplace_back(columnData);
+  }
+
+  // Return result filepath 
+  return result;
+}
+
+std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepath, std::string_view imageFilesFilepath) const
+{
+  std::vector<std::string> imageFilenames{ParseImageFilenamesTextFile(imageFilesFilepath)};
+
   // Create buffer from file
   Buffer buffer = LoadFileToBuffer(filepath);
 
@@ -240,7 +304,7 @@ std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepa
     }
 
     // Get image filename 
-    std::string filename{ GetImageFilepathByIndex(id / INDEX_OFFSET, true) };
+    std::string filename{ imageFilenames[id / _idOffset] };
 
     // Sort probabilites
     std::sort(
@@ -459,18 +523,17 @@ std::string ImageRanker::GetImageFilenameById(size_t imageId) const
 
 std::string ImageRanker::GetImageFilepathByIndex(size_t imgIndex, bool relativePaths) const
 {
-  constexpr const char fileFilepath[] = DATA_PATH IMAGES_LIST_FILENAME;
 
   // Open file with list of files in images dir
-  std::ifstream inFile(fileFilepath, std::ios::in);
+  std::ifstream inFile(_imagesListFilepath, std::ios::in);
 
   // If failed to open file
   if (!inFile)
   {
-    throw std::runtime_error(std::string("Error opening file :") + fileFilepath);
+    throw std::runtime_error(std::string("Error opening file :") + _imagesListFilepath);
   }
 
-  size_t desiredByteIndex = imgIndex * FILES_FILE_LINE_LENGTH;
+  size_t desiredByteIndex = imgIndex * _imageListFileLineLength;
 
   //size_t desiredByteIndex = 0ULL;
   
@@ -488,7 +551,7 @@ std::string ImageRanker::GetImageFilepathByIndex(size_t imgIndex, bool relativeP
   std::string columnData;
 
   // Throw away correct number of columns
-  for (size_t i = 0ULL; i < COLUMN_INDEX_OF_FILENAME; ++i)
+  for (size_t i = 0ULL; i < _columnIndexFilename; ++i)
   {
     ss >> columnData;
   }
@@ -504,7 +567,7 @@ std::string ImageRanker::GetImageFilepathByIndex(size_t imgIndex, bool relativeP
   }
   else
   {
-    result = std::string(IMAGES_PATH + columnData);
+    result = std::string(_imagesPath + columnData);
   }
 
 

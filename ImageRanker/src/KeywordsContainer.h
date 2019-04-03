@@ -55,7 +55,7 @@ public:
 
   std::vector<std::tuple<size_t, std::string, std::string>> GetNearKeywords(const std::string& prefix);
 
-  Keyword* MapDescIndexToKeyword() const;
+  Keyword* MapDescIndexToKeyword(size_t descIndex) const;
 
 #if PUSH_DATA_TO_DB
   bool PushKeywordsToDatabase(Database& db);
@@ -101,6 +101,8 @@ private:
     }   
   };
 
+  std::vector<size_t> FindAllNeedles(std::string_view hey, std::string_view needle);
+
 private:
   std::vector< std::unique_ptr<Keyword> > _keywords;
 
@@ -112,6 +114,10 @@ private:
 
   //! Maps index from probability vector to Keyword
   std::map<size_t, Keyword*> _vecIndexToKeyword;
+
+  std::vector<std::pair<size_t, Keyword*>> _descIndexToKeyword;
+
+  size_t _approxDescLen;
 
 #if PUSH_DATA_TO_DB
   
