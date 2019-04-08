@@ -6,6 +6,8 @@
 #define STAGING 0
 #define PRODUCTION 0
 
+//! Will throw exception on LOG_ERROR
+#define THROW_ON_ERROR 1
 
 #define MIN_DESC_SEARCH_LENGTH 3
 
@@ -19,7 +21,7 @@
 #define NUM_SUGESTIONS 5ULL
 
 //! If set to 1, loaded data from files will be inserted into PRIMARY db
-#define PUSH_DATA_TO_DB 1
+#define PUSH_DATA_TO_DB 0
 
 //! If 1, data will be loaded from database(s)
 #define GET_DATA_FROM_DB 0
@@ -36,7 +38,7 @@
  * 3: linode data1
  * 4: linode data2
  */
-#define PRIMARY_DB_ID 4
+#define PRIMARY_DB_ID 2
 #define SECONDARY_DB_ID 2
 
 
@@ -218,8 +220,21 @@
 
 #define GENERATE_COLLECTOR_INPUT_DATA 1
 
-//! Basic LOG macro
-#define LOG(x) std::cout << x << std::endl
+
+//! Standard logging macro
+#define LOG(x) std::cout << x << std::endl;
+
+//! Basic log error macro
+#if THROW_ON_ERROR
+
+  #define LOG_ERROR(x) std::cout << "ERROR: " << x << std::endl; throw std::runtime_error(std::string(x));
+
+#elif
+
+  #define LOG_ERROR(x) std::cout << "ERROR: " << x << std::endl;
+
+#endif
+
 
 
  //! Error value for size_t types

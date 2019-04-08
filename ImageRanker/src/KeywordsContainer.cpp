@@ -22,6 +22,7 @@ KeywordsContainer::KeywordsContainer(std::string_view keywordClassesFilepath)
 
 
 
+
 KeywordsContainer::KeywordsContainer(std::vector< std::vector<std::string>>&& data)
 {
   // Parse data
@@ -124,6 +125,41 @@ bool KeywordsContainer::ParseKeywordDbDataStructure(std::vector< std::vector<std
 
   }
   return true;
+}
+
+
+std::vector<size_t> KeywordsContainer::GetVectorKeywords(size_t wordnetId) const
+{
+  // Find root keyword
+  auto wordnetIdKeywordPair = _wordnetIdToKeywords.find(wordnetId);
+
+  if (wordnetIdKeywordPair == _wordnetIdToKeywords.end()) 
+  {
+    LOG_ERROR("Keyword not found!");
+
+    return std::vector<size_t>();
+  }
+
+  Keyword* pRootKeyword = wordnetIdKeywordPair->second;
+
+  // It not vector keyword
+  if (pRootKeyword->m_vectorIndex == SIZE_T_ERROR_VALUE)
+  {
+    std::vector<size_t> result{ wordnetId };
+
+    // Recursively get hyponyms
+    for (auto&& hypo : pRootKeyword->m_hyponyms) 
+    {
+      auto recur = GetVectorKeywords(hypo);
+      result.resize(result.size() + recur.size());
+      result.insert(result.end(),  recur.begin(), recur.end());
+    }
+    
+    return result;
+  }
+
+  // If vector word, return self
+  return std::vector<size_t>{ pRootKeyword->m_wordnetId };
 }
 
 bool KeywordsContainer::ParseKeywordClassesFile(std::string_view filepath)

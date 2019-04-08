@@ -34,7 +34,6 @@ struct Keyword
 
   {}
 
-
   size_t m_wordnetId;
   size_t m_vectorIndex;
   size_t m_descStartIndex;
@@ -65,6 +64,14 @@ public:
   std::string GetKeywordByVectorIndex(size_t index) const;
 
   std::string GetKeywordDescriptionByWordnetId(size_t wordnetId);
+
+
+  /*!
+   * Returns vector of keywords that are present in ranking vector of images.
+   *
+   * \return
+   */
+  std::vector<size_t> GetVectorKeywords(size_t wordnetId) const;
 
 private:
   bool ParseKeywordClassesFile(std::string_view filepath);
@@ -104,6 +111,7 @@ private:
   std::vector<size_t> FindAllNeedles(std::string_view hey, std::string_view needle);
 
 private:
+  //! Keywords
   std::vector< std::unique_ptr<Keyword> > _keywords;
 
   //! Maps wordnetID to Keyword

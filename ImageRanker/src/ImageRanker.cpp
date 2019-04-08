@@ -33,7 +33,7 @@ ImageRanker::ImageRanker(
   auto result{ _primaryDb.EstablishConnection() };
   if (result != 0ULL)
   {
-    LOG("Connecting to primary DB failed.");
+    LOG_ERROR("Connecting to primary DB failed.");
   }
 
 #if PUSH_DATA_TO_DB
@@ -54,7 +54,7 @@ ImageRanker::ImageRanker(
   auto result{ _primaryDb.EstablishConnection() };
   if (result != 0ULL)
   {
-    LOG("Connecting to primary DB failed.");
+    LOG_ERROR("Connecting to primary DB failed.");
   }
 
 #if USE_SECONDARY_DB
@@ -63,7 +63,7 @@ ImageRanker::ImageRanker(
   auto result{ _secondaryDb.EstablishConnection() };
   if (result != 0ULL)
   {
-    LOG("Connecting to secondary DB failed.");
+    LOG_ERROR("Connecting to secondary DB failed.");
   }
 
 #endif
@@ -131,7 +131,7 @@ std::vector<ImageRanker::GameSessionQueryResult> ImageRanker::SubmitUserQueriesW
   auto result = _primaryDb.NoResultQuery(sqlQuery);
   if (result != 0)
   {
-    LOG("Inserting queries into DB failed");
+    LOG_ERROR("Inserting queries into DB failed");
   }
 
   /******************************
@@ -167,7 +167,7 @@ std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(s
   // If no such image
   if (imagePair == _images.end())
   {
-    LOG("No image found!");
+    LOG_ERROR("No image found!");
     return std::vector<std::pair<std::string, float>>();
   }
 
@@ -514,7 +514,7 @@ std::string ImageRanker::GetImageFilenameById(size_t imageId) const
 
   if (imgPair == _images.end())
   {
-    LOG("Image not found");
+    LOG_ERROR("Image not found");
   }
 
   return imgPair->second._filename;
@@ -637,7 +637,7 @@ bool ImageRanker::LoadKeywordsFromDatabase(Database::Type type)
   }
   else
   {
-    LOG("NOT IMPLEMENTED!");
+    LOG_ERROR("NOT IMPLEMENTED!");
     return false;
   }
   
@@ -695,7 +695,7 @@ bool ImageRanker::LoadImagesFromDatabase(Database::Type type)
   }
   else
   {
-    LOG("NOT IMPLEMENTED!");
+    LOG_ERROR("NOT IMPLEMENTED!");
     return false;
   }
 

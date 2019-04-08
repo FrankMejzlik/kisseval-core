@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include <iostream>
 #include <assert.h>
 #include <fstream>
@@ -84,6 +85,18 @@ public:
   );
 
   ~ImageRanker() noexcept = default;
+
+  void TestCall()
+  {
+    auto keywords = _keywords.GetVectorKeywords(2452ULL);
+
+    std::cout << "KEYWORD: " << GetKeywordByWordnetId(2452ULL) << std::endl;
+
+    for (auto&& keywordId : keywords)
+    {
+      std::cout << GetKeywordByWordnetId(keywordId) << std::endl;
+    }
+  }
 
 
   /*!
