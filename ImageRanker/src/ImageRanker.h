@@ -34,11 +34,15 @@ struct Image
     _imageId(id),
     _filename(std::move(filename)),
     _probabilityVector(std::move(probVector))
+
+
   {}
 
   size_t _imageId;
   std::string _filename;
   std::vector<std::pair<size_t, float>> _probabilityVector;
+
+
 };
 
 
@@ -58,6 +62,11 @@ public:
   //!
   /*! <wordnetID, keyword, description> */
   using KeywordReference = std::vector<std::tuple<size_t, std::string, std::string>>;
+
+  enum RankingModel 
+  {
+    cBoolean
+  };
 
   enum QueryOrigin
   {
@@ -118,6 +127,12 @@ public:
 
 #endif
 
+
+  //////////////////////////
+  //    API Methods
+  //////////////////////////
+  // vvvvvvvvvvvvvvvvvvvvvvv
+
   /*!
    * This processes input queries that come from users, generates results and sends them back
    */
@@ -127,6 +142,15 @@ public:
   ImageReference GetRandomImage() const;
   KeywordReference GetNearKeywords(const std::string& prefix);
 
+  std::vector<std::pair<size_t, size_t>> RunModelTest(QueryOrigin queryOrigin, RankingModel rankingModel = DEFAULT_RANKING_MODEL) const;
+
+  std::vector<ImageReference> GetRelevantImages(const std::string& query, RankingModel rankingModel = DEFAULT_RANKING_MODEL) const;
+
+
+  // ^^^^^^^^^^^^^^^^^^^^^^^
+  //////////////////////////
+  //    API Methods
+  //////////////////////////
   
 private:
 #if PUSH_DATA_TO_DB
@@ -135,8 +159,8 @@ private:
   bool PushImagesToDatabase();
 #endif
 
+  
   size_t GetRandomImageId() const;
-
   
 
   std::string GetKeywordByWordnetId(size_t wordnetId)
