@@ -171,6 +171,7 @@
     <ClInclude Include="src\Database.h" />
     <ClInclude Include="src\ImageRanker.h" />
     <ClInclude Include="src\KeywordsContainer.h" />
+    <ClInclude Include="src\utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

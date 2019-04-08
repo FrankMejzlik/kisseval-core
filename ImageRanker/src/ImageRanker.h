@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <sstream>
 #include <random>
+#include <sstream>
 #include <queue>
 
 #include <map>
@@ -19,6 +20,8 @@
 #include <locale>
 
 #include "config.h"
+
+#include "utility.h"
 #include "Database.h"
 #include "KeywordsContainer.h"
 
@@ -86,11 +89,15 @@ public:
 
   ~ImageRanker() noexcept = default;
 
-  void TestCall()
-  {
-    auto keywords = _keywords.GetVectorKeywords(2452ULL);
+  // Testing
+# if 1 
 
-    std::cout << "KEYWORD: " << GetKeywordByWordnetId(2452ULL) << std::endl;
+  void TEST_GetVectorKeywords(size_t wordnetId)
+  {
+    auto keywords = _keywords.GetVectorKeywords(wordnetId);
+
+    std::cout << "===========" << std::endl;
+    std::cout << "KEYWORD: " << GetKeywordByWordnetId(wordnetId) << std::endl;
 
     for (auto&& keywordId : keywords)
     {
@@ -98,6 +105,18 @@ public:
     }
   }
 
+
+  void TEST_GetCanonicalQuery(const std::string& query)
+  {
+    CnfFormula fml = _keywords.GetCanonicalQuery(query);
+
+    std::cout << "===========" << std::endl;
+    std::cout << "QUERY: " << query << std::endl;
+    std::cout << _keywords.StringifyCnfFormula(fml) << std::endl;
+
+  }
+
+#endif
 
   /*!
    * This processes input queries that come from users, generates results and sends them back

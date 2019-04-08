@@ -585,6 +585,7 @@ int ImageRanker::GetRandomInteger(int from, int to) const
   return randFromDistribution(rng);
 }
 
+
 std::vector<std::byte> ImageRanker::LoadFileToBuffer(std::string_view filepath) const
 {
   // Open file for reading as binary

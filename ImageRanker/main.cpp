@@ -56,10 +56,12 @@ int main()
   }*/
 
 
-  ranker.TestCall();
+  ranker.TEST_GetVectorKeywords(4258ULL);
+  ranker.TEST_GetCanonicalQuery("party&wedding party&disco&stage");
+
 
 #endif
 
-  return -0;
+  return 0;
 
 }

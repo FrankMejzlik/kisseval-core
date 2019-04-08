@@ -151,7 +151,7 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywords(size_t wordnetId) const
     for (auto&& hypo : pRootKeyword->m_hyponyms) 
     {
       auto recur = GetVectorKeywords(hypo);
-      result.resize(result.size() + recur.size());
+      result.reserve(result.size() + recur.size());
       result.insert(result.end(),  recur.begin(), recur.end());
     }
     
@@ -162,10 +162,27 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywords(size_t wordnetId) const
   return std::vector<size_t>{ pRootKeyword->m_wordnetId };
 }
 
+
+CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query) const
+{
+  // Tokenize query
+  auto tokens = SplitString(query, '&');
+
+  std::vector<Clause> resultFormula;
+
+  // Get clauses from all tokens
+  for (auto&& token : tokens) 
+  {
+    Keyword* pKeyword = GetKeywordByWord(token);
+
+    resultFormula.emplace_back(GetVectorKeywords(pKeyword->m_wordnetId));
+  }
+
+  return resultFormula;
+}
+
 bool KeywordsContainer::ParseKeywordClassesFile(std::string_view filepath)
 {
-  
-
   // Open file with list of files in images dir
   std::ifstream inFile(filepath.data(), std::ios::in);
 
@@ -245,7 +262,7 @@ bool KeywordsContainer::ParseKeywordClassesFile(std::string_view filepath)
     // Get all hyperyms
     std::vector<size_t> hyperyms;
 
-    std::stringstream hyperymsSs(tokens[3]);
+    std::stringstream hyperymsSs(tokens[4]);
     std::string stringHypernym;
 
     while (std::getline(hyperymsSs, stringHypernym, SYNONYM_DELIMITER))
