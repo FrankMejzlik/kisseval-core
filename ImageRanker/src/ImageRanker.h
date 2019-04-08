@@ -29,7 +29,10 @@ using namespace std::string_literals;
 
 struct Image
 {
-  Image() = delete;
+  Image(): 
+    m_imageId(SIZE_T_ERROR_VALUE),
+    m_filename(""s)
+  {};
   Image(size_t id, std::string&& filename, std::vector<std::pair<size_t, float>>&& probVector):
     m_imageId(id),
     m_filename(std::move(filename)),
@@ -53,6 +56,11 @@ struct Image
 };
 
 
+struct ImageData 
+{
+
+};
+
 class ImageRanker
 {
   // Structures
@@ -65,6 +73,8 @@ public:
   using GameSessionInputQuery = std::tuple<std::string, size_t, std::string>;
 
   using ImageReference = std::pair<size_t, std::string>;
+  using ImageData = Image;
+
 
   //!
   /*! <wordnetID, keyword, description> */
@@ -140,6 +150,18 @@ public:
   //    API Methods
   //////////////////////////
   // vvvvvvvvvvvvvvvvvvvvvvv
+
+  /*!
+   * Gets all data about image with provided ID
+   * 
+   * \param imageId
+   * \return 
+   */
+  ImageData GetImageDataById(size_t imageId) const;
+  std::string GetKeywordByVectorIndex(size_t index) const
+  {
+    return _keywords.GetKeywordByVectorIndex(index);
+  }
 
   /*!
    * This processes input queries that come from users, generates results and sends them back
