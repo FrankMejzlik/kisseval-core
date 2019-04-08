@@ -31,16 +31,23 @@ struct Image
 {
   Image() = delete;
   Image(size_t id, std::string&& filename, std::vector<std::pair<size_t, float>>&& probVector):
-    _imageId(id),
-    _filename(std::move(filename)),
-    _probabilityVector(std::move(probVector))
-
-
+    m_imageId(id),
+    m_filename(std::move(filename)),
+    m_probabilityVector(std::move(probVector))
   {}
 
-  size_t _imageId;
-  std::string _filename;
-  std::vector<std::pair<size_t, float>> _probabilityVector;
+  Image(size_t id, std::string&& filename, std::vector<std::pair<size_t, float>>&& probVector, std::vector<std::pair<size_t, uint8_t>>&& boolVector) :
+    m_imageId(id),
+    m_filename(std::move(filename)),
+    m_probabilityVector(std::move(probVector)),
+    m_booleanProbVector(boolVector)
+  {
+  }
+
+  size_t m_imageId;
+  std::string m_filename;
+  std::vector<std::pair<size_t, float>> m_probabilityVector;
+  std::vector<std::pair<size_t, uint8_t>> m_booleanProbVector;
 
 
 };
@@ -65,7 +72,8 @@ public:
 
   enum RankingModel 
   {
-    cBoolean
+    cBoolean,
+    cFuzzyLogic
   };
 
   enum QueryOrigin
@@ -162,6 +170,9 @@ private:
   
   size_t GetRandomImageId() const;
   
+
+  std::vector<ImageReference> GetRelevantImagesBooleanModel(const std::string& query) const;
+  std::vector<ImageReference> GetRelevantImagesFuzzyLogicModel(const std::string& query) const;
 
   std::string GetKeywordByWordnetId(size_t wordnetId)
   {

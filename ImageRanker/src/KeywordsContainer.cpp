@@ -145,7 +145,7 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywords(size_t wordnetId) const
   // It not vector keyword
   if (pRootKeyword->m_vectorIndex == SIZE_T_ERROR_VALUE)
   {
-    std::vector<size_t> result{ wordnetId };
+    std::vector<size_t> result;
 
     // Recursively get hyponyms
     for (auto&& hypo : pRootKeyword->m_hyponyms) 
@@ -162,6 +162,41 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywords(size_t wordnetId) const
   return std::vector<size_t>{ pRootKeyword->m_wordnetId };
 }
 
+std::vector<size_t> KeywordsContainer::GetVectorKeywordsIndices(size_t wordnetId) const
+{
+  // Find root keyword
+  auto wordnetIdKeywordPair = _wordnetIdToKeywords.find(wordnetId);
+
+  if (wordnetIdKeywordPair == _wordnetIdToKeywords.end())
+  {
+    LOG_ERROR("Keyword not found!");
+
+    return std::vector<size_t>();
+  }
+
+  Keyword* pRootKeyword = wordnetIdKeywordPair->second;
+
+  // It not vector keyword
+  if (pRootKeyword->m_vectorIndex == SIZE_T_ERROR_VALUE)
+  {
+    std::vector<size_t> result;
+
+    // Recursively get hyponyms
+    for (auto&& hypo : pRootKeyword->m_hyponyms)
+    {
+      auto recur = GetVectorKeywordsIndices(hypo);
+      result.reserve(result.size() + recur.size());
+      result.insert(result.end(), recur.begin(), recur.end());
+    }
+
+    return result;
+  }
+ 
+
+  // If vector word, return self
+  return std::vector<size_t>{ pRootKeyword->m_vectorIndex };
+}
+
 
 CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query) const
 {
@@ -175,7 +210,7 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query) const
   {
     Keyword* pKeyword = GetKeywordByWord(token);
 
-    resultFormula.emplace_back(GetVectorKeywords(pKeyword->m_wordnetId));
+    resultFormula.emplace_back(GetVectorKeywordsIndices(pKeyword->m_wordnetId));
   }
 
   return resultFormula;

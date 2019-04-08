@@ -28,6 +28,8 @@ ImageRanker::ImageRanker(
   _secondaryDb(SECONDARY_DB_HOST, SECONDARY_DB_PORT, SECONDARY_DB_USERNAME, SECONDARY_DB_PASSWORD, SECONDARY_DB_DB_NAME)
 {
   _images = ParseSoftmaxBinFile(probabilityVectorFilepath, _imagesListFilepath);
+  
+
 
   // Connect to database
   auto result{ _primaryDb.EstablishConnection() };
@@ -86,7 +88,6 @@ ImageRanker::ImageReference ImageRanker::GetRandomImage() const
 
   return ImageReference{ imageId, GetImageFilenameById(imageId) };
 }
-
 
 ImageRanker::KeywordReference ImageRanker::GetNearKeywords(const std::string& prefix)
 {
@@ -175,7 +176,7 @@ std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(s
   std::vector<std::pair<std::string, float>> result;
   result.reserve(N);
 
-  auto probabilites = imagePair->second._probabilityVector;
+  auto probabilites = imagePair->second.m_probabilityVector;
 
   // Get first N highest probabilites
   for (size_t i = 0ULL; i < N; ++i)
@@ -290,14 +291,32 @@ std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepa
 
     // Initialize vector of floats for this row
     std::vector<std::pair<size_t, float>> floats;
+    std::vector<std::pair<size_t, uint8_t>> boolVector;
+
     // Reserve exact capacitys
     floats.reserve(numFloats);
 
     // Iterate through all floats in row
     for (size_t i = 0; i < numFloats; ++i)
     {
+      float probability{ ParseFloatLE(buffer, currOffset) };
+
       // Push float value in
-      floats.push_back(std::make_pair(i, ParseFloatLE(buffer, currOffset)));
+      floats.push_back(std::make_pair(i, probability));
+
+    #if GENERATE_BOOL_IMAGE_VECTOR_NAIVELY
+
+      if (probability >= IS_TRUE_TRESHOLD)
+      {
+        boolVector.push_back(std::pair(i, 1));
+      }
+      else 
+      {
+        boolVector.push_back(std::pair(i, 0));
+      }
+      
+    #endif
+
 
       // Stride in bytes
       currOffset += sizeof(float);
@@ -316,7 +335,7 @@ std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepa
     );
 
     // Push final row
-    images.emplace(std::make_pair(id, Image(id, std::move(filename), std::move(floats))));
+    images.emplace(std::make_pair(id, Image(id, std::move(filename), std::move(floats), std::move(boolVector))));
   }
 
   
@@ -324,7 +343,80 @@ std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepa
   return images;
 }
 
-std::vector< std::pair< size_t, std::unordered_map<size_t, float> > > ImageRanker::ParseSoftmaxBinFileFiltered(std::string_view filepath, float minProbabilty) const 
+
+std::vector<ImageRanker::ImageReference> ImageRanker::GetRelevantImages(const std::string& query, RankingModel rankingModel) const
+{
+  switch (rankingModel) 
+  {
+  case ImageRanker::cBoolean:
+    return GetRelevantImagesBooleanModel(query);
+    break;
+
+  case ImageRanker::cFuzzyLogic:
+    return GetRelevantImagesFuzzyLogicModel(query);
+    break;
+  }
+
+  return std::vector<ImageRanker::ImageReference>();
+}
+
+
+
+std::vector<ImageRanker::ImageReference> ImageRanker::GetRelevantImagesFuzzyLogicModel(const std::string& query) const
+{
+  return std::vector<ImageRanker::ImageReference>();
+}
+
+std::vector<ImageRanker::ImageReference> ImageRanker::GetRelevantImagesBooleanModel(const std::string& query) const
+{
+  CnfFormula fml = _keywords.GetCanonicalQuery(query);
+
+
+  std::vector<ImageRanker::ImageReference> result;
+
+  // Check every image if satisfies query formula
+  for (auto&& idImgPair : _images) 
+  {
+    const Image& img{ idImgPair.second };
+    bool imageSucc{true};
+
+    // Itarate through clauses connected with AND
+    for (auto&& clause : fml) 
+    {
+      bool clauseSucc{ false };
+
+      // Iterate through predicates
+      for (auto&& var : clause) 
+      {
+        // If this variable satisfies this clause
+        if (img.m_booleanProbVector[var].second != 0) 
+        {
+          clauseSucc = true;
+          break;
+        }
+      }
+
+      // If this clause not satisfied
+      if (!clauseSucc) 
+      {
+        imageSucc = false;
+        break;
+      }
+    }
+
+    // If image satisfies formula
+    if (imageSucc) 
+    {
+      // Insert this file into result set
+      result.emplace_back(std::pair(img.m_imageId, img.m_filename));
+    }
+
+  }
+
+  return result;
+}
+
+std::vector< std::pair< size_t, std::unordered_map<size_t, float>>> ImageRanker::ParseSoftmaxBinFileFiltered(std::string_view filepath, float minProbabilty) const 
 {
   // Create buffer from file
   Buffer buffer = LoadFileToBuffer(filepath);
@@ -517,7 +609,7 @@ std::string ImageRanker::GetImageFilenameById(size_t imageId) const
     LOG_ERROR("Image not found");
   }
 
-  return imgPair->second._filename;
+  return imgPair->second.m_filename;
 }
 
 

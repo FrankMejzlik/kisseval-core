@@ -60,6 +60,13 @@ int main()
   ranker.TEST_GetCanonicalQuery("party&wedding party&disco&stage");
 
 
+  auto resultImages = ranker.GetRelevantImages("party&wedding party&disco&stage");
+
+  for (auto&& imgPair : resultImages)
+  {
+    std::cout << imgPair.second << std::endl;
+  }
+
 #endif
 
   return 0;

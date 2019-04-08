@@ -101,6 +101,8 @@ public:
    */
   std::vector<size_t> GetVectorKeywords(size_t wordnetId) const;
 
+  std::vector<size_t> GetVectorKeywordsIndices(size_t wordnetId) const;
+
 
   std::string StringifyCnfFormula(const CnfFormula& formula)
   {
@@ -110,9 +112,9 @@ public:
     {
       result += "(";
 
-      for (auto&& var : clause)
+      for (auto&& vecIndex : clause)
       {
-        result += GetKeywordByWordnetId(var) + " | "s;
+        result += GetKeywordByVectorIndex(vecIndex) + " | "s;
       }
       result.pop_back();
       result.pop_back();
