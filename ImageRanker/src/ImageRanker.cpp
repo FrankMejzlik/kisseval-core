@@ -443,8 +443,9 @@ ImageRanker::ChartData ImageRanker::RunBooleanCustomModelTest(ImageRanker::Query
   // Compute final chart values
   for (auto&& r : result)
   {
+    uint32_t tmp{ r.second };
     r.second = currCount;
-    currCount += r.second;
+    currCount += tmp;
   }
 
   return result;
