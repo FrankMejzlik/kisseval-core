@@ -2,13 +2,18 @@
 
 #include <stdint.h>
 
-#define DEFAULT_RANKING_MODEL ImageRanker::cBoolean
+#define DEFAULT_RANKING_MODEL ImageRanker::cBooleanCustom
+
+#define CHART_DENSITY 100
 
 /*!
   * Boolean model settings
   */
 #define GENERATE_BOOL_IMAGE_VECTOR_NAIVELY 1 
-#define IS_TRUE_TRESHOLD 0.01f
+#define IS_TRUE_TRESHOLD 0.005f
+
+
+#define NUM_IMAGES_PER_PAGE 200
 
 #define DEVELOPMENT 1
 #define STAGING 0
@@ -46,7 +51,7 @@
  * 3: linode data1
  * 4: linode data2
  */
-#define PRIMARY_DB_ID 2
+#define PRIMARY_DB_ID 4
 #define SECONDARY_DB_ID 2
 
 

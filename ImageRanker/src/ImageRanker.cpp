@@ -18,7 +18,7 @@ ImageRanker::ImageRanker(
   _imagesPath(imagesPath),
   _numRows(numRows),
   _idOffset(idOffset),
-
+  _currBoolModelProbTreshold(IS_TRUE_TRESHOLD),
   // Parse keywords from file
   _keywords(keywordClassesFilepath),
 
@@ -45,6 +45,8 @@ ImageRanker::ImageRanker(
 #endif
  
 }
+
+
 
 ImageRanker::ImageRanker(
   std::string_view imagesPath
@@ -101,6 +103,21 @@ ImageRanker::KeywordReference ImageRanker::GetNearKeywords(const std::string& pr
   }
 
   return _keywords.GetNearKeywords(lower);
+}
+
+
+ImageRanker::ImageData ImageRanker::GetImageDataById(size_t imageId) const
+{
+  auto imgIdImgPair = _images.find(imageId);
+
+  if (imgIdImgPair == _images.end())
+  {
+    LOG_ERROR("Image not found.")
+    return ImageRanker::ImageData();
+  }
+
+  // Return copy to this Image instance
+  return ImageRanker::ImageData(imgIdImgPair->second);
 }
 
 std::vector<ImageRanker::GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(std::vector<ImageRanker::GameSessionInputQuery> inputQueries, QueryOrigin origin)
@@ -306,7 +323,7 @@ std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepa
 
     #if GENERATE_BOOL_IMAGE_VECTOR_NAIVELY
 
-      if (probability >= IS_TRUE_TRESHOLD)
+      if (probability >= _currBoolModelProbTreshold)
       {
         boolVector.push_back(std::pair(i, 1));
       }
@@ -343,42 +360,138 @@ std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepa
   return images;
 }
 
+ImageRanker::ChartData ImageRanker::RunModelTest(
+  ImageRanker::RankingModel rankingModel, ImageRanker::QueryOrigin dataSource,
+  std::string arg1, std::string arg2, std::string arg3, std::string arg4
+)
+{
+  std::stringstream arg1Ss{ arg1 };
+  std::stringstream arg2Ss{ arg2 };
+  std::stringstream arg3Ss{ arg3 };
+  std::stringstream arg4Ss{ arg4 };
 
-std::vector<ImageRanker::ImageReference> ImageRanker::GetRelevantImages(const std::string& query, RankingModel rankingModel) const
+
+  switch (rankingModel) 
+  {
+  case ImageRanker::RankingModel::cBooleanCustom:
+
+    // Extract arguments and convert them
+    float probTreshold;
+
+    arg1Ss >> probTreshold;
+
+    // Launch test
+    return RunBooleanCustomModelTest(dataSource, probTreshold);
+    break;
+
+  case ImageRanker::RankingModel::cViretBase:
+
+    break;
+  }
+
+  return ImageRanker::ChartData();
+}
+
+ImageRanker::ChartData ImageRanker::RunBooleanCustomModelTest(ImageRanker::QueryOrigin dataSource, float probTreshold)
+{
+  //! \todo Do not ignore prob treshold
+
+  // Fetch pairs of <Q, Img>
+  std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string(dataSource) + ";");
+
+  auto dbResult = _primaryDb.ResultQuery(query);
+
+  if (dbResult.first != 0)
+  {
+    throw "Error getting queries from database.";
+  }
+
+  auto queriesRow = dbResult.second;
+
+  uint32_t maxRank = _images.size();
+
+  // To have 100 samples
+  uint32_t scaleDownFactor = maxRank / CHART_DENSITY;
+
+  std::vector<std::pair<uint32_t, uint32_t>> result;
+  result.resize(CHART_DENSITY + 1);
+
+  uint32_t label{ 0ULL };
+  for (auto&& column : result) 
+  {
+    column.first = label;
+    label += scaleDownFactor;
+  }
+
+  for (auto&& idQueryRow : queriesRow)
+  {
+    size_t imageId{ FastAtoU(idQueryRow[0].data()) };
+    const std::string& userQuery{ idQueryRow[1] };
+
+    auto resultImages = GetRelevantImages(userQuery, 0ULL, ImageRanker::RankingModel::cBooleanCustom, imageId);
+
+
+    size_t transformedRank = resultImages.second.m_targetImageRank / scaleDownFactor;
+
+    // Increment this hit
+    ++result[transformedRank].second;
+  }
+
+
+  uint32_t currCount{ 0ULL };
+
+  // Compute final chart values
+  for (auto&& r : result)
+  {
+    r.second = currCount;
+    currCount += r.second;
+  }
+
+  return result;
+}
+
+
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetRelevantImages(const std::string& query, size_t numResults, RankingModel rankingModel, size_t imageId) const
 {
   switch (rankingModel) 
   {
   case ImageRanker::cBoolean:
-    return GetRelevantImagesBooleanModel(query);
+    return GetImageRankingBooleanModel(query, numResults, imageId);
+    break;
+
+  case ImageRanker::cBooleanCustom:
+    return GetImageRankingBooleanCustomModel(query, numResults, imageId);
     break;
 
   case ImageRanker::cFuzzyLogic:
-    return GetRelevantImagesFuzzyLogicModel(query);
+    return GetImageRankingFuzzyLogicModel(query, numResults, imageId);
     break;
   }
 
-  return std::vector<ImageRanker::ImageReference>();
+  return std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult>();
 }
 
 
 
-std::vector<ImageRanker::ImageReference> ImageRanker::GetRelevantImagesFuzzyLogicModel(const std::string& query) const
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingFuzzyLogicModel(const std::string& query, size_t numResults, size_t targetImageId) const
 {
-  return std::vector<ImageRanker::ImageReference>();
+  return std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult>();
 }
 
-std::vector<ImageRanker::ImageReference> ImageRanker::GetRelevantImagesBooleanModel(const std::string& query) const
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanModel(const std::string& query, size_t numResults, size_t targetImageId) const
 {
   CnfFormula fml = _keywords.GetCanonicalQuery(query);
 
 
-  std::vector<ImageRanker::ImageReference> result;
+  std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> result;
+  ImageRanker::QueryResult queryResult;
 
   // Check every image if satisfies query formula
   for (auto&& idImgPair : _images) 
   {
     const Image& img{ idImgPair.second };
     bool imageSucc{true};
+    size_t imageRank{ 1ULL };
 
     // Itarate through clauses connected with AND
     for (auto&& clause : fml) 
@@ -399,6 +512,7 @@ std::vector<ImageRanker::ImageReference> ImageRanker::GetRelevantImagesBooleanMo
       // If this clause not satisfied
       if (!clauseSucc) 
       {
+        imageRank = 2ULL;
         imageSucc = false;
         break;
       }
@@ -408,13 +522,106 @@ std::vector<ImageRanker::ImageReference> ImageRanker::GetRelevantImagesBooleanMo
     if (imageSucc) 
     {
       // Insert this file into result set
-      result.emplace_back(std::pair(img.m_imageId, img.m_filename));
+      result.first.emplace_back(img.m_imageId, img.m_filename);
+
+      // If is target image
+      if (targetImageId == img.m_imageId) 
+      {
+        result.second.m_targetImageRank = imageRank;
+      }
+
+      if (numResults != 0ULL) 
+      {
+        // If filled limit
+        if (result.first.size() >= numResults)
+        {
+          continue;
+        }
+      }
     }
 
   }
 
   return result;
 }
+
+
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanCustomModel(const std::string& query, size_t numResults, size_t targetImageId) const
+{
+  CnfFormula fml = _keywords.GetCanonicalQuery(query);
+
+  auto cmp = [](const std::pair<size_t, std::pair<size_t, std::string>>& left, const std::pair<size_t, std::pair<size_t, std::string>>& right)
+  { 
+    return left.first > right.first; 
+  };
+
+  // Reserve enough space in container
+  std::vector<std::pair<size_t, std::pair<size_t, std::string>>> container;
+  container.reserve(GetNumImages());
+
+  std::priority_queue<std::pair<size_t, std::pair<size_t, std::string>>, std::vector<std::pair<size_t, std::pair<size_t, std::string>>>, decltype(cmp)> minHeap(cmp, std::move(container));
+
+  // Extract desired number of images out of min heap
+  std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> result;
+  result.first.reserve(numResults);
+
+  // Check every image if satisfies query formula
+  for (auto&& idImgPair : _images)
+  {
+    const Image& img{ idImgPair.second };
+    size_t imageSucc{ 0ULL };
+
+    // Itarate through clauses connected with AND
+    for (auto&& clause : fml)
+    {
+      bool clauseSucc{ false };
+
+      // Iterate through predicates
+      for (auto&& var : clause)
+      {
+        // If this variable satisfies this clause
+        if (img.m_booleanProbVector[var].second != 0)
+        {
+          clauseSucc = true;
+          break;
+        }
+      }
+
+      // If this clause not satisfied
+      if (!clauseSucc)
+      {
+        ++imageSucc;
+      }
+    }
+
+
+    // Insert result to min heap
+    minHeap.push(std::pair(imageSucc, std::pair(img.m_imageId, img.m_filename)));
+  }
+
+  size_t sizeHeap{ minHeap.size() };
+  for (size_t i = 0ULL; i < sizeHeap; ++i)
+  {
+    auto pair = minHeap.top();
+    minHeap.pop();
+
+    // If is target image, save it
+    if (targetImageId == pair.second.first)
+    {
+      result.second.m_targetImageRank = i + 1;
+    }
+
+    if (i < numResults) 
+    {
+      result.first.emplace_back(std::move(pair.second));
+    }
+    
+  }
+ 
+
+  return result;
+}
+
 
 std::vector< std::pair< size_t, std::unordered_map<size_t, float>>> ImageRanker::ParseSoftmaxBinFileFiltered(std::string_view filepath, float minProbabilty) const 
 {

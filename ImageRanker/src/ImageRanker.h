@@ -65,6 +65,15 @@ class ImageRanker
 {
   // Structures
 public:
+  struct QueryResult 
+  {
+    QueryResult() :
+      m_targetImageRank(0ULL)
+    {}
+
+    size_t m_targetImageRank;
+  };
+
   using Buffer = std::vector<std::byte>;
   //! This is returned to front end app when some quesries are submited
   //! <SessionID, image filename, user keywords, net <keyword, probability> >
@@ -80,9 +89,14 @@ public:
   /*! <wordnetID, keyword, description> */
   using KeywordReference = std::vector<std::tuple<size_t, std::string, std::string>>;
 
+  using ChartData = std::vector <std::pair<uint32_t, uint32_t>>;
+
   enum RankingModel 
   {
     cBoolean,
+    cBooleanCustom,
+    cBooleanExtended,
+    cViretBase,
     cFuzzyLogic
   };
 
@@ -151,6 +165,21 @@ public:
   //////////////////////////
   // vvvvvvvvvvvvvvvvvvvvvvv
 
+  // const chartData = [
+  //   { index: 0, value: 10 },
+  //   { index: 1, value: 20 },
+  //   { index: 2, value: 30 },
+  //   { index: 3, value: 40 },
+  //   { index: 4, value: 40.32 },
+  //   { index: 5, value: 50.3 },
+  //   { index: 6, value: 60.4 }
+  // ];
+  ImageRanker::ChartData RunModelTest(
+    RankingModel rankingModel, QueryOrigin dataSource,
+    std::string arg1 = std::string(""), std::string arg2 = std::string(""), std::string arg3 = std::string(""), std::string arg4 = std::string("")
+  );
+
+
   /*!
    * Gets all data about image with provided ID
    * 
@@ -172,9 +201,10 @@ public:
   ImageReference GetRandomImage() const;
   KeywordReference GetNearKeywords(const std::string& prefix);
 
-  std::vector<std::pair<size_t, size_t>> RunModelTest(QueryOrigin queryOrigin, RankingModel rankingModel = DEFAULT_RANKING_MODEL) const;
-
-  std::vector<ImageReference> GetRelevantImages(const std::string& query, RankingModel rankingModel = DEFAULT_RANKING_MODEL) const;
+  std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImages(
+    const std::string& query, size_t numResults = NUM_IMAGES_PER_PAGE, RankingModel rankingModel = DEFAULT_RANKING_MODEL,
+    size_t imageId = SIZE_T_ERROR_VALUE  
+  ) const;
 
 
   // ^^^^^^^^^^^^^^^^^^^^^^^
@@ -189,12 +219,21 @@ private:
   bool PushImagesToDatabase();
 #endif
 
+  ImageRanker::ChartData RunBooleanCustomModelTest(QueryOrigin dataSource, float probTreshold);
   
+
+
   size_t GetRandomImageId() const;
   
 
-  std::vector<ImageReference> GetRelevantImagesBooleanModel(const std::string& query) const;
-  std::vector<ImageReference> GetRelevantImagesFuzzyLogicModel(const std::string& query) const;
+  size_t GetNumImages() const
+  {
+    return _images.size();
+  }
+
+  std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanModel(const std::string& query, size_t numResults = 0ULL, size_t targetImageId = SIZE_T_ERROR_VALUE) const;
+  std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanCustomModel(const std::string& query, size_t numResults = 0ULL, size_t targetImageId = SIZE_T_ERROR_VALUE) const;
+  std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingFuzzyLogicModel(const std::string& query, size_t numResults = 0ULL, size_t targetImageId = SIZE_T_ERROR_VALUE) const;
 
   std::string GetKeywordByWordnetId(size_t wordnetId)
   {
@@ -269,6 +308,6 @@ private:
   size_t _numRows;
   size_t _idOffset;
 
-
+  float _currBoolModelProbTreshold;
 
 };

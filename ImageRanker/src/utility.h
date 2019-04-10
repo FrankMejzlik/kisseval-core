@@ -20,3 +20,12 @@ inline std::vector<std::string> SplitString(const std::string& s, char delimiter
   return tokens;
 }
 
+
+inline unsigned int FastAtoU(const char *str)
+{
+  unsigned int val = 0;
+  while (*str) {
+    val = (val << 1) + (val << 3) + *(str++) - 48;
+  }
+  return val;
+}

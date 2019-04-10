@@ -46,6 +46,10 @@ size_t Database::EstablishConnection()
     "NULL", 0
   );
 
+  bool reconnect = true;
+  mysql_options(_mysqlConnection, MYSQL_OPT_RECONNECT, &reconnect);
+ 
+
   // If connection failed
   if (!_mysqlConnection)
   {

@@ -38,33 +38,16 @@ int main()
     20000,
     1
   };
+
+  auto result3 = ranker.GetRelevantImages("eagle", 500, (ImageRanker::RankingModel)2, 0);
+
   
-
-  /*std::vector<ImageRanker::GameSessionInputQuery> input;
-  input.push_back(ImageRanker::GameSessionInputQuery("123ULL"s, 0ULL, "dog&cat&wood"));
-  input.push_back(ImageRanker::GameSessionInputQuery("123U3LL"s, 50ULL, "brick&entity"));
-
-  auto output = ranker.SubmitUserQueriesWithResults(input);
+  auto result{ ranker.RunModelTest((ImageRanker::RankingModel)2, (ImageRanker::QueryOrigin)0, std::string("0.005000")) };
 
 
-  auto result = ranker.GetNearKeywords("paprika");
-  
-
-  for (auto&& r : result)
+  for (auto&& slice : result) 
   {
-    std::cout << std::get<1>(r) <<std::endl;
-  }*/
-
-
-  ranker.TEST_GetVectorKeywords(4258ULL);
-  ranker.TEST_GetCanonicalQuery("party&wedding party&disco&stage");
-
-
-  auto resultImages = ranker.GetRelevantImages("party&wedding party&disco&stage");
-
-  for (auto&& imgPair : resultImages)
-  {
-    std::cout << imgPair.second << std::endl;
+    std::cout << slice.first << " => " << slice.second << std::endl;
   }
 
 #endif
