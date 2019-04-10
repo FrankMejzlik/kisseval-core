@@ -374,7 +374,7 @@ ImageRanker::ChartData ImageRanker::RunModelTest(
   switch (rankingModel) 
   {
   case ImageRanker::RankingModel::cBooleanCustom:
-
+  {
     // Extract arguments and convert them
     float probTreshold;
 
@@ -382,15 +382,85 @@ ImageRanker::ChartData ImageRanker::RunModelTest(
 
     // Launch test
     return RunBooleanCustomModelTest(dataSource, probTreshold);
+  }
     break;
 
   case ImageRanker::RankingModel::cViretBase:
+  {
+    // Extract arguments and convert them
+    float probTreshold;
 
+    arg1Ss >> probTreshold;
+
+    // Launch test
+    return RunViretBaseModelTest(dataSource, probTreshold); 
+  }
     break;
   }
 
   return ImageRanker::ChartData();
 }
+
+
+ImageRanker::ChartData ImageRanker::RunViretBaseModelTest(ImageRanker::QueryOrigin dataSource, float probTreshold)
+{
+  //! \todo Do not ignore prob treshold
+
+  // Fetch pairs of <Q, Img>
+  std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string(dataSource) + ";");
+
+  auto dbResult = _primaryDb.ResultQuery(query);
+
+  if (dbResult.first != 0)
+  {
+    throw "Error getting queries from database.";
+  }
+
+  auto queriesRow = dbResult.second;
+
+  uint32_t maxRank = (uint32_t)_images.size();
+
+  // To have 100 samples
+  uint32_t scaleDownFactor = maxRank / CHART_DENSITY;
+
+  std::vector<std::pair<uint32_t, uint32_t>> result;
+  result.resize(CHART_DENSITY + 1);
+
+  uint32_t label{ 0ULL };
+  for (auto&& column : result)
+  {
+    column.first = label;
+    label += scaleDownFactor;
+  }
+
+  for (auto&& idQueryRow : queriesRow)
+  {
+    size_t imageId{ FastAtoU(idQueryRow[0].data()) };
+    const std::string& userQuery{ idQueryRow[1] };
+
+    auto resultImages = GetRelevantImages(userQuery, 0ULL, ImageRanker::RankingModel::cViretBase, imageId);
+
+
+    size_t transformedRank = resultImages.second.m_targetImageRank / scaleDownFactor;
+
+    // Increment this hit
+    ++result[transformedRank].second;
+  }
+
+
+  uint32_t currCount{ 0ULL };
+
+  // Compute final chart values
+  for (auto&& r : result)
+  {
+    uint32_t tmp{ r.second };
+    r.second = currCount;
+    currCount += tmp;
+  }
+
+  return result;
+}
+
 
 ImageRanker::ChartData ImageRanker::RunBooleanCustomModelTest(ImageRanker::QueryOrigin dataSource, float probTreshold)
 {
@@ -408,7 +478,7 @@ ImageRanker::ChartData ImageRanker::RunBooleanCustomModelTest(ImageRanker::Query
 
   auto queriesRow = dbResult.second;
 
-  uint32_t maxRank = _images.size();
+  uint32_t maxRank = (uint32_t)_images.size();
 
   // To have 100 samples
   uint32_t scaleDownFactor = maxRank / CHART_DENSITY;
@@ -462,6 +532,10 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
 
   case ImageRanker::cBooleanCustom:
     return GetImageRankingBooleanCustomModel(query, numResults, imageId);
+    break;
+
+  case ImageRanker::cViretBase:
+    return GetImageRankingViretBaseModel(query, numResults, imageId);
     break;
 
   case ImageRanker::cFuzzyLogic:
@@ -542,6 +616,77 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
     }
 
   }
+
+  return result;
+}
+
+
+
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingViretBaseModel(const std::string& query, size_t numResults, size_t targetImageId) const
+{
+  CnfFormula fml = _keywords.GetCanonicalQuery(query);
+
+  auto cmp = [](const std::pair<double, std::pair<size_t, std::string>>& left, const std::pair<double, std::pair<size_t, std::string>>& right)
+  {
+    return left.first < right.first;
+  };
+
+  // Reserve enough space in container
+  std::vector<std::pair<double, std::pair<size_t, std::string>>> container;
+  container.reserve(GetNumImages());
+
+  std::priority_queue<std::pair<double, std::pair<size_t, std::string>>, std::vector<std::pair<double, std::pair<size_t, std::string>>>, decltype(cmp)> maxHeap(cmp, std::move(container));
+
+  // Extract desired number of images out of min heap
+  std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> result;
+  result.first.reserve(numResults);
+
+  // Check every image if satisfies query formula
+  for (auto&& idImgPair : _images)
+  {
+    const Image& img{ idImgPair.second };
+    double imageRanking{ 1.0f };
+
+    double clauseRanking{ 0.0f };
+    // Itarate through clauses connected with AND
+    for (auto&& clause : fml)
+    {
+      bool clauseSucc{ false };
+
+      // Iterate through predicates
+      for (auto&& var : clause)
+      {
+        // Add up labels in one clause
+        clauseRanking += img.m_probabilityVector[var].second;
+      }
+
+      imageRanking = imageRanking * clauseRanking;
+    }
+
+
+    // Insert result to min heap
+    maxHeap.push(std::pair(imageRanking, std::pair(img.m_imageId, img.m_filename)));
+  }
+
+  size_t sizeHeap{ maxHeap.size() };
+  for (size_t i = 0ULL; i < sizeHeap; ++i)
+  {
+    auto pair = maxHeap.top();
+    maxHeap.pop();
+
+    // If is target image, save it
+    if (targetImageId == pair.second.first)
+    {
+      result.second.m_targetImageRank = i + 1;
+    }
+
+    if (i < numResults)
+    {
+      result.first.emplace_back(std::move(pair.second));
+    }
+
+  }
+
 
   return result;
 }

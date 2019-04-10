@@ -50,6 +50,15 @@ int main()
     std::cout << slice.first << " => " << slice.second << std::endl;
   }
 
+  auto result2{ ranker.RunModelTest((ImageRanker::RankingModel)3, (ImageRanker::QueryOrigin)0, std::string("0.005000")) };
+
+  std::cout << "++++++++++++++++++++++++++" << std::endl;
+
+  for (auto&& slice : result2)
+  {
+    std::cout << slice.first << " => " << slice.second << std::endl;
+  }
+
 #endif
 
   return 0;

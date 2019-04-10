@@ -220,6 +220,7 @@ private:
 #endif
 
   ImageRanker::ChartData RunBooleanCustomModelTest(QueryOrigin dataSource, float probTreshold);
+  ImageRanker::ChartData RunViretBaseModelTest(QueryOrigin dataSource, float probTreshold);
   
 
 
@@ -233,6 +234,7 @@ private:
 
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanModel(const std::string& query, size_t numResults = 0ULL, size_t targetImageId = SIZE_T_ERROR_VALUE) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanCustomModel(const std::string& query, size_t numResults = 0ULL, size_t targetImageId = SIZE_T_ERROR_VALUE) const;
+  std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingViretBaseModel(const std::string& query, size_t numResults = 0ULL, size_t targetImageId = SIZE_T_ERROR_VALUE) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingFuzzyLogicModel(const std::string& query, size_t numResults = 0ULL, size_t targetImageId = SIZE_T_ERROR_VALUE) const;
 
   std::string GetKeywordByWordnetId(size_t wordnetId)
