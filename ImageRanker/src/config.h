@@ -2,7 +2,17 @@
 
 #include <stdint.h>
 
+#define CALC_MIN_MAX_CLAMP_AGG 1
+#define CALC_BOOL_AGG 1
+#define BOOL_AGG_TRESHOLD 0.5
+
+#define MIN_MAX_CLAMP_TRESHOLD 0.5
+
 #define DEFAULT_RANKING_MODEL ImageRanker::cBooleanCustom
+#define DEFAULT_AGG_FUNCTION ImageRanker::AggregationFunction::cSoftmax
+
+#define DEFAULT_MODEL_SETTINGS std::vector<std::string>()
+
 
 #define CHART_DENSITY 100
 

@@ -27,32 +27,35 @@ int main()
   //};
 
 
+  //ImageRanker ranker{
+  //  R"(C:\Users\devwe\source\repos\ImageRankerCollector\public\images\)",
+  //  R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.softmax)",
+  //  R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.pre-softmax)",
+  //  R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.deep-features)",
+  //  R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\keyword_classes.txt)",
+  //  R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\dir_images.txt)",
+  //  4,
+  //  90,
+  //  20000,
+  //  1
+  //};
+
   ImageRanker ranker{
-    R"(C:\Users\devwe\source\repos\ImageRankerCollector\public\images\)",
-    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.softmax)",
-    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.deep-features)",
-    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\keyword_classes.txt)",
-    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\dir_images.txt)",
-    4,
-    90,
-    20000,
-    1
+   R"(C:\Users\frank\source\repos\ImageRanker\public\images\)",
+   R"(C:\Users\frank\source\repos\ImageRanker\data2\Studenti_NasNetLarge.softmax)",
+   R"(C:\Users\frank\source\repos\ImageRanker\data2\Studenti_NasNetLarge.pre-softmax)",
+   R"(C:\Users\frank\source\repos\ImageRanker\data2\Studenti_NasNetLarge.deep-features)",
+   R"(C:\Users\frank\source\repos\ImageRanker\data2\keyword_classes.txt)",
+   R"(C:\Users\frank\source\repos\ImageRanker\data2\dir_images.txt)",
+   4,
+   90,
+   20000,
+   1
   };
 
-  auto result3 = ranker.GetRelevantImages("eagle", 500, (ImageRanker::RankingModel)2, 0);
 
-  
-  auto result{ ranker.RunModelTest((ImageRanker::RankingModel)2, (ImageRanker::QueryOrigin)0, std::string("0.005000")) };
+  auto result2{ ranker.RunModelTest((ImageRanker::AggregationFunction)0, (ImageRanker::RankingModel)1, (ImageRanker::QueryOrigin)0, std::vector<std::string>({"0.01"})) };
 
-
-  for (auto&& slice : result) 
-  {
-    std::cout << slice.first << " => " << slice.second << std::endl;
-  }
-
-  auto result2{ ranker.RunModelTest((ImageRanker::RankingModel)3, (ImageRanker::QueryOrigin)0, std::string("0.005000")) };
-
-  std::cout << "++++++++++++++++++++++++++" << std::endl;
 
   for (auto&& slice : result2)
   {
