@@ -27,19 +27,19 @@ int main()
   //};
 
 
-  //ImageRanker ranker{
-  //  R"(C:\Users\devwe\source\repos\ImageRankerCollector\public\images\)",
-  //  R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.softmax)",
-  //  R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.pre-softmax)",
-  //  R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.deep-features)",
-  //  R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\keyword_classes.txt)",
-  //  R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\dir_images.txt)",
-  //  4,
-  //  90,
-  //  20000,
-  //  1
-  //};
-
+  ImageRanker ranker{
+    R"(C:\Users\devwe\source\repos\ImageRankerCollector\public\images\)",
+    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.softmax)",
+    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.pre-softmax)",
+    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.deep-features)",
+    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\keyword_classes.txt)",
+    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\dir_images.txt)",
+    4,
+    90,
+    20000,
+    1
+  };
+/*
   ImageRanker ranker{
    R"(C:\Users\frank\source\repos\ImageRanker\public\images\)",
    R"(C:\Users\frank\source\repos\ImageRanker\data2\Studenti_NasNetLarge.softmax)",
@@ -51,11 +51,16 @@ int main()
    90,
    20000,
    1
-  };
+  };*/
 
 
-  auto result2{ ranker.RunModelTest((ImageRanker::AggregationFunction)0, (ImageRanker::RankingModel)1, (ImageRanker::QueryOrigin)0, std::vector<std::string>({"0.01"})) };
 
+
+  auto result2{ ranker.RunModelTest(
+    (ImageRanker::AggregationFunction)0, 
+    (ImageRanker::RankingModel)1, 
+    (ImageRanker::QueryOrigin)0, 
+    std::vector<std::string>({"0.7", "0.005", "0", "2"})) };
 
   for (auto&& slice : result2)
   {
