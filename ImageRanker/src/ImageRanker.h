@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <stdexcept>
 #include <iostream>
 #include <assert.h>
@@ -50,18 +51,23 @@ struct Image
   std::string m_filename;
   std::vector<std::pair<size_t, float>> m_probabilityVector;
 
+  
 
   //! Raw vector as it came out of neural network
   std::vector<float> m_rawProbabilityVector;
 
   //! Softmax probability vector
   std::vector<float> m_probabilityVectorUnsorted;
+  std::vector<float> m_softmaxProbAmplified1;
+  std::vector<float> m_softmaxProbAmplified2;
 
   //! Probability vector from custom MinMax Clamp method
   std::vector<float> m_minMaxClampAggProbVector;
 
   //! Probability vector from custom Boolean Aggregation with treshold
-  std::vector<float> m_boolAggProbVector;
+  std::vector<float> m_amplifyProbVector1;
+  std::vector<float> m_amplifyProbVector2;
+  std::vector<float> m_amplifyProbVector3;
 };
 
 
@@ -100,6 +106,16 @@ public:
 
   using ChartData = std::vector <std::pair<uint32_t, uint32_t>>;
 
+  enum AmplifyAggregations 
+  {
+    cLinearFull,
+    cLinearWithLowOffset,
+    cSoftmaxAmplify,
+    cSoftmaxAmplify2,
+    cSoftmaxAmplify3,
+    cSoftmaxAmplify4
+  };
+
   enum RankingModel 
   {
     cBoolean,
@@ -118,7 +134,12 @@ public:
   enum AggregationFunction
   {
     cSoftmax,
-    cMinMaxClamp
+    cMinMaxClamp,
+    cAmplified1,
+    cAmplified2,
+    cAmplified3,
+    cAmplifiedSoftmax1,
+    cAmplifiedSoftmax2
   };
 
   // Methods
@@ -304,7 +325,7 @@ const std::string& query, size_t numResults,
 
   std::vector<std::string> TokenizeAndQuery(std::string_view query) const;
 
-  std::map<size_t, Image> ParseSoftmaxBinFile(std::string_view filepath, std::string_view imageFilesFilepath) const;
+  std::map<size_t, Image> ParseSoftmaxBinFile(std::string_view filepath, std::string_view imageFilesFilepath);
   bool ParseRawProbabilityBinFile(std::string_view filepath, std::string_view imageFilesFilepath);
 
   std::vector< std::pair< size_t, std::unordered_map<size_t, float> > > ParseSoftmaxBinFileFiltered(std::string_view filepath, float minProbabilty) const;
@@ -317,6 +338,11 @@ const std::string& query, size_t numResults,
 
   bool CalculateMinMaxClampAgg(Image* pImage, float min, float max, float avg);
 
+
+  bool CalculateAmplifyAgg(ImageRanker::AmplifyAggregations ampAgg, Image* pImage, float min, float max, float avg);
+  bool CalculateAmplifyAgg2(ImageRanker::AmplifyAggregations ampAgg, Image* pImage, float min, float max, float avg);
+  
+  bool CalculateAmplifySoftmaxAgg(ImageRanker::AmplifyAggregations ampAgg, Image* pImage);
   /*!
   * Loads bytes from specified file into buffer
   *
@@ -343,6 +369,13 @@ const std::string& query, size_t numResults,
   float ParseFloatLE(const Buffer& buffer, size_t startIndex) const;
 
   std::vector<std::string> ParseImageFilenamesTextFile(std::string_view filepath) const;
+
+  float FullLinearAmplifyValue(float x) const;
+  float FullLinearAmplifySoftmaxValue(float x) const;
+  float FullLinearAmplifySoftmaxValue2(float x) const;
+  float FullLinearAmplifySoftmaxValue3(float x) const;
+  float FullLinearAmplifySoftmaxValue4(float x) const;
+  float OffsetLinearAmplifyValue(float x) const;
 
 private:
   Database _primaryDb;

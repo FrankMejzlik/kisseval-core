@@ -54,52 +54,30 @@ int main()
   };*/
 
   auto result1{ ranker.RunModelTest(
-   (ImageRanker::AggregationFunction)0,
-   (ImageRanker::RankingModel)1,
+   (ImageRanker::AggregationFunction)5,
+   (ImageRanker::RankingModel)3,
    (ImageRanker::QueryOrigin)0,
-   std::vector<std::string>({"0.7", "0.005", "0", "2"})) };
+   std::vector<std::string>({"0.0", "0.000", "0", "2"})) };
 
-  //for (auto&& slice : result1)
-  //{
-  //  std::cout << slice.first << " => " << slice.second << std::endl;
-  //}
+  for (auto&& slice : result1)
+  {
+    std::cout << slice.first << " => " << slice.second << std::endl;
+  }
 
 
 
   auto result2{ ranker.RunModelTest(
-    (ImageRanker::AggregationFunction)0, 
-    (ImageRanker::RankingModel)1, 
-    (ImageRanker::QueryOrigin)1, 
-    std::vector<std::string>({"0.7", "0.005", "0", "2"})) };
+    (ImageRanker::AggregationFunction)6, 
+    (ImageRanker::RankingModel)3, 
+    (ImageRanker::QueryOrigin)0, 
+    std::vector<std::string>({"0.0", "0.000", "0", "2"})) };
 
-  //for (auto&& slice : result2)
-  //{
-  //  std::cout << slice.first << " => " << slice.second << std::endl;
-  //}
+  for (auto&& slice : result2)
+  {
+    std::cout << slice.first << " => " << slice.second << std::endl;
+  }
+  std::cout << "++++++++++++++++" << std::endl;
 
-  auto result3{ ranker.RunModelTest(
-   (ImageRanker::AggregationFunction)0,
-   (ImageRanker::RankingModel)1,
-   (ImageRanker::QueryOrigin)0,
-   std::vector<std::string>({"0.7", "0.005", "0", "2"})) };
-
-  //for (auto&& slice : result3)
-  //{
-  //  std::cout << slice.first << " => " << slice.second << std::endl;
-  //}
-
-
-
-  auto result4{ ranker.RunModelTest(
-    (ImageRanker::AggregationFunction)0,
-    (ImageRanker::RankingModel)1,
-    (ImageRanker::QueryOrigin)1,
-    std::vector<std::string>({"0.7", "0.005", "0", "2"})) };
-
-  //for (auto&& slice : result4)
-  //{
-  //  std::cout << slice.first << " => " << slice.second << std::endl;
-  //}
 
 #endif
 

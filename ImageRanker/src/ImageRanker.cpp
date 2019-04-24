@@ -1,5 +1,5 @@
 #include "ImageRanker.h"
-
+#include <functional>
 
 ImageRanker::ImageRanker(
   std::string_view imagesPath,
@@ -323,7 +323,7 @@ std::vector<std::string> ImageRanker::ParseImageFilenamesTextFile(std::string_vi
   return result;
 }
 
-std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepath, std::string_view imageFilesFilepath) const
+std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepath, std::string_view imageFilesFilepath) 
 {
   std::vector<std::string> imageFilenames{ParseImageFilenamesTextFile(imageFilesFilepath)};
 
@@ -363,7 +363,7 @@ std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepa
     // Reserve exact capacitys
     floats.reserve(numFloats);
     floatsUnsorted.reserve(numFloats);
-
+    
 
     // Iterate through all floats in row
     for (size_t i = 0; i < numFloats; ++i)
@@ -391,7 +391,14 @@ std::map<size_t, Image> ImageRanker::ParseSoftmaxBinFile(std::string_view filepa
     );*/
 
     // Push final row
-    images.emplace(std::make_pair(id, Image(id, std::move(filename), std::move(floats), std::move(floatsUnsorted))));
+    auto newIt = images.emplace(std::make_pair(id, Image(id, std::move(filename), std::move(floats), std::move(floatsUnsorted))));
+
+    auto& ptr = newIt.first->second;
+
+    // Calculate transformed values
+    // xoxo
+    ptr.m_softmaxProbAmplified1.resize(numFloats);
+    CalculateAmplifySoftmaxAgg(ImageRanker::AmplifyAggregations::cSoftmaxAmplify, &(ptr));
   }
 
   
@@ -473,12 +480,19 @@ bool ImageRanker::ParseRawProbabilityBinFile(std::string_view filepath, std::str
 
     // Resize agg vectors
     imageIt->second.m_minMaxClampAggProbVector.resize(numFloats);
+    imageIt->second.m_amplifyProbVector1.resize(numFloats);
+    imageIt->second.m_amplifyProbVector2.resize(numFloats);
  
 
     imageIt->second.m_rawProbabilityVector = std::move(floats);
 
+    // Calculate linear scale from 0 to 1
     CalculateMinMaxClampAgg(&(imageIt->second), min, max, avg);
 
+    // Calculate transformed values
+    CalculateAmplifyAgg(ImageRanker::AmplifyAggregations::cLinearFull, &(imageIt->second), min, max, avg);
+
+    CalculateAmplifyAgg2(ImageRanker::AmplifyAggregations::cLinearWithLowOffset, &(imageIt->second), min, max, avg);
   }
 
   return true;
@@ -504,6 +518,208 @@ bool ImageRanker::CalculateMinMaxClampAgg(Image* pImage, float min, float max, f
   return true;
 }
 
+bool ImageRanker::CalculateAmplifyAgg(ImageRanker::AmplifyAggregations ampAgg, Image* pImage, float min, float max, float avg)
+{
+  std::function<float(ImageRanker&, float)> pAmpFn;
+
+  switch (ampAgg) 
+  {
+  case ImageRanker::AmplifyAggregations::cLinearFull:
+    pAmpFn = std::function<float(ImageRanker&, float)>(&ImageRanker::FullLinearAmplifyValue);
+    break;
+
+  case ImageRanker::AmplifyAggregations::cLinearWithLowOffset:
+    pAmpFn = std::function<float(ImageRanker&, float)>(&ImageRanker::OffsetLinearAmplifyValue);
+    break;
+  }
+
+  size_t i{ 0ULL };
+  for (auto&& prob : pImage->m_minMaxClampAggProbVector)
+  {
+    float newValue{ pAmpFn(*this, prob) };
+
+    pImage->m_amplifyProbVector1[i] = newValue;
+
+    ++i;
+  }
+
+  return true;
+}
+
+bool ImageRanker::CalculateAmplifySoftmaxAgg(ImageRanker::AmplifyAggregations ampAgg, Image* pImage)
+{
+  std::function<float(ImageRanker&, float)> pAmpFn;
+
+  switch (ampAgg)
+  {
+  case ImageRanker::AmplifyAggregations::cSoftmaxAmplify:
+    pAmpFn = std::function<float(ImageRanker&, float)>(&ImageRanker::FullLinearAmplifySoftmaxValue);
+    break;
+
+  case ImageRanker::AmplifyAggregations::cSoftmaxAmplify2:
+    pAmpFn = std::function<float(ImageRanker&, float)>(&ImageRanker::FullLinearAmplifySoftmaxValue2);
+    break;
+
+  case ImageRanker::AmplifyAggregations::cSoftmaxAmplify3:
+    pAmpFn = std::function<float(ImageRanker&, float)>(&ImageRanker::FullLinearAmplifySoftmaxValue3);
+    break;
+
+  case ImageRanker::AmplifyAggregations::cSoftmaxAmplify4:
+    pAmpFn = std::function<float(ImageRanker&, float)>(&ImageRanker::FullLinearAmplifySoftmaxValue4);
+    break;
+  }
+
+  size_t i{ 0ULL };
+  for (auto&& prob : pImage->m_probabilityVectorUnsorted)
+  {
+    float newValue{ pAmpFn(*this, prob) };
+
+    pImage->m_softmaxProbAmplified1[i] = newValue;
+
+    ++i;
+  }
+
+  return true;
+}
+
+bool ImageRanker::CalculateAmplifyAgg2(ImageRanker::AmplifyAggregations ampAgg, Image* pImage, float min, float max, float avg)
+{
+  std::function<float(ImageRanker&, float)> pAmpFn;
+
+  switch (ampAgg)
+  {
+  case ImageRanker::AmplifyAggregations::cLinearFull:
+    pAmpFn = std::function<float(ImageRanker&, float)>(&ImageRanker::FullLinearAmplifyValue);
+    break;
+
+  case ImageRanker::AmplifyAggregations::cLinearWithLowOffset:
+    pAmpFn = std::function<float(ImageRanker&, float)>(&ImageRanker::OffsetLinearAmplifyValue);
+    break;
+  }
+
+  size_t i{ 0ULL };
+  for (auto&& prob : pImage->m_minMaxClampAggProbVector)
+  {
+    float newValue{ pAmpFn(*this, prob) };
+
+    pImage->m_amplifyProbVector2[i] = newValue;
+
+    ++i;
+  }
+
+  return true;
+}
+
+
+float ImageRanker::FullLinearAmplifyValue(float x) const
+{
+  float fx{0.0f};
+
+  fx = 1 + (fabs(x - 0.5f));
+
+  return fx * x;
+}
+
+float ImageRanker::FullLinearAmplifySoftmaxValue(float x) const
+{
+  float fx{ 0.0f };
+
+
+  return x * x;
+}
+
+float ImageRanker::FullLinearAmplifySoftmaxValue2(float x) const
+{
+  float fx{ 0.0f };
+
+  // If middle values
+  if (x < 0.0001)
+  {
+    fx = 100.0;
+  }
+  else if (x < 0.001) {
+    fx = 10.0f;
+  }
+  else if (x < 0.01) {
+    fx = 5.0f;
+  }
+  else if (x < 0.1) {
+    fx = 2.0f;
+  }
+  else {
+    fx = 1.0f;
+  }
+
+  return fx * x;
+}
+
+float ImageRanker::FullLinearAmplifySoftmaxValue3(float x) const
+{
+  float fx{ 0.0f };
+
+  // If middle values
+  if (x < 0.0001)
+  {
+    fx = 100.0;
+  }
+  else if (x < 0.001) {
+    fx = 10.0f;
+  }
+  else if (x < 0.01) {
+    fx = 5.0f;
+  }
+  else if (x < 0.1) {
+    fx = 2.0f;
+  }
+  else {
+    fx = 1.0f;
+  }
+
+  return fx * x;
+}
+
+float ImageRanker::FullLinearAmplifySoftmaxValue4(float x) const
+{
+  float fx{ 0.0f };
+
+  // If middle values
+  if (x < 0.0001)
+  {
+    fx = 100.0;
+  }
+  else if (x < 0.001) {
+    fx = 10.0f;
+  }
+  else if (x < 0.01) {
+    fx = 5.0f;
+  }
+  else if (x < 0.1) {
+    fx = 2.0f;
+  }
+  else {
+    fx = 1.0f;
+  }
+
+  return fx * x;
+}
+
+float ImageRanker::OffsetLinearAmplifyValue(float x) const
+{
+  float fx{ 0.0f };
+
+  if (x < 0.5f) 
+  {
+    fx = 0.5f + (fabs(x - 0.5f) * 2);
+  }
+  else 
+  {
+    fx = 1 + (fabs(x - 0.5f));
+  }
+
+  
+
+  return fx * x;
+}
 
 ImageRanker::ChartData ImageRanker::RunModelTest(
   AggregationFunction aggFn, ImageRanker::RankingModel rankingModel, ImageRanker::QueryOrigin dataSource,
@@ -859,6 +1075,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
   std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> result;
   result.first.reserve(numResults);
 
+
   // Check every image if satisfies query formula
   for (auto&& idImgPair : _images)
   {
@@ -871,6 +1088,31 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
       // MinMax Linear
     case AggregationFunction::cMinMaxClamp:
       pImgRankingVector = &(img.m_minMaxClampAggProbVector);
+      break;
+
+      //  cAmplifiedLinear1
+    case AggregationFunction::cAmplified1:
+      pImgRankingVector = &(img.m_amplifyProbVector1);
+      break;
+
+      //  cAmplifiedLinear2
+    case AggregationFunction::cAmplified2:
+      pImgRankingVector = &(img.m_amplifyProbVector2);
+      break;
+
+      //  cAmplifiedLinear3
+    case AggregationFunction::cAmplified3:
+      pImgRankingVector = &(img.m_amplifyProbVector3);
+      break;
+
+      //  cAmplifiedLinear3
+    case AggregationFunction::cAmplifiedSoftmax1:
+      pImgRankingVector = &(img.m_softmaxProbAmplified1);
+      break;
+
+      //  cAmplifiedLinear3
+    case AggregationFunction::cAmplifiedSoftmax2:
+      pImgRankingVector = &(img.m_softmaxProbAmplified2);
       break;
 
       // Default Softmax
@@ -1034,6 +1276,31 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
       // MinMax Linear
     case AggregationFunction::cMinMaxClamp:
       pImgRankingVector = &(img.m_minMaxClampAggProbVector);
+      break;
+
+      //  cAmplifiedLinear1
+    case AggregationFunction::cAmplified1:
+      pImgRankingVector = &(img.m_amplifyProbVector1);
+      break;
+
+      //  cAmplifiedLinear2
+    case AggregationFunction::cAmplified2:
+      pImgRankingVector = &(img.m_amplifyProbVector2);
+      break;
+
+      //  cAmplifiedLinear3
+    case AggregationFunction::cAmplified3:
+      pImgRankingVector = &(img.m_amplifyProbVector3);
+      break;
+
+      //  cAmplifiedLinear3
+    case AggregationFunction::cAmplifiedSoftmax1:
+      pImgRankingVector = &(img.m_softmaxProbAmplified1);
+      break;
+
+      //  cAmplifiedLinear3
+    case AggregationFunction::cAmplifiedSoftmax2:
+      pImgRankingVector = &(img.m_softmaxProbAmplified2);
       break;
 
       // Default Softmax
