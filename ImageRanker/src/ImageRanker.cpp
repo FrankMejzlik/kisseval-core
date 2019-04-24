@@ -531,7 +531,7 @@ ImageRanker::ChartData ImageRanker::RunModelTest(
 }
 
 
-ImageRanker::ChartData ImageRanker::RunViretBaseModelTest(AggregationFunction aggFn, ImageRanker::QueryOrigin dataSource, std::vector<std::string> settings)
+ImageRanker::ChartData ImageRanker::RunViretBaseModelTest(AggregationFunction aggFn, ImageRanker::QueryOrigin dataSource, std::vector<std::string>& settings)
 {
   // Parse settings
   /*
@@ -539,15 +539,8 @@ ImageRanker::ChartData ImageRanker::RunViretBaseModelTest(AggregationFunction ag
   */
 
 
-  // Fetch pairs of <Q, Img>
-  std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string(dataSource) + ";");
-
-  auto dbResult = _primaryDb.ResultQuery(query);
-
-  if (dbResult.first != 0)
-  {
-    throw "Error getting queries from database.";
-  }
+  // Get queries
+  auto dbResult = GetCachedQueries(dataSource);
 
   auto queriesRow = dbResult.second;
 
@@ -595,19 +588,57 @@ ImageRanker::ChartData ImageRanker::RunViretBaseModelTest(AggregationFunction ag
 }
 
 
-ImageRanker::ChartData ImageRanker::RunBooleanCustomModelTest(AggregationFunction aggFn, ImageRanker::QueryOrigin dataSource, std::vector<std::string> settings)
+std::pair< size_t, std::vector< std::vector<std::string>>>& ImageRanker::GetCachedQueries(ImageRanker::QueryOrigin dataSource)
 {
-  
+  static std::pair< size_t, std::vector< std::vector<std::string>>> cachedData0;
+  static std::pair< size_t, std::vector< std::vector<std::string>>> cachedData1;
 
-  // Fetch pairs of <Q, Img>
-  std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string(dataSource) + ";");
+  switch (dataSource) {
+  case 0:
 
-  auto dbResult = _primaryDb.ResultQuery(query);
+    if (cachedData0.second.empty()) 
+    {
+      // Fetch pairs of <Q, Img>
+      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string(dataSource) + ";");
+      cachedData0 = std::move(_primaryDb.ResultQuery(query));
 
-  if (dbResult.first != 0)
-  {
-    throw "Error getting queries from database.";
+      if (cachedData0.first != 0)
+      {
+        throw "Error getting queries from database.";
+      }
+
+    }
+
+    return cachedData0;
+
+    break;
+
+  case 1:
+
+    if (cachedData1.second.empty()) 
+    {
+      // Fetch pairs of <Q, Img>
+      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string(dataSource) + ";");
+      cachedData1 = std::move(_primaryDb.ResultQuery(query));
+
+      if (cachedData0.first != 0)
+      {
+        throw "Error getting queries from database.";
+      }
+    }
+
+    return cachedData1;
+
+    break;
   }
+
+  return cachedData0;
+}
+
+ImageRanker::ChartData ImageRanker::RunBooleanCustomModelTest(AggregationFunction aggFn, ImageRanker::QueryOrigin dataSource, std::vector<std::string>& settings)
+{
+  // Get queries
+  auto dbResult = GetCachedQueries(dataSource);
 
   auto queriesRow = dbResult.second;
 
@@ -685,12 +716,12 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
 
 
 
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingFuzzyLogicModel(const std::string& query, size_t numResults, size_t targetImageId, AggregationFunction aggFn, std::vector<std::string> settings) const
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingFuzzyLogicModel(const std::string& query, size_t numResults, size_t targetImageId, AggregationFunction aggFn, std::vector<std::string>& settings) const
 {
   return std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult>();
 }
 
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanModel(const std::string& query, size_t numResults, size_t targetImageId, AggregationFunction aggFn, std::vector<std::string> settings) const
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanModel(const std::string& query, size_t numResults, size_t targetImageId, AggregationFunction aggFn, std::vector<std::string>& settings) const
 {
   /*
   SETTINGS:
@@ -782,7 +813,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
 
 
 
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingViretBaseModel(const std::string& query, size_t numResults, size_t targetImageId, AggregationFunction aggFn, std::vector<std::string> settings) const
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingViretBaseModel(const std::string& query, size_t numResults, size_t targetImageId, AggregationFunction aggFn, std::vector<std::string>& settings) const
 {
   /*
   SETTINGS:
@@ -813,16 +844,16 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
 
   CnfFormula fml = _keywords.GetCanonicalQuery(query);
 
-  auto cmp = [](const std::pair<double, std::pair<size_t, std::string>>& left, const std::pair<double, std::pair<size_t, std::string>>& right)
+  auto cmp = [](const std::pair<double, size_t>& left, const std::pair<double, size_t>& right)
   {
     return left.first < right.first;
   };
 
   // Reserve enough space in container
-  std::vector<std::pair<double, std::pair<size_t, std::string>>> container;
+  std::vector<std::pair<double, size_t>> container;
   container.reserve(GetNumImages());
 
-  std::priority_queue<std::pair<double, std::pair<size_t, std::string>>, std::vector<std::pair<double, std::pair<size_t, std::string>>>, decltype(cmp)> maxHeap(cmp, std::move(container));
+  std::priority_queue<std::pair<double, size_t>, std::vector<std::pair<double, size_t>>, decltype(cmp)> maxHeap(cmp, std::move(container));
 
   // Extract desired number of images out of min heap
   std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> result;
@@ -892,7 +923,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
 
 
     // Insert result to min heap
-    maxHeap.push(std::pair(imageRanking, std::pair(img.m_imageId, img.m_filename)));
+    maxHeap.push(std::pair(imageRanking, img.m_imageId));
   }
 
   size_t sizeHeap{ maxHeap.size() };
@@ -902,14 +933,14 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
     maxHeap.pop();
 
     // If is target image, save it
-    if (targetImageId == pair.second.first)
+    if (targetImageId == pair.second)
     {
       result.second.m_targetImageRank = i + 1;
     }
 
     if (i < numResults)
     {
-      result.first.emplace_back(std::move(pair.second));
+      result.first.emplace_back(std::pair(pair.second, GetImageFilenameById(pair.second)));
     }
 
   }
@@ -919,7 +950,8 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
 }
 
 
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanCustomModel(const std::string& query, size_t numResults, size_t targetImageId, AggregationFunction aggFn, std::vector<std::string> settings) const
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanCustomModel(
+  const std::string& query, size_t numResults, size_t targetImageId, AggregationFunction aggFn, std::vector<std::string>& settings) const
 {
   /*
   SETTINGS:
@@ -951,7 +983,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
   
   CnfFormula fml = _keywords.GetCanonicalQuery(query);
 
-  auto cmp = [](const std::pair<std::pair<size_t, float>, std::pair<size_t, std::string>>& left, const std::pair<std::pair<size_t, float>, std::pair<size_t, std::string>>& right)
+  auto cmp = [](const std::pair<std::pair<size_t, float>, size_t>& left, const std::pair<std::pair<size_t, float>, size_t>& right)
   {
 
 
@@ -978,10 +1010,10 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
   };
 
   // Reserve enough space in container
-  std::vector<std::pair<std::pair<size_t, float>, std::pair<size_t, std::string>>> container;
+  std::vector<std::pair<std::pair<size_t, float>, size_t>> container;
   container.reserve(GetNumImages());
 
-  std::priority_queue<std::pair<std::pair<size_t, float>, std::pair<size_t, std::string>>, std::vector<std::pair<std::pair<size_t, float>, std::pair<size_t, std::string>>>, decltype(cmp)> minHeap(cmp, std::move(container));
+  std::priority_queue<std::pair<std::pair<size_t, float>, size_t>, std::vector<std::pair<std::pair<size_t, float>, size_t>>, decltype(cmp)> minHeap(cmp, std::move(container));
 
   // Extract desired number of images out of min heap
   std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> result;
@@ -1055,7 +1087,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
     }
 
     // Insert result to min heap
-    minHeap.push(std::pair(std::pair(imageSucc, imageSubRank), std::pair(img.m_imageId, img.m_filename)));
+    minHeap.push(std::pair(std::pair(imageSucc, imageSubRank), img.m_imageId));
   }
 
   size_t sizeHeap{ minHeap.size() };
@@ -1065,14 +1097,14 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
     minHeap.pop();
 
     // If is target image, save it
-    if (targetImageId == pair.second.first)
+    if (targetImageId == pair.second)
     {
       result.second.m_targetImageRank = i + 1;
     }
 
     if (i < numResults) 
     {
-      result.first.emplace_back(std::move(pair.second));
+      result.first.emplace_back(std::pair(pair.second, GetImageFilenameById(pair.second)));
     }
     
   }

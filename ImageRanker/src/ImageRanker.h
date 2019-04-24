@@ -50,6 +50,7 @@ struct Image
   std::string m_filename;
   std::vector<std::pair<size_t, float>> m_probabilityVector;
 
+
   //! Raw vector as it came out of neural network
   std::vector<float> m_rawProbabilityVector;
 
@@ -248,8 +249,8 @@ private:
   bool PushImagesToDatabase();
 #endif
 
-  ImageRanker::ChartData RunBooleanCustomModelTest(AggregationFunction aggFn, QueryOrigin dataSource, std::vector<std::string> settings);
-  ImageRanker::ChartData RunViretBaseModelTest(AggregationFunction aggFn, QueryOrigin dataSource, std::vector<std::string> settings);
+  ImageRanker::ChartData RunBooleanCustomModelTest(AggregationFunction aggFn, QueryOrigin dataSource, std::vector<std::string>& settings);
+  ImageRanker::ChartData RunViretBaseModelTest(AggregationFunction aggFn, QueryOrigin dataSource, std::vector<std::string>& settings);
   
 
 
@@ -262,24 +263,24 @@ private:
   }
 
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanModel(
-const std::string& query, size_t numResults = 0ULL, 
-    size_t targetImageId = SIZE_T_ERROR_VALUE,
-    AggregationFunction aggFn = DEFAULT_AGG_FUNCTION, std::vector<std::string> settings = DEFAULT_MODEL_SETTINGS
+const std::string& query, size_t numResults, 
+    size_t targetImageId,
+    AggregationFunction aggFn, std::vector<std::string>& settings
   ) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanCustomModel(
-    const std::string& query, size_t numResults = 0ULL, 
-    size_t targetImageId = SIZE_T_ERROR_VALUE,
-    AggregationFunction aggFn = DEFAULT_AGG_FUNCTION, std::vector<std::string> settings = DEFAULT_MODEL_SETTINGS
+    const std::string& query, size_t numResults, 
+    size_t targetImageId,
+    AggregationFunction aggFn , std::vector<std::string>& settings
   ) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingViretBaseModel(
-    const std::string& query, size_t numResults = 0ULL, 
-    size_t targetImageId = SIZE_T_ERROR_VALUE,
-    AggregationFunction aggFn = DEFAULT_AGG_FUNCTION, std::vector<std::string> settings = DEFAULT_MODEL_SETTINGS
+    const std::string& query, size_t numResults, 
+    size_t targetImageId,
+    AggregationFunction aggFn, std::vector<std::string>& settings
   ) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingFuzzyLogicModel(
-    const std::string& query, size_t numResults = 0ULL, 
-    size_t targetImageId = SIZE_T_ERROR_VALUE,
-    AggregationFunction aggFn = DEFAULT_AGG_FUNCTION, std::vector<std::string> settings = DEFAULT_MODEL_SETTINGS
+    const std::string& query, size_t numResults, 
+    size_t targetImageId,
+    AggregationFunction aggFn, std::vector<std::string>& settings
   ) const;
 
   std::string GetKeywordByWordnetId(size_t wordnetId)
@@ -311,6 +312,8 @@ const std::string& query, size_t numResults = 0ULL,
   std::unordered_map<size_t, std::pair<size_t, std::string> > ParseKeywordClassesTextFile(std::string_view filepath) const;
 
   std::unordered_map<size_t, std::pair<size_t, std::string> > ParseHypernymKeywordClassesTextFile(std::string_view filepath) const;
+
+  std::pair< size_t, std::vector< std::vector<std::string>>>& GetCachedQueries(ImageRanker::QueryOrigin dataSource);
 
   bool CalculateMinMaxClampAgg(Image* pImage, float min, float max, float avg);
 
