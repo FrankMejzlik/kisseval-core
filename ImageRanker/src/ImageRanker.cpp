@@ -625,7 +625,7 @@ float ImageRanker::FullLinearAmplifySoftmaxValue(float x) const
   float fx{ 0.0f };
 
 
-  return x * x;
+  return sqrtf(10 + x);
 }
 
 float ImageRanker::FullLinearAmplifySoftmaxValue2(float x) const
