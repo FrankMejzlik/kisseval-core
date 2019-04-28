@@ -1,20 +1,27 @@
 #pragma once
 
+#include <assert.h>
+
+#include <limits>
+#include <string>
+using namespace std::string_literals;
+
 #include <cmath>
 #include <stdexcept>
 #include <iostream>
-#include <assert.h>
+
 #include <fstream>
 #include <vector>
 #include <cstdint>
 #include <array>
-#include <string>
+
 #include <chrono>
 #include <unordered_map>
 #include <sstream>
 #include <random>
 #include <sstream>
 #include <queue>
+#include <functional>
 
 #include <map>
 #include <set>
@@ -26,38 +33,55 @@
 #include "Database.h"
 #include "KeywordsContainer.h"
 
-using namespace std::string_literals;
+
 
 struct Image
 {
-  Image(): 
-    m_imageId(SIZE_T_ERROR_VALUE),
-    m_filename(""s)
-  {};
-  Image(size_t id, std::string&& filename, std::vector<std::pair<size_t, float>>&& probVector):
+  Image() = delete;
+
+  Image(
+    size_t id, 
+    std::string&& filename, 
+    std::vector<float>&& rawNetRanking,
+    float min, float max,
+    float mean, float variance
+  ) :
     m_imageId(id),
     m_filename(std::move(filename)),
-    m_probabilityVector(std::move(probVector))
-  {}
-  Image(size_t id, std::string&& filename, std::vector<std::pair<size_t, float>>&& probVector, std::vector<float>&& probVecUnsorted) :
-    m_imageId(id),
-    m_filename(std::move(filename)),
-    m_probabilityVector(std::move(probVector)),
-    m_probabilityVectorUnsorted(probVecUnsorted)
+    m_rawNetRanking(std::move(rawNetRanking)),
+    m_rawNetRankingSorted(m_rawNetRanking),
+    m_min(min), m_max(max),
+    m_mean(mean), m_variance(variance)
   {
+    // Sort it
+    std::sort(
+      m_rawNetRankingSorted.begin(), m_rawNetRankingSorted.end(),
+      [](const float& a, const float& b) -> bool
+      {
+        return a > b;
+      }
+    );
   }
 
   size_t m_imageId;
   std::string m_filename;
-  std::vector<std::pair<size_t, float>> m_probabilityVector;
-
-  
 
   //! Raw vector as it came out of neural network
-  std::vector<float> m_rawProbabilityVector;
+  std::vector<float> m_rawNetRanking;
+
+  float m_min;
+  float m_max;
+  float m_mean;
+  float m_variance;
+
+  //! Raw vector as it came out of neural network but SORTED
+  std::vector<float> m_rawNetRankingSorted;
+   
+
+  //! Softmax probability ranking
+  std::vector<float> m_softmaxVector;
 
   //! Softmax probability vector
-  std::vector<float> m_probabilityVectorUnsorted;
   std::vector<float> m_softmaxProbAmplified1;
   std::vector<float> m_softmaxProbAmplified2;
 
@@ -68,11 +92,6 @@ struct Image
   std::vector<float> m_amplifyProbVector1;
   std::vector<float> m_amplifyProbVector2;
   std::vector<float> m_amplifyProbVector3;
-};
-
-
-struct ImageData 
-{
 
 };
 
@@ -90,130 +109,121 @@ public:
   };
 
   using Buffer = std::vector<std::byte>;
+
   //! This is returned to front end app when some quesries are submited
   //! <SessionID, image filename, user keywords, net <keyword, probability> >
   using GameSessionQueryResult = std::tuple<std::string, std::string, std::vector<std::string>, std::vector<std::pair<std::string, float>>>;
+  
   //! Array of those is submited from front-end app game
   using GameSessionInputQuery = std::tuple<std::string, size_t, std::string>;
 
   using ImageReference = std::pair<size_t, std::string>;
-  using ImageData = Image;
 
-
-  //!
   /*! <wordnetID, keyword, description> */
-  using KeywordReference = std::vector<std::tuple<size_t, std::string, std::string>>;
+  using KeywordReferences = std::vector<std::tuple<size_t, std::string, std::string>>;
 
+  /*!
+   * Output data for drawing chart
+   */
   using ChartData = std::vector <std::pair<uint32_t, uint32_t>>;
 
-  enum AmplifyAggregations 
-  {
-    cLinearFull,
-    cLinearWithLowOffset,
-    cSoftmaxAmplify,
-    cSoftmaxAmplify2,
-    cSoftmaxAmplify3,
-    cSoftmaxAmplify4
-  };
+  /*!
+   * FORMAT:
+   *  0: Boolean:
+   *  1: BooleanBucket:
+   *    0 => trueTreshold
+   *    1 => inBucketSorting
+   *  2: BooleanExtended:
+   *  3: ViretBase:
+   *    0 => ignoreTreshold
+   *    1 => rankCalcMethod
+   *      0: Multiply & (Add |)
+   *      1: Add only
+   *  4: FuzzyLogic:
+   */
+  using ModelSettings = std::vector<std::string>;
 
   enum RankingModel 
   {
-    cBoolean,
-    cBooleanCustom,
-    cBooleanExtended,
-    cViretBase,
-    cFuzzyLogic
+    cBoolean = 0,
+    cBooleanBucket = 1,
+    cBooleanExtended = 2,
+    cViretBase = 3,
+    cFuzzyLogic = 4
   };
 
   enum QueryOrigin
   {
-    cDeveloper,
-    cPublic
+    cDeveloper = 0,
+    cPublic = 1,
+    cManaged = 2
   };
 
-  enum AggregationFunction
+  enum Aggregation
   {
-    cSoftmax,
-    cMinMaxClamp,
-    cAmplified1,
-    cAmplified2,
-    cAmplified3,
-    cAmplifiedSoftmax1,
-    cAmplifiedSoftmax2
+    cSoftmax = 1,
+      cAmplified1 = 100,
+      cAmplified2 = 101,
+      cAmplified3 = 102,
+    cMinMaxLinear = 2,
+      cAmplifiedSoftmax1 = 200,
+      cAmplifiedSoftmax2 = 201
   };
+
+  enum Mode
+  {
+    cFull,
+    cCollector
+  };
+
 
   // Methods
 public:
   ImageRanker() = delete;
 
-  //! Constructor with data from files
-  ImageRanker(
-    std::string_view imagesPath,
-    std::string_view probabilityVectorFilepath,
-    std::string_view deepFeaturesFilepath,
-    std::string_view keywordClassesFilepath,
-    std::string_view imagesListFilepath,
-    size_t columnIndexFilename,
-    size_t imageListFileLineLength,
-    size_t numRows,
-    size_t idOffset
-  );
-
   //! Constructor with data from files with presoftmax file
   ImageRanker(
-    std::string_view imagesPath,
-    std::string_view probabilityVectorFilepath,
-    std::string_view rawProbabilityVectorFilepath,
-    std::string_view deepFeaturesFilepath,
-    std::string_view keywordClassesFilepath,
-    std::string_view imagesListFilepath,
-    size_t columnIndexFilename,
-    size_t imageListFileLineLength,
-    size_t numRows,
-    size_t idOffset
+    const std::string& imagesPath,
+    const std::string& rawNetRankingFilepath,
+    const std::string& keywordClassesFilepath,
+    const std::string& softmaxFilepath = ""s,
+    const std::string& deepFeaturesFilepath = ""s,
+    const std::string& imageToIdMapFilepath = ""s,
+    size_t idOffset = 1ULL
   );
 
   //! Constructor with data from database
   ImageRanker(
-    std::string_view imagesPath
+    const std::string& imagesPath
   );
 
   ~ImageRanker() noexcept = default;
-
-  // Testing
-# if 1 
-
-  void TEST_GetVectorKeywords(size_t wordnetId)
-  {
-    auto keywords = _keywords.GetVectorKeywords(wordnetId);
-
-    std::cout << "===========" << std::endl;
-    std::cout << "KEYWORD: " << GetKeywordByWordnetId(wordnetId) << std::endl;
-
-    for (auto&& keywordId : keywords)
-    {
-      std::cout << GetKeywordByWordnetId(keywordId) << std::endl;
-    }
-  }
-
-
-  void TEST_GetCanonicalQuery(const std::string& query)
-  {
-    CnfFormula fml = _keywords.GetCanonicalQuery(query);
-
-    std::cout << "===========" << std::endl;
-    std::cout << "QUERY: " << query << std::endl;
-    std::cout << _keywords.StringifyCnfFormula(fml) << std::endl;
-
-  }
-
-#endif
 
 
   //////////////////////////
   //    API Methods
   //////////////////////////
   // vvvvvvvvvvvvvvvvvvvvvvv
+
+  /*!
+   * Initializes IR with current settings
+   * 
+   * \return True on success
+   */
+  bool Initialize();
+  bool Reinitialize();
+  void Clear();
+  void SetMode(Mode value);
+
+  /*!
+   * Set how ranker will rank by default
+   * 
+   * \param aggFn
+   * \param rankingModel
+   * \param dataSource
+   * \param settings
+   */
+  void SetMainSettings(Aggregation agg, RankingModel rankingModel, ModelSettings settings);
 
   // const chartData = [
   //   { index: 0, value: 10 },
@@ -225,18 +235,11 @@ public:
   //   { index: 6, value: 60.4 }
   // ];
   ImageRanker::ChartData RunModelTest(
-    AggregationFunction aggFn, RankingModel rankingModel, QueryOrigin dataSource,
+    Aggregation aggFn, RankingModel rankingModel, QueryOrigin dataSource,
     std::vector<std::string> settings
   );
 
 
-  /*!
-   * Gets all data about image with provided ID
-   * 
-   * \param imageId
-   * \return 
-   */
-  ImageData GetImageDataById(size_t imageId) const;
   std::string GetKeywordByVectorIndex(size_t index) const
   {
     return _keywords.GetKeywordByVectorIndex(index);
@@ -249,11 +252,11 @@ public:
 
 
   ImageReference GetRandomImage() const;
-  KeywordReference GetNearKeywords(const std::string& prefix);
+  KeywordReferences GetNearKeywords(const std::string& prefix);
 
   std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImages(
     const std::string& query, size_t numResults = NUM_IMAGES_PER_PAGE, 
-    AggregationFunction aggFn = DEFAULT_AGG_FUNCTION, RankingModel rankingModel = DEFAULT_RANKING_MODEL, std::vector<std::string> settings = DEFAULT_MODEL_SETTINGS,
+    Aggregation aggFn = DEFAULT_AGG_FUNCTION, RankingModel rankingModel = DEFAULT_RANKING_MODEL, std::vector<std::string> settings = DEFAULT_MODEL_SETTINGS,
     size_t imageId = SIZE_T_ERROR_VALUE  
   ) const;
 
@@ -270,38 +273,33 @@ private:
   bool PushImagesToDatabase();
 #endif
 
-  ImageRanker::ChartData RunBooleanCustomModelTest(AggregationFunction aggFn, QueryOrigin dataSource, std::vector<std::string>& settings);
-  ImageRanker::ChartData RunViretBaseModelTest(AggregationFunction aggFn, QueryOrigin dataSource, std::vector<std::string>& settings);
+  ImageRanker::ChartData RunBooleanCustomModelTest(Aggregation aggFn, QueryOrigin dataSource, std::vector<std::string>& settings);
+  ImageRanker::ChartData RunViretBaseModelTest(Aggregation aggFn, QueryOrigin dataSource, std::vector<std::string>& settings);
   
 
 
   size_t GetRandomImageId() const;
-  
-
-  size_t GetNumImages() const
-  {
-    return _images.size();
-  }
+ 
 
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanModel(
 const std::string& query, size_t numResults, 
     size_t targetImageId,
-    AggregationFunction aggFn, std::vector<std::string>& settings
+    Aggregation aggFn, std::vector<std::string>& settings
   ) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanCustomModel(
     const std::string& query, size_t numResults, 
     size_t targetImageId,
-    AggregationFunction aggFn , std::vector<std::string>& settings
+    Aggregation aggFn , std::vector<std::string>& settings
   ) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingViretBaseModel(
     const std::string& query, size_t numResults, 
     size_t targetImageId,
-    AggregationFunction aggFn, std::vector<std::string>& settings
+    Aggregation aggFn, std::vector<std::string>& settings
   ) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingFuzzyLogicModel(
     const std::string& query, size_t numResults, 
     size_t targetImageId,
-    AggregationFunction aggFn, std::vector<std::string>& settings
+    Aggregation aggFn, std::vector<std::string>& settings
   ) const;
 
   std::string GetKeywordByWordnetId(size_t wordnetId)
@@ -316,19 +314,12 @@ const std::string& query, size_t numResults,
 
   std::string GetImageFilenameById(size_t imageId) const;
 
-  std::string GetImageFilepathByIndex(size_t imgIndex, bool relativePaths = false) const;
-
-  int GetRandomInteger(int from, int to) const;
+  
   bool LoadKeywordsFromDatabase(Database::Type type);
   bool LoadImagesFromDatabase(Database::Type type);
   std::vector<std::pair<std::string, float>> GetHighestProbKeywords(size_t imageId, size_t N) const;
 
   std::vector<std::string> TokenizeAndQuery(std::string_view query) const;
-
-  std::map<size_t, Image> ParseSoftmaxBinFile(std::string_view filepath, std::string_view imageFilesFilepath);
-  bool ParseRawProbabilityBinFile(std::string_view filepath, std::string_view imageFilesFilepath);
-
-  std::vector< std::pair< size_t, std::unordered_map<size_t, float> > > ParseSoftmaxBinFileFiltered(std::string_view filepath, float minProbabilty) const;
 
   std::unordered_map<size_t, std::pair<size_t, std::string> > ParseKeywordClassesTextFile(std::string_view filepath) const;
 
@@ -336,13 +327,34 @@ const std::string& query, size_t numResults,
 
   std::pair< size_t, std::vector< std::vector<std::string>>>& GetCachedQueries(ImageRanker::QueryOrigin dataSource);
 
-  bool CalculateMinMaxClampAgg(Image* pImage, float min, float max, float avg);
+  std::string EncodeAndQuery(const std::string& query) const;
 
 
-  bool CalculateAmplifyAgg(ImageRanker::AmplifyAggregations ampAgg, Image* pImage, float min, float max, float avg);
-  bool CalculateAmplifyAgg2(ImageRanker::AmplifyAggregations ampAgg, Image* pImage, float min, float max, float avg);
+  size_t GetNumImages() const { return _images.size(); };
+
+  /*!
+   * Initializes ImageRanker for working in Collector app
+   * 
+   * \return True on success
+   */
+  bool InitializeCollectorMode();
+
+  /*!
+   * Initializes ImageRanker for working in IRApp
+   * 
+   * \return True on success
+   */
+  bool InitializeFullMode();
+
+
+  /*!
+   *  Parses binary file containing raw ranking data
+   * 
+   * \return  Hash map with all Image instances loaded
+   */
+  std::map<size_t, Image> ParseRawNetRankingBinFile();
+  bool ParseSoftmaxBinFile();
   
-  bool CalculateAmplifySoftmaxAgg(ImageRanker::AmplifyAggregations ampAgg, Image* pImage);
   /*!
   * Loads bytes from specified file into buffer
   *
@@ -352,51 +364,66 @@ const std::string& query, size_t numResults,
   std::vector<std::byte> LoadFileToBuffer(std::string_view filepath) const;
 
   /*!
-  * Parses Little Endian integer from provided buffer starting at specified index.
+  * Parses Little Endian integer from provided buffer starting at specified index
   *
-  * \param buffer  Reference to source buffer.
-  * \param startIndex  Index where integer starts.
   * \return  Correct integer representation.
   */
-  int32_t ParseIntegerLE(const Buffer& buffer, size_t startIndex) const;
+  int32_t ParseIntegerLE(const std::byte* pFirstByte) const;
+
   /*!
-  * Parses Little Endian float from provided buffer starting at specified index.
-  *
-  * \param buffer  Reference to source buffer.
-  * \param startIndex  Index where float starts.
+  * Parses Little Endian float from provided buffer starting at specified index
+  * 
   * \return  Correct float representation.
   */
-  float ParseFloatLE(const Buffer& buffer, size_t startIndex) const;
+  float ParseFloatLE(const std::byte* pFirstByte) const;
 
-  std::vector<std::string> ParseImageFilenamesTextFile(std::string_view filepath) const;
+  
+  /*!
+   * Returns true if no specific image filename mapping file provided
+   * 
+   * \return True if default order of images in directory should be used
+   */
+  bool UseDefaultImageFilenames() const { return (_imageToIdMap.empty() ? true : false); };
 
-  float FullLinearAmplifyValue(float x) const;
-  float FullLinearAmplifySoftmaxValue(float x) const;
-  float FullLinearAmplifySoftmaxValue2(float x) const;
-  float FullLinearAmplifySoftmaxValue3(float x) const;
-  float FullLinearAmplifySoftmaxValue4(float x) const;
-  float OffsetLinearAmplifyValue(float x) const;
+
+  std::vector<std::string> GetImageFilenames() const;
+  std::vector<std::string> GetImageFilenamesFromDirectoryStructure() const;
+
+  //////////////////////////
+  // uncertain stuff
+  void CalculateMinMaxClampAgg();
+
+  // uncertain stuff
+  //////////////////////////
 
 private:
   Database _primaryDb;
-
   Database _secondaryDb;
+
+  bool _isReinitNeeded;
+  Mode _mode;
+
+  //! Aggregation that will be used mainly
+  Aggregation _mainAggregation; 
+
+  //! Ranking model that will be used mainly
+  RankingModel _mainRankingModel;
+
+  //! Model settings that will be used mainly
+  ModelSettings _mainSettings;
+
+  size_t _imageIdStride;
+
+  std::string _imagesPath;
+  std::string _rawNetRankingFilepath;
+
+  std::string _softmaxFilepath;
+  std::string _deepFeaturesFilepath;
+
+  std::string _imageToIdMap;
 
   KeywordsContainer _keywords;
   std::map<size_t, Image> _images;
-  
 
-  std::string _softmaxFilepath;
-  std::string _preSoftmaxFilepath;
-
-  std::string _imagesListFilepath;
-  std::string _imagesPath;
-  size_t _columnIndexFilename;
-  size_t _imageListFileLineLength;
-
-  size_t _numRows;
-  size_t _idOffset;
-
-  float _currBoolModelProbTreshold;
 
 };

@@ -46,6 +46,14 @@ size_t Database::EstablishConnection()
     "NULL", 0
   );
 
+
+  if (!_mysqlConnection)
+  {
+    fprintf(stderr, "Failed to connect to database: Error: %s\n",
+      mysql_error(_mysqlConnection));
+  }
+
+
   bool reconnect = true;
   mysql_options(_mysqlConnection, MYSQL_OPT_RECONNECT, &reconnect);
  

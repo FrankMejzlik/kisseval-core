@@ -1,5 +1,4 @@
-// ImageRanker.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+
 
 #include <iostream>
 
@@ -14,36 +13,22 @@ int main()
 
 #else 
 
-  //ImageRanker ranker{
-  //  IMAGES_PATH,
-  //  DATA_PATH SOFTMAX_BIN_FILE,
-  //  DATA_PATH DEEP_FEATURES_FILENAME,
-  //  DATA_PATH KEYWORD_CLASSES_FILENAME,
-  //  DATA_PATH IMAGES_LIST_FILENAME,
-  //  COLUMN_INDEX_OF_FILENAME,
-  //  FILES_FILE_LINE_LENGTH,
-  //  NUM_ROWS,
-  //  INDEX_OFFSET
-  //};
-
-
   ImageRanker ranker{
-    R"(C:\Users\devwe\source\repos\ImageRankerCollector\public\images\)",
-    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.softmax)",
-    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.pre-softmax)",
-    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\Studenti_NasNetLarge.deep-features)",
-    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\keyword_classes.txt)",
-    R"(C:\Users\devwe\source\repos\ImageRankerCollector\data2\dir_images.txt)",
-    4,
-    90,
-    20000,
-    1
+    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\images\)",
+    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.pre-softmax)",
+    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\keyword_classes.txt)",
+    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.softmax)",
+    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.deep-features)",
+    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\files.txt)",
   };
+
+  ranker.Initialize();
+
 /*
   ImageRanker ranker{
    R"(C:\Users\frank\source\repos\ImageRanker\public\images\)",
-   R"(C:\Users\frank\source\repos\ImageRanker\data2\Studenti_NasNetLarge.softmax)",
    R"(C:\Users\frank\source\repos\ImageRanker\data2\Studenti_NasNetLarge.pre-softmax)",
+   R"(C:\Users\frank\source\repos\ImageRanker\data2\Studenti_NasNetLarge.softmax)",
    R"(C:\Users\frank\source\repos\ImageRanker\data2\Studenti_NasNetLarge.deep-features)",
    R"(C:\Users\frank\source\repos\ImageRanker\data2\keyword_classes.txt)",
    R"(C:\Users\frank\source\repos\ImageRanker\data2\dir_images.txt)",
@@ -53,33 +38,28 @@ int main()
    1
   };*/
 
-  auto result1{ ranker.RunModelTest(
-   (ImageRanker::AggregationFunction)5,
-   (ImageRanker::RankingModel)3,
-   (ImageRanker::QueryOrigin)0,
-   std::vector<std::string>({"0.0", "0.000", "0", "2"})) };
+  //auto result1{ ranker.RunModelTest(
+  // (ImageRanker::Aggregation)5,
+  // (ImageRanker::RankingModel)3,
+  // (ImageRanker::QueryOrigin)0,
+  // std::vector<std::string>({"0.0", "0.000", "0", "2"})) };
 
-  for (auto&& slice : result1)
-  {
-    std::cout << slice.first << " => " << slice.second << std::endl;
-  }
+  //for (auto&& slice : result1)
+  //{
+  //  std::cout << slice.first << " => " << slice.second << std::endl;
+  //}
 
+  auto p1 = ranker.GetRandomImage();
+  auto p2 = ranker.GetRandomImage();
 
+  std::vector<ImageRanker::GameSessionInputQuery> tv;
+  tv.emplace_back(std::tuple("ses1"s, 1234ULL, "111&222&333&4444"));
+  tv.emplace_back(std::tuple("ses2"s, 12364ULL, "9111&9222&3933&94444"));
 
-  auto result2{ ranker.RunModelTest(
-    (ImageRanker::AggregationFunction)6, 
-    (ImageRanker::RankingModel)3, 
-    (ImageRanker::QueryOrigin)0, 
-    std::vector<std::string>({"0.0", "0.000", "0", "2"})) };
-
-  for (auto&& slice : result2)
-  {
-    std::cout << slice.first << " => " << slice.second << std::endl;
-  }
-  std::cout << "++++++++++++++++" << std::endl;
-
+  ranker.SubmitUserQueriesWithResults(tv, ImageRanker::cPublic);
 
 #endif
+
 
   return 0;
 

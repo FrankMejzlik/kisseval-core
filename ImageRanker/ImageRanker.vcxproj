@@ -244,6 +244,7 @@
     <ClCompile Include="src\KeywordsContainer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\credentials.h" />
     <ClInclude Include="src\config.h" />
     <ClInclude Include="src\Database.h" />
     <ClInclude Include="src\ImageRanker.h" />

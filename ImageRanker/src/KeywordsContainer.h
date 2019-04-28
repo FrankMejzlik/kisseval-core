@@ -2,7 +2,6 @@
 #pragma once
 
 #include <string>
-
 using namespace std::literals::string_literals;
 
 #include <algorithm>
@@ -55,7 +54,7 @@ class KeywordsContainer
 {
 public:
   KeywordsContainer() = default;
-  KeywordsContainer(std::string_view keywordClassesFilepath);
+  KeywordsContainer(const std::string& keywordClassesFilepath);
 
   //! Constructor from database data
   KeywordsContainer(std::vector< std::vector<std::string>>&& data);
@@ -71,7 +70,7 @@ public:
   std::string GetKeywordByWordnetId(size_t wordnetId);
   std::string GetKeywordByVectorIndex(size_t index) const;
 
-  std::string GetKeywordDescriptionByWordnetId(size_t wordnetId);
+  std::string GetKeywordDescriptionByWordnetId(size_t wordnetId) const;
   
   CnfFormula GetCanonicalQuery(const std::string& query) const;
 
@@ -128,7 +127,7 @@ public:
   }
 
 private:
-  bool ParseKeywordClassesFile(std::string_view filepath);
+  bool ParseKeywordClassesFile(const std::string& filepath);
   bool ParseKeywordDbDataStructure(std::vector< std::vector<std::string>>&& data);
 
   /*!
@@ -180,6 +179,8 @@ private:
   std::vector<std::pair<size_t, Keyword*>> _descIndexToKeyword;
 
   size_t _approxDescLen;
+
+  
 
 #if PUSH_DATA_TO_DB
   

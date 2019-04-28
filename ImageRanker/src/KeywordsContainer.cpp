@@ -5,7 +5,7 @@
 #include "KeywordsContainer.h"
 
 
-KeywordsContainer::KeywordsContainer(std::string_view keywordClassesFilepath)
+KeywordsContainer::KeywordsContainer(const std::string& keywordClassesFilepath)
 {
   // Parse data
   ParseKeywordClassesFile(keywordClassesFilepath);
@@ -213,18 +213,19 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query) const
     resultFormula.emplace_back(GetVectorKeywordsIndices(pKeyword->m_wordnetId));
   }
 
+
   return resultFormula;
 }
 
-bool KeywordsContainer::ParseKeywordClassesFile(std::string_view filepath)
+bool KeywordsContainer::ParseKeywordClassesFile(const std::string& filepath)
 {
   // Open file with list of files in images dir
-  std::ifstream inFile(filepath.data(), std::ios::in);
+  std::ifstream inFile(filepath, std::ios::in);
 
   // If failed to open file
   if (!inFile)
   {
-    throw std::runtime_error(std::string("Error opening file :") + filepath.data());
+    throw std::runtime_error(std::string("Error opening file :") + filepath);
   }
 
   std::string lineBuffer;
@@ -659,7 +660,7 @@ bool KeywordsContainer::PushKeywordsToDatabase(Database& db)
 #endif
 
 
-std::string KeywordsContainer::GetKeywordDescriptionByWordnetId(size_t wordnetId)
+std::string KeywordsContainer::GetKeywordDescriptionByWordnetId(size_t wordnetId) const
 {
 
   auto resultIt = _wordnetIdToKeywords.find(wordnetId);
@@ -671,7 +672,7 @@ std::string KeywordsContainer::GetKeywordDescriptionByWordnetId(size_t wordnetId
 
   size_t startDescIndex = resultIt->second->m_descStartIndex;
 
-  char* pDesc = (_allDescriptions.data()) + startDescIndex;
+  const char* pDesc = (_allDescriptions.data()) + startDescIndex;
 
 
   return std::string(pDesc);
