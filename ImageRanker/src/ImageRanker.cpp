@@ -221,6 +221,73 @@ std::vector<std::string> ImageRanker::GetImageFilenamesFromDirectoryStructure() 
   return std::vector<std::string>();
 }
 
+const std::vector<float>& ImageRanker::GetMainRankingVector(const Image& image) const
+{
+  switch (_mainAggregation) 
+  {
+  case cSoftmax:
+    return image.m_softmaxVector;
+    break;
+
+  case cAmplified1:
+    return image.m_amplifyProbVector1;
+    break;
+
+  case cAmplified2:
+    return image.m_amplifyProbVector2;
+    break;
+
+  case cAmplified3:
+    return image.m_amplifyProbVector3;
+    break;
+
+  case cMinMaxLinear:
+    return image.m_minMaxLinearVector;
+    break;
+
+  case cAmplifiedSoftmax1:
+    return image.m_softmaxProbAmplified1;
+    break;
+
+  case cAmplifiedSoftmax2:
+    return image.m_softmaxProbAmplified2;
+    break;
+  }
+}
+
+std::vector<float>& ImageRanker::GetMainRankingVector(Image& image)
+{
+  switch (_mainAggregation)
+  {
+  case cSoftmax:
+    return image.m_softmaxVector;
+    break;
+
+  case cAmplified1:
+    return image.m_amplifyProbVector1;
+    break;
+
+  case cAmplified2:
+    return image.m_amplifyProbVector2;
+    break;
+
+  case cAmplified3:
+    return image.m_amplifyProbVector3;
+    break;
+
+  case cMinMaxLinear:
+    return image.m_minMaxLinearVector;
+    break;
+
+  case cAmplifiedSoftmax1:
+    return image.m_softmaxProbAmplified1;
+    break;
+
+  case cAmplifiedSoftmax2:
+    return image.m_softmaxProbAmplified2;
+    break;
+  }
+}
 
 
 std::map<size_t, Image> ImageRanker::ParseRawNetRankingBinFile() 
@@ -484,7 +551,7 @@ void ImageRanker::CalculateMinMaxClampAgg()
       float newValue{ (prob - img.m_min) / (float)amplitude };
 
       // Calculate the MAGIC!!
-      img.m_minMaxClampAggProbVector[i] = newValue;
+      img.m_minMaxLinearVector[i] = newValue;
 
       ++i;
     }
@@ -568,7 +635,7 @@ std::vector<ImageRanker::GameSessionQueryResult> ImageRanker::SubmitUserQueriesW
 std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(size_t imageId, size_t N) const
 {
   // Find image in map
-  auto imagePair = _images.find(imageId);
+  std::map<size_t, Image>::const_iterator imagePair = _images.find(imageId);
 
   // If no such image
   if (imagePair == _images.end())
@@ -863,7 +930,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
     {
       // MinMax Linear
     case Aggregation::cMinMaxLinear:
-      pImgRankingVector = &(img.m_minMaxClampAggProbVector);
+      pImgRankingVector = &(img.m_minMaxLinearVector);
       break;
 
       // Default Softmax
@@ -989,7 +1056,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
     {
       // MinMax Linear
     case Aggregation::cMinMaxLinear:
-      pImgRankingVector = &(img.m_minMaxClampAggProbVector);
+      pImgRankingVector = &(img.m_minMaxLinearVector);
       break;
 
       //  cAmplifiedLinear1
@@ -1177,7 +1244,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
     {
       // MinMax Linear
     case Aggregation::cMinMaxLinear:
-      pImgRankingVector = &(img.m_minMaxClampAggProbVector);
+      pImgRankingVector = &(img.m_minMaxLinearVector);
       break;
 
       //  cAmplifiedLinear1

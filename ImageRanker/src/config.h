@@ -15,7 +15,7 @@
 
 //! Default settings for main evaluation
 #define DEFAULT_RANKING_MODEL ImageRanker::cViretBase
-#define DEFAULT_AGG_FUNCTION ImageRanker::Aggregation::cMinMaxLinear
+#define DEFAULT_AGG_FUNCTION ImageRanker::Aggregation::cSoftmax
 #define DEFAULT_MODEL_SETTINGS std::vector<std::string>({"0.0f"s, "1"s})
 
 

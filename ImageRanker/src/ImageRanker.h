@@ -86,7 +86,7 @@ struct Image
   std::vector<float> m_softmaxProbAmplified2;
 
   //! Probability vector from custom MinMax Clamp method
-  std::vector<float> m_minMaxClampAggProbVector;
+  std::vector<float> m_minMaxLinearVector;
 
   //! Probability vector from custom Boolean Aggregation with treshold
   std::vector<float> m_amplifyProbVector1;
@@ -331,6 +331,10 @@ const std::string& query, size_t numResults,
 
 
   size_t GetNumImages() const { return _images.size(); };
+
+
+  const std::vector<float>& GetMainRankingVector(const Image& image) const;
+  std::vector<float>& GetMainRankingVector(Image& image);
 
   /*!
    * Initializes ImageRanker for working in Collector app
