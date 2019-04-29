@@ -191,7 +191,6 @@ std::vector<std::string> ImageRanker::GetImageFilenames() const
   }
 
   std::vector<std::string> result;
-  result.reserve(GetNumImages());
 
   std::string line;
 
@@ -585,7 +584,7 @@ std::vector<ImageRanker::GameSessionQueryResult> ImageRanker::SubmitUserQueriesW
   size_t originNumber{ static_cast<size_t>(origin) };
 
   // Store it into database
-  std::string sqlQuery{ "INSERT INTO `queries` (query, image_id, type) VALUES " };
+  std::string sqlQuery{ "INSERT INTO `queries` (query, image_id, type, sessionId) VALUES " };
 
   for (auto&& query : inputQueries)
   {
@@ -595,7 +594,7 @@ std::vector<ImageRanker::GameSessionQueryResult> ImageRanker::SubmitUserQueriesW
 
 
 
-    sqlQuery += "('"s + EncodeAndQuery(queryString) + "', " + std::to_string(imageId) + ", "s + std::to_string(originNumber) + "),"s;
+    sqlQuery += "('"s + EncodeAndQuery(queryString) + "', " + std::to_string(imageId) + ", "s + std::to_string(originNumber) + ", '"s + std::get<0>(query) + "'),"s;
   }
 
   sqlQuery.pop_back();
