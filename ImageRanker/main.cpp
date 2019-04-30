@@ -24,20 +24,6 @@ int main()
 
   ranker.Initialize();
 
-/*
-  ImageRanker ranker{
-   R"(C:\Users\frank\source\repos\ImageRanker\public\images\)",
-   R"(C:\Users\frank\source\repos\ImageRanker\data2\Studenti_NasNetLarge.pre-softmax)",
-   R"(C:\Users\frank\source\repos\ImageRanker\data2\Studenti_NasNetLarge.softmax)",
-   R"(C:\Users\frank\source\repos\ImageRanker\data2\Studenti_NasNetLarge.deep-features)",
-   R"(C:\Users\frank\source\repos\ImageRanker\data2\keyword_classes.txt)",
-   R"(C:\Users\frank\source\repos\ImageRanker\data2\dir_images.txt)",
-   4,
-   90,
-   20000,
-   1
-  };*/
-
   //auto result1{ ranker.RunModelTest(
   // (ImageRanker::Aggregation)5,
   // (ImageRanker::RankingModel)3,
@@ -56,7 +42,7 @@ int main()
   tv.emplace_back(std::tuple("ses1"s, 1234ULL, "111&222&333&4444"));
   tv.emplace_back(std::tuple("ses2"s, 12364ULL, "9111&9222&3933&94444"));
 
-  ranker.SubmitUserQueriesWithResults(tv, ImageRanker::cPublic);
+  auto result = ranker.SubmitUserQueriesWithResults(tv, ImageRanker::cPublic);
 
 #endif
 

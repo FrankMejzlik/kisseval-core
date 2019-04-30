@@ -67,7 +67,7 @@ public:
   bool PushKeywordsToDatabase(Database& db);
 #endif
 
-  std::string GetKeywordByWordnetId(size_t wordnetId);
+  std::string GetKeywordByWordnetId(size_t wordnetId)const ;
   std::string GetKeywordByVectorIndex(size_t index) const;
 
   std::string GetKeywordDescriptionByWordnetId(size_t wordnetId) const;

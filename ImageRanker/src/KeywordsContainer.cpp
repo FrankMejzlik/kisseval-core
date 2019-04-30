@@ -527,7 +527,7 @@ Keyword* KeywordsContainer::MapDescIndexToKeyword(size_t descIndex) const
   return _descIndexToKeyword[left].second;
 }
 
-std::string KeywordsContainer::GetKeywordByWordnetId(size_t wordnetId)
+std::string KeywordsContainer::GetKeywordByWordnetId(size_t wordnetId) const
 {
   auto resultIt = _wordnetIdToKeywords.find(wordnetId);
 

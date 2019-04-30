@@ -49,18 +49,31 @@ struct Image
     m_imageId(id),
     m_filename(std::move(filename)),
     m_rawNetRanking(std::move(rawNetRanking)),
-    m_rawNetRankingSorted(m_rawNetRanking),
+    m_rawNetRankingSorted(),
     m_min(min), m_max(max),
     m_mean(mean), m_variance(variance)
   {
+
+    // Create sorted array
+    size_t i{0ULL};
+    for (auto&& img : m_rawNetRanking)
+    {
+      m_rawNetRankingSorted.emplace_back(std::pair(static_cast<uint32_t>(i), img));
+
+      ++i;
+    }
+    
+
     // Sort it
     std::sort(
       m_rawNetRankingSorted.begin(), m_rawNetRankingSorted.end(),
-      [](const float& a, const float& b) -> bool
+      [](const std::pair<size_t, float>& a, const std::pair<size_t, float>& b) -> bool
       {
-        return a > b;
+        return a.second > b.second;
       }
     );
+
+
   }
 
   size_t m_imageId;
@@ -75,7 +88,7 @@ struct Image
   float m_variance;
 
   //! Raw vector as it came out of neural network but SORTED
-  std::vector<float> m_rawNetRankingSorted;
+  std::vector<std::pair<uint32_t, float>> m_rawNetRankingSorted;
    
 
   //! Softmax probability ranking
@@ -99,6 +112,41 @@ class ImageRanker
 {
   // Structures
 public:
+  enum RankingModel
+  {
+    cBoolean = 0,
+    cBooleanBucket = 1,
+    cBooleanExtended = 2,
+    cViretBase = 3,
+    cFuzzyLogic = 4
+  };
+
+  enum QueryOrigin
+  {
+    cDeveloper = 0,
+    cPublic = 1,
+    cManaged = 2
+  };
+
+  enum Aggregation
+  {
+    cSoftmax = 1,
+    cAmplified1 = 100,
+    cAmplified2 = 101,
+    cAmplified3 = 102,
+    cMinMaxLinear = 2,
+    cAmplifiedSoftmax1 = 200,
+    cAmplifiedSoftmax2 = 201
+  };
+
+  enum Mode
+  {
+    cFull,
+    cCollector
+  };
+
+
+
   struct QueryResult 
   {
     QueryResult() :
@@ -127,6 +175,8 @@ public:
    */
   using ChartData = std::vector <std::pair<uint32_t, uint32_t>>;
 
+  using TestSettings = std::tuple<Aggregation, RankingModel, QueryOrigin, std::vector<std::string>>;
+
   /*!
    * FORMAT:
    *  0: Boolean:
@@ -143,40 +193,7 @@ public:
    */
   using ModelSettings = std::vector<std::string>;
 
-  enum RankingModel 
-  {
-    cBoolean = 0,
-    cBooleanBucket = 1,
-    cBooleanExtended = 2,
-    cViretBase = 3,
-    cFuzzyLogic = 4
-  };
-
-  enum QueryOrigin
-  {
-    cDeveloper = 0,
-    cPublic = 1,
-    cManaged = 2
-  };
-
-  enum Aggregation
-  {
-    cSoftmax = 1,
-      cAmplified1 = 100,
-      cAmplified2 = 101,
-      cAmplified3 = 102,
-    cMinMaxLinear = 2,
-      cAmplifiedSoftmax1 = 200,
-      cAmplifiedSoftmax2 = 201
-  };
-
-  enum Mode
-  {
-    cFull,
-    cCollector
-  };
-
-
+  
   // Methods
 public:
   ImageRanker() = delete;
@@ -238,6 +255,10 @@ public:
     Aggregation aggFn, RankingModel rankingModel, QueryOrigin dataSource,
     std::vector<std::string> settings
   );
+
+  std::vector<ChartData> RunModelTests(const std::vector<TestSettings>& testSettings) const;
+
+  std::vector<std::pair<TestSettings, ChartData>> RunGridTests(const std::vector<TestSettings>& testSettings) const;
 
 
   std::string GetKeywordByVectorIndex(size_t index) const
@@ -302,7 +323,7 @@ const std::string& query, size_t numResults,
     Aggregation aggFn, std::vector<std::string>& settings
   ) const;
 
-  std::string GetKeywordByWordnetId(size_t wordnetId)
+  std::string GetKeywordByWordnetId(size_t wordnetId) const
   {
     return _keywords.GetKeywordByWordnetId(wordnetId);
   }
@@ -320,6 +341,7 @@ const std::string& query, size_t numResults,
   std::vector<std::pair<std::string, float>> GetHighestProbKeywords(size_t imageId, size_t N) const;
 
   std::vector<std::string> TokenizeAndQuery(std::string_view query) const;
+  std::vector<std::string> StringenizeAndQuery(const std::string& query) const;
 
   std::unordered_map<size_t, std::pair<size_t, std::string> > ParseKeywordClassesTextFile(std::string_view filepath) const;
 

@@ -355,11 +355,6 @@ std::map<size_t, Image> ImageRanker::ParseRawNetRankingBinFile()
   // Iterate until there is something to read from file
   while (ifs.read((char*)lineBuffer.data(), byteRowLengths))
   {
-    if (lineBuffer.empty())
-    {
-      //break;
-    }
-
     // Get picture ID of this row
     size_t id = ParseIntegerLE(lineBuffer.data());
 
@@ -615,7 +610,7 @@ std::vector<ImageRanker::GameSessionQueryResult> ImageRanker::SubmitUserQueriesW
   for (auto&& query : inputQueries)
   {
     // Get user keywords tokens
-    std::vector<std::string> userKeywords{ TokenizeAndQuery(std::get<2>(query)) };
+    std::vector<std::string> userKeywords{ StringenizeAndQuery(std::get<2>(query)) };
 
     // Get image ID
     size_t imageId = std::get<1>(query);
@@ -652,10 +647,10 @@ std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(s
   // Get first N highest probabilites
   for (size_t i = 0ULL; i < N; ++i)
   {
-    float probability{ ranking[i] };
+    float probability{ ranking[i].second };
 
     // Get keyword string
-    std::string keyword{ _keywords.GetKeywordByVectorIndex(i) }; ;
+    std::string keyword{ _keywords.GetKeywordByVectorIndex(ranking[i].first) }; ;
 
     // Place it into result vector
     result.emplace_back(std::pair(keyword, probability));
@@ -682,6 +677,33 @@ std::vector<std::string> ImageRanker::TokenizeAndQuery(std::string_view query) c
 
     // Push new token into result
     resultTokens.emplace_back(std::move(tokenString));
+  }
+
+  return resultTokens;
+}
+
+std::vector<std::string> ImageRanker::StringenizeAndQuery(const std::string& query) const
+{
+  // Create sstram from query
+  std::stringstream querySs{ query.data() };
+
+  std::vector<std::string> resultTokens;
+  std::string tokenString;
+
+  while (std::getline(querySs, tokenString, '&'))
+  {
+    // If empty string
+    if (tokenString.empty())
+    {
+      continue;
+    }
+
+    std::stringstream tokenSs{ tokenString };
+    size_t wordnetId;
+    tokenSs >> wordnetId;
+
+    // Push new token into result
+    resultTokens.emplace_back(GetKeywordByWordnetId(wordnetId));
   }
 
   return resultTokens;
