@@ -6,7 +6,7 @@
 #include <sstream>
 #include <random>
 
-using Clause = std::vector<size_t>;
+using Clause = std::vector<std::pair<bool, size_t>>;
 using CnfFormula = std::vector<Clause>;
 
 inline std::vector<std::string> SplitString(const std::string& s, char delimiter)

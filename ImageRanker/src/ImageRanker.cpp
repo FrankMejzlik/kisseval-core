@@ -972,7 +972,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
       for (auto&& var : clause) 
       {
           // If this variable satisfies this clause
-          if ((*pImgRankingVector)[var] != 0)
+          if ((*pImgRankingVector)[var.second] != 0)
           {
             clauseSucc = true;
             break;
@@ -1130,7 +1130,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
       // Iterate through predicates
       for (auto&& var : clause)
       {
-        auto ranking{ (*pImgRankingVector)[var] };
+        auto ranking{ (*pImgRankingVector)[var.second] };
 
         // Skipp all labels with too low probability
         if (ranking < trueTreshold)
@@ -1185,17 +1185,6 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
 std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanCustomModel(
   const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, std::vector<std::string>& settings) const
 {
-  /*
-  SETTINGS:
-  0 => true treshold
-  1
-  2
-  3 => InBucketRanking
-    0 = none
-    1 = sum
-    2 = max
-  */
-
   // Defaults:
   float trueTreshold{0.01f};
   unsigned int inBucketRanking{0};
@@ -1203,14 +1192,14 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
   // If setting 0 set
   if (settings.size() >= 1 && settings[0].size() >= 0)
   {
-    std::stringstream setting1Ss{ settings[0] };
-    setting1Ss >> trueTreshold;
+    std::stringstream setting0Ss{ settings[0] };
+    setting0Ss >> trueTreshold;
   }
-  // If setting 3 set
-  if (settings.size() >= 4 && settings[3].size() >= 0)
+  // If setting 1 set
+  if (settings.size() >= 2 && settings[1].size() >= 0)
   {
-    std::stringstream setting4Ss{ settings[3] };
-    setting4Ss >> inBucketRanking;
+    std::stringstream setting1Ss{ settings[1] };
+    setting1Ss >> inBucketRanking;
   }
   
   CnfFormula fml = _keywords.GetCanonicalQuery(query);
@@ -1309,7 +1298,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
       for (auto&& var : clause)
       {
         // If this variable satisfies this clause
-        if ((*pImgRankingVector)[var] >= trueTreshold)
+        if ((*pImgRankingVector)[var.second] >= trueTreshold)
         {
           clauseSucc = true;
           break;
@@ -1322,14 +1311,14 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
         else if (inBucketRanking == 1)
         {
           // Summ sort
-          imageSubRank += (*pImgRankingVector)[var];
+          imageSubRank += (*pImgRankingVector)[var.second];
         }
         else if (inBucketRanking == 2)
         {
           // Get max
-          if (imageSubRank < (*pImgRankingVector)[var])
+          if (imageSubRank < (*pImgRankingVector)[var.second])
           {
-            imageSubRank = (*pImgRankingVector)[var];
+            imageSubRank = (*pImgRankingVector)[var.second];
           }
         }
 

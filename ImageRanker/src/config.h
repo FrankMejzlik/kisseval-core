@@ -82,5 +82,5 @@
  * 3: linode data1
  * 4: linode data2
  */
-#define PRIMARY_DB_ID 2
+#define PRIMARY_DB_ID 4
 #include "credentials.h"

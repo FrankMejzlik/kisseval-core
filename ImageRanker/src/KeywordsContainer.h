@@ -17,7 +17,7 @@ using namespace std::literals::string_literals;
 #include "utility.h"
 #include "Database.h"
 
-using Clause = std::vector<size_t>;
+using Clause = std::vector<std::pair<bool, size_t>>;
 using CnfFormula = std::vector<Clause>;
 
 struct Keyword
@@ -113,7 +113,7 @@ public:
 
       for (auto&& vecIndex : clause)
       {
-        result += GetKeywordByVectorIndex(vecIndex) + " | "s;
+        result += GetKeywordByVectorIndex(vecIndex.second) + " | "s;
       }
       result.pop_back();
       result.pop_back();

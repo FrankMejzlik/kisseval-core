@@ -1,6 +1,7 @@
 
 
 #include <algorithm>
+#include <cctype>
 
 #include "KeywordsContainer.h"
 
@@ -200,19 +201,75 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywordsIndices(size_t wordnetId
 
 CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query) const
 {
-  // Tokenize query
-  auto tokens = SplitString(query, '&');
+  //EG: &-8252602+-8256735+-3206282+-4296562+
+
+  std::stringstream idSs;
+  size_t wordnetId;
+  bool nextIdNegate{false};
 
   std::vector<Clause> resultFormula;
 
-  // Get clauses from all tokens
-  for (auto&& token : tokens) 
+  // Parse query
+  // \todo write complete parser
+  for (auto&& c : query)
   {
-    Keyword* pKeyword = GetKeywordByWord(token);
+    // Ignore 
+    if (c == '&') continue;
 
-    resultFormula.emplace_back(GetVectorKeywordsIndices(pKeyword->m_wordnetId));
+
+    if (c == '~') nextIdNegate = true;
+
+    if (std::isdigit(c))
+    {
+      idSs << c;
+    }
+    // If ss not empty
+    else if (idSs.rdbuf()->in_avail() > 0)
+    {
+      idSs >> wordnetId;
+      idSs.str("");
+      idSs.clear();
+
+      auto vecIds{ GetVectorKeywordsIndices(wordnetId) };
+
+      // If this Clause should be negated
+      if (nextIdNegate) 
+      {
+        // Add their negations as ANDs
+        for (auto&& id : vecIds)
+        {
+          Clause tmp{ std::pair(false, id) };        
+
+          resultFormula.push_back(tmp);
+        }
+        
+      }
+      else 
+      {
+
+        Clause tmp;
+        // Add their
+        for (auto&& id : vecIds)
+        {
+          tmp.emplace_back(std::pair(false, id));
+        }
+
+        resultFormula.emplace_back(tmp);
+      }
+
+      
+      nextIdNegate = false;
+    }
+    else if (c == '-' || c == '+')
+    {
+
+    }
+    else 
+    {
+      LOG_ERROR("Parsing query failed");
+    }
+
   }
-
 
   return resultFormula;
 }

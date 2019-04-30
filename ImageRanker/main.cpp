@@ -24,16 +24,16 @@ int main()
 
   ranker.Initialize();
 
-  //auto result1{ ranker.RunModelTest(
-  // (ImageRanker::Aggregation)5,
-  // (ImageRanker::RankingModel)3,
-  // (ImageRanker::QueryOrigin)0,
-  // std::vector<std::string>({"0.0", "0.000", "0", "2"})) };
+  auto result1{ ranker.RunModelTest(
+   (ImageRanker::Aggregation)5,
+   (ImageRanker::RankingModel)3,
+   (ImageRanker::QueryOrigin)0,
+   std::vector<std::string>({"0.0", "0.000", "0", "2"})) };
 
-  //for (auto&& slice : result1)
-  //{
-  //  std::cout << slice.first << " => " << slice.second << std::endl;
-  //}
+  for (auto&& slice : result1)
+  {
+    std::cout << slice.first << " => " << slice.second << std::endl;
+  }
 
   auto p1 = ranker.GetRandomImage();
   auto p2 = ranker.GetRandomImage();
