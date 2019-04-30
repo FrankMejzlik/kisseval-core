@@ -37,7 +37,7 @@ using namespace std::string_literals;
 
 struct Image
 {
-  Image() = delete;
+  Image() = default;
 
   Image(
     size_t id, 
@@ -265,6 +265,15 @@ public:
   {
     return _keywords.GetKeywordByVectorIndex(index);
   }
+
+  /*!
+   * Gets all data about image with provided ID
+   *
+   * \param imageId
+   * \return
+   */
+    Image GetImageDataById(size_t imageId) const;
+
 
   /*!
    * This processes input queries that come from users, generates results and sends them back

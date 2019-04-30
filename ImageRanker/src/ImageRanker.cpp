@@ -537,6 +537,8 @@ void ImageRanker::CalculateMinMaxClampAgg()
   {
     Image& img{ imgPair.second };
 
+    img.m_minMaxLinearVector.reserve(img.m_rawNetRanking.size());
+
     float amplitude{ img.m_max - img.m_min };
 
     size_t i{ 0ULL };
@@ -1357,6 +1359,20 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
  
 
   return result;
+}
+
+Image ImageRanker::GetImageDataById(size_t imageId) const
+{
+  auto imgIdImgPair = _images.find(imageId);
+
+  if (imgIdImgPair == _images.end())
+  {
+    LOG_ERROR("Image not found.")
+      return Image();
+  }
+
+  // Return copy to this Image instance
+  return Image(imgIdImgPair->second);
 }
 
 

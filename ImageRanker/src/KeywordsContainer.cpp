@@ -274,6 +274,8 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query) const
   return resultFormula;
 }
 
+
+
 bool KeywordsContainer::ParseKeywordClassesFile(const std::string& filepath)
 {
   // Open file with list of files in images dir
