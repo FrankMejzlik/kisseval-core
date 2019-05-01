@@ -1889,6 +1889,11 @@ bool ImageRanker::LoadImagesFromDatabase(Database::Type type)
 }
 
 
+std::pair<uint8_t, uint8_t> ImageRanker::GetGridTestProgress() const
+{ 
+  return GridTest::GetGridTestProgress(); 
+}
+
 int32_t ImageRanker::ParseIntegerLE(const std::byte* pFirstByte) const
 {
   // Initialize value

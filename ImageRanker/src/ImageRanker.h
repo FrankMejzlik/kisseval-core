@@ -38,6 +38,7 @@ using namespace std::string_literals;
 
 
 class ImageRanker;
+class GridTest;
 
 class RankingModel
 {
@@ -325,7 +326,7 @@ public:
   ) const;
 
 
-  uint8_t GetGridTestProgress() const { return GetGridTestProgress(); }
+  std::pair<uint8_t, uint8_t> GetGridTestProgress() const;
 
   // ^^^^^^^^^^^^^^^^^^^^^^^
   //////////////////////////
@@ -515,9 +516,9 @@ public:
     GridTest::numCompletedTests.operator++();
   }
 
-  static uint8_t GetGridTestProgress()
+  static std::pair<uint8_t, uint8_t> GetGridTestProgress()
   {
-    return static_cast<uint8_t>((float)GridTest::numCompletedTests / m_testSettings.size());
+    return std::pair((uint8_t)GridTest::numCompletedTests, (uint8_t)m_testSettings.size());
   }
 
   static void ReportTestProgress()
