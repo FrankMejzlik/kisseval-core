@@ -131,12 +131,12 @@ public:
   enum Aggregation
   {
     cSoftmax = 1,
-    cAmplified1 = 100,
-    cAmplified2 = 101,
-    cAmplified3 = 102,
+      cAmplified1 = 100,
+      cAmplified2 = 101,
+      cAmplified3 = 102,
     cMinMaxLinear = 2,
-    cAmplifiedSoftmax1 = 200,
-    cAmplifiedSoftmax2 = 201
+      cAmplifiedSoftmax1 = 200,
+      cAmplifiedSoftmax2 = 201
   };
 
   enum Mode
@@ -252,13 +252,12 @@ public:
   //   { index: 6, value: 60.4 }
   // ];
   ImageRanker::ChartData RunModelTest(
-    Aggregation aggFn, RankingModel rankingModel, QueryOrigin dataSource,
-    std::vector<std::string> settings
-  );
+    Aggregation aggFn, RankingModel rankingModel, QueryOrigin dataSource, const ModelSettings& settings
+  ) const;
 
   std::vector<ChartData> RunModelTests(const std::vector<TestSettings>& testSettings) const;
 
-  std::vector<std::pair<TestSettings, ChartData>> RunGridTests(const std::vector<TestSettings>& testSettings) const;
+  std::vector<std::pair<TestSettings, ChartData>> RunGridTest(const std::vector<TestSettings>& testSettings) const;
 
 
   std::string GetKeywordByVectorIndex(size_t index) const
@@ -285,8 +284,8 @@ public:
   KeywordReferences GetNearKeywords(const std::string& prefix);
 
   std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImages(
-    const std::string& query, size_t numResults = NUM_IMAGES_PER_PAGE, 
-    Aggregation aggFn = DEFAULT_AGG_FUNCTION, RankingModel rankingModel = DEFAULT_RANKING_MODEL, std::vector<std::string> settings = DEFAULT_MODEL_SETTINGS,
+    const std::string& query, size_t numResults, 
+    Aggregation aggFn, RankingModel rankingModel, const ModelSettings& settings,
     size_t imageId = SIZE_T_ERROR_VALUE  
   ) const;
 
@@ -303,8 +302,8 @@ private:
   bool PushImagesToDatabase();
 #endif
 
-  ImageRanker::ChartData RunBooleanCustomModelTest(Aggregation aggFn, QueryOrigin dataSource, std::vector<std::string>& settings);
-  ImageRanker::ChartData RunViretBaseModelTest(Aggregation aggFn, QueryOrigin dataSource, std::vector<std::string>& settings);
+  ImageRanker::ChartData RunBooleanCustomModelTest(Aggregation aggFn, QueryOrigin dataSource, const ImageRanker::ModelSettings& settings) const;
+  ImageRanker::ChartData RunViretBaseModelTest(Aggregation aggFn, QueryOrigin dataSource, const ImageRanker::ModelSettings& settings) const;
   
 
 
@@ -314,22 +313,22 @@ private:
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanModel(
 const std::string& query, size_t numResults, 
     size_t targetImageId,
-    Aggregation aggFn, std::vector<std::string>& settings
+    Aggregation aggFn, const ModelSettings& settings
   ) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanCustomModel(
     const std::string& query, size_t numResults, 
     size_t targetImageId,
-    Aggregation aggFn , std::vector<std::string>& settings
+    Aggregation aggFn , const ModelSettings& settings
   ) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingViretBaseModel(
     const std::string& query, size_t numResults, 
     size_t targetImageId,
-    Aggregation aggFn, std::vector<std::string>& settings
+    Aggregation aggFn, const ModelSettings& settings
   ) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingFuzzyLogicModel(
     const std::string& query, size_t numResults, 
     size_t targetImageId,
-    Aggregation aggFn, std::vector<std::string>& settings
+    Aggregation aggFn, const ModelSettings& settings
   ) const;
 
   std::string GetKeywordByWordnetId(size_t wordnetId) const
@@ -356,7 +355,7 @@ const std::string& query, size_t numResults,
 
   std::unordered_map<size_t, std::pair<size_t, std::string> > ParseHypernymKeywordClassesTextFile(std::string_view filepath) const;
 
-  std::pair< size_t, std::vector< std::vector<std::string>>>& GetCachedQueries(ImageRanker::QueryOrigin dataSource);
+  std::pair< size_t, std::vector< std::vector<std::string>>>& GetCachedQueries(ImageRanker::QueryOrigin dataSource)  const;
 
   std::string EncodeAndQuery(const std::string& query) const;
 

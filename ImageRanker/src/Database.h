@@ -37,8 +37,8 @@ public:
   size_t EstablishConnection();
   void CloseConnection();
 
-  size_t NoResultQuery(std::string_view query);
-  std::pair<size_t, std::vector<std::vector<std::string>>> ResultQuery(std::string_view query);
+  size_t NoResultQuery(std::string_view query) const;
+  std::pair<size_t, std::vector<std::vector<std::string>>> ResultQuery(std::string_view query) const;
 
   private:
     MYSQL* _mysqlConnection;

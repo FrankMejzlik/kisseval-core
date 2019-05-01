@@ -87,7 +87,7 @@ std::string Database::EscapeString(const std::string& stringToEscape) const
   return std::string{ buffer };
 }
 
-size_t Database::NoResultQuery(std::string_view query)
+size_t Database::NoResultQuery(std::string_view query) const
 {
   // Send query to DB and get result
   auto result{ mysql_real_query(_mysqlConnection, query.data(), static_cast<unsigned long>(query.length())) };
@@ -103,7 +103,7 @@ size_t Database::NoResultQuery(std::string_view query)
   return GetErrorCode();
 }
 
-std::pair< size_t, std::vector< std::vector<std::string>>> Database::ResultQuery(std::string_view query)
+std::pair< size_t, std::vector< std::vector<std::string>>> Database::ResultQuery(std::string_view query) const
 {
   // Send query to DB and get result
   auto result{ mysql_real_query(_mysqlConnection, query.data(), static_cast<unsigned long>(query.length())) };

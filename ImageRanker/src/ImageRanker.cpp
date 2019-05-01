@@ -713,17 +713,25 @@ std::vector<std::string> ImageRanker::StringenizeAndQuery(const std::string& que
 
 
 ImageRanker::ChartData ImageRanker::RunModelTest(
-  Aggregation aggFn, ImageRanker::RankingModel rankingModel, ImageRanker::QueryOrigin dataSource,
-  std::vector<std::string> settings
-)
+  Aggregation aggFn, RankingModel rankingModel, QueryOrigin dataSource, const ModelSettings& settings
+) const
 {
   switch (rankingModel) 
   {
+  case ImageRanker::RankingModel::cBoolean:
+
+    break;
+
   case ImageRanker::RankingModel::cBooleanBucket:
   {
     // Launch test
     return RunBooleanCustomModelTest(aggFn, dataSource, settings);
   }
+    break;
+
+
+  case ImageRanker::RankingModel::cBooleanExtended:
+
     break;
 
   case ImageRanker::RankingModel::cViretBase:
@@ -732,13 +740,20 @@ ImageRanker::ChartData ImageRanker::RunModelTest(
     return RunViretBaseModelTest(aggFn, dataSource, settings);
   }
     break;
+  
+  case ImageRanker::RankingModel::cFuzzyLogic:
+
+    break;
+
+  default:
+    LOG_ERROR("Unknown model type.");
   }
 
   return ImageRanker::ChartData();
 }
 
 
-ImageRanker::ChartData ImageRanker::RunViretBaseModelTest(Aggregation aggFn, ImageRanker::QueryOrigin dataSource, std::vector<std::string>& settings)
+ImageRanker::ChartData ImageRanker::RunViretBaseModelTest(Aggregation aggFn, ImageRanker::QueryOrigin dataSource, const ImageRanker::ModelSettings& settings) const
 {
   // Parse settings
   /*
@@ -795,7 +810,7 @@ ImageRanker::ChartData ImageRanker::RunViretBaseModelTest(Aggregation aggFn, Ima
 }
 
 
-std::pair< size_t, std::vector< std::vector<std::string>>>& ImageRanker::GetCachedQueries(ImageRanker::QueryOrigin dataSource)
+std::pair< size_t, std::vector< std::vector<std::string>>>& ImageRanker::GetCachedQueries(ImageRanker::QueryOrigin dataSource) const
 {
   static std::pair< size_t, std::vector< std::vector<std::string>>> cachedData0;
   static std::pair< size_t, std::vector< std::vector<std::string>>> cachedData1;
@@ -842,7 +857,7 @@ std::pair< size_t, std::vector< std::vector<std::string>>>& ImageRanker::GetCach
   return cachedData0;
 }
 
-ImageRanker::ChartData ImageRanker::RunBooleanCustomModelTest(Aggregation aggFn, ImageRanker::QueryOrigin dataSource, std::vector<std::string>& settings)
+ImageRanker::ChartData ImageRanker::RunBooleanCustomModelTest(Aggregation aggFn, ImageRanker::QueryOrigin dataSource, const ImageRanker::ModelSettings& settings) const
 {
   // Get queries
   auto dbResult = GetCachedQueries(dataSource);
@@ -895,7 +910,7 @@ ImageRanker::ChartData ImageRanker::RunBooleanCustomModelTest(Aggregation aggFn,
 
 std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetRelevantImages(
   const std::string& query, size_t numResults, 
-  Aggregation aggFn, RankingModel rankingModel, std::vector<std::string> settings, 
+  Aggregation aggFn, RankingModel rankingModel, const ModelSettings& settings,
   size_t imageId
 ) const
 {
@@ -923,12 +938,12 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
 
 
 
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingFuzzyLogicModel(const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, std::vector<std::string>& settings) const
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingFuzzyLogicModel(const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, const ModelSettings& settings) const
 {
   return std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult>();
 }
 
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanModel(const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, std::vector<std::string>& settings) const
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanModel(const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, const ModelSettings& settings) const
 {
   /*
   SETTINGS:
@@ -1020,7 +1035,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
 
 
 
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingViretBaseModel(const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, std::vector<std::string>& settings) const
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingViretBaseModel(const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, const ModelSettings& settings) const
 {
   /*
   SETTINGS:
@@ -1185,7 +1200,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
 
 
 std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanCustomModel(
-  const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, std::vector<std::string>& settings) const
+  const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, const ModelSettings& settings) const
 {
   // Defaults:
   float trueTreshold{0.01f};
