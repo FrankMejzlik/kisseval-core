@@ -943,7 +943,10 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
   return std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult>();
 }
 
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanModel(const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, const ModelSettings& settings) const
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanModel(
+  const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, 
+  const ModelSettings& settings
+) const
 {
   /*
   SETTINGS:
@@ -1033,36 +1036,27 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
   return result;
 }
 
-
-
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingViretBaseModel(const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, const ModelSettings& settings) const
+std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingViretBaseModel(
+  const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, 
+  const ModelSettings& settings
+) const
 {
-  /*
-  SETTINGS:
-  0 => XXXX
-  1 => true treshold
-  2 => query operation
-    0 = Multiply + Add
-    1 = Add only
-  */
-
-
   // Defaults:
   float trueTreshold{ 0.01f };
   float queryOperation{ 0 };
+
+  // If setting 0 set
+  if (settings.size() >= 1 && settings[0].size() >= 0)
+  {
+    std::stringstream setting0Ss{ settings[0] };
+    setting0Ss >> trueTreshold;
+  }
 
   // If setting 1 set
   if (settings.size() >= 2 && settings[1].size() >= 0)
   {
     std::stringstream setting1Ss{ settings[1] };
-    setting1Ss >> trueTreshold;
-  }
-
-  // If setting 2 set
-  if (settings.size() >= 3 && settings[2].size() >= 0)
-  {
-    std::stringstream setting2Ss{ settings[2] };
-    setting2Ss >> queryOperation;
+    setting1Ss >> queryOperation;
   }
 
   CnfFormula fml = _keywords.GetCanonicalQuery(query);
@@ -1200,7 +1194,9 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
 
 
 std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanCustomModel(
-  const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, const ModelSettings& settings) const
+  const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, 
+  const ModelSettings& settings
+) const
 {
   // Defaults:
   float trueTreshold{0.01f};
