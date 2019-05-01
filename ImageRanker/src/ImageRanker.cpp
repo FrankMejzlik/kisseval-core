@@ -1,9 +1,6 @@
 
 #include "ImageRanker.h"
 
-std::vector<ImageRanker::Aggregation> GridTest::m_aggregations{ {ImageRanker::Aggregation::cSoftmax, ImageRanker::Aggregation::cMinMaxLinear} };
-std::vector<ImageRanker::QueryOrigin> GridTest::m_queryOrigins{ {ImageRanker::QueryOrigin::cPublic} };
-std::vector<ImageRanker::RankingModel> GridTest::m_rankingModels{ {ImageRanker::RankingModel::cBooleanBucket,ImageRanker::RankingModel::cViretBase } };
 
 float BooleanBucketModel::m_trueTresholdFrom{0.01f};
 float BooleanBucketModel::m_trueTresholdTo{ 0.9f };
@@ -16,6 +13,13 @@ float BooleanViretModel::m_trueTresholdTo{ 0.9f };
 float BooleanViretModel::m_trueTresholdStep{ 0.01f };
 std::vector<float> BooleanViretModel::m_trueTresholds;
 std::vector<uint8_t> BooleanViretModel::m_queryOperations{ {0,1} };
+
+std::vector<ImageRanker::Aggregation> GridTest::m_aggregations{ {ImageRanker::Aggregation::cSoftmax, ImageRanker::Aggregation::cMinMaxLinear} };
+std::vector<ImageRanker::QueryOrigin> GridTest::m_queryOrigins{ {ImageRanker::QueryOrigin::cDeveloper} };
+std::vector<ImageRanker::RankingModel> GridTest::m_rankingModels{ {ImageRanker::RankingModel::cBooleanBucket,ImageRanker::RankingModel::cViretBase } };
+std::vector<ImageRanker::TestSettings> GridTest::m_testSettings;
+
+std::atomic<size_t> GridTest::numCompletedTests{0ULL};
 
 
 ImageRanker::ImageRanker(
@@ -160,19 +164,60 @@ bool ImageRanker::InitializeFullMode()
 
 void ImageRanker::InitializeGridTests()
 {
-  // BooleanBucketModel
-  for (float fi{ BooleanBucketModel::m_trueTresholdFrom }; fi <= BooleanBucketModel::m_trueTresholdTo; fi += BooleanBucketModel::m_trueTresholdStep) 
-  {
-    BooleanBucketModel::m_trueTresholds.emplace_back(fi);
-  }
-  LOG("BooleanBucketModel::m_trueTresholds initialized.");
+  // ==========================================
+  // Iterate through all desired configurations we want to test
+  // ==========================================
 
-  // BooleanViretModel
-  for (float fi{ BooleanViretModel::m_trueTresholdFrom }; fi <= BooleanViretModel::m_trueTresholdTo; fi += BooleanViretModel::m_trueTresholdStep)
+  // Aggregations
+  for (auto&& agg : GridTest::m_aggregations)
   {
-    BooleanViretModel::m_trueTresholds.emplace_back(fi);
+    // Query origins
+    for (auto&& queryOrigin : GridTest::m_queryOrigins)
+    {
+      // Ranking models
+      for (auto&& model : GridTest::m_rankingModels)
+      {
+
+
+        switch (model)
+        {
+          // BooleanBucketModel
+        case RankingModel::cBooleanBucket:
+          
+          // True treshold probability values
+          for (float fi{ BooleanBucketModel::m_trueTresholdFrom }; fi <= BooleanBucketModel::m_trueTresholdTo; fi += BooleanBucketModel::m_trueTresholdStep)
+          {
+            // In bucket ordering options
+            for (auto&& qo : BooleanBucketModel::m_inBucketOrders)
+            {
+              std::vector<std::string> modSettings{ std::to_string(fi), std::to_string((uint8_t)qo) };
+
+              GridTest::m_testSettings.emplace_back(agg, model, queryOrigin, modSettings);
+            }
+          }
+          break;
+
+          // BooleanViretModel
+        case RankingModel::cViretBase:
+          // True treshold probability values
+          for (float fi{ BooleanViretModel::m_trueTresholdFrom }; fi <= BooleanViretModel::m_trueTresholdTo; fi += BooleanViretModel::m_trueTresholdStep)
+          {
+            // Query operation options
+            for (auto&& qo : BooleanViretModel::m_queryOperations) 
+            {
+              std::vector<std::string> modSettings{std::to_string(fi), std::to_string((uint8_t)qo)};
+
+              GridTest::m_testSettings.emplace_back(agg, model, queryOrigin, modSettings);
+            }
+          }
+          break;
+        }
+
+
+      }
+    }
   }
-  LOG("BooleanViretModel::m_trueTresholds initialized.");
+  LOG("GridTests initialized.");
 }
 
 
@@ -185,6 +230,130 @@ void ImageRanker::SetMainSettings(Aggregation agg, RankingModel rankingModel, Mo
   _mainSettings = settings;
 }
 
+
+std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>> ImageRanker::RunGridTest(
+  const std::vector<TestSettings>& userTestsSettings
+)
+{
+  // Final result set
+  std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>> results;
+
+  std::vector<std::thread> tPool;
+  tPool.reserve(10);
+
+  constexpr unsigned int numThreads{8};
+  size_t numTests{ GridTest::m_testSettings.size() };
+
+  size_t numTestsPerThread{(numTests / numThreads) + 1};
+
+  size_t from{ 0ULL };
+  size_t to{ 0ULL };
+
+  // Cache all queries to avoid data races
+  GetCachedQueries(QueryOrigin::cDeveloper);
+  GetCachedQueries(QueryOrigin::cPublic);
+
+  std::thread tProgress(&GridTest::ReportTestProgress);
+
+  // Start threads
+  for (size_t i{ 0ULL }; i < numThreads; ++i)
+  {
+    to = from + numTestsPerThread;
+
+    tPool.emplace_back(&ImageRanker::RunGridTestsFromTo, this, &results, from, to);
+
+    from = to;
+  }
+
+  // Wait for threads
+  for (auto&& t : tPool)
+  {
+    t.join();
+  }
+  tProgress.join();
+
+  // xoxo
+
+  auto cmp = [](const std::pair<size_t, size_t>& left, const std::pair<size_t, size_t>& right)
+  {
+    return left.second < right.second;
+  };
+
+  std::priority_queue<std::pair<size_t, size_t>, std::vector<std::pair<size_t, size_t>>, decltype(cmp)> maxHeap(cmp);
+
+  // Choose the winner
+  size_t i{0ULL};
+  for (auto&& test : results)
+  {
+    size_t score{0ULL};
+    size_t j{ 0ULL };
+
+    size_t numHalf{ test.second.size() / 2 };
+    for (auto&& val : test.second)
+    {
+      // Only calculate first half
+      if (j >= numHalf)
+      {
+        break;
+      }
+      score += val.second;
+
+      ++j;
+    }
+
+    maxHeap.push(std::pair(i, score));
+
+    ++i;
+  }
+
+  LOG("All tests complete.");
+
+  std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>> resultsReal;
+
+  for (size_t i{ 0ULL }; i < 15; ++i)
+  {
+    auto item = maxHeap.top();
+    maxHeap.pop();
+
+    resultsReal.emplace_back(results[item.first]);
+  }
+  
+  LOG("Winner models and settings selected.");
+
+  return resultsReal;
+}
+
+
+void ImageRanker::RunGridTestsFromTo(
+  std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>>* pDest, 
+  size_t fromIndex, size_t toIndex
+)
+{
+  // If to index out of bounds
+  if (toIndex > GridTest::m_testSettings.size()) 
+  {
+    toIndex = GridTest::m_testSettings.size();
+  }
+
+  auto to = GridTest::m_testSettings.begin() + toIndex;
+
+  // Itarate over that interval
+  size_t i{0ULL};
+  for (auto it = GridTest::m_testSettings.begin() + fromIndex; it != to; ++it)
+  {
+    auto testSet{ (*it) };
+
+    // Run test
+    auto chartData{ RunModelTest(std::get<0>(testSet), std::get<1>(testSet), std::get<2>(testSet), std::get<3>(testSet)) };
+
+    pDest->emplace_back(testSet, std::move(chartData));
+
+    GridTest::ProgressCallback();
+
+    ++i;
+  }
+  
+}
 
 size_t ImageRanker::GetRandomImageId() const
 {

@@ -24,7 +24,7 @@ int main()
 
   ranker.Initialize();
 
-  auto result1{ ranker.RunModelTest(
+  /*auto result1{ ranker.RunModelTest(
    (ImageRanker::Aggregation)1,
    (ImageRanker::RankingModel)3,
    (ImageRanker::QueryOrigin)0,
@@ -33,16 +33,37 @@ int main()
   for (auto&& slice : result1)
   {
     std::cout << slice.first << " => " << slice.second << std::endl;
+  }*/
+
+
+  auto result = ranker.RunGridTest(std::vector<ImageRanker::TestSettings>());
+
+  size_t i{ 0ULL };
+  for (auto&& setChartDataPair : result)
+  {
+    const auto& settings{ setChartDataPair.first };
+    const auto& chartData{ setChartDataPair.second };
+
+    std::cout << i << ")" << std::endl;
+    std::cout << "Aggregation = " << std::get<0>(settings) << ", RankingModel = " << std::get<1>(settings) << ", QueryOrigin" << std::get<2>(settings) << std::endl;
+
+    std::cout << "MODEL SETTINGS: " << std::endl;
+    auto setStr{ std::get<3>(settings) };
+    for (auto&& str : setStr)
+    {
+      std::cout << str << std::endl;
+    }
+    std::cout << "---" << std::endl;
+
+    for (auto&& slice : chartData)
+    {
+      std::cout << slice.first << " => " << slice.second << std::endl;
+    }
+
+    std::cout << "===========================" << std::endl;
+    ++i;
   }
 
-  auto p1 = ranker.GetRandomImage();
-  auto p2 = ranker.GetRandomImage();
-
-  std::vector<ImageRanker::GameSessionInputQuery> tv;
-  tv.emplace_back(std::tuple("ses1"s, 1234ULL, "111&222&333&4444"));
-  tv.emplace_back(std::tuple("ses2"s, 12364ULL, "9111&9222&3933&94444"));
-
-  auto result = ranker.SubmitUserQueriesWithResults(tv, ImageRanker::cPublic);
 
 #endif
 

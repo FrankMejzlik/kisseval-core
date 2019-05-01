@@ -22,6 +22,7 @@ using CnfFormula = std::vector<Clause>;
 
 struct Keyword
 {
+  Keyword() = default;
   Keyword(
     size_t wordnetId, 
     size_t vectorIndex, 

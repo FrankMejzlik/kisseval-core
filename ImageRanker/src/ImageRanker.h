@@ -26,6 +26,9 @@ using namespace std::string_literals;
 #include <map>
 #include <set>
 #include <locale>
+#include <thread>
+#include <atomic>
+#include <chrono>
 
 #include "config.h"
 
@@ -289,7 +292,7 @@ public:
 
   std::vector<ChartData> RunModelTests(const std::vector<TestSettings>& testSettings) const;
 
-  std::vector<std::pair<TestSettings, ChartData>> RunGridTest(const std::vector<TestSettings>& testSettings) const;
+  std::vector<std::pair<TestSettings, ChartData>> RunGridTest(const std::vector<TestSettings>& testSettings);
 
 
   std::string GetKeywordByVectorIndex(size_t index) const
@@ -321,6 +324,8 @@ public:
     size_t imageId = SIZE_T_ERROR_VALUE  
   ) const;
 
+
+  uint8_t GetGridTestProgress() const { return GetGridTestProgress(); }
 
   // ^^^^^^^^^^^^^^^^^^^^^^^
   //////////////////////////
@@ -375,6 +380,8 @@ const std::string& query, size_t numResults,
 
   std::string GetImageFilenameById(size_t imageId) const;
 
+
+  void RunGridTestsFromTo(std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>>* pDest, size_t fromIndex, size_t toIndex);
   
   bool LoadKeywordsFromDatabase(Database::Type type);
   bool LoadImagesFromDatabase(Database::Type type);
@@ -446,6 +453,7 @@ const std::string& query, size_t numResults,
   float ParseFloatLE(const std::byte* pFirstByte) const;
 
   
+
   /*!
    * Returns true if no specific image filename mapping file provided
    * 
@@ -500,7 +508,40 @@ private:
 class GridTest
 {
 public:
+  static std::atomic<size_t> numCompletedTests;
+
+  static void ProgressCallback()
+  {
+    GridTest::numCompletedTests.operator++();
+  }
+
+  static uint8_t GetGridTestProgress()
+  {
+    return static_cast<uint8_t>((float)GridTest::numCompletedTests / m_testSettings.size());
+  }
+
+  static void ReportTestProgress()
+  {
+    while (true)
+    {
+      if (numCompletedTests >= m_testSettings.size())
+      {
+        break;
+      }
+
+      LOG("Test progress is "s + std::to_string(GridTest::numCompletedTests) + "/"s + std::to_string(m_testSettings.size()));
+      
+      std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    }
+    
+  }
+
+  
+
   static std::vector<ImageRanker::Aggregation> m_aggregations;
   static std::vector<ImageRanker::QueryOrigin> m_queryOrigins;
   static std::vector<ImageRanker::RankingModel> m_rankingModels;
+
+
+  static std::vector<ImageRanker::TestSettings> m_testSettings;
 };
