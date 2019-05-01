@@ -131,12 +131,13 @@ public:
   enum Aggregation
   {
     cSoftmax = 1,
-      cAmplified1 = 100,
-      cAmplified2 = 101,
-      cAmplified3 = 102,
+      cAmplifiedSoftmax1 = 100,
+      cAmplifiedSoftmax2 = 101,
+      
     cMinMaxLinear = 2,
-      cAmplifiedSoftmax1 = 200,
-      cAmplifiedSoftmax2 = 201
+      cAmplified1 = 200,
+      cAmplified2 = 201,
+      cAmplified3 = 202,
   };
 
   enum Mode
