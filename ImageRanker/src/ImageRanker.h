@@ -34,6 +34,37 @@ using namespace std::string_literals;
 #include "KeywordsContainer.h"
 
 
+class ImageRanker;
+
+class RankingModel
+{
+public:
+
+};
+
+class BooleanBucketModel
+{
+public:
+  static float m_trueTresholdFrom;
+  static float m_trueTresholdTo;
+  static float m_trueTresholdStep;
+  static std::vector<float> m_trueTresholds;
+
+  static std::vector<uint8_t> m_inBucketOrders;
+};
+
+class BooleanViretModel
+{
+public:
+  static float m_trueTresholdFrom;
+  static float m_trueTresholdTo;
+  static float m_trueTresholdStep;
+  static std::vector<float> m_trueTresholds;
+
+  static std::vector<uint8_t> m_queryOperations;
+};
+
+
 
 struct Image
 {
@@ -367,6 +398,8 @@ const std::string& query, size_t numResults,
   const std::vector<float>& GetMainRankingVector(const Image& image) const;
   std::vector<float>& GetMainRankingVector(Image& image);
 
+  void InitializeGridTests();
+
   /*!
    * Initializes ImageRanker for working in Collector app
    * 
@@ -461,4 +494,13 @@ private:
   std::map<size_t, Image> _images;
 
 
+};
+
+
+class GridTest
+{
+public:
+  static std::vector<ImageRanker::Aggregation> m_aggregations;
+  static std::vector<ImageRanker::QueryOrigin> m_queryOrigins;
+  static std::vector<ImageRanker::RankingModel> m_rankingModels;
 };

@@ -1,6 +1,23 @@
 
 #include "ImageRanker.h"
 
+std::vector<ImageRanker::Aggregation> GridTest::m_aggregations{ {ImageRanker::Aggregation::cSoftmax, ImageRanker::Aggregation::cMinMaxLinear} };
+std::vector<ImageRanker::QueryOrigin> GridTest::m_queryOrigins{ {ImageRanker::QueryOrigin::cPublic} };
+std::vector<ImageRanker::RankingModel> GridTest::m_rankingModels{ {ImageRanker::RankingModel::cBooleanBucket,ImageRanker::RankingModel::cViretBase } };
+
+float BooleanBucketModel::m_trueTresholdFrom{0.01f};
+float BooleanBucketModel::m_trueTresholdTo{ 0.9f };
+float BooleanBucketModel::m_trueTresholdStep{0.01f};
+std::vector<float> BooleanBucketModel::m_trueTresholds;
+std::vector<uint8_t> BooleanBucketModel::m_inBucketOrders{ {0,1,2} };
+
+float BooleanViretModel::m_trueTresholdFrom{ 0.01f };
+float BooleanViretModel::m_trueTresholdTo{ 0.9f };
+float BooleanViretModel::m_trueTresholdStep{ 0.01f };
+std::vector<float> BooleanViretModel::m_trueTresholds;
+std::vector<uint8_t> BooleanViretModel::m_queryOperations{ {0,1} };
+
+
 ImageRanker::ImageRanker(
   const std::string& imagesPath,
   const std::string& rawNetRankingFilepath,
@@ -133,8 +150,32 @@ bool ImageRanker::InitializeFullMode()
   // Calculate MinMax Aggregation
   CalculateMinMaxClampAgg();
 
+
+  // Initialize gridtests
+  InitializeGridTests();
+
   return true;
 }
+
+
+void ImageRanker::InitializeGridTests()
+{
+  // BooleanBucketModel
+  for (float fi{ BooleanBucketModel::m_trueTresholdFrom }; fi <= BooleanBucketModel::m_trueTresholdTo; fi += BooleanBucketModel::m_trueTresholdStep) 
+  {
+    BooleanBucketModel::m_trueTresholds.emplace_back(fi);
+  }
+  LOG("BooleanBucketModel::m_trueTresholds initialized.");
+
+  // BooleanViretModel
+  for (float fi{ BooleanViretModel::m_trueTresholdFrom }; fi <= BooleanViretModel::m_trueTresholdTo; fi += BooleanViretModel::m_trueTresholdStep)
+  {
+    BooleanViretModel::m_trueTresholds.emplace_back(fi);
+  }
+  LOG("BooleanViretModel::m_trueTresholds initialized.");
+}
+
+
 
 void ImageRanker::SetMainSettings(Aggregation agg, RankingModel rankingModel, ModelSettings settings)
 {

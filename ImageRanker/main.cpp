@@ -25,7 +25,7 @@ int main()
   ranker.Initialize();
 
   auto result1{ ranker.RunModelTest(
-   (ImageRanker::Aggregation)5,
+   (ImageRanker::Aggregation)1,
    (ImageRanker::RankingModel)3,
    (ImageRanker::QueryOrigin)0,
    std::vector<std::string>({"0.0", "0.000", "0", "2"})) };
