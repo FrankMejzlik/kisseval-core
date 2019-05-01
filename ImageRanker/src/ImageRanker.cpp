@@ -4,13 +4,13 @@
 
 float BooleanBucketModel::m_trueTresholdFrom{0.01f};
 float BooleanBucketModel::m_trueTresholdTo{ 0.9f };
-float BooleanBucketModel::m_trueTresholdStep{0.01f};
+float BooleanBucketModel::m_trueTresholdStep{0.1f};
 std::vector<float> BooleanBucketModel::m_trueTresholds;
 std::vector<uint8_t> BooleanBucketModel::m_inBucketOrders{ {0,1,2} };
 
 float BooleanViretModel::m_trueTresholdFrom{ 0.01f };
 float BooleanViretModel::m_trueTresholdTo{ 0.9f };
-float BooleanViretModel::m_trueTresholdStep{ 0.01f };
+float BooleanViretModel::m_trueTresholdStep{ 0.1f };
 std::vector<float> BooleanViretModel::m_trueTresholds;
 std::vector<uint8_t> BooleanViretModel::m_queryOperations{ {0,1} };
 
