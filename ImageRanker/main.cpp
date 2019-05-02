@@ -36,7 +36,7 @@ int main()
   }*/
 
 
-  auto result = ranker.RunGridTest(std::vector<ImageRanker::TestSettings>());
+  /*auto result = ranker.RunGridTest(std::vector<ImageRanker::TestSettings>());
 
   size_t i{ 0ULL };
   for (auto&& setChartDataPair : result)
@@ -62,8 +62,12 @@ int main()
 
     std::cout << "===========================" << std::endl;
     ++i;
-  }
+  }*/
 
+
+  auto results = ranker.GetRelevantImagesPlainQuery(
+    "07906111&00023100&07893528"s, 100, ImageRanker::Aggregation::cMinMaxLinear, ImageRanker::RankingModel::cBooleanBucket, std::vector<std::string>({ "0.869999"s, "1"s })
+  );
 
 #endif
 

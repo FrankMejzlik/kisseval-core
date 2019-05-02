@@ -325,6 +325,15 @@ public:
     size_t imageId = SIZE_T_ERROR_VALUE  
   ) const;
 
+  std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImagesPlainQuery(
+    const std::string& query, size_t numResults,
+    Aggregation aggFn, RankingModel rankingModel, const ModelSettings& settings,
+    size_t imageId = SIZE_T_ERROR_VALUE
+  ) const
+  {
+    return GetRelevantImages(EncodeAndQuery(query), numResults, aggFn, rankingModel, settings, imageId);
+  }
+
 
   std::pair<uint8_t, uint8_t> GetGridTestProgress() const;
 
