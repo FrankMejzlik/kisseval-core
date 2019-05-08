@@ -2,24 +2,22 @@
 #include "ImageRanker.h"
 
 
-float BooleanBucketModel::m_trueTresholdFrom{0.01f};
+
+/*********************
+  Ranking Models
+ *********************/
+
+float BooleanBucketModel::m_trueTresholdFrom{ 0.01f };
 float BooleanBucketModel::m_trueTresholdTo{ 0.9f };
-float BooleanBucketModel::m_trueTresholdStep{0.1f};
+float BooleanBucketModel::m_trueTresholdStep{ 0.1f };
 std::vector<float> BooleanBucketModel::m_trueTresholds;
 std::vector<uint8_t> BooleanBucketModel::m_inBucketOrders{ {0,1,2} };
 
-float BooleanViretModel::m_trueTresholdFrom{ 0.01f };
-float BooleanViretModel::m_trueTresholdTo{ 0.9f };
-float BooleanViretModel::m_trueTresholdStep{ 0.1f };
-std::vector<float> BooleanViretModel::m_trueTresholds;
-std::vector<uint8_t> BooleanViretModel::m_queryOperations{ {0,1} };
-
-std::vector<ImageRanker::Aggregation> GridTest::m_aggregations{ {ImageRanker::Aggregation::cSoftmax, ImageRanker::Aggregation::cMinMaxLinear} };
-std::vector<ImageRanker::QueryOrigin> GridTest::m_queryOrigins{ {ImageRanker::QueryOrigin::cDeveloper} };
-std::vector<ImageRanker::RankingModel> GridTest::m_rankingModels{ {ImageRanker::RankingModel::cBooleanBucket,ImageRanker::RankingModel::cViretBase } };
-std::vector<ImageRanker::TestSettings> GridTest::m_testSettings;
-
-std::atomic<size_t> GridTest::numCompletedTests{0ULL};
+float ViretModel::m_trueTresholdFrom{ 0.01f };
+float ViretModel::m_trueTresholdTo{ 0.9f };
+float ViretModel::m_trueTresholdStep{ 0.1f };
+std::vector<float> ViretModel::m_trueTresholds;
+std::vector<uint8_t> ViretModel::m_queryOperations{ {0,1} };
 
 
 ImageRanker::ImageRanker(
@@ -29,7 +27,8 @@ ImageRanker::ImageRanker(
   const std::string& softmaxFilepath,
   const std::string& deepFeaturesFilepath,
   const std::string& imageToIdMapFilepath,
-  size_t idOffset
+  size_t idOffset,
+  Mode mode
 ) :
   _primaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
   _secondaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
@@ -38,13 +37,7 @@ ImageRanker::ImageRanker(
   _mainRankingModel(DEFAULT_RANKING_MODEL),
   _mainSettings(DEFAULT_MODEL_SETTINGS),
   _isReinitNeeded(true),
-
-#if COLLECTOR_MODE
-  _mode(cCollector),
-#else
-  _mode(cFull),
-#endif
-
+  _mode(mode),
   _imageIdStride(idOffset),
   _imagesPath(imagesPath),
   _rawNetRankingFilepath(rawNetRankingFilepath),
@@ -64,45 +57,9 @@ ImageRanker::ImageRanker(
 
 }
 
-ImageRanker::ImageRanker(
-  const std::string& imagesPath
-) :
-  _primaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
-  _secondaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
-  
-#if COLLECTOR_MODE
-  _mode(cCollector),
-#else
-  _mode(cFull),
-#endif
-
-  _isReinitNeeded(true),
-
-  _imageIdStride(0ULL),
-  _imagesPath(imagesPath),
-  _rawNetRankingFilepath(""s),
-  _softmaxFilepath(""s),
-  _deepFeaturesFilepath(""s),
-  _imageToIdMap(""s),
-
-  _keywords(),
-  _images()
-{
-  // Connect to database
-  auto result{ _primaryDb.EstablishConnection() };
-  if (result != 0ULL)
-  {
-    LOG_ERROR("Connecting to primary DB failed.");
-  }
-
-  // Load from database
-  LoadKeywordsFromDatabase(DATA_SOURCE_DB);
-  LoadImagesFromDatabase(DATA_SOURCE_DB);
-}
-
 bool ImageRanker::Initialize()
 {
-  if (_mode == cCollector)
+  if (_mode == Mode::cCollector)
   {
     return InitializeCollectorMode();
   }
@@ -151,9 +108,11 @@ bool ImageRanker::InitializeFullMode()
   // Parse softmax file if available
   ParseSoftmaxBinFile();
 
-  // Calculate MinMax Aggregation
-  CalculateMinMaxClampAgg();
-
+  // Load and process all aggregations
+  for (auto&& agg : _aggregations)
+  {
+    agg.second->CalculateTransformedVectors(_images);
+  }
 
   // Initialize gridtests
   InitializeGridTests();
@@ -169,74 +128,105 @@ void ImageRanker::InitializeGridTests()
   // ==========================================
 
   // Aggregations
-  for (auto&& agg : GridTest::m_aggregations)
-  {
-    // Query origins
-    for (auto&& queryOrigin : GridTest::m_queryOrigins)
-    {
-      // Ranking models
-      for (auto&& model : GridTest::m_rankingModels)
-      {
+  //for (auto&& agg : GridTest::m_aggregations)
+  //{
+  //  // Query origins
+  //  for (auto&& queryOrigin : GridTest::m_queryOrigins)
+  //  {
+  //    // Ranking models
+  //    for (auto&& model : GridTest::m_rankingModels)
+  //    {
 
 
-        switch (model)
-        {
-          // BooleanBucketModel
-        case RankingModel::cBooleanBucket:
-          
-          // True treshold probability values
-          for (float fi{ BooleanBucketModel::m_trueTresholdFrom }; fi <= BooleanBucketModel::m_trueTresholdTo; fi += BooleanBucketModel::m_trueTresholdStep)
-          {
-            // In bucket ordering options
-            for (auto&& qo : BooleanBucketModel::m_inBucketOrders)
-            {
-              std::vector<std::string> modSettings{ std::to_string(fi), std::to_string((uint8_t)qo) };
+  //      switch (model)
+  //      {
+  //        // BooleanBucketModel
+  //      case RankingModelId::cBooleanBucket:
+  //        
+  //        // True treshold probability values
+  //        for (float fi{ BooleanBucketModel::m_trueTresholdFrom }; fi <= BooleanBucketModel::m_trueTresholdTo; fi += BooleanBucketModel::m_trueTresholdStep)
+  //        {
+  //          // In bucket ordering options
+  //          for (auto&& qo : BooleanBucketModel::m_inBucketOrders)
+  //          {
+  //            std::vector<std::string> modSettings{ std::to_string(fi), std::to_string((uint8_t)qo) };
 
-              GridTest::m_testSettings.emplace_back(agg, model, queryOrigin, modSettings);
-            }
-          }
-          break;
+  //            GridTest::m_testSettings.emplace_back(agg, model, queryOrigin, modSettings);
+  //          }
+  //        }
+  //        break;
 
-          // BooleanViretModel
-        case RankingModel::cViretBase:
-          // True treshold probability values
-          for (float fi{ BooleanViretModel::m_trueTresholdFrom }; fi <= BooleanViretModel::m_trueTresholdTo; fi += BooleanViretModel::m_trueTresholdStep)
-          {
-            // Query operation options
-            for (auto&& qo : BooleanViretModel::m_queryOperations) 
-            {
-              std::vector<std::string> modSettings{std::to_string(fi), std::to_string((uint8_t)qo)};
+  //        // BooleanViretModel
+  //      case RankingModelId::cViretBase:
+  //        // True treshold probability values
+  //        for (float fi{ ViretModel::m_trueTresholdFrom }; fi <= ViretModel::m_trueTresholdTo; fi += ViretModel::m_trueTresholdStep)
+  //        {
+  //          // Query operation options
+  //          for (auto&& qo : ViretModel::m_queryOperations) 
+  //          {
+  //            std::vector<std::string> modSettings{std::to_string(fi), std::to_string((uint8_t)qo)};
 
-              GridTest::m_testSettings.emplace_back(agg, model, queryOrigin, modSettings);
-            }
-          }
-          break;
-        }
+  //            GridTest::m_testSettings.emplace_back(agg, model, queryOrigin, modSettings);
+  //          }
+  //        }
+  //        break;
+  //      }
 
 
-      }
-    }
-  }
+  //    }
+  //  }
+  //}
   LOG("GridTests initialized.");
 }
 
 
+AggregationFunctionBase* ImageRanker::GetAggregationById(size_t id) const
+{
+  // Try to get this aggregation
+  if (
+    auto result{ _aggregations.find(static_cast<AggregationId>(id)) };
+    result != _aggregations.end()
+    ) {
+    return result->second.get();
+  }
+  else {
+    LOG_ERROR("Aggregation not found!");
+    return nullptr;
+  }
+}
 
-void ImageRanker::SetMainSettings(Aggregation agg, RankingModel rankingModel, ModelSettings settings)
+RankingModelBase* ImageRanker::GetRankingModelById(size_t id) const
+{
+  // Try to get this aggregation
+  if (
+    auto result{ _models.find(static_cast<RankingModelId>(id)) };
+    result != _models.end()
+    ) {
+    return result->second.get();
+  }
+  else {
+    LOG_ERROR("Ranking model not found!");
+    return nullptr;
+  }
+}
+
+
+void ImageRanker::SetMainSettings(AggregationId agg, RankingModelId rankingModel, ModelSettings settings)
 {
   _mainAggregation = agg;
   _mainRankingModel = rankingModel;
+
   // \todo Avoid string -> type parsing
   _mainSettings = settings;
 }
 
 
-std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>> ImageRanker::RunGridTest(
+std::vector<std::pair<TestSettings, ChartData>> ImageRanker::RunGridTest(
   const std::vector<TestSettings>& userTestsSettings
 )
 {
   // Final result set
-  std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>> results;
+  std::vector<std::pair<TestSettings, ChartData>> results;
 
   std::vector<std::thread> tPool;
   tPool.reserve(10);
@@ -250,8 +240,8 @@ std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>> ImageR
   size_t to{ 0ULL };
 
   // Cache all queries to avoid data races
-  GetCachedQueries(QueryOrigin::cDeveloper);
-  GetCachedQueries(QueryOrigin::cPublic);
+  GetCachedQueries(QueryOriginId::cDeveloper);
+  GetCachedQueries(QueryOriginId::cPublic);
 
   std::thread tProgress(&GridTest::ReportTestProgress);
 
@@ -308,7 +298,7 @@ std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>> ImageR
 
   LOG("All tests complete.");
 
-  std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>> resultsReal;
+  std::vector<std::pair<TestSettings, ChartData>> resultsReal;
 
   for (size_t i{ 0ULL }; i < 15; ++i)
   {
@@ -325,7 +315,7 @@ std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>> ImageR
 
 
 void ImageRanker::RunGridTestsFromTo(
-  std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>>* pDest, 
+  std::vector<std::pair<TestSettings, ChartData>>* pDest, 
   size_t fromIndex, size_t toIndex
 )
 {
@@ -344,7 +334,7 @@ void ImageRanker::RunGridTestsFromTo(
     auto testSet{ (*it) };
 
     // Run test
-    auto chartData{ RunModelTest(std::get<0>(testSet), std::get<1>(testSet), std::get<2>(testSet), std::get<3>(testSet)) };
+    auto chartData{ RunModelTest(std::get<0>(testSet), std::get<1>(testSet), std::get<2>(testSet), std::get<3>(testSet), std::get<4>(testSet)) };
 
     pDest->emplace_back(testSet, std::move(chartData));
 
@@ -361,14 +351,14 @@ size_t ImageRanker::GetRandomImageId() const
   return static_cast<size_t>(GetRandomInteger(0, (int)GetNumImages()) * _imageIdStride);
 }
 
-ImageRanker::ImageReference ImageRanker::GetRandomImage() const
+ImageReference ImageRanker::GetRandomImage() const
 {
   size_t imageId{GetRandomImageId()};
 
   return ImageReference{ imageId, GetImageFilenameById(imageId) };
 }
 
-ImageRanker::KeywordReferences ImageRanker::GetNearKeywords(const std::string& prefix)
+KeywordReferences ImageRanker::GetNearKeywords(const std::string& prefix)
 {
   // Force lowercase
   std::locale loc;
@@ -434,33 +424,10 @@ const std::vector<float>& ImageRanker::GetMainRankingVector(const Image& image) 
 {
   switch (_mainAggregation) 
   {
-  case cSoftmax:
+  case AggregationId::cSoftmax:
     return image.m_softmaxVector;
     break;
 
-  case cAmplified1:
-    return image.m_amplifyProbVector1;
-    break;
-
-  case cAmplified2:
-    return image.m_amplifyProbVector2;
-    break;
-
-  case cAmplified3:
-    return image.m_amplifyProbVector3;
-    break;
-
-  case cMinMaxLinear:
-    return image.m_minMaxLinearVector;
-    break;
-
-  case cAmplifiedSoftmax1:
-    return image.m_softmaxProbAmplified1;
-    break;
-
-  case cAmplifiedSoftmax2:
-    return image.m_softmaxProbAmplified2;
-    break;
   }
 }
 
@@ -468,38 +435,15 @@ std::vector<float>& ImageRanker::GetMainRankingVector(Image& image)
 {
   switch (_mainAggregation)
   {
-  case cSoftmax:
+  case AggregationId::cSoftmax:
     return image.m_softmaxVector;
     break;
 
-  case cAmplified1:
-    return image.m_amplifyProbVector1;
-    break;
-
-  case cAmplified2:
-    return image.m_amplifyProbVector2;
-    break;
-
-  case cAmplified3:
-    return image.m_amplifyProbVector3;
-    break;
-
-  case cMinMaxLinear:
-    return image.m_minMaxLinearVector;
-    break;
-
-  case cAmplifiedSoftmax1:
-    return image.m_softmaxProbAmplified1;
-    break;
-
-  case cAmplifiedSoftmax2:
-    return image.m_softmaxProbAmplified2;
-    break;
   }
 }
 
 
-std::map<size_t, Image> ImageRanker::ParseRawNetRankingBinFile() 
+std::unordered_map<size_t, Image> ImageRanker::ParseRawNetRankingBinFile() 
 {
   // Get image filenames
   std::vector<std::string> imageFilenames{ GetImageFilenames() };
@@ -556,7 +500,7 @@ std::map<size_t, Image> ImageRanker::ParseRawNetRankingBinFile()
 
 
   // Declare result vector
-  std::map<size_t, Image> images;
+  std::unordered_map<size_t, Image> images;
 
   // Create line buffer
   std::vector<std::byte>  lineBuffer;
@@ -722,47 +666,51 @@ bool ImageRanker::ParseSoftmaxBinFile()
     // Stride in bytes
     currOffset = sizeof(float);
 
-    imageIt->second.m_softmaxVector.reserve(numFloats);
+    std::vector<float> softmaxVector; 
+    softmaxVector.reserve(numFloats);
 
     // Iterate through all floats in row
     for (size_t i = 0ULL; i < numFloats; ++i)
     {
       float rankValue{ ParseFloatLE(&lineBuffer[currOffset]) };
 
-      imageIt->second.m_softmaxVector.emplace_back(rankValue);
+      softmaxVector.emplace_back(rankValue);
 
       // Stride in bytes
       currOffset += sizeof(float);
     }
+    imageIt->second.m_aggVectors.insert(std::pair(AggregationId::cSoftmax, std::move(softmaxVector)));
   }
+
+  
 
   return true;
 }
 
 
-void ImageRanker::CalculateMinMaxClampAgg()
-{
-  // Itarate through all images
-  for (auto&& imgPair : _images)
-  {
-    Image& img{ imgPair.second };
-
-    img.m_minMaxLinearVector.reserve(img.m_rawNetRanking.size());
-
-    float amplitude{ img.m_max - img.m_min };
-
-    size_t i{ 0ULL };
-    for (auto&& prob : img.m_rawNetRanking)
-    {
-      float newValue{ (prob - img.m_min) / (float)amplitude };
-
-      // Calculate the MAGIC!!
-      img.m_minMaxLinearVector[i] = newValue;
-
-      ++i;
-    }
-  }
-}
+//void ImageRanker::CalculateMinMaxClampAgg()
+//{
+//  // Itarate through all images
+//  for (auto&& imgPair : _images)
+//  {
+//    Image& img{ imgPair.second };
+//
+//    img.m_minMaxLinearVector.reserve(img.m_rawNetRanking.size());
+//
+//    float amplitude{ img.m_max - img.m_min };
+//
+//    size_t i{ 0ULL };
+//    for (auto&& prob : img.m_rawNetRanking)
+//    {
+//      float newValue{ (prob - img.m_min) / (float)amplitude };
+//
+//      // Calculate the MAGIC!!
+//      img.m_minMaxLinearVector[i] = newValue;
+//
+//      ++i;
+//    }
+//  }
+//}
 
 
 std::string ImageRanker::EncodeAndQuery(const std::string& query) const
@@ -779,7 +727,7 @@ std::string ImageRanker::EncodeAndQuery(const std::string& query) const
   return resultEncodedGraph;
 }
 
-std::vector<ImageRanker::GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(std::vector<ImageRanker::GameSessionInputQuery> inputQueries, QueryOrigin origin)
+std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(std::vector<GameSessionInputQuery> inputQueries, QueryOriginId origin)
 {
   /******************************
     Save query to database
@@ -816,7 +764,7 @@ std::vector<ImageRanker::GameSessionQueryResult> ImageRanker::SubmitUserQueriesW
   /******************************
     Construct result for user
   *******************************/
-  std::vector<ImageRanker::GameSessionQueryResult> userResult;
+  std::vector<GameSessionQueryResult> userResult;
   userResult.reserve(inputQueries.size());
 
   for (auto&& query : inputQueries)
@@ -841,7 +789,7 @@ std::vector<ImageRanker::GameSessionQueryResult> ImageRanker::SubmitUserQueriesW
 std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(size_t imageId, size_t N) const
 {
   // Find image in map
-  std::map<size_t, Image>::const_iterator imagePair = _images.find(imageId);
+  std::unordered_map<size_t, Image>::const_iterator imagePair = _images.find(imageId);
 
   // If no such image
   if (imagePair == _images.end())
@@ -922,48 +870,46 @@ std::vector<std::string> ImageRanker::StringenizeAndQuery(const std::string& que
 }
 
 
-ImageRanker::ChartData ImageRanker::RunModelTest(
-  Aggregation aggFn, RankingModel rankingModel, QueryOrigin dataSource, const ModelSettings& settings
+ChartData ImageRanker::RunModelTest(
+  AggregationId aggFn, RankingModelId rankingModel, QueryOriginId dataSource, 
+  const ModelSettings& settings, const AggregationSettings& aggSettings
 ) const
 {
   switch (rankingModel) 
   {
-  case ImageRanker::RankingModel::cBoolean:
 
-    break;
-
-  case ImageRanker::RankingModel::cBooleanBucket:
+  case RankingModelId::cBooleanBucket:
   {
     // Launch test
-    return RunBooleanCustomModelTest(aggFn, dataSource, settings);
+    return RunBooleanCustomModelTest(aggFn, dataSource, settings, aggSettings);
   }
     break;
 
 
-  case ImageRanker::RankingModel::cBooleanExtended:
+  case RankingModelId::cBooleanExtended:
 
     break;
 
-  case ImageRanker::RankingModel::cViretBase:
+  case RankingModelId::cViretBase:
   {
     // Launch test
-    return RunViretBaseModelTest(aggFn, dataSource, settings);
+    return RunViretBaseModelTest(aggFn, dataSource, settings, aggSettings);
   }
     break;
   
-  case ImageRanker::RankingModel::cFuzzyLogic:
-
-    break;
 
   default:
     LOG_ERROR("Unknown model type.");
   }
 
-  return ImageRanker::ChartData();
+  return ChartData();
 }
 
 
-ImageRanker::ChartData ImageRanker::RunViretBaseModelTest(Aggregation aggFn, ImageRanker::QueryOrigin dataSource, const ImageRanker::ModelSettings& settings) const
+ChartData ImageRanker::RunViretBaseModelTest(
+  AggregationId aggFn, QueryOriginId dataSource, 
+  const ModelSettings& settings, const AggregationSettings& aggSettings
+) const
 {
   // Parse settings
   /*
@@ -996,7 +942,7 @@ ImageRanker::ChartData ImageRanker::RunViretBaseModelTest(Aggregation aggFn, Ima
     size_t imageId{ FastAtoU(idQueryRow[0].data()) };
     const std::string& userQuery{ idQueryRow[1] };
 
-    auto resultImages = GetRelevantImages(userQuery, 0ULL, aggFn, ImageRanker::RankingModel::cViretBase, settings, imageId);
+    auto resultImages = GetRelevantImages(userQuery, 0ULL, aggFn, RankingModelId::cViretBase, settings, aggSettings, imageId);
 
 
     size_t transformedRank = resultImages.second.m_targetImageRank / scaleDownFactor;
@@ -1020,18 +966,18 @@ ImageRanker::ChartData ImageRanker::RunViretBaseModelTest(Aggregation aggFn, Ima
 }
 
 
-std::pair< size_t, std::vector< std::vector<std::string>>>& ImageRanker::GetCachedQueries(ImageRanker::QueryOrigin dataSource) const
+std::pair< size_t, std::vector< std::vector<std::string>>>& ImageRanker::GetCachedQueries(QueryOriginId dataSource) const
 {
   static std::pair< size_t, std::vector< std::vector<std::string>>> cachedData0;
   static std::pair< size_t, std::vector< std::vector<std::string>>> cachedData1;
 
   switch (dataSource) {
-  case 0:
+  case QueryOriginId::cDeveloper:
 
     if (cachedData0.second.empty()) 
     {
       // Fetch pairs of <Q, Img>
-      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string(dataSource) + ";");
+      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
       cachedData0 = std::move(_primaryDb.ResultQuery(query));
 
       if (cachedData0.first != 0)
@@ -1045,12 +991,12 @@ std::pair< size_t, std::vector< std::vector<std::string>>>& ImageRanker::GetCach
 
     break;
 
-  case 1:
+  case QueryOriginId::cPublic:
 
     if (cachedData1.second.empty()) 
     {
       // Fetch pairs of <Q, Img>
-      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string(dataSource) + ";");
+      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
       cachedData1 = std::move(_primaryDb.ResultQuery(query));
 
       if (cachedData0.first != 0)
@@ -1067,7 +1013,10 @@ std::pair< size_t, std::vector< std::vector<std::string>>>& ImageRanker::GetCach
   return cachedData0;
 }
 
-ImageRanker::ChartData ImageRanker::RunBooleanCustomModelTest(Aggregation aggFn, ImageRanker::QueryOrigin dataSource, const ImageRanker::ModelSettings& settings) const
+ChartData ImageRanker::RunBooleanCustomModelTest(
+  AggregationId aggFn, QueryOriginId dataSource, 
+  const ModelSettings& settings, const AggregationSettings& aggSettings
+) const
 {
   // Get queries
   auto dbResult = GetCachedQueries(dataSource);
@@ -1094,7 +1043,7 @@ ImageRanker::ChartData ImageRanker::RunBooleanCustomModelTest(Aggregation aggFn,
     size_t imageId{ FastAtoU(idQueryRow[0].data()) };
     const std::string& userQuery{ idQueryRow[1] };
 
-    auto resultImages = GetRelevantImages(userQuery, 0ULL, aggFn, ImageRanker::RankingModel::cBooleanBucket, settings, imageId);
+    auto resultImages = GetRelevantImages(userQuery, 0ULL, aggFn, RankingModelId::cBooleanBucket, settings, aggSettings, imageId);
 
 
     size_t transformedRank = resultImages.second.m_targetImageRank / scaleDownFactor;
@@ -1118,137 +1067,55 @@ ImageRanker::ChartData ImageRanker::RunBooleanCustomModelTest(Aggregation aggFn,
 }
 
 
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetRelevantImages(
+std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImages(
   const std::string& query, size_t numResults, 
-  Aggregation aggFn, RankingModel rankingModel, const ModelSettings& settings,
+  AggregationId aggFn, RankingModelId rankingModel, 
+  const ModelSettings& settings, const AggregationSettings& aggSettings,
   size_t imageId
 ) const
 {
   switch (rankingModel) 
   {
-  case ImageRanker::cBoolean:
-    return GetImageRankingBooleanModel(query, numResults, imageId, aggFn, settings);
+  case RankingModelId::cBooleanBucket:
+    return GetImageRankingBooleanCustomModel(query, numResults, imageId, aggFn, settings, aggSettings);
     break;
 
-  case ImageRanker::cBooleanBucket:
-    return GetImageRankingBooleanCustomModel(query, numResults, imageId, aggFn, settings);
-    break;
-
-  case ImageRanker::cViretBase:
-    return GetImageRankingViretBaseModel(query, numResults, imageId, aggFn, settings);
-    break;
-
-  case ImageRanker::cFuzzyLogic:
-    return GetImageRankingFuzzyLogicModel(query, numResults, imageId, aggFn, settings);
+  case RankingModelId::cViretBase:
+    return GetImageRankingViretBaseModel(query, numResults, imageId, aggFn, settings, aggSettings);
     break;
   }
 
-  return std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult>();
+  return std::pair<std::vector<ImageReference>, QueryResult>();
 }
 
 
-
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingFuzzyLogicModel(const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, const ModelSettings& settings) const
-{
-  return std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult>();
-}
-
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanModel(
-  const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, 
-  const ModelSettings& settings
+std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImagesWrapper(
+  const std::string& queryEncodedPlaintext, size_t numResults,
+  AggregationId aggId, RankingModelId modelId,
+  const ModelSettings& modelSettings, const AggregationSettings& aggSettings,
+  size_t imageId
 ) const
 {
-  /*
-  SETTINGS:
-  0 => true treshold
-  */
+  // Decode query
   
-  
-  CnfFormula fml = _keywords.GetCanonicalQuery(query);
+
+  // Get desired aggregation
+  GetAggregationById(static_cast<size_t>(aggId));
+
+  // Get disired model
+
+  // Rank it
 
 
-  std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> result;
-  ImageRanker::QueryResult queryResult;
-
-  // Check every image if satisfies query formula
-  for (auto&& idImgPair : _images) 
-  {
-    const Image& img{ idImgPair.second };
-    const std::vector<float>* pImgRankingVector{ nullptr };
-
-    // Select desired probability vector
-    switch (aggFn)
-    {
-      // MinMax Linear
-    case Aggregation::cMinMaxLinear:
-      pImgRankingVector = &(img.m_minMaxLinearVector);
-      break;
-
-      // Default Softmax
-    default:
-      pImgRankingVector = &(img.m_softmaxVector);
-      break;
-    }
-
-    bool imageSucc{true};
-    size_t imageRank{ 1ULL };
-
-    // Itarate through clauses connected with AND
-    for (auto&& clause : fml) 
-    {
-      bool clauseSucc{ false };
-
-      // Iterate through predicates
-      for (auto&& var : clause) 
-      {
-          // If this variable satisfies this clause
-          if ((*pImgRankingVector)[var.second] != 0)
-          {
-            clauseSucc = true;
-            break;
-          }
-
-      }
-
-      // If this clause not satisfied
-      if (!clauseSucc) 
-      {
-        imageRank = 2ULL;
-        imageSucc = false;
-        break;
-      }
-    }
-
-    // If image satisfies formula
-    if (imageSucc) 
-    {
-      // Insert this file into result set
-      result.first.emplace_back(img.m_imageId, img.m_filename);
-
-      // If is target image
-      if (targetImageId == img.m_imageId) 
-      {
-        result.second.m_targetImageRank = imageRank;
-      }
-
-      if (numResults != 0ULL) 
-      {
-        // If filled limit
-        if (result.first.size() >= numResults)
-        {
-          continue;
-        }
-      }
-    }
-
-  }
-
-  return result;
+  return std::pair<std::vector<ImageReference>, QueryResult>();
 }
 
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingViretBaseModel(
-  const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, 
-  const ModelSettings& settings
+
+
+
+std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetImageRankingViretBaseModel(
+  const std::string& query, size_t numResults, size_t targetImageId, AggregationId aggFn, 
+  const ModelSettings& settings, const AggregationSettings& aggSettings
 ) const
 {
   // Defaults:
@@ -1283,7 +1150,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
   std::priority_queue<std::pair<double, size_t>, std::vector<std::pair<double, size_t>>, decltype(cmp)> maxHeap(cmp, std::move(container));
 
   // Extract desired number of images out of min heap
-  std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> result;
+  std::pair<std::vector<ImageReference>, QueryResult> result;
   result.first.reserve(numResults);
 
 
@@ -1296,36 +1163,6 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
     // Select desired probability vector
     switch (aggFn)
     {
-      // MinMax Linear
-    case Aggregation::cMinMaxLinear:
-      pImgRankingVector = &(img.m_minMaxLinearVector);
-      break;
-
-      //  cAmplifiedLinear1
-    case Aggregation::cAmplified1:
-      pImgRankingVector = &(img.m_amplifyProbVector1);
-      break;
-
-      //  cAmplifiedLinear2
-    case Aggregation::cAmplified2:
-      pImgRankingVector = &(img.m_amplifyProbVector2);
-      break;
-
-      //  cAmplifiedLinear3
-    case Aggregation::cAmplified3:
-      pImgRankingVector = &(img.m_amplifyProbVector3);
-      break;
-
-      //  cAmplifiedLinear3
-    case Aggregation::cAmplifiedSoftmax1:
-      pImgRankingVector = &(img.m_softmaxProbAmplified1);
-      break;
-
-      //  cAmplifiedLinear3
-    case Aggregation::cAmplifiedSoftmax2:
-      pImgRankingVector = &(img.m_softmaxProbAmplified2);
-      break;
-
       // Default Softmax
     default:
       pImgRankingVector = &(img.m_softmaxVector);
@@ -1403,27 +1240,16 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
 }
 
 
-std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> ImageRanker::GetImageRankingBooleanCustomModel(
-  const std::string& query, size_t numResults, size_t targetImageId, Aggregation aggFn, 
-  const ModelSettings& settings
+std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetImageRankingBooleanCustomModel(
+  const std::string& query, size_t numResults, size_t targetImageId, AggregationId aggFn, 
+  const ModelSettings& settings, const AggregationSettings& aggSettings
 ) const
 {
   // Defaults:
-  float trueTreshold{0.01f};
+  float trueTreshold{0.0f};
   unsigned int inBucketRanking{0};
 
-  // If setting 0 set
-  if (settings.size() >= 1 && settings[0].size() >= 0)
-  {
-    std::stringstream setting0Ss{ settings[0] };
-    setting0Ss >> trueTreshold;
-  }
-  // If setting 1 set
-  if (settings.size() >= 2 && settings[1].size() >= 0)
-  {
-    std::stringstream setting1Ss{ settings[1] };
-    setting1Ss >> inBucketRanking;
-  }
+  
   
   CnfFormula fml = _keywords.GetCanonicalQuery(query);
 
@@ -1460,7 +1286,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
   std::priority_queue<std::pair<std::pair<size_t, float>, size_t>, std::vector<std::pair<std::pair<size_t, float>, size_t>>, decltype(cmp)> minHeap(cmp, std::move(container));
 
   // Extract desired number of images out of min heap
-  std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> result;
+  std::pair<std::vector<ImageReference>, QueryResult> result;
   result.first.reserve(numResults);
 
   // Check every image if satisfies query formula
@@ -1475,35 +1301,7 @@ std::pair<std::vector<ImageRanker::ImageReference>, ImageRanker::QueryResult> Im
     // Select desired probability vector
     switch (aggFn)
     {
-      // MinMax Linear
-    case Aggregation::cMinMaxLinear:
-      pImgRankingVector = &(img.m_minMaxLinearVector);
-      break;
 
-      //  cAmplifiedLinear1
-    case Aggregation::cAmplified1:
-      pImgRankingVector = &(img.m_amplifyProbVector1);
-      break;
-
-      //  cAmplifiedLinear2
-    case Aggregation::cAmplified2:
-      pImgRankingVector = &(img.m_amplifyProbVector2);
-      break;
-
-      //  cAmplifiedLinear3
-    case Aggregation::cAmplified3:
-      pImgRankingVector = &(img.m_amplifyProbVector3);
-      break;
-
-      //  cAmplifiedLinear3
-    case Aggregation::cAmplifiedSoftmax1:
-      pImgRankingVector = &(img.m_softmaxProbAmplified1);
-      break;
-
-      //  cAmplifiedLinear3
-    case Aggregation::cAmplifiedSoftmax2:
-      pImgRankingVector = &(img.m_softmaxProbAmplified2);
-      break;
 
       // Default Softmax
     default:

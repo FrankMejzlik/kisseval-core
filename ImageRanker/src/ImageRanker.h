@@ -19,7 +19,6 @@ using namespace std::string_literals;
 #include <unordered_map>
 #include <sstream>
 #include <random>
-#include <sstream>
 #include <queue>
 #include <functional>
 
@@ -32,202 +31,28 @@ using namespace std::string_literals;
 
 #include "config.h"
 
+#include "common.h"
 #include "utility.h"
 #include "Database.h"
+#include "Image.hpp"
 #include "KeywordsContainer.h"
 
+#include "GridTest.h"
 
-class ImageRanker;
-class GridTest;
+#include "aggregations.h"
+#include "ranking_models.h"
 
-class RankingModel
-{
-public:
-
-};
-
-class BooleanBucketModel
-{
-public:
-  static float m_trueTresholdFrom;
-  static float m_trueTresholdTo;
-  static float m_trueTresholdStep;
-  static std::vector<float> m_trueTresholds;
-
-  static std::vector<uint8_t> m_inBucketOrders;
-};
-
-class BooleanViretModel
-{
-public:
-  static float m_trueTresholdFrom;
-  static float m_trueTresholdTo;
-  static float m_trueTresholdStep;
-  static std::vector<float> m_trueTresholds;
-
-  static std::vector<uint8_t> m_queryOperations;
-};
-
-
-
-struct Image
-{
-  Image() = default;
-
-  Image(
-    size_t id, 
-    std::string&& filename, 
-    std::vector<float>&& rawNetRanking,
-    float min, float max,
-    float mean, float variance
-  ) :
-    m_imageId(id),
-    m_filename(std::move(filename)),
-    m_rawNetRanking(std::move(rawNetRanking)),
-    m_rawNetRankingSorted(),
-    m_min(min), m_max(max),
-    m_mean(mean), m_variance(variance)
-  {
-
-    // Create sorted array
-    size_t i{0ULL};
-    for (auto&& img : m_rawNetRanking)
-    {
-      m_rawNetRankingSorted.emplace_back(std::pair(static_cast<uint32_t>(i), img));
-
-      ++i;
-    }
-    
-
-    // Sort it
-    std::sort(
-      m_rawNetRankingSorted.begin(), m_rawNetRankingSorted.end(),
-      [](const std::pair<size_t, float>& a, const std::pair<size_t, float>& b) -> bool
-      {
-        return a.second > b.second;
-      }
-    );
-
-
-  }
-
-  size_t m_imageId;
-  std::string m_filename;
-
-  //! Raw vector as it came out of neural network
-  std::vector<float> m_rawNetRanking;
-
-  float m_min;
-  float m_max;
-  float m_mean;
-  float m_variance;
-
-  //! Raw vector as it came out of neural network but SORTED
-  std::vector<std::pair<uint32_t, float>> m_rawNetRankingSorted;
-   
-
-  //! Softmax probability ranking
-  std::vector<float> m_softmaxVector;
-
-  //! Softmax probability vector
-  std::vector<float> m_softmaxProbAmplified1;
-  std::vector<float> m_softmaxProbAmplified2;
-
-  //! Probability vector from custom MinMax Clamp method
-  std::vector<float> m_minMaxLinearVector;
-
-  //! Probability vector from custom Boolean Aggregation with treshold
-  std::vector<float> m_amplifyProbVector1;
-  std::vector<float> m_amplifyProbVector2;
-  std::vector<float> m_amplifyProbVector3;
-
-};
 
 class ImageRanker
 {
   // Structures
 public:
-  enum RankingModel
-  {
-    cBoolean = 0,
-    cBooleanBucket = 1,
-    cBooleanExtended = 2,
-    cViretBase = 3,
-    cFuzzyLogic = 4
-  };
-
-  enum QueryOrigin
-  {
-    cDeveloper = 0,
-    cPublic = 1,
-    cManaged = 2
-  };
-
-  enum Aggregation
-  {
-    cSoftmax = 1,
-      cAmplifiedSoftmax1 = 100,
-      cAmplifiedSoftmax2 = 101,
-      
-    cMinMaxLinear = 2,
-      cAmplified1 = 200,
-      cAmplified2 = 201,
-      cAmplified3 = 202,
-  };
-
-  enum Mode
+  //! ImageRanker modes
+  enum class Mode
   {
     cFull,
     cCollector
   };
-
-
-
-  struct QueryResult 
-  {
-    QueryResult() :
-      m_targetImageRank(0ULL)
-    {}
-
-    size_t m_targetImageRank;
-  };
-
-  using Buffer = std::vector<std::byte>;
-
-  //! This is returned to front end app when some quesries are submited
-  //! <SessionID, image filename, user keywords, net <keyword, probability> >
-  using GameSessionQueryResult = std::tuple<std::string, std::string, std::vector<std::string>, std::vector<std::pair<std::string, float>>>;
-  
-  //! Array of those is submited from front-end app game
-  using GameSessionInputQuery = std::tuple<std::string, size_t, std::string>;
-
-  using ImageReference = std::pair<size_t, std::string>;
-
-  /*! <wordnetID, keyword, description> */
-  using KeywordReferences = std::vector<std::tuple<size_t, std::string, std::string>>;
-
-  /*!
-   * Output data for drawing chart
-   */
-  using ChartData = std::vector <std::pair<uint32_t, uint32_t>>;
-
-  using TestSettings = std::tuple<Aggregation, RankingModel, QueryOrigin, std::vector<std::string>>;
-
-  /*!
-   * FORMAT:
-   *  0: Boolean:
-   *  1: BooleanBucket:
-   *    0 => trueTreshold
-   *    1 => inBucketSorting
-   *  2: BooleanExtended:
-   *  3: ViretBase:
-   *    0 => ignoreTreshold
-   *    1 => rankCalcMethod
-   *      0: Multiply & (Add |)
-   *      1: Add only
-   *  4: FuzzyLogic:
-   */
-  using ModelSettings = std::vector<std::string>;
 
   
   // Methods
@@ -242,12 +67,8 @@ public:
     const std::string& softmaxFilepath = ""s,
     const std::string& deepFeaturesFilepath = ""s,
     const std::string& imageToIdMapFilepath = ""s,
-    size_t idOffset = 1ULL
-  );
-
-  //! Constructor with data from database
-  ImageRanker(
-    const std::string& imagesPath
+    size_t idOffset = 1ULL,
+    Mode mode = DEFAULT_MODE
   );
 
   ~ImageRanker() noexcept = default;
@@ -268,6 +89,11 @@ public:
   void Clear();
   void SetMode(Mode value);
 
+  // So front end can display options dynamically
+  // \todo Implement.
+  void GetAggregations() const;
+  void GetRankingModels() const;
+
   /*!
    * Set how ranker will rank by default
    * 
@@ -276,7 +102,7 @@ public:
    * \param dataSource
    * \param settings
    */
-  void SetMainSettings(Aggregation agg, RankingModel rankingModel, ModelSettings settings);
+  void SetMainSettings(AggregationId agg, RankingModelId rankingModel, ModelSettings settings);
 
   // const chartData = [
   //   { index: 0, value: 10 },
@@ -287,8 +113,8 @@ public:
   //   { index: 5, value: 50.3 },
   //   { index: 6, value: 60.4 }
   // ];
-  ImageRanker::ChartData RunModelTest(
-    Aggregation aggFn, RankingModel rankingModel, QueryOrigin dataSource, const ModelSettings& settings
+  ChartData RunModelTest(
+    AggregationId aggFn, RankingModelId rankingModel, QueryOriginId dataSource, const ModelSettings& settings, const AggregationSettings& aggSettings
   ) const;
 
   std::vector<ChartData> RunModelTests(const std::vector<TestSettings>& testSettings) const;
@@ -313,7 +139,7 @@ public:
   /*!
    * This processes input queries that come from users, generates results and sends them back
    */
-  std::vector<GameSessionQueryResult> SubmitUserQueriesWithResults(std::vector<GameSessionInputQuery> inputQueries, QueryOrigin origin = QueryOrigin::cPublic);
+  std::vector<GameSessionQueryResult> SubmitUserQueriesWithResults(std::vector<GameSessionInputQuery> inputQueries, QueryOriginId origin = QueryOriginId::cPublic);
 
 
   ImageReference GetRandomImage() const;
@@ -321,17 +147,27 @@ public:
 
   std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImages(
     const std::string& query, size_t numResults, 
-    Aggregation aggFn, RankingModel rankingModel, const ModelSettings& settings,
+    AggregationId aggFn, RankingModelId rankingModel, const ModelSettings& settings, const AggregationSettings& aggSettings,
     size_t imageId = SIZE_T_ERROR_VALUE  
   ) const;
 
+
+  std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImagesWrapper(
+    const std::string& queryEncodedPlaintext, size_t numResults,
+    AggregationId aggId, RankingModelId modelId, 
+    const ModelSettings& modelSettings, const AggregationSettings& aggSettings,
+    size_t imageId = SIZE_T_ERROR_VALUE
+  ) const;
+
+
   std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImagesPlainQuery(
     const std::string& query, size_t numResults,
-    Aggregation aggFn, RankingModel rankingModel, const ModelSettings& settings,
+    AggregationId aggFn, RankingModelId rankingModel, 
+    const ModelSettings& settings, const AggregationSettings& aggSettings,
     size_t imageId = SIZE_T_ERROR_VALUE
   ) const
   {
-    return GetRelevantImages(EncodeAndQuery(query), numResults, aggFn, rankingModel, settings, imageId);
+    return GetRelevantImages(EncodeAndQuery(query), numResults, aggFn, rankingModel, settings, aggSettings, imageId);
   }
 
 
@@ -349,34 +185,25 @@ private:
   bool PushImagesToDatabase();
 #endif
 
-  ImageRanker::ChartData RunBooleanCustomModelTest(Aggregation aggFn, QueryOrigin dataSource, const ImageRanker::ModelSettings& settings) const;
-  ImageRanker::ChartData RunViretBaseModelTest(Aggregation aggFn, QueryOrigin dataSource, const ImageRanker::ModelSettings& settings) const;
+  ChartData RunBooleanCustomModelTest(AggregationId aggFn, QueryOriginId dataSource, const ModelSettings& settings, const AggregationSettings& aggSettings) const;
+  ChartData RunViretBaseModelTest(AggregationId aggFn, QueryOriginId dataSource, const ModelSettings& settings, const AggregationSettings& aggSettings) const;
   
 
 
   size_t GetRandomImageId() const;
  
 
-  std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanModel(
-const std::string& query, size_t numResults, 
-    size_t targetImageId,
-    Aggregation aggFn, const ModelSettings& settings
-  ) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanCustomModel(
     const std::string& query, size_t numResults, 
     size_t targetImageId,
-    Aggregation aggFn , const ModelSettings& settings
+    AggregationId aggFn , const ModelSettings& settings, const AggregationSettings& aggSettings
   ) const;
   std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingViretBaseModel(
     const std::string& query, size_t numResults, 
     size_t targetImageId,
-    Aggregation aggFn, const ModelSettings& settings
+    AggregationId aggFn, const ModelSettings& settings, const AggregationSettings& aggSettings
   ) const;
-  std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingFuzzyLogicModel(
-    const std::string& query, size_t numResults, 
-    size_t targetImageId,
-    Aggregation aggFn, const ModelSettings& settings
-  ) const;
+
 
   std::string GetKeywordByWordnetId(size_t wordnetId) const
   {
@@ -391,7 +218,7 @@ const std::string& query, size_t numResults,
   std::string GetImageFilenameById(size_t imageId) const;
 
 
-  void RunGridTestsFromTo(std::vector<std::pair<ImageRanker::TestSettings, ImageRanker::ChartData>>* pDest, size_t fromIndex, size_t toIndex);
+  void RunGridTestsFromTo(std::vector<std::pair<TestSettings, ChartData>>* pDest, size_t fromIndex, size_t toIndex);
   
   bool LoadKeywordsFromDatabase(Database::Type type);
   bool LoadImagesFromDatabase(Database::Type type);
@@ -404,7 +231,7 @@ const std::string& query, size_t numResults,
 
   std::unordered_map<size_t, std::pair<size_t, std::string> > ParseHypernymKeywordClassesTextFile(std::string_view filepath) const;
 
-  std::pair< size_t, std::vector< std::vector<std::string>>>& GetCachedQueries(ImageRanker::QueryOrigin dataSource)  const;
+  std::pair< size_t, std::vector< std::vector<std::string>>>& GetCachedQueries(QueryOriginId dataSource)  const;
 
   std::string EncodeAndQuery(const std::string& query) const;
 
@@ -414,6 +241,11 @@ const std::string& query, size_t numResults,
 
   const std::vector<float>& GetMainRankingVector(const Image& image) const;
   std::vector<float>& GetMainRankingVector(Image& image);
+
+
+
+
+
 
   void InitializeGridTests();
 
@@ -430,14 +262,19 @@ const std::string& query, size_t numResults,
    * \return True on success
    */
   bool InitializeFullMode();
-
-
+  
   /*!
    *  Parses binary file containing raw ranking data
    * 
    * \return  Hash map with all Image instances loaded
    */
-  std::map<size_t, Image> ParseRawNetRankingBinFile();
+  std::unordered_map<size_t, Image> ParseRawNetRankingBinFile();
+
+  /*!
+   * Parses Softmax binary file into all \ref Image instances we're now holding
+   * 
+   * \return 
+   */
   bool ParseSoftmaxBinFile();
   
   /*!
@@ -461,9 +298,7 @@ const std::string& query, size_t numResults,
   * \return  Correct float representation.
   */
   float ParseFloatLE(const std::byte* pFirstByte) const;
-
   
-
   /*!
    * Returns true if no specific image filename mapping file provided
    * 
@@ -471,16 +306,35 @@ const std::string& query, size_t numResults,
    */
   bool UseDefaultImageFilenames() const { return (_imageToIdMap.empty() ? true : false); };
 
+  /*!
+   * Gets aggregation instance if found
+   * 
+   * \param id
+   * \return 
+   */
+  AggregationFunctionBase* GetAggregationById(size_t id) const;
 
+  /*!
+   * Gets ranking model instance if found
+   * 
+   * \param id
+   * \return 
+   */
+  RankingModelBase* GetRankingModelById(size_t id) const;
+
+  /*!
+   * Gets list of image filenames we're working with
+   * 
+   * \return 
+   */
   std::vector<std::string> GetImageFilenames() const;
+
+  /*!
+   * Gets list of image filenames we're working with from dir structure
+   *
+   * \return
+   */
   std::vector<std::string> GetImageFilenamesFromDirectoryStructure() const;
-
-  //////////////////////////
-  // uncertain stuff
-  void CalculateMinMaxClampAgg();
-
-  // uncertain stuff
-  //////////////////////////
 
 private:
   Database _primaryDb;
@@ -490,10 +344,10 @@ private:
   Mode _mode;
 
   //! Aggregation that will be used mainly
-  Aggregation _mainAggregation; 
+  AggregationId _mainAggregation; 
 
   //! Ranking model that will be used mainly
-  RankingModel _mainRankingModel;
+  RankingModelId _mainRankingModel;
 
   //! Model settings that will be used mainly
   ModelSettings _mainSettings;
@@ -509,49 +363,11 @@ private:
   std::string _imageToIdMap;
 
   KeywordsContainer _keywords;
-  std::map<size_t, Image> _images;
+  std::unordered_map<size_t, Image> _images;
 
 
+  std::unordered_map<AggregationId, std::unique_ptr<AggregationFunctionBase>> _aggregations;
+  std::unordered_map<RankingModelId, std::unique_ptr<RankingModelBase>> _models;
 };
 
 
-class GridTest
-{
-public:
-  static std::atomic<size_t> numCompletedTests;
-
-  static void ProgressCallback()
-  {
-    GridTest::numCompletedTests.operator++();
-  }
-
-  static std::pair<uint8_t, uint8_t> GetGridTestProgress()
-  {
-    return std::pair((uint8_t)GridTest::numCompletedTests, (uint8_t)m_testSettings.size());
-  }
-
-  static void ReportTestProgress()
-  {
-    while (true)
-    {
-      if (numCompletedTests >= m_testSettings.size())
-      {
-        break;
-      }
-
-      LOG("Test progress is "s + std::to_string(GridTest::numCompletedTests) + "/"s + std::to_string(m_testSettings.size()));
-      
-      std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    }
-    
-  }
-
-  
-
-  static std::vector<ImageRanker::Aggregation> m_aggregations;
-  static std::vector<ImageRanker::QueryOrigin> m_queryOrigins;
-  static std::vector<ImageRanker::RankingModel> m_rankingModels;
-
-
-  static std::vector<ImageRanker::TestSettings> m_testSettings;
-};

@@ -6,13 +6,6 @@
 
 int main()
 {
-
-#if GET_DATA_FROM_DB
-
-  ImageRanker ranker{IMAGES_PATH};
-
-#else 
-
   ImageRanker ranker{
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\images\)",
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.pre-softmax)",
@@ -20,6 +13,8 @@ int main()
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.softmax)",
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.deep-features)",
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\files.txt)",
+    1ULL,
+    ImageRanker::Mode::cFull
   };
 
   ranker.Initialize();
@@ -66,10 +61,11 @@ int main()
 
 
   auto results = ranker.GetRelevantImagesPlainQuery(
-    "07906111&00023100&07893528"s, 100, ImageRanker::Aggregation::cMinMaxLinear, ImageRanker::RankingModel::cBooleanBucket, std::vector<std::string>({ "0.869999"s, "1"s })
+    "07906111&00023100&07893528"s, 100, AggregationId::cSoftmax, 
+    RankingModelId::cBooleanBucket, std::vector<std::string>({ "0.869999"s, "1"s }), std::vector<std::string>()
   );
 
-#endif
+
 
 
   return 0;

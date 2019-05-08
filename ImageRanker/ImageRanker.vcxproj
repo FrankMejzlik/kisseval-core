@@ -141,7 +141,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -201,7 +201,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -225,7 +225,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -240,15 +240,28 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\Database.cpp" />
+    <ClCompile Include="src\GridTest.cpp" />
     <ClCompile Include="src\ImageRanker.cpp" />
     <ClCompile Include="src\KeywordsContainer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\aggregations\AggregationFunctionBase.h" />
+    <ClInclude Include="src\aggregations\aggregations.h" />
+    <ClInclude Include="src\aggregations\AggregationSine.h" />
+    <ClInclude Include="src\aggregations\AggregationSoftmax.h" />
+    <ClInclude Include="src\aggregations\AggregationXToTheP.h" />
+    <ClInclude Include="src\common.h" />
     <ClInclude Include="src\credentials.h" />
     <ClInclude Include="src\config.h" />
     <ClInclude Include="src\Database.h" />
+    <ClInclude Include="src\GridTest.h" />
+    <ClInclude Include="src\Image.hpp" />
     <ClInclude Include="src\ImageRanker.h" />
     <ClInclude Include="src\KeywordsContainer.h" />
+    <ClInclude Include="src\ranking_models\BooleanBucketModel.h" />
+    <ClInclude Include="src\ranking_models\RankingModelBase.h" />
+    <ClInclude Include="src\ranking_models\ranking_models.h" />
+    <ClInclude Include="src\ranking_models\ViretBaseModel.h" />
     <ClInclude Include="src\utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

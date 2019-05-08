@@ -5,9 +5,11 @@
 #include <string>
 #include <sstream>
 #include <random>
+#include <charconv>
+#include <iostream>
 
-using Clause = std::vector<std::pair<bool, size_t>>;
-using CnfFormula = std::vector<Clause>;
+#include "common.h"
+
 
 inline std::vector<std::string> SplitString(const std::string& s, char delimiter)
 {
@@ -40,4 +42,42 @@ inline int GetRandomInteger(int from, int to)
   std::uniform_int_distribution<int> randFromDistribution(from, to);
 
   return randFromDistribution(rng);
+}
+
+inline float strToFloat(const std::string& str)
+{
+  float result;
+
+  // Convert and check if successful
+  if (
+    auto[p, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
+    ec == std::errc()
+    )
+  {
+    return result;
+  }
+  // If failed
+  else 
+  {
+    LOG_ERROR("Conversion of string '"s + str +"' failed with error code "s + std::to_string((int)ec) +".");
+  }
+}
+
+inline int strToInt(const std::string& str)
+{
+  int result;
+
+  // Convert and check if successful
+  if (
+    auto[p, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
+    ec == std::errc()
+    )
+  {
+    return result;
+  }
+  // If failed
+  else
+  {
+    LOG_ERROR("Conversion of string '"s + str + "' failed with error code "s + std::to_string((int)ec) + ".");
+  }
 }
