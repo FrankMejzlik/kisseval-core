@@ -14,6 +14,12 @@
 class AggregationSoftmax :
   public AggregationFunctionBase
 {
+public:
+  struct Settings
+  {
+    
+  };
+
   // Methods
 public:
   AggregationSoftmax() :
@@ -21,16 +27,23 @@ public:
   {
   }
 
-  virtual bool CalculateTransformedVectors(const std::unordered_map<size_t, Image>& images) const
+  virtual void SetAggregationSettings(AggregationSettings settingsString) override
   {
-    // Softmax file is loaded by default
+
   }
 
-private:
+  virtual bool CalculateTransformedVectors(const std::unordered_map<size_t, std::unique_ptr<Image>>& images) const
+  {
+    // Softmax file is loaded by default
+    return true;
+  }
+
+
+
 
 
   // Attributes
 private:
-
+  Settings _settings;
 
 };

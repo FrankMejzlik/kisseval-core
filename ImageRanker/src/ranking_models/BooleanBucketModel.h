@@ -32,7 +32,7 @@ public:
     return Settings{ 0.01f , eInBucketSorting::eNone };
   }
 
-  Settings DecodeModelSettings(ModelSettings settingsString) const
+  virtual void SetModelSettings(ModelSettings settingsString) override
   {
     auto settings{ GetDefaultSettings() };
 
@@ -46,11 +46,22 @@ public:
     {
       settings.m_inBucketSorting = static_cast<eInBucketSorting>(strToInt(settingsString[1]));
     }
+  }
 
-    return settings;
+  virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
+    CnfFormula queryFormula,
+    size_t aggId,
+    const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont,
+    size_t numResults = SIZE_T_ERROR_VALUE,
+    size_t targetImageId = SIZE_T_ERROR_VALUE
+  ) override
+  {
+    return std::pair<std::vector<size_t>, size_t>();
   }
 
 
+private:
+  Settings _settings;
 
 public:
   static float m_trueTresholdFrom;

@@ -35,16 +35,16 @@ KeywordsContainer::KeywordsContainer(std::vector< std::vector<std::string>>&& da
 
 
 
-std::string KeywordsContainer::GetKeywordByVectorIndex(size_t index) const
+KeywordData KeywordsContainer::GetKeywordByVectorIndex(size_t index) const
 {
   auto result = _vecIndexToKeyword.find(index);
 
   if (result == _vecIndexToKeyword.end())
   {
-    return std::string();
+    return KeywordData();
   }
 
-  return result->second->m_word;
+  return KeywordData(result->second->m_wordnetId, result->second->m_word, GetKeywordDescriptionByWordnetId(result->second->m_wordnetId));
 }
 
 bool KeywordsContainer::ParseKeywordDbDataStructure(std::vector< std::vector<std::string>>&& data)

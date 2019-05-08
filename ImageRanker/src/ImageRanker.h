@@ -91,8 +91,8 @@ public:
 
   // So front end can display options dynamically
   // \todo Implement.
-  void GetAggregations() const;
-  void GetRankingModels() const;
+  void GetActiveAggregations() const;
+  void GetActiveRankingModels() const;
 
   /*!
    * Set how ranker will rank by default
@@ -117,15 +117,11 @@ public:
     AggregationId aggFn, RankingModelId rankingModel, QueryOriginId dataSource, const ModelSettings& settings, const AggregationSettings& aggSettings
   ) const;
 
-  std::vector<ChartData> RunModelTests(const std::vector<TestSettings>& testSettings) const;
 
   std::vector<std::pair<TestSettings, ChartData>> RunGridTest(const std::vector<TestSettings>& testSettings);
 
 
-  std::string GetKeywordByVectorIndex(size_t index) const
-  {
-    return _keywords.GetKeywordByVectorIndex(index);
-  }
+  
 
   /*!
    * Gets all data about image with provided ID
@@ -133,7 +129,7 @@ public:
    * \param imageId
    * \return
    */
-    Image GetImageDataById(size_t imageId) const;
+  const Image* GetImageDataById(size_t imageId) const;
 
 
   /*!
@@ -143,7 +139,9 @@ public:
 
 
   ImageReference GetRandomImage() const;
+
   KeywordReferences GetNearKeywords(const std::string& prefix);
+  KeywordData GetKeywordByVectorIndex(size_t index);
 
   std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImages(
     const std::string& query, size_t numResults, 
@@ -154,7 +152,7 @@ public:
 
   std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImagesWrapper(
     const std::string& queryEncodedPlaintext, size_t numResults,
-    AggregationId aggId, RankingModelId modelId, 
+    size_t aggId, size_t modelId,
     const ModelSettings& modelSettings, const AggregationSettings& aggSettings,
     size_t imageId = SIZE_T_ERROR_VALUE
   ) const;
@@ -179,11 +177,8 @@ public:
   //////////////////////////
   
 private:
-#if PUSH_DATA_TO_DB
-  bool PushDataToDatabase();
-  bool PushKeywordsToDatabase();
-  bool PushImagesToDatabase();
-#endif
+
+
 
   ChartData RunBooleanCustomModelTest(AggregationId aggFn, QueryOriginId dataSource, const ModelSettings& settings, const AggregationSettings& aggSettings) const;
   ChartData RunViretBaseModelTest(AggregationId aggFn, QueryOriginId dataSource, const ModelSettings& settings, const AggregationSettings& aggSettings) const;
@@ -244,9 +239,6 @@ private:
 
 
 
-
-
-
   void InitializeGridTests();
 
   /*!
@@ -268,7 +260,7 @@ private:
    * 
    * \return  Hash map with all Image instances loaded
    */
-  std::unordered_map<size_t, Image> ParseRawNetRankingBinFile();
+  std::unordered_map<size_t, std::unique_ptr<Image>> ParseRawNetRankingBinFile();
 
   /*!
    * Parses Softmax binary file into all \ref Image instances we're now holding
@@ -336,6 +328,17 @@ private:
    */
   std::vector<std::string> GetImageFilenamesFromDirectoryStructure() const;
 
+
+#if PUSH_DATA_TO_DB
+
+  bool PushDataToDatabase();
+  bool PushKeywordsToDatabase();
+  bool PushImagesToDatabase();
+
+#endif // PUSH_DATA_TO_DB
+
+
+  // Attributes
 private:
   Database _primaryDb;
   Database _secondaryDb;
@@ -363,7 +366,7 @@ private:
   std::string _imageToIdMap;
 
   KeywordsContainer _keywords;
-  std::unordered_map<size_t, Image> _images;
+  std::unordered_map<size_t, std::unique_ptr<Image>> _images;
 
 
   std::unordered_map<AggregationId, std::unique_ptr<AggregationFunctionBase>> _aggregations;

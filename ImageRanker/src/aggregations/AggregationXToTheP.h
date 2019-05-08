@@ -19,14 +19,53 @@ public:
 public:
   AggregationXToTheP() :
     AggregationFunctionBase(AggregationId::cXToTheP),
-    _exponents({ 0.2f, 0.5f, 0.8f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 9.0f })
+    //_exponents({ 0.2f, 0.5f, 0.8f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 9.0f }),
+    _exponents({ 0.2f, 1.0f, 2.0f })
   {
   }
 
-  virtual bool CalculateTransformedVectors(const std::unordered_map<size_t, Image>& images) const
+  enum eExponents 
   {
+    
+  };
+ 
+  virtual bool CalculateTransformedVectors(const std::unordered_map<size_t, std::unique_ptr<Image>>& images) const
+  {
+    // Itarate over all images
+    for (auto&& [imgId, img] : images)
+    {
+      // Calculate total sum of this bin vector
+      float totalSum{ 0ULL };
+      for (auto&& bin : img->m_rawNetRanking)
+      {
+        totalSum += bin;
+      }
 
+      // Iterate over all wanted exponents
+      size_t i{0ULL};
+      for (auto&& exp : _exponents)
+      {
+        std::vector<float> aggVector;
+        aggVector.reserve(img->GetNumBins());
+
+        for (auto&& bin : img->m_rawNetRanking)
+        {
+          // Do final transformation f(x) = x ^ exp
+          // xoxo: power after of before dividing with total sum?
+          aggVector.emplace_back( pow(bin / totalSum, exp));
+        }
+
+        // Insert this aggregation to IR agregations
+        img->m_aggVectors.emplace(GetGuid(i), std::move(aggVector));
+        
+        ++i;
+      } 
+    }
+
+    return true;
   }
+
+
 
   Settings GetDefaultSettings() const
   {
@@ -34,7 +73,7 @@ public:
     return Settings{ 1.0f };
   }
 
-  Settings DecodeModelSettings(ModelSettings settingsString) const
+  virtual void SetAggregationSettings(ModelSettings settingsString) override
   {
     auto settings{ GetDefaultSettings() };
 
@@ -43,13 +82,16 @@ public:
     {
       settings.m_exponent = strToFloat(settingsString[0]);
     }
-
-    return settings;
   }
 
 
+
+ 
+
   // Attributes
 private:
+  Settings _settings;
+
   std::vector<float> _exponents;
 
 };

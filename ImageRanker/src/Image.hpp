@@ -48,6 +48,25 @@ struct Image
 
   }
 
+  size_t GetNumBins() const { return m_rawNetRanking.size(); }
+  const std::vector<float>* GetAggregationVectorById(size_t id) const
+  {
+    // If found
+    if (
+      auto&& it{ m_aggVectors.find(id) }; 
+      it != m_aggVectors.end()
+    )
+    {
+      return &(it->second);
+    }
+    else 
+    {
+      LOG_ERROR("Aggregation not found!");
+      return nullptr;
+    }
+  }
+
+
   size_t m_imageId;
   std::string m_filename;
 
@@ -70,5 +89,5 @@ struct Image
 
 
   //! Aggregation vectors calculated by provided aggregations
-  std::unordered_map<AggregationId, AggregationVector> m_aggVectors;
+  std::unordered_map<size_t, AggregationVector> m_aggVectors;
 };

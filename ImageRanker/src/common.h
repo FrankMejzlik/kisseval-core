@@ -7,6 +7,7 @@
 using Clause = std::vector<std::pair<bool, size_t>>;
 using CnfFormula = std::vector<Clause>;
 
+
 enum class RankingModelId
 {
   cBooleanBucket = 1,
@@ -16,9 +17,9 @@ enum class RankingModelId
 
 enum class AggregationId
 {
-  cSoftmax = 1,
-  cXToTheP = 2,
-  cSine = 3
+  cSoftmax = 100,
+  cXToTheP = 200,
+  cSine = 300
 };
 
 enum class QueryOriginId
@@ -67,6 +68,9 @@ using ImageReference = std::pair<size_t, std::string>;
 
 /*! <wordnetID, keyword, description> */
 using KeywordReferences = std::vector<std::tuple<size_t, std::string, std::string>>;
+
+/*! <wordnetID, keyword, description> */
+using KeywordData = std::tuple<size_t, std::string, std::string>;
 
 /*!
  * Output data for drawing chart

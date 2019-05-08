@@ -48,6 +48,15 @@ ImageRanker::ImageRanker(
   _keywords(keywordClassesFilepath),
   _images(ParseRawNetRankingBinFile())
 {
+  // Insert all desired aggregations
+  _aggregations.emplace(AggregationId::cSoftmax, std::make_unique<AggregationSoftmax>());
+  _aggregations.emplace(AggregationId::cXToTheP, std::make_unique<AggregationXToTheP>());
+
+  // Insert all desired ranking models
+  _models.emplace(RankingModelId::cViretBase, std::make_unique<ViretModel>());
+  _models.emplace(RankingModelId::cBooleanBucket, std::make_unique<BooleanBucketModel>());
+
+
   // Connect to database
   auto result{ _primaryDb.EstablishConnection() };
   if (result != 0ULL)
@@ -373,6 +382,11 @@ KeywordReferences ImageRanker::GetNearKeywords(const std::string& prefix)
 }
 
 
+KeywordData ImageRanker::GetKeywordByVectorIndex(size_t index)
+{
+  return _keywords.GetKeywordByVectorIndex(index);
+}
+
 std::vector<std::string> ImageRanker::GetImageFilenames() const
 {
   // If no map file provided, use directory layout
@@ -443,7 +457,7 @@ std::vector<float>& ImageRanker::GetMainRankingVector(Image& image)
 }
 
 
-std::unordered_map<size_t, Image> ImageRanker::ParseRawNetRankingBinFile() 
+std::unordered_map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRankingBinFile()
 {
   // Get image filenames
   std::vector<std::string> imageFilenames{ GetImageFilenames() };
@@ -500,7 +514,7 @@ std::unordered_map<size_t, Image> ImageRanker::ParseRawNetRankingBinFile()
 
 
   // Declare result vector
-  std::unordered_map<size_t, Image> images;
+  std::unordered_map<size_t, std::unique_ptr<Image>> images;
 
   // Create line buffer
   std::vector<std::byte>  lineBuffer;
@@ -571,7 +585,7 @@ std::unordered_map<size_t, Image> ImageRanker::ParseRawNetRankingBinFile()
     // Push final row
     auto newIt = images.emplace(std::pair(
       id, 
-      Image(
+      std::make_unique<Image>(
         id, 
         std::move(filename), std::move(rawRankData),
         min, max, 
@@ -679,7 +693,7 @@ bool ImageRanker::ParseSoftmaxBinFile()
       // Stride in bytes
       currOffset += sizeof(float);
     }
-    imageIt->second.m_aggVectors.insert(std::pair(AggregationId::cSoftmax, std::move(softmaxVector)));
+    imageIt->second->m_aggVectors.insert(std::pair(static_cast<size_t>(AggregationId::cSoftmax), std::move(softmaxVector)));
   }
 
   
@@ -789,7 +803,7 @@ std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(st
 std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(size_t imageId, size_t N) const
 {
   // Find image in map
-  std::unordered_map<size_t, Image>::const_iterator imagePair = _images.find(imageId);
+  std::unordered_map<size_t, std::unique_ptr<Image>>::const_iterator imagePair = _images.find(imageId);
 
   // If no such image
   if (imagePair == _images.end())
@@ -802,7 +816,7 @@ std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(s
   std::vector<std::pair<std::string, float>> result;
   result.reserve(N);
 
-  auto ranking = imagePair->second.m_rawNetRankingSorted;
+  auto ranking = imagePair->second->m_rawNetRankingSorted;
 
   // Get first N highest probabilites
   for (size_t i = 0ULL; i < N; ++i)
@@ -810,7 +824,7 @@ std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(s
     float probability{ ranking[i].second };
 
     // Get keyword string
-    std::string keyword{ _keywords.GetKeywordByVectorIndex(ranking[i].first) }; ;
+    std::string keyword{ std::get<1>(_keywords.GetKeywordByVectorIndex(ranking[i].first)) }; ;
 
     // Place it into result vector
     result.emplace_back(std::pair(keyword, probability));
@@ -1091,23 +1105,40 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImag
 
 std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImagesWrapper(
   const std::string& queryEncodedPlaintext, size_t numResults,
-  AggregationId aggId, RankingModelId modelId,
+  size_t aggId, size_t modelId,
   const ModelSettings& modelSettings, const AggregationSettings& aggSettings,
   size_t imageId
 ) const
 {
-  // Decode query
-  
+  // Decode query to logical CNF formula
+  CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(queryEncodedPlaintext)) };
 
   // Get desired aggregation
-  GetAggregationById(static_cast<size_t>(aggId));
+  auto pAggFn = GetAggregationById(aggId);
+  // Setup model correctly
+  pAggFn->SetAggregationSettings(aggSettings);
 
   // Get disired model
+  auto pRankingModel = GetRankingModelById(modelId);
+  // Setup model correctly
+  pRankingModel->SetModelSettings(modelSettings);
 
   // Rank it
+  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(queryFormula, aggId, _images, numResults, imageId)};
 
 
-  return std::pair<std::vector<ImageReference>, QueryResult>();
+  std::pair<std::vector<ImageReference>, QueryResult> resultResponse;
+
+  // Prepare final result to return
+  for (auto&& imgId : imgOrder)
+  {
+    resultResponse.first.emplace_back(ImageReference(imgId, GetImageFilenameById(imgId)));
+  }
+
+  // Fill in QueryResult
+  resultResponse.second.m_targetImageRank = targetImgRank;
+
+  return resultResponse;
 }
 
 
@@ -1157,7 +1188,7 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetImageRanking
   // Check every image if satisfies query formula
   for (auto&& idImgPair : _images)
   {
-    const Image& img{ idImgPair.second };
+    const Image* pImg{ idImgPair.second.get() };
     const std::vector<float>* pImgRankingVector{ nullptr };
 
     // Select desired probability vector
@@ -1165,7 +1196,7 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetImageRanking
     {
       // Default Softmax
     default:
-      pImgRankingVector = &(img.m_softmaxVector);
+      pImgRankingVector = &(pImg->m_softmaxVector);
       break;
     }
 
@@ -1213,7 +1244,7 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetImageRanking
 
 
     // Insert result to min heap
-    maxHeap.push(std::pair(imageRanking, img.m_imageId));
+    maxHeap.push(std::pair(imageRanking, pImg->m_imageId));
   }
 
   size_t sizeHeap{ maxHeap.size() };
@@ -1292,7 +1323,7 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetImageRanking
   // Check every image if satisfies query formula
   for (auto&& idImgPair : _images)
   {
-    const Image& img{ idImgPair.second };
+    const Image* img{ idImgPair.second.get() };
     const std::vector<float>* pImgRankingVector{nullptr};
 
     size_t imageSucc{ 0ULL };
@@ -1305,7 +1336,7 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetImageRanking
 
       // Default Softmax
     default:
-      pImgRankingVector = &(img.m_softmaxVector);
+      pImgRankingVector = &(img->m_softmaxVector);
       break;
     }
 
@@ -1354,7 +1385,7 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetImageRanking
     }
 
     // Insert result to min heap
-    minHeap.push(std::pair(std::pair(imageSucc, imageSubRank), img.m_imageId));
+    minHeap.push(std::pair(std::pair(imageSucc, imageSubRank), img->m_imageId));
   }
 
   size_t sizeHeap{ minHeap.size() };
@@ -1380,18 +1411,18 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetImageRanking
   return result;
 }
 
-Image ImageRanker::GetImageDataById(size_t imageId) const
+const Image* ImageRanker::GetImageDataById(size_t imageId) const
 {
   auto imgIdImgPair = _images.find(imageId);
 
   if (imgIdImgPair == _images.end())
   {
     LOG_ERROR("Image not found.")
-      return Image();
+      return nullptr;
   }
 
   // Return copy to this Image instance
-  return Image(imgIdImgPair->second);
+  return imgIdImgPair->second.get();
 }
 
 
@@ -1528,7 +1559,7 @@ std::string ImageRanker::GetImageFilenameById(size_t imageId) const
     LOG_ERROR("Image not found");
   }
 
-  return imgPair->second.m_filename;
+  return imgPair->second->m_filename;
 }
 
 

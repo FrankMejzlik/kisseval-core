@@ -60,9 +60,12 @@ int main()
   }*/
 
 
-  auto results = ranker.GetRelevantImagesPlainQuery(
-    "07906111&00023100&07893528"s, 100, AggregationId::cSoftmax, 
-    RankingModelId::cBooleanBucket, std::vector<std::string>({ "0.869999"s, "1"s }), std::vector<std::string>()
+
+  auto results = ranker.GetRelevantImagesWrapper(
+    "07906111&00023100&07893528"s, 100, 
+    200, 3,
+    std::vector<std::string>({ "0.0"s, "1"s }), std::vector<std::string>({ "1.0"s }),
+    0
   );
 
 

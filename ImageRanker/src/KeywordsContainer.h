@@ -69,7 +69,7 @@ public:
 #endif
 
   std::string GetKeywordByWordnetId(size_t wordnetId)const ;
-  std::string GetKeywordByVectorIndex(size_t index) const;
+  KeywordData GetKeywordByVectorIndex(size_t index) const;
 
   std::string GetKeywordDescriptionByWordnetId(size_t wordnetId) const;
   
@@ -114,7 +114,7 @@ public:
 
       for (auto&& vecIndex : clause)
       {
-        result += GetKeywordByVectorIndex(vecIndex.second) + " | "s;
+        result += std::get<1>(GetKeywordByVectorIndex(vecIndex.second)) + " | "s;
       }
       result.pop_back();
       result.pop_back();
