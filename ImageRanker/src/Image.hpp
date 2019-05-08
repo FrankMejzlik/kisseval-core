@@ -58,7 +58,7 @@ struct Image
     )
     {
       return &(it->second);
-    }
+    }   
     else 
     {
       LOG_ERROR("Aggregation not found!");

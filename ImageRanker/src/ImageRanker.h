@@ -104,20 +104,6 @@ public:
    */
   void SetMainSettings(AggregationId agg, RankingModelId rankingModel, ModelSettings settings);
 
-  // const chartData = [
-  //   { index: 0, value: 10 },
-  //   { index: 1, value: 20 },
-  //   { index: 2, value: 30 },
-  //   { index: 3, value: 40 },
-  //   { index: 4, value: 40.32 },
-  //   { index: 5, value: 50.3 },
-  //   { index: 6, value: 60.4 }
-  // ];
-  ChartData RunModelTest(
-    AggregationId aggFn, RankingModelId rankingModel, QueryOriginId dataSource, const ModelSettings& settings, const AggregationSettings& aggSettings
-  ) const;
-
-
   std::vector<std::pair<TestSettings, ChartData>> RunGridTest(const std::vector<TestSettings>& testSettings);
 
 
@@ -143,33 +129,25 @@ public:
   KeywordReferences GetNearKeywords(const std::string& prefix);
   KeywordData GetKeywordByVectorIndex(size_t index);
 
-  std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImages(
-    const std::string& query, size_t numResults, 
-    AggregationId aggFn, RankingModelId rankingModel, const ModelSettings& settings, const AggregationSettings& aggSettings,
-    size_t imageId = SIZE_T_ERROR_VALUE  
-  ) const;
-
 
   std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImagesWrapper(
     const std::string& queryEncodedPlaintext, size_t numResults,
-    size_t aggId, size_t modelId,
+    AggregationId aggId, RankingModelId modelId,
     const ModelSettings& modelSettings, const AggregationSettings& aggSettings,
     size_t imageId = SIZE_T_ERROR_VALUE
   ) const;
 
 
-  std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImagesPlainQuery(
-    const std::string& query, size_t numResults,
-    AggregationId aggFn, RankingModelId rankingModel, 
-    const ModelSettings& settings, const AggregationSettings& aggSettings,
-    size_t imageId = SIZE_T_ERROR_VALUE
-  ) const
-  {
-    return GetRelevantImages(EncodeAndQuery(query), numResults, aggFn, rankingModel, settings, aggSettings, imageId);
-  }
-
-
   std::pair<uint8_t, uint8_t> GetGridTestProgress() const;
+
+
+
+
+
+  ChartData RunModelTestWrapper(
+    AggregationId aggId, RankingModelId modelId, QueryOriginId dataSource,
+    const ModelSettings& settings, const AggregationSettings& aggSettings
+  ) const;
 
   // ^^^^^^^^^^^^^^^^^^^^^^^
   //////////////////////////
@@ -180,9 +158,8 @@ private:
 
 
 
-  ChartData RunBooleanCustomModelTest(AggregationId aggFn, QueryOriginId dataSource, const ModelSettings& settings, const AggregationSettings& aggSettings) const;
-  ChartData RunViretBaseModelTest(AggregationId aggFn, QueryOriginId dataSource, const ModelSettings& settings, const AggregationSettings& aggSettings) const;
-  
+ 
+
 
 
   size_t GetRandomImageId() const;
@@ -192,11 +169,6 @@ private:
     const std::string& query, size_t numResults, 
     size_t targetImageId,
     AggregationId aggFn , const ModelSettings& settings, const AggregationSettings& aggSettings
-  ) const;
-  std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingViretBaseModel(
-    const std::string& query, size_t numResults, 
-    size_t targetImageId,
-    AggregationId aggFn, const ModelSettings& settings, const AggregationSettings& aggSettings
   ) const;
 
 
@@ -211,8 +183,7 @@ private:
   }
 
   std::string GetImageFilenameById(size_t imageId) const;
-
-
+  
   void RunGridTestsFromTo(std::vector<std::pair<TestSettings, ChartData>>* pDest, size_t fromIndex, size_t toIndex);
   
   bool LoadKeywordsFromDatabase(Database::Type type);
@@ -226,20 +197,22 @@ private:
 
   std::unordered_map<size_t, std::pair<size_t, std::string> > ParseHypernymKeywordClassesTextFile(std::string_view filepath) const;
 
-  std::pair< size_t, std::vector< std::vector<std::string>>>& GetCachedQueries(QueryOriginId dataSource)  const;
-
-  std::string EncodeAndQuery(const std::string& query) const;
-
-
   size_t GetNumImages() const { return _images.size(); };
-
 
   const std::vector<float>& GetMainRankingVector(const Image& image) const;
   std::vector<float>& GetMainRankingVector(Image& image);
 
-
-
   void InitializeGridTests();
+
+
+
+
+  
+
+
+  std::vector<UserImgQuery>& GetCachedQueries(QueryOriginId dataSource) const;
+
+  std::string EncodeAndQuery(const std::string& query) const;
 
   /*!
    * Initializes ImageRanker for working in Collector app
@@ -304,7 +277,7 @@ private:
    * \param id
    * \return 
    */
-  AggregationFunctionBase* GetAggregationById(size_t id) const;
+  AggregationFunctionBase* GetAggregationById(AggregationId id) const;
   
   /*!
    * Gets ranking model instance if found
@@ -312,7 +285,7 @@ private:
    * \param id
    * \return 
    */
-  RankingModelBase* GetRankingModelById(size_t id) const;
+  RankingModelBase* GetRankingModelById(RankingModelId id) const;
 
   /*!
    * Gets list of image filenames we're working with

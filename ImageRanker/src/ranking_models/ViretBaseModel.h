@@ -35,11 +35,11 @@ public:
 
   virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
     CnfFormula queryFormula,
-    size_t aggId,
+    AggregationFunctionBase* pAggregation,
     const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont,
     size_t numResults,
     size_t targetImageId
-  ) override
+  ) const  override
   {
     // If want all results
     if (numResults == SIZE_T_ERROR_VALUE)
@@ -70,7 +70,7 @@ public:
     for (auto&& [imgId, pImg] : _imagesCont)
     {
       // Prepare pointer for ranking vector aggregation data
-      const std::vector<float>* pImgRankingVector{ pImg->GetAggregationVectorById(aggId) };
+      const std::vector<float>* pImgRankingVector{ pImg->GetAggregationVectorById(pAggregation->GetGuidFromSettings()) };
 
 
       // If Add and Multiply
@@ -156,6 +156,52 @@ public:
     return result;
   }
 
+  virtual ChartData RunModelTest(
+    AggregationFunctionBase* pAggregation,
+    const std::vector<UserImgQuery>& testQueries,
+    const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont
+  ) const override
+  {
+
+    uint32_t maxRank = (uint32_t)_imagesCont.size();
+
+    // To have 100 samples
+    uint32_t scaleDownFactor = maxRank / CHART_DENSITY;
+
+    std::vector<std::pair<uint32_t, uint32_t>> result;
+    result.resize(CHART_DENSITY + 1);
+
+    uint32_t label{ 0ULL };
+    for (auto&& column : result)
+    {
+      column.first = label;
+      label += scaleDownFactor;
+    }
+
+    // Iterate over test queries
+    for (auto&& [imgId, queryFormula] : testQueries)
+    {
+      auto resultImages = GetRankedImages(queryFormula, pAggregation, _imagesCont, 0ULL, imgId);
+
+      size_t transformedRank = resultImages.second / scaleDownFactor;
+
+      // Increment this hit
+      ++result[transformedRank].second;
+    }
+
+
+    uint32_t currCount{ 0ULL };
+
+    // Compute final chart values
+    for (auto&& r : result)
+    {
+      uint32_t tmp{ r.second };
+      r.second = currCount;
+      currCount += tmp;
+    }
+
+    return result;
+  }
 
 private:
   Settings GetDefaultSettings() const

@@ -19,16 +19,17 @@ int main()
 
   ranker.Initialize();
 
-  /*auto result1{ ranker.RunModelTest(
-   (ImageRanker::Aggregation)1,
-   (ImageRanker::RankingModel)3,
-   (ImageRanker::QueryOrigin)0,
-   std::vector<std::string>({"0.0", "0.000", "0", "2"})) };
+  auto result11{ 
+    ranker.RunModelTestWrapper(
+      AggregationId::cXToTheP, RankingModelId::cViretBase, QueryOriginId::cDeveloper,
+      std::vector<std::string>({ "0.0"s, "0"s }), std::vector<std::string>({ "1"s })
+    )
+  };
 
-  for (auto&& slice : result1)
+  for (auto&& slice : result11)
   {
     std::cout << slice.first << " => " << slice.second << std::endl;
-  }*/
+  }
 
 
   /*auto result = ranker.RunGridTest(std::vector<ImageRanker::TestSettings>());
@@ -59,7 +60,7 @@ int main()
     ++i;
   }*/
 
-
+/*
 
   auto results = ranker.GetRelevantImagesWrapper(
     "07906111&00023100&07893528"s, 100, 
@@ -80,7 +81,7 @@ int main()
     200, 3,
     std::vector<std::string>({ "0.0"s, "1"s }), std::vector<std::string>({ "2"s }),
     0
-  );
+  );*/
 
 
 

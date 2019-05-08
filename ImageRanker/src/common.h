@@ -77,6 +77,8 @@ using KeywordData = std::tuple<size_t, std::string, std::string>;
  */
 using ChartData = std::vector <std::pair<uint32_t, uint32_t>>;
 
+using UserImgQuery = std::tuple<size_t, CnfFormula>;
+
 //! Structure for returning results of queries
 struct QueryResult
 {

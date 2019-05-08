@@ -189,7 +189,7 @@ void ImageRanker::InitializeGridTests()
 }
 
 
-AggregationFunctionBase* ImageRanker::GetAggregationById(size_t id) const
+AggregationFunctionBase* ImageRanker::GetAggregationById(AggregationId id) const
 {
   // Try to get this aggregation
   if (
@@ -204,7 +204,7 @@ AggregationFunctionBase* ImageRanker::GetAggregationById(size_t id) const
   }
 }
 
-RankingModelBase* ImageRanker::GetRankingModelById(size_t id) const
+RankingModelBase* ImageRanker::GetRankingModelById(RankingModelId id) const
 {
   // Try to get this aggregation
   if (
@@ -343,7 +343,7 @@ void ImageRanker::RunGridTestsFromTo(
     auto testSet{ (*it) };
 
     // Run test
-    auto chartData{ RunModelTest(std::get<0>(testSet), std::get<1>(testSet), std::get<2>(testSet), std::get<3>(testSet), std::get<4>(testSet)) };
+    auto chartData{ RunModelTestWrapper(std::get<0>(testSet), std::get<1>(testSet), std::get<2>(testSet), std::get<3>(testSet), std::get<4>(testSet)) };
 
     pDest->emplace_back(testSet, std::move(chartData));
 
@@ -884,120 +884,68 @@ std::vector<std::string> ImageRanker::StringenizeAndQuery(const std::string& que
 }
 
 
-ChartData ImageRanker::RunModelTest(
-  AggregationId aggFn, RankingModelId rankingModel, QueryOriginId dataSource, 
-  const ModelSettings& settings, const AggregationSettings& aggSettings
+ChartData ImageRanker::RunModelTestWrapper(
+  AggregationId aggId, RankingModelId modelId, QueryOriginId dataSource,
+  const ModelSettings& modelSettings, const AggregationSettings& aggSettings
 ) const
 {
-  switch (rankingModel) 
-  {
-
-  case RankingModelId::cBooleanBucket:
-  {
-    // Launch test
-    return RunBooleanCustomModelTest(aggFn, dataSource, settings, aggSettings);
-  }
-    break;
-
-
-  case RankingModelId::cBooleanExtended:
-
-    break;
-
-  case RankingModelId::cViretBase:
-  {
-    // Launch test
-    return RunViretBaseModelTest(aggFn, dataSource, settings, aggSettings);
-  }
-    break;
-  
-
-  default:
-    LOG_ERROR("Unknown model type.");
-  }
-
-  return ChartData();
-}
-
-
-ChartData ImageRanker::RunViretBaseModelTest(
-  AggregationId aggFn, QueryOriginId dataSource, 
-  const ModelSettings& settings, const AggregationSettings& aggSettings
-) const
-{
-  // Parse settings
-  /*
-  0 => true treshold
-  */
-
-
   // Get queries
-  auto dbResult = GetCachedQueries(dataSource);
+  auto testQueries = GetCachedQueries(dataSource);
 
-  auto queriesRow = dbResult.second;
+  // Get desired aggregation
+  auto pAggFn = GetAggregationById(aggId);
+  // Setup model correctly
+  pAggFn->SetAggregationSettings(aggSettings);
 
-  uint32_t maxRank = (uint32_t)_images.size();
+  // Get disired model
+  auto pRankingModel = GetRankingModelById(modelId);
+  // Setup model correctly
+  pRankingModel->SetModelSettings(modelSettings);
 
-  // To have 100 samples
-  uint32_t scaleDownFactor = maxRank / CHART_DENSITY;
-
-  std::vector<std::pair<uint32_t, uint32_t>> result;
-  result.resize(CHART_DENSITY + 1);
-
-  uint32_t label{ 0ULL };
-  for (auto&& column : result)
-  {
-    column.first = label;
-    label += scaleDownFactor;
-  }
-
-  for (auto&& idQueryRow : queriesRow)
-  {
-    size_t imageId{ FastAtoU(idQueryRow[0].data()) };
-    const std::string& userQuery{ idQueryRow[1] };
-
-    auto resultImages = GetRelevantImages(userQuery, 0ULL, aggFn, RankingModelId::cViretBase, settings, aggSettings, imageId);
-
-
-    size_t transformedRank = resultImages.second.m_targetImageRank / scaleDownFactor;
-
-    // Increment this hit
-    ++result[transformedRank].second;
-  }
-
-
-  uint32_t currCount{ 0ULL };
-
-  // Compute final chart values
-  for (auto&& r : result)
-  {
-    uint32_t tmp{ r.second };
-    r.second = currCount;
-    currCount += tmp;
-  }
-
-  return result;
+  // Run test
+  return pRankingModel->RunModelTest(pAggFn, testQueries, _images);
 }
 
 
-std::pair< size_t, std::vector< std::vector<std::string>>>& ImageRanker::GetCachedQueries(QueryOriginId dataSource) const
+std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSource) const
 {
-  static std::pair< size_t, std::vector< std::vector<std::string>>> cachedData0;
-  static std::pair< size_t, std::vector< std::vector<std::string>>> cachedData1;
+  static std::vector<UserImgQuery> cachedData0;
+  static std::vector<UserImgQuery> cachedData1;
+  static std::vector<UserImgQuery> cachedData2;
 
-  switch (dataSource) {
+  static std::chrono::steady_clock::time_point cachedData0Ts = std::chrono::steady_clock::now();
+  static std::chrono::steady_clock::time_point cachedData1Ts = std::chrono::steady_clock::now();
+  static std::chrono::steady_clock::time_point cachedData2Ts = std::chrono::steady_clock::now();
+
+  auto currentTime = std::chrono::steady_clock::now();
+
+  switch (dataSource) 
+  {
   case QueryOriginId::cDeveloper:
 
-    if (cachedData0.second.empty()) 
+    if (cachedData0.empty() || cachedData0Ts < currentTime)
     {
       // Fetch pairs of <Q, Img>
       std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
-      cachedData0 = std::move(_primaryDb.ResultQuery(query));
+      
+      auto dbData = _primaryDb.ResultQuery(query);
 
-      if (cachedData0.first != 0)
+      if (dbData.first != 0)
       {
         throw "Error getting queries from database.";
       }
+
+      // Parse DB results
+      for (auto&& idQueryRow : dbData.second)
+      {
+        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
+        CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1])) };
+        
+        cachedData0.emplace_back(std::move(imageId), std::move(queryFormula));
+      }
+
+      cachedData0Ts = std::chrono::steady_clock::now();
+      cachedData0Ts += std::chrono::hours(2);
 
     }
 
@@ -1007,16 +955,28 @@ std::pair< size_t, std::vector< std::vector<std::string>>>& ImageRanker::GetCach
 
   case QueryOriginId::cPublic:
 
-    if (cachedData1.second.empty()) 
+    if (cachedData1.empty() || cachedData1Ts < currentTime)
     {
       // Fetch pairs of <Q, Img>
       std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
-      cachedData1 = std::move(_primaryDb.ResultQuery(query));
+      auto dbData = _primaryDb.ResultQuery(query);
 
-      if (cachedData0.first != 0)
+      if (dbData.first != 0)
       {
         throw "Error getting queries from database.";
       }
+
+      // Parse DB results
+      for (auto&& idQueryRow : dbData.second)
+      {
+        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
+        CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1])) };
+
+        cachedData1.emplace_back(std::move(imageId), std::move(queryFormula));
+      }
+
+      cachedData1Ts = std::chrono::steady_clock::now();
+      cachedData1Ts += std::chrono::hours(2);
     }
 
     return cachedData1;
@@ -1027,85 +987,10 @@ std::pair< size_t, std::vector< std::vector<std::string>>>& ImageRanker::GetCach
   return cachedData0;
 }
 
-ChartData ImageRanker::RunBooleanCustomModelTest(
-  AggregationId aggFn, QueryOriginId dataSource, 
-  const ModelSettings& settings, const AggregationSettings& aggSettings
-) const
-{
-  // Get queries
-  auto dbResult = GetCachedQueries(dataSource);
-
-  auto queriesRow = dbResult.second;
-
-  uint32_t maxRank = (uint32_t)_images.size();
-
-  // To have 100 samples
-  uint32_t scaleDownFactor = maxRank / CHART_DENSITY;
-
-  std::vector<std::pair<uint32_t, uint32_t>> result;
-  result.resize(CHART_DENSITY + 1);
-
-  uint32_t label{ 0ULL };
-  for (auto&& column : result) 
-  {
-    column.first = label;
-    label += scaleDownFactor;
-  }
-
-  for (auto&& idQueryRow : queriesRow)
-  {
-    size_t imageId{ FastAtoU(idQueryRow[0].data()) };
-    const std::string& userQuery{ idQueryRow[1] };
-
-    auto resultImages = GetRelevantImages(userQuery, 0ULL, aggFn, RankingModelId::cBooleanBucket, settings, aggSettings, imageId);
-
-
-    size_t transformedRank = resultImages.second.m_targetImageRank / scaleDownFactor;
-
-    // Increment this hit
-    ++result[transformedRank].second;
-  }
-
-
-  uint32_t currCount{ 0ULL };
-
-  // Compute final chart values
-  for (auto&& r : result)
-  {
-    uint32_t tmp{ r.second };
-    r.second = currCount;
-    currCount += tmp;
-  }
-
-  return result;
-}
-
-
-std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImages(
-  const std::string& query, size_t numResults, 
-  AggregationId aggFn, RankingModelId rankingModel, 
-  const ModelSettings& settings, const AggregationSettings& aggSettings,
-  size_t imageId
-) const
-{
-  switch (rankingModel) 
-  {
-  case RankingModelId::cBooleanBucket:
-    return GetImageRankingBooleanCustomModel(query, numResults, imageId, aggFn, settings, aggSettings);
-    break;
-
-  case RankingModelId::cViretBase:
-    return GetImageRankingViretBaseModel(query, numResults, imageId, aggFn, settings, aggSettings);
-    break;
-  }
-
-  return std::pair<std::vector<ImageReference>, QueryResult>();
-}
-
 
 std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImagesWrapper(
   const std::string& queryEncodedPlaintext, size_t numResults,
-  size_t aggId, size_t modelId,
+  AggregationId aggId, RankingModelId modelId,
   const ModelSettings& modelSettings, const AggregationSettings& aggSettings,
   size_t imageId
 ) const
@@ -1117,15 +1002,14 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImag
   auto pAggFn = GetAggregationById(aggId);
   // Setup model correctly
   pAggFn->SetAggregationSettings(aggSettings);
-  size_t aggGuid{ pAggFn->GetGuidFromSettings() };
-
+  
   // Get disired model
   auto pRankingModel = GetRankingModelById(modelId);
   // Setup model correctly
   pRankingModel->SetModelSettings(modelSettings);
 
   // Rank it
-  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(queryFormula, aggId, _images, numResults, imageId)};
+  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(queryFormula, pAggFn, _images, numResults, imageId)};
 
 
   std::pair<std::vector<ImageReference>, QueryResult> resultResponse;
@@ -1144,132 +1028,6 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImag
 
 
 
-
-std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetImageRankingViretBaseModel(
-  const std::string& query, size_t numResults, size_t targetImageId, AggregationId aggFn, 
-  const ModelSettings& settings, const AggregationSettings& aggSettings
-) const
-{
-  // Defaults:
-  float trueTreshold{ 0.01f };
-  float queryOperation{ 0 };
-
-  // If setting 0 set
-  if (settings.size() >= 1 && settings[0].size() >= 0)
-  {
-    std::stringstream setting0Ss{ settings[0] };
-    setting0Ss >> trueTreshold;
-  }
-
-  // If setting 1 set
-  if (settings.size() >= 2 && settings[1].size() >= 0)
-  {
-    std::stringstream setting1Ss{ settings[1] };
-    setting1Ss >> queryOperation;
-  }
-
-  CnfFormula fml = _keywords.GetCanonicalQuery(query);
-
-  auto cmp = [](const std::pair<double, size_t>& left, const std::pair<double, size_t>& right)
-  {
-    return left.first < right.first;
-  };
-
-  // Reserve enough space in container
-  std::vector<std::pair<double, size_t>> container;
-  container.reserve(GetNumImages());
-
-  std::priority_queue<std::pair<double, size_t>, std::vector<std::pair<double, size_t>>, decltype(cmp)> maxHeap(cmp, std::move(container));
-
-  // Extract desired number of images out of min heap
-  std::pair<std::vector<ImageReference>, QueryResult> result;
-  result.first.reserve(numResults);
-
-
-  // Check every image if satisfies query formula
-  for (auto&& idImgPair : _images)
-  {
-    const Image* pImg{ idImgPair.second.get() };
-    const std::vector<float>* pImgRankingVector{ nullptr };
-
-    // Select desired probability vector
-    switch (aggFn)
-    {
-      // Default Softmax
-    default:
-      pImgRankingVector = &(pImg->m_softmaxVector);
-      break;
-    }
-
-    // If Add and Multiply
-    double imageRanking{ 1.0f };
-
-    // If add only
-    if (queryOperation == 1) 
-    {
-      imageRanking = 0.0f;
-    }
-   
-    double clauseRanking{ 0.0f };
-
-    // Itarate through clauses connected with AND
-    for (auto&& clause : fml)
-    {
-      bool clauseSucc{ false };
-
-      // Iterate through predicates
-      for (auto&& var : clause)
-      {
-        auto ranking{ (*pImgRankingVector)[var.second] };
-
-        // Skipp all labels with too low probability
-        if (ranking < trueTreshold)
-        {
-          continue;
-        }
-
-        // Add up labels in one clause
-        clauseRanking += ranking;
-      }
-
-      // If add only
-      if (queryOperation == 0)
-      {
-        imageRanking = imageRanking * clauseRanking;
-      }
-      else if (queryOperation == 1)
-      {
-        imageRanking = imageRanking + clauseRanking;
-      }
-    }
-
-
-    // Insert result to min heap
-    maxHeap.push(std::pair(imageRanking, pImg->m_imageId));
-  }
-
-  size_t sizeHeap{ maxHeap.size() };
-  for (size_t i = 0ULL; i < sizeHeap; ++i)
-  {
-    auto pair = maxHeap.top();
-    maxHeap.pop();
-
-    // If is target image, save it
-    if (targetImageId == pair.second)
-    {
-      result.second.m_targetImageRank = i + 1;
-    }
-
-    if (i < numResults)
-    {
-      result.first.emplace_back(std::pair(pair.second, GetImageFilenameById(pair.second)));
-    }
-
-  }
-
-
-  return result;
-}
 
 
 std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetImageRankingBooleanCustomModel(
