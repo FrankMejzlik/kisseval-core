@@ -21,8 +21,8 @@ int main()
 
   auto result11{ 
     ranker.RunModelTestWrapper(
-      AggregationId::cXToTheP, RankingModelId::cViretBase, QueryOriginId::cDeveloper,
-      std::vector<std::string>({ "0.0"s, "0"s }), std::vector<std::string>({ "1"s })
+      AggregationId::cXToTheP, RankingModelId::cBooleanBucket, QueryOriginId::cDeveloper,
+      std::vector<std::string>({ "0.001"s, "2"s }), std::vector<std::string>({ "1"s })
     )
   };
 

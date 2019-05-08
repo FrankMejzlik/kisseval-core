@@ -156,21 +156,8 @@ public:
   
 private:
 
-
-
- 
-
-
-
   size_t GetRandomImageId() const;
  
-
-  std::pair<std::vector<ImageReference>, QueryResult> GetImageRankingBooleanCustomModel(
-    const std::string& query, size_t numResults, 
-    size_t targetImageId,
-    AggregationId aggFn , const ModelSettings& settings, const AggregationSettings& aggSettings
-  ) const;
-
 
   std::string GetKeywordByWordnetId(size_t wordnetId) const
   {

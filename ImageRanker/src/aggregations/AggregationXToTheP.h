@@ -20,8 +20,8 @@ public:
 public:
   AggregationXToTheP() :
     AggregationFunctionBase(AggregationId::cXToTheP),
-    //_exponents({ 0.2f, 0.5f, 0.8f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 9.0f }),
-    _exponents({ 0.2f, 1.0f, 2.0f })
+    _exponents({ 0.2f, 0.4f, 0.6f, 0.8f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f})
+    //_exponents({ 0.2f, 1.0f, 2.0f })
   {
   }
 
