@@ -64,7 +64,21 @@ int main()
   auto results = ranker.GetRelevantImagesWrapper(
     "07906111&00023100&07893528"s, 100, 
     200, 3,
-    std::vector<std::string>({ "0.0"s, "1"s }), std::vector<std::string>({ "1.0"s }),
+    std::vector<std::string>({ "0.0"s, "1"s }), std::vector<std::string>({ "0.2"s }),
+    0
+  );
+
+  auto results2 = ranker.GetRelevantImagesWrapper(
+    "07906111&00023100&07893528"s, 100,
+    200, 3,
+    std::vector<std::string>({ "0.0"s, "1"s }), std::vector<std::string>({ "1"s }),
+    0
+  );
+
+  auto results3 = ranker.GetRelevantImagesWrapper(
+    "07906111&00023100&07893528"s, 100,
+    200, 3,
+    std::vector<std::string>({ "0.0"s, "1"s }), std::vector<std::string>({ "2"s }),
     0
   );
 

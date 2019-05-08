@@ -39,7 +39,10 @@ public:
   }
 
 
-
+  virtual size_t GetGuidFromSettings() const override
+  {
+    return GetGuid(0ULL);
+  }
 
 
   // Attributes

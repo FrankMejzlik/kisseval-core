@@ -1117,6 +1117,7 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImag
   auto pAggFn = GetAggregationById(aggId);
   // Setup model correctly
   pAggFn->SetAggregationSettings(aggSettings);
+  size_t aggGuid{ pAggFn->GetGuidFromSettings() };
 
   // Get disired model
   auto pRankingModel = GetRankingModelById(modelId);

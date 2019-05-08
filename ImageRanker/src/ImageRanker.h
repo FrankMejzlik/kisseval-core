@@ -305,7 +305,7 @@ private:
    * \return 
    */
   AggregationFunctionBase* GetAggregationById(size_t id) const;
-
+  
   /*!
    * Gets ranking model instance if found
    * 

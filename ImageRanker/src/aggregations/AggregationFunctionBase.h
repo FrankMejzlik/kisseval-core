@@ -22,7 +22,7 @@ public:
 public:
   virtual void SetAggregationSettings(AggregationSettings settingsString) = 0;
   virtual bool CalculateTransformedVectors(const std::unordered_map<size_t, std::unique_ptr<Image>>& images) const = 0;
-
+  virtual size_t GetGuidFromSettings() const = 0;
 
   // Methods
 public:
@@ -35,6 +35,8 @@ public:
 
     return guid;
   }
+  
+
 
   // Attributes
 private:
