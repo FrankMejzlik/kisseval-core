@@ -17,8 +17,17 @@ KeywordsContainer::KeywordsContainer(const std::string& keywordClassesFilepath)
   // \todo Replace
   _descIndexToKeyword.reserve(20000);
 
-
-  _approxDescLen = _allDescriptions.size() / _descIndexToKeyword.size();
+  if (
+    size_t divisor{ _descIndexToKeyword.size() };
+    divisor == 0
+    )
+  {
+    LOG_ERROR("Zero division");
+  }
+  else
+  {
+    _approxDescLen = _allDescriptions.size() / divisor;
+  }
 }
 
 
@@ -284,7 +293,7 @@ bool KeywordsContainer::ParseKeywordClassesFile(const std::string& filepath)
   // If failed to open file
   if (!inFile)
   {
-    throw std::runtime_error(std::string("Error opening file :") + filepath);
+    LOG_ERROR(std::string("Error opening file :") + filepath);
   }
 
   std::string lineBuffer;

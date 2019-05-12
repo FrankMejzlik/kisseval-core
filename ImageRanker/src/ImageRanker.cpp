@@ -467,7 +467,7 @@ std::vector<std::string> ImageRanker::GetImageFilenames() const
   // If failed to open file
   if (!inFile)
   {
-    throw std::runtime_error(std::string("Error opening file :") + _imageToIdMap);
+    LOG_ERROR(std::string("Error opening file :") + _imageToIdMap);
   }
 
   std::vector<std::string> result;
@@ -992,7 +992,7 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
 
       if (dbData.first != 0)
       {
-        throw "Error getting queries from database.";
+        LOG_ERROR("Error getting queries from database."s);
       }
 
       // Parse DB results
@@ -1023,7 +1023,7 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
 
       if (dbData.first != 0)
       {
-        throw "Error getting queries from database.";
+        LOG_ERROR("Error getting queries from database."s);
       }
 
       // Parse DB results
@@ -1111,7 +1111,7 @@ std::unordered_map<size_t, std::pair<size_t, std::string> > ImageRanker::ParseKe
   // If failed to open file
   if (!inFile)
   {
-    throw std::runtime_error(std::string("Error opening file :") + filepath.data());
+    LOG_ERROR("Error opening file :"s + filepath.data());
   }
 
   // Result variable
@@ -1171,7 +1171,7 @@ std::unordered_map<size_t, std::pair<size_t, std::string> > ImageRanker::ParseHy
   // If failed to open file
   if (!inFile)
   {
-    throw std::runtime_error(std::string("Error opening file :") + filepath.data());
+    LOG_ERROR("Error opening file :"s + filepath.data());
   }
 
   // Result variable
@@ -1248,7 +1248,7 @@ std::vector<std::byte> ImageRanker::LoadFileToBuffer(std::string_view filepath) 
   // If failed to open file
   if (!ifs)
   {
-    throw std::runtime_error(std::string("Error opening file :") + filepath.data());
+    LOG_ERROR("Error opening file :"s + filepath.data());
   }
 
   // Get end of file
@@ -1270,7 +1270,7 @@ std::vector<std::byte> ImageRanker::LoadFileToBuffer(std::string_view filepath) 
   // If error during reading
   if (!ifs.read((char*)buffer.data(), buffer.size()))
   {
-    throw std::runtime_error(std::string("Error reading file :") + filepath.data());
+    LOG_ERROR("Error opening file :"s + filepath.data());
   }
 
   // Return (move) final buffer
