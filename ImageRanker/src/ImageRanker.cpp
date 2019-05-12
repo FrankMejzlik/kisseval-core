@@ -57,6 +57,8 @@ ImageRanker::ImageRanker(
   _models.emplace(RankingModelId::cBooleanBucket, std::make_unique<BooleanBucketModel>());
 
 
+  
+
   // Connect to database
   auto result{ _primaryDb.EstablishConnection() };
   if (result != 0ULL)
@@ -64,6 +66,64 @@ ImageRanker::ImageRanker(
     LOG_ERROR("Connecting to primary DB failed.");
   }
 
+}
+
+bool ImageRanker::SpitImagesIntoCsv() const
+{
+  std::ofstream presoftmaxFileHandle("presoftmax_20k_subset.csv", std::ios::out);
+
+  for (auto&&[imgId, pImg] : _images)
+  {
+    presoftmaxFileHandle << imgId << ",";
+
+    size_t size{ pImg->m_rawNetRanking.size() };
+    size_t i{ 0ULL };
+    for (auto&& bin : pImg->m_rawNetRanking)
+    {
+      presoftmaxFileHandle << std::fixed<< std::setprecision(std::numeric_limits<long double>::digits10 + 1) << bin;
+      
+
+      if (i < size - 1) 
+      {
+        presoftmaxFileHandle << ",";
+      }
+
+      ++i;
+    }
+    presoftmaxFileHandle << std::endl;
+  }
+
+  presoftmaxFileHandle.close();
+
+  std::ofstream softmaxFileHandle("softmax_20k_subset.csv", std::ios::out);
+
+  
+  for (auto&&[imgId, pImg] : _images)
+  {
+    softmaxFileHandle << imgId << ",";
+
+    size_t size{ pImg->m_aggVectors[100].size() };
+    size_t i{ 0ULL };
+
+    for (auto&& bin : pImg->m_aggVectors[100])
+    {
+      
+      softmaxFileHandle << std::fixed << std::setprecision(std::numeric_limits<long double>::digits10 + 1) << bin;
+
+      if (i < size - 1)
+      {
+        softmaxFileHandle << ",";
+      }
+
+      ++i;
+    }
+    softmaxFileHandle << std::endl;
+  }
+
+  softmaxFileHandle.close();
+
+
+  return true;
 }
 
 bool ImageRanker::Initialize()
@@ -76,6 +136,9 @@ bool ImageRanker::Initialize()
   {
     return InitializeFullMode();
   }
+
+  
+
 }
 
 bool ImageRanker::Reinitialize()
@@ -125,6 +188,9 @@ bool ImageRanker::InitializeFullMode()
 
   // Initialize gridtests
   InitializeGridTests();
+
+
+  //SpitImagesIntoCsv();
 
   return true;
 }
@@ -666,11 +732,6 @@ bool ImageRanker::ParseSoftmaxBinFile()
   // Iterate until there is something to read from file
   while (ifs.read((char*)lineBuffer.data(), byteRowLengths))
   {
-    if (lineBuffer.empty())
-    {
-      //break;
-    }
-
     // Get picture ID of this row
     size_t id = ParseIntegerLE(lineBuffer.data());
 
@@ -693,10 +754,9 @@ bool ImageRanker::ParseSoftmaxBinFile()
       // Stride in bytes
       currOffset += sizeof(float);
     }
+    // Store  vector of floats
     imageIt->second->m_aggVectors.insert(std::pair(static_cast<size_t>(AggregationId::cSoftmax), std::move(softmaxVector)));
   }
-
-  
 
   return true;
 }

@@ -6,6 +6,7 @@
 #include <string>
 using namespace std::string_literals;
 
+#include <fstream>
 #include <cmath>
 #include <stdexcept>
 #include <iostream>
@@ -36,6 +37,8 @@ using namespace std::string_literals;
 #include "Database.h"
 #include "Image.hpp"
 #include "KeywordsContainer.h"
+
+#include <iomanip>
 
 #include "GridTest.h"
 
@@ -142,7 +145,7 @@ public:
 
 
 
-
+  bool SpitImagesIntoCsv() const;
 
   ChartData RunModelTestWrapper(
     AggregationId aggId, RankingModelId modelId, QueryOriginId dataSource,

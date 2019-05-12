@@ -6,6 +6,7 @@
  * Aggregation of type f(x) = x^p
  */
 class AggregationXToTheP :
+
   public AggregationFunctionBase
 {
 public:
