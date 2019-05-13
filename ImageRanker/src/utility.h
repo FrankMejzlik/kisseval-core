@@ -44,10 +44,18 @@ inline int GetRandomInteger(int from, int to)
   return randFromDistribution(rng);
 }
 
+#include <sstream>
+
 inline float strToFloat(const std::string& str)
 {
   float result;
 
+std::stringstream ss{str};
+
+ss >> result;
+return result;
+
+  /*
   // Convert and check if successful
   if (
     auto[p, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
@@ -57,10 +65,11 @@ inline float strToFloat(const std::string& str)
     return result;
   }
   // If failed
-  else 
+  else
   {
     LOG_ERROR("Conversion of string '"s + str +"' failed with error code "s + std::to_string((int)ec) +".");
   }
+  */
 }
 
 inline int strToInt(const std::string& str)
