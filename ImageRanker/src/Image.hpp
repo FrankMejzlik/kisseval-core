@@ -80,6 +80,7 @@ struct Image
 
   //! Raw vector as it came out of neural network but SORTED
   std::vector<std::pair<uint32_t, float>> m_rawNetRankingSorted;
+  std::vector<std::pair<size_t, float>> m_hypernymsRankingSorted;
 
   //! Softmax probability ranking
   std::vector<float> m_softmaxVector;

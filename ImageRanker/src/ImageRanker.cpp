@@ -68,64 +68,6 @@ ImageRanker::ImageRanker(
 
 }
 
-bool ImageRanker::SpitImagesIntoCsv() const
-{
-  std::ofstream presoftmaxFileHandle("presoftmax_20k_subset.csv", std::ios::out);
-
-  for (auto&&[imgId, pImg] : _images)
-  {
-    presoftmaxFileHandle << imgId << ",";
-
-    size_t size{ pImg->m_rawNetRanking.size() };
-    size_t i{ 0ULL };
-    for (auto&& bin : pImg->m_rawNetRanking)
-    {
-      presoftmaxFileHandle << std::fixed<< std::setprecision(std::numeric_limits<long double>::digits10 + 1) << bin;
-      
-
-      if (i < size - 1) 
-      {
-        presoftmaxFileHandle << ",";
-      }
-
-      ++i;
-    }
-    presoftmaxFileHandle << std::endl;
-  }
-
-  presoftmaxFileHandle.close();
-
-  std::ofstream softmaxFileHandle("softmax_20k_subset.csv", std::ios::out);
-
-  
-  for (auto&&[imgId, pImg] : _images)
-  {
-    softmaxFileHandle << imgId << ",";
-
-    size_t size{ pImg->m_aggVectors[100].size() };
-    size_t i{ 0ULL };
-
-    for (auto&& bin : pImg->m_aggVectors[100])
-    {
-      
-      softmaxFileHandle << std::fixed << std::setprecision(std::numeric_limits<long double>::digits10 + 1) << bin;
-
-      if (i < size - 1)
-      {
-        softmaxFileHandle << ",";
-      }
-
-      ++i;
-    }
-    softmaxFileHandle << std::endl;
-  }
-
-  softmaxFileHandle.close();
-
-
-  return true;
-}
-
 bool ImageRanker::Initialize()
 {
   if (_mode == Mode::cCollector)
@@ -136,8 +78,6 @@ bool ImageRanker::Initialize()
   {
     return InitializeFullMode();
   }
-
-  
 
 }
 
@@ -177,6 +117,9 @@ bool ImageRanker::InitializeCollectorMode()
 
 bool ImageRanker::InitializeFullMode()
 {
+  // Create best hypernyms
+  GenerateBestHypernymsForImages();
+
   // Parse softmax file if available
   ParseSoftmaxBinFile();
 
@@ -190,11 +133,47 @@ bool ImageRanker::InitializeFullMode()
   InitializeGridTests();
 
 
-  //SpitImagesIntoCsv();
-
   return true;
 }
 
+
+void ImageRanker::GenerateBestHypernymsForImages()
+{
+  auto cmp = [](const std::pair<size_t, float>& left, const std::pair<size_t, float>& right)
+  {
+    return left.second < right.second;
+  };
+
+  for (auto&& [imgId, pImg] : _images)
+  {
+    std::priority_queue<std::pair<size_t, float>, std::vector<std::pair<size_t, float>>, decltype(cmp)> maxHeap(cmp);
+
+    for (auto&& [wordnetId, pKw] : _keywords._wordnetIdToKeywords)
+    {
+
+      // If has some hyponyms
+      if (pKw->m_vectorIndex == SIZE_T_ERROR_VALUE)
+      {
+        float totalRank{ 0.0f };
+        for (auto&& kwIndex : pKw->m_hypernymIndices)
+        {
+          totalRank += pImg->m_rawNetRanking[kwIndex];
+        }
+
+        maxHeap.push(std::pair(wordnetId, totalRank));
+      }
+    }
+    
+    while (!maxHeap.empty())
+    {
+      auto item = maxHeap.top();
+      maxHeap.pop();
+
+      pImg->m_hypernymsRankingSorted.emplace_back(std::move(item));
+    }
+    
+  }
+}
 
 void ImageRanker::InitializeGridTests()
 {
@@ -492,6 +471,52 @@ std::vector<std::string> ImageRanker::GetImageFilenames() const
 
   return result;
 }
+
+
+std::pair<std::vector<std::pair<size_t, float>>, std::vector<std::pair<size_t, float>>> ImageRanker::GetImageKeywordsForInteractiveSearch(size_t imageId, size_t numResults)
+{
+  std::vector<std::pair<size_t, float>>  hypernyms;
+  hypernyms.reserve(numResults);
+  std::vector<std::pair<size_t, float>>  nonHypernyms;
+  nonHypernyms.reserve(numResults);
+
+  auto img = _images.find(imageId);
+
+  if (img == _images.end())
+  {
+    LOG_ERROR("Image not found.");
+  }
+
+
+  // Get hypers
+  size_t i{0ULL};
+  for (auto&& kw : img->second->m_hypernymsRankingSorted)
+  {
+    if (!(i < numResults))
+    {
+      break;
+    }
+    hypernyms.emplace_back(kw);
+
+    ++i;
+  }
+
+  // Get kws
+  i = 0ULL;
+  for (auto&& kw : img->second->m_rawNetRankingSorted)
+  {
+    if (!(i < numResults))
+    {
+      break;
+    }
+    nonHypernyms.emplace_back(kw);
+    
+    ++i;
+  }
+
+  return std::pair(std::move(hypernyms), std::move(nonHypernyms));
+}
+
 
 std::vector<std::string> ImageRanker::GetImageFilenamesFromDirectoryStructure() const
 {

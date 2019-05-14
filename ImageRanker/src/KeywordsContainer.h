@@ -10,6 +10,7 @@ using namespace std::literals::string_literals;
 #include <fstream>
 #include <map>
 #include <locale>
+
 #include <set>
 
 #include "config.h"
@@ -49,6 +50,7 @@ struct Keyword
   std::string m_word;
   std::vector<size_t> m_hypernyms;
   std::vector<size_t> m_hyponyms;
+  std::set<size_t> m_hypernymIndices;
 };
 
 class KeywordsContainer
@@ -102,6 +104,7 @@ public:
   std::vector<size_t> GetVectorKeywords(size_t wordnetId) const;
 
   std::vector<size_t> GetVectorKeywordsIndices(size_t wordnetId) const;
+  std::set<size_t> GetVectorKeywordsIndicesSet(size_t wordnetId) const;
 
 
   std::string StringifyCnfFormula(const CnfFormula& formula)
@@ -162,14 +165,15 @@ private:
     }   
   };
 
+  public:
   std::vector<size_t> FindAllNeedles(std::string_view hey, std::string_view needle);
-
-private:
   //! Keywords
   std::vector< std::unique_ptr<Keyword> > _keywords;
 
   //! Maps wordnetID to Keyword
   std::map<size_t, Keyword*> _wordnetIdToKeywords;
+private:
+ 
 
   //! One huge string of all descriptions for fast keyword search
   std::string _allDescriptions;

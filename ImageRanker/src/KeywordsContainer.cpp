@@ -14,6 +14,16 @@ KeywordsContainer::KeywordsContainer(const std::string& keywordClassesFilepath)
   // Sort keywords
   std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
 
+
+  for (auto&&[wordnetId, pKw] : _wordnetIdToKeywords)
+  {
+    // If has some hyponyms
+    if (pKw->m_vectorIndex == SIZE_T_ERROR_VALUE)
+    {
+      pKw->m_hypernymIndices = std::move(GetVectorKeywordsIndicesSet(wordnetId));
+    }
+  }
+
   // \todo Replace
   _descIndexToKeyword.reserve(20000);
 
@@ -205,6 +215,47 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywordsIndices(size_t wordnetId
 
   // If vector word, return self
   return std::vector<size_t>{ pRootKeyword->m_vectorIndex };
+}
+
+std::set<size_t> KeywordsContainer::GetVectorKeywordsIndicesSet(size_t wordnetId) const
+{
+  // Find root keyword
+  auto wordnetIdKeywordPair = _wordnetIdToKeywords.find(wordnetId);
+
+  if (wordnetIdKeywordPair == _wordnetIdToKeywords.end())
+  {
+    LOG_ERROR("Keyword not found!");
+
+    return std::set<size_t>();
+  }
+
+  Keyword* pRootKeyword = wordnetIdKeywordPair->second;
+
+  // It not vector keyword
+  if (pRootKeyword->m_vectorIndex == SIZE_T_ERROR_VALUE)
+  {
+    std::set<size_t> result;
+
+    // Recursively get hyponyms
+    for (auto&& hypo : pRootKeyword->m_hyponyms)
+    {
+      auto recur = GetVectorKeywordsIndicesSet(hypo);
+      //result.reserve(result.size() + recur.size());
+
+
+      for (auto&& item : recur)
+      {
+        result.insert(item);
+      }
+      
+    }
+
+    return result;
+  }
+
+
+  // If vector word, return self
+  return std::set<size_t>{ pRootKeyword->m_vectorIndex };
 }
 
 

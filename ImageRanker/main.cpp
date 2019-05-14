@@ -84,7 +84,7 @@ int main()
   );
 
 
-
+  auto result{ ranker.GetImageKeywordsForInteractiveSearch(1ULL, 20ULL) };
 
   return 0;
 

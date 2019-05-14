@@ -92,6 +92,10 @@ public:
   void Clear();
   void SetMode(Mode value);
 
+
+  std::pair<std::vector<std::pair<size_t, float>>, std::vector<std::pair<size_t, float>>> GetImageKeywordsForInteractiveSearch(size_t imageId, size_t numResults);
+  ChartData SubmitInteractiveSearchSubmit(size_t imageId);
+
   // So front end can display options dynamically
   // \todo Implement.
   void GetActiveAggregations() const;
@@ -144,8 +148,6 @@ public:
   std::pair<uint8_t, uint8_t> GetGridTestProgress() const;
 
 
-
-  bool SpitImagesIntoCsv() const;
 
   ChartData RunModelTestWrapper(
     AggregationId aggId, RankingModelId modelId, QueryOriginId dataSource,
@@ -291,6 +293,7 @@ private:
    */
   std::vector<std::string> GetImageFilenamesFromDirectoryStructure() const;
 
+  void GenerateBestHypernymsForImages();
 
 #if PUSH_DATA_TO_DB
 
