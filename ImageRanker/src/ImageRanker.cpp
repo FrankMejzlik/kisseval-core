@@ -473,11 +473,11 @@ std::vector<std::string> ImageRanker::GetImageFilenames() const
 }
 
 
-std::pair<std::vector<std::pair<size_t, float>>, std::vector<std::pair<size_t, float>>> ImageRanker::GetImageKeywordsForInteractiveSearch(size_t imageId, size_t numResults)
+std::pair<std::vector<std::tuple<size_t, std::string, float>>, std::vector<std::tuple<size_t, std::string, float>>> ImageRanker::GetImageKeywordsForInteractiveSearch(size_t imageId, size_t numResults)
 {
-  std::vector<std::pair<size_t, float>>  hypernyms;
+  std::vector<std::tuple<size_t, std::string, float>>  hypernyms;
   hypernyms.reserve(numResults);
-  std::vector<std::pair<size_t, float>>  nonHypernyms;
+  std::vector<std::tuple<size_t, std::string, float>>  nonHypernyms;
   nonHypernyms.reserve(numResults);
 
   auto img = _images.find(imageId);
@@ -496,7 +496,10 @@ std::pair<std::vector<std::pair<size_t, float>>, std::vector<std::pair<size_t, f
     {
       break;
     }
-    hypernyms.emplace_back(kw);
+
+    std::string word{ GetKeywordByWordnetId(kw.first) };
+
+    hypernyms.emplace_back(std::tuple(kw.first, std::move(word), kw.second));
 
     ++i;
   }
@@ -509,7 +512,11 @@ std::pair<std::vector<std::pair<size_t, float>>, std::vector<std::pair<size_t, f
     {
       break;
     }
-    nonHypernyms.emplace_back(kw);
+
+    auto kws = GetKeywordByVectorIndex(kw.first);
+    std::string word{ std::get<1>(GetKeywordByVectorIndex(kw.first)) };
+
+    nonHypernyms.emplace_back(std::tuple(std::get<0>(kws), std::move(word), kw.second));
     
     ++i;
   }

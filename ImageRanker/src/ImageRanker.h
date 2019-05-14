@@ -93,7 +93,7 @@ public:
   void SetMode(Mode value);
 
 
-  std::pair<std::vector<std::pair<size_t, float>>, std::vector<std::pair<size_t, float>>> GetImageKeywordsForInteractiveSearch(size_t imageId, size_t numResults);
+  std::pair<std::vector<std::tuple<size_t, std::string, float>>, std::vector<std::tuple<size_t, std::string, float>>> GetImageKeywordsForInteractiveSearch(size_t imageId, size_t numResults);
   ChartData SubmitInteractiveSearchSubmit(size_t imageId);
 
   // So front end can display options dynamically
