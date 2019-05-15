@@ -131,7 +131,7 @@ bool ImageRanker::InitializeFullMode()
   }
 
   // Calculate approx document frequency
-  ComputeApproxDocFrequency(200, 0.001f);
+  ComputeApproxDocFrequency(200, TRUE_TRESHOLD_FOR_KW_FREQUENCY);
 
   // Initialize gridtests
   InitializeGridTests();

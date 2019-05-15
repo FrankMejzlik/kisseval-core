@@ -5,6 +5,13 @@
 //! In seconds
 #define QUERIES_CACHE_LIFETIME 5
 
+#define TRUE_TRESHOLD_FOR_KW_FREQUENCY 0.001f
+/*!
+  100 => always softmax
+  200 => always x^1
+*/
+#define KW_FREQUENCY_BASE_DATA 200
+
 #define CALC_MIN_MAX_CLAMP_AGG 1
 #define CALC_BOOL_AGG 1
 #define BOOL_AGG_TRESHOLD 0.5
