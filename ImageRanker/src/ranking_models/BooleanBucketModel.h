@@ -15,6 +15,7 @@ public:
 
   struct Settings
   {
+    unsigned int m_keywordFrequencyHandling;
     float m_trueTreshold;
     eInBucketSorting m_inBucketSorting;
   };
@@ -29,7 +30,7 @@ public:
   Settings GetDefaultSettings() const
   {
     // Return default settings instance
-    return Settings{ 0.01f , eInBucketSorting::eNone };
+    return Settings{ 0U, 0.01f , eInBucketSorting::eNone };
   }
 
   virtual void SetModelSettings(ModelSettings settingsString) override
@@ -39,12 +40,17 @@ public:
     // If setting 0 set
     if (settingsString.size() >= 1 && settingsString[0].size() >= 0)
     {
-      _settings.m_trueTreshold = strToFloat(settingsString[0]);
+      _settings.m_keywordFrequencyHandling = static_cast<unsigned int>(strToInt(settingsString[0]));
     }
     // If setting 1 set
     if (settingsString.size() >= 2 && settingsString[1].size() >= 0)
     {
-      _settings.m_inBucketSorting = static_cast<eInBucketSorting>(strToInt(settingsString[1]));
+      _settings.m_trueTreshold = strToFloat(settingsString[1]);
+    }
+    // If setting 2 set
+    if (settingsString.size() >= 3 && settingsString[2].size() >= 0)
+    {
+      _settings.m_inBucketSorting = static_cast<eInBucketSorting>(strToInt(settingsString[2]));
     }
 
   }

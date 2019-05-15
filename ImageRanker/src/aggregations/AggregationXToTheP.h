@@ -21,7 +21,7 @@ public:
 public:
   AggregationXToTheP() :
     AggregationFunctionBase(AggregationId::cXToTheP),
-    _exponents({ 0.8f, 1.0f, 2.0f })
+    _exponents({ 1.0f, 0.8f, 2.0f })
   {
   }
 

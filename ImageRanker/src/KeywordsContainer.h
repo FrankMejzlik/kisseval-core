@@ -77,6 +77,8 @@ public:
   
   CnfFormula GetCanonicalQuery(const std::string& query) const;
 
+
+
   Keyword* GetKeywordByWord(const std::string& keyword) const
   {
     auto item = std::lower_bound(_keywords.begin(), _keywords.end(), keyword,
@@ -129,6 +131,8 @@ public:
 
     return result;
   }
+
+  size_t GetNetVectorSize() const { return _vecIndexToKeyword.size(); }
 
 private:
   bool ParseKeywordClassesFile(const std::string& filepath);

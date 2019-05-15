@@ -123,11 +123,15 @@ bool ImageRanker::InitializeFullMode()
   // Parse softmax file if available
   ParseSoftmaxBinFile();
 
+
   // Load and process all aggregations
   for (auto&& agg : _aggregations)
   {
     agg.second->CalculateTransformedVectors(_images);
   }
+
+  // Calculate approx document frequency
+  ComputeApproxDocFrequency(200, 0.001f);
 
   // Initialize gridtests
   InitializeGridTests();
@@ -136,6 +140,62 @@ bool ImageRanker::InitializeFullMode()
   return true;
 }
 
+void ImageRanker::ComputeApproxDocFrequency(size_t aggregationGuid, float treshold)
+{
+  m_indexKwFrequency.reserve(_keywords.GetNetVectorSize());
+
+  std::vector<size_t> indexKwFrequencyCount;
+  indexKwFrequencyCount.resize(_keywords.GetNetVectorSize());
+ 
+
+  // Iterate thorough all images
+  for (auto&& [id, pImg] : _images)
+  {
+    auto it = pImg->m_aggVectors.find(aggregationGuid);
+
+    if (it == pImg->m_aggVectors.end())
+    {
+      LOG_ERROR("Aggregation GUID"s + std::to_string(aggregationGuid) + " not found.");
+    }
+
+    {
+      size_t i{ 0ULL };
+      for (auto&& fl : it->second)
+      {
+        // If this keyword is truly present
+        if (fl > treshold)
+        {
+          // Increment it's count
+          ++indexKwFrequencyCount[i];
+        }
+
+        ++i;
+      }
+    }
+  }
+
+  // Find maximum
+  std::pair<size_t, size_t> maxIndexCount{ 0ULL, 0ULL };
+  {
+    size_t i{ 0ULL };
+    for (auto&& indexCount : indexKwFrequencyCount)
+    {
+      if (indexCount > maxIndexCount.second)
+      {
+        maxIndexCount.first = i;
+        maxIndexCount.second = indexCount;
+      }
+
+      ++i;
+    }
+  }
+
+  size_t i{ 0ULL };
+  for (auto&& indexCount : indexKwFrequencyCount)
+  {
+    m_indexKwFrequency.emplace_back(((float)indexCount / maxIndexCount.second));
+  }
+}
 
 void ImageRanker::GenerateBestHypernymsForImages()
 {
@@ -1037,7 +1097,7 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
       }
 
       cachedData0Ts = std::chrono::steady_clock::now();
-      cachedData0Ts += std::chrono::hours(2);
+      cachedData0Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
 
     }
 

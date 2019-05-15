@@ -87,6 +87,8 @@ struct Image
 
   //! Probability vector from custom MinMax Clamp method
   std::vector<float> m_minMaxLinearVector;
+  
+  
 
 
   //! Aggregation vectors calculated by provided aggregations

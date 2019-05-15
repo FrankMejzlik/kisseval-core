@@ -161,6 +161,8 @@ public:
   
 private:
 
+  void ComputeApproxDocFrequency(size_t aggregationGuid, float treshold);
+
   size_t GetRandomImageId() const;
  
 
@@ -333,6 +335,8 @@ private:
 
   KeywordsContainer _keywords;
   std::unordered_map<size_t, std::unique_ptr<Image>> _images;
+
+  std::vector<float> m_indexKwFrequency;
 
 
   std::unordered_map<AggregationId, std::unique_ptr<AggregationFunctionBase>> _aggregations;
