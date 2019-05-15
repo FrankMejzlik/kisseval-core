@@ -44,6 +44,7 @@ public:
   virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
     CnfFormula queryFormula,
     AggregationFunctionBase* pAggregation,
+    const std::vector<float>* pIndexKwFrequency,
     const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont,
     size_t numResults,
     size_t targetImageId
@@ -109,6 +110,25 @@ public:
         {
           auto ranking{ (*pImgRankingVector)[var.second] };
 
+          float factor{1.0f};
+          // Choose correct KF handling
+          switch (_settings.m_keywordFrequencyHandling)
+          {
+            // No care about TFIDF
+          case 0:
+            
+            break;
+
+            // Multiply with TFIDF
+          case 1:
+            factor =  (*pIndexKwFrequency)[var.second];
+            ranking = ranking * factor;
+            break;
+
+          default:
+            LOG_ERROR("Unknown query operation.");
+          }
+
           // Skip all labels with too low ranking
           if (ranking < _settings.m_trueTreshold)
           {
@@ -166,6 +186,7 @@ public:
 
   virtual ChartData RunModelTest(
     AggregationFunctionBase* pAggregation,
+    const std::vector<float>* pIndexKwFrequency,
     const std::vector<UserImgQuery>& testQueries,
     const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont
   ) const override
@@ -189,7 +210,7 @@ public:
     // Iterate over test queries
     for (auto&& [imgId, queryFormula] : testQueries)
     {
-      auto resultImages = GetRankedImages(queryFormula, pAggregation, _imagesCont, 0ULL, imgId);
+      auto resultImages = GetRankedImages(queryFormula, pAggregation, pIndexKwFrequency, _imagesCont, 0ULL, imgId);
 
       size_t transformedRank = resultImages.second / scaleDownFactor;
 

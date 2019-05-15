@@ -193,7 +193,7 @@ void ImageRanker::ComputeApproxDocFrequency(size_t aggregationGuid, float tresho
   size_t i{ 0ULL };
   for (auto&& indexCount : indexKwFrequencyCount)
   {
-    m_indexKwFrequency.emplace_back(((float)indexCount / maxIndexCount.second));
+    m_indexKwFrequency.emplace_back(1 - ((float)indexCount / maxIndexCount.second));
   }
 }
 
@@ -1055,7 +1055,7 @@ ChartData ImageRanker::RunModelTestWrapper(
   pRankingModel->SetModelSettings(modelSettings);
 
   // Run test
-  return pRankingModel->RunModelTest(pAggFn, testQueries, _images);
+  return pRankingModel->RunModelTest(pAggFn, &m_indexKwFrequency, testQueries, _images);
 }
 
 
@@ -1077,6 +1077,8 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
 
     if (cachedData0.empty() || cachedData0Ts < currentTime)
     {
+      cachedData0.clear();
+
       // Fetch pairs of <Q, Img>
       std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
       
@@ -1090,6 +1092,7 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
       // Parse DB results
       for (auto&& idQueryRow : dbData.second)
       {
+        
         size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
         CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1])) };
         
@@ -1109,6 +1112,8 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
 
     if (cachedData1.empty() || cachedData1Ts < currentTime)
     {
+      cachedData1.clear();
+
       // Fetch pairs of <Q, Img>
       std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
       auto dbData = _primaryDb.ResultQuery(query);
@@ -1121,6 +1126,8 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
       // Parse DB results
       for (auto&& idQueryRow : dbData.second)
       {
+        
+
         size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
         CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1])) };
 
@@ -1128,7 +1135,7 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
       }
 
       cachedData1Ts = std::chrono::steady_clock::now();
-      cachedData1Ts += std::chrono::hours(2);
+      cachedData1Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
     }
 
     return cachedData1;
@@ -1161,7 +1168,7 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImag
   pRankingModel->SetModelSettings(modelSettings);
 
   // Rank it
-  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(queryFormula, pAggFn, _images, numResults, imageId)};
+  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(queryFormula, pAggFn, &m_indexKwFrequency, _images, numResults, imageId)};
 
 
   std::pair<std::vector<ImageReference>, QueryResult> resultResponse;

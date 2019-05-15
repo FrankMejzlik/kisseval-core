@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 //! In seconds
-#define QUERIES_CACHE_LIFETIME 0
+#define QUERIES_CACHE_LIFETIME 5
 
 #define CALC_MIN_MAX_CLAMP_AGG 1
 #define CALC_BOOL_AGG 1
