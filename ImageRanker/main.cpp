@@ -1,7 +1,8 @@
 
 
 #include <iostream>
-
+#include <thread>
+#include <chrono>
 #include "ImageRanker.h"
 
 int main()
@@ -42,6 +43,21 @@ int main()
   {
     std::cout << slice.first << " => " << slice.second << std::endl;
   }
+
+
+  auto rr = ranker.GetStatisticsUserKeywordAccuracy();
+
+  
+  for (auto&& [x, y] : std::get<0>(rr).second)
+  {
+    std::cout << x << " -> " << y << std::endl;
+  }
+
+  for (auto&&[x, y] : std::get<1>(rr).second)
+  {
+    std::cout << x << " -> " << y << std::endl;
+  }
+
 
 
   return 0;

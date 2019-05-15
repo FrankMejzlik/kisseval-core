@@ -26,8 +26,12 @@ enum class QueryOriginId
 {
   cDeveloper = 0,
   cPublic = 1,
-  cManaged = 2
+  cManaged = 2,
+
+  cAll = 999
 };
+
+
 
 /*!
 * FORMAT:
@@ -78,7 +82,13 @@ using KeywordData = std::tuple<size_t, std::string, std::string>;
 using ChartData = std::vector <std::pair<uint32_t, uint32_t>>;
 
 using UserImgQuery = std::tuple<size_t, CnfFormula>;
+using UserImgQueryRaw = std::tuple<size_t, std::vector<size_t>>;
 
+
+//! (datasourceID, percentageofAll)
+using UserAccuracyChartDataMisc = std::tuple<size_t, float>;
+
+using UserAccuracyChartData = std::pair<UserAccuracyChartDataMisc, ChartData>;
 //! Structure for returning results of queries
 struct QueryResult
 {

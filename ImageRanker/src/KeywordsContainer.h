@@ -69,7 +69,7 @@ public:
 #if PUSH_DATA_TO_DB
   bool PushKeywordsToDatabase(Database& db);
 #endif
-
+  Keyword* GetWholeKeywordByWordnetId(size_t wordnetId) const;
   std::string GetKeywordByWordnetId(size_t wordnetId)const ;
   KeywordData GetKeywordByVectorIndex(size_t index) const;
 
@@ -133,10 +133,14 @@ public:
   }
 
   size_t GetNetVectorSize() const { return _vecIndexToKeyword.size(); }
+  
+  std::vector<size_t> GetCanonicalQueryNoRecur(const std::string& query) const;
 
 private:
   bool ParseKeywordClassesFile(const std::string& filepath);
   bool ParseKeywordDbDataStructure(std::vector< std::vector<std::string>>&& data);
+
+  
 
   /*!
   * Functor for comparing our string=>wordnetId structure

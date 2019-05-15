@@ -154,6 +154,12 @@ public:
     const ModelSettings& settings, const AggregationSettings& aggSettings
   ) const;
 
+
+  
+
+  std::tuple<UserAccuracyChartData, UserAccuracyChartData> GetStatisticsUserKeywordAccuracy(QueryOriginId queriesSource = QueryOriginId::cAll) const;
+
+
   // ^^^^^^^^^^^^^^^^^^^^^^^
   //////////////////////////
   //    API Methods
@@ -203,7 +209,7 @@ private:
 
   
 
-
+  std::vector<UserImgQueryRaw>& GetCachedQueriesRaw(QueryOriginId dataSource) const;
   std::vector<UserImgQuery>& GetCachedQueries(QueryOriginId dataSource) const;
 
   std::string EncodeAndQuery(const std::string& query) const;

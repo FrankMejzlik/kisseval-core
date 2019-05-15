@@ -25,6 +25,7 @@
 
 
 #define CHART_DENSITY 100
+#define CHART_NUM_X_POINTS 100
 
 /*!
   * Boolean model settings

@@ -334,6 +334,50 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query) const
   return resultFormula;
 }
 
+std::vector<size_t> KeywordsContainer::GetCanonicalQueryNoRecur(const std::string& query) const
+{
+  //EG: &-8252602+-8256735+-3206282+-4296562+
+
+  std::stringstream idSs;
+  size_t wordnetId;
+
+
+  std::vector<size_t> resultFormula;
+
+  // Parse query
+  // \todo write complete parser
+  for (auto&& c : query)
+  {
+    // Ignore 
+    if (c == '&') continue;
+
+    if (std::isdigit(c))
+    {
+      idSs << c;
+    }
+    // If ss not empty
+    else if (idSs.rdbuf()->in_avail() > 0)
+    {
+      idSs >> wordnetId;
+      idSs.str("");
+      idSs.clear();
+
+      resultFormula.push_back(wordnetId);
+    }
+    else if (c == '-' || c == '+')
+    {
+
+    }
+    else
+    {
+      LOG_ERROR("Parsing query failed");
+    }
+
+  }
+
+  return resultFormula;
+}
+
 
 
 bool KeywordsContainer::ParseKeywordClassesFile(const std::string& filepath)
@@ -656,6 +700,18 @@ std::string KeywordsContainer::GetKeywordByWordnetId(size_t wordnetId) const
   }
 
   return resultIt->second->m_word;
+}
+
+Keyword* KeywordsContainer::GetWholeKeywordByWordnetId(size_t wordnetId) const
+{
+  auto resultIt = _wordnetIdToKeywords.find(wordnetId);
+
+  if (resultIt == _wordnetIdToKeywords.end())
+  {
+    std::string("NOT FOUND");
+  }
+
+  return resultIt->second;
 }
 
 #if PUSH_DATA_TO_DB

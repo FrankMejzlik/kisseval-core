@@ -133,6 +133,8 @@ bool ImageRanker::InitializeFullMode()
   // Calculate approx document frequency
   ComputeApproxDocFrequency(200, TRUE_TRESHOLD_FOR_KW_FREQUENCY);
 
+  //GetStatisticsUserKeywordAccuracy();
+
   // Initialize gridtests
   InitializeGridTests();
 
@@ -1059,6 +1061,92 @@ ChartData ImageRanker::RunModelTestWrapper(
 }
 
 
+std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(QueryOriginId dataSource) const
+{
+  static std::vector<UserImgQueryRaw> cachedData0;
+  static std::vector<UserImgQueryRaw> cachedData1;
+  static std::vector<UserImgQueryRaw> cachedData2;
+
+  static std::chrono::steady_clock::time_point cachedData0Ts = std::chrono::steady_clock::now();
+  static std::chrono::steady_clock::time_point cachedData1Ts = std::chrono::steady_clock::now();
+  static std::chrono::steady_clock::time_point cachedData2Ts = std::chrono::steady_clock::now();
+
+  auto currentTime = std::chrono::steady_clock::now();
+
+  switch (dataSource)
+  {
+  case QueryOriginId::cDeveloper:
+
+    if (cachedData0.empty() || cachedData0Ts < currentTime)
+    {
+      cachedData0.clear();
+
+      // Fetch pairs of <Q, Img>
+      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
+
+      auto dbData = _primaryDb.ResultQuery(query);
+
+      if (dbData.first != 0)
+      {
+        LOG_ERROR("Error getting queries from database."s);
+      }
+
+      // Parse DB results
+      for (auto&& idQueryRow : dbData.second)
+      {
+
+        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
+        std::vector<size_t> queryWordnetIds{ _keywords.GetCanonicalQueryNoRecur(idQueryRow[1]) };
+
+        cachedData0.emplace_back(std::move(imageId), std::move(queryWordnetIds));
+      }
+
+      cachedData0Ts = std::chrono::steady_clock::now();
+      cachedData0Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
+
+    }
+
+    return cachedData0;
+
+    break;
+
+  case QueryOriginId::cPublic:
+
+    if (cachedData1.empty() || cachedData1Ts < currentTime)
+    {
+      cachedData1.clear();
+
+      // Fetch pairs of <Q, Img>
+      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
+      auto dbData = _primaryDb.ResultQuery(query);
+
+      if (dbData.first != 0)
+      {
+        LOG_ERROR("Error getting queries from database."s);
+      }
+
+      // Parse DB results
+      for (auto&& idQueryRow : dbData.second)
+      {
+        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
+        std::vector<size_t> queryWordnetIds{ _keywords.GetCanonicalQueryNoRecur(idQueryRow[1]) };
+
+        cachedData1.emplace_back(std::move(imageId), std::move(queryWordnetIds));
+      }
+
+      cachedData1Ts = std::chrono::steady_clock::now();
+      cachedData1Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
+    }
+
+    return cachedData1;
+
+    break;
+  }
+
+  return cachedData0;
+}
+
+
 std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSource) const
 {
   static std::vector<UserImgQuery> cachedData0;
@@ -1144,6 +1232,142 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
   }
 
   return cachedData0;
+}
+
+
+std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatisticsUserKeywordAccuracy(QueryOriginId queriesSource) const
+{
+  std::vector<UserImgQueryRaw> queries;
+
+  if (queriesSource == QueryOriginId::cAll)
+  {
+    queries = GetCachedQueriesRaw(QueryOriginId::cDeveloper);
+    auto queries2 = GetCachedQueriesRaw(QueryOriginId::cPublic);
+
+    // Merge them
+    std::copy(queries2.begin(), queries2.end(), back_inserter(queries));
+  }
+
+  std::vector<size_t> hitsNonHyper;
+  size_t hitsNonHyperTotal{0ULL};
+  hitsNonHyper.resize(_keywords.GetNetVectorSize());
+
+  std::vector<size_t> hitsHyper;
+  size_t hitsHyperTotal{ 0ULL };
+  auto pImg{ GetImageDataById(0) };
+  hitsHyper.resize(pImg->m_hypernymsRankingSorted.size());
+
+  for (auto&&[imgId, wnIds] : queries)
+  {
+    auto pImg{ GetImageDataById(imgId) };
+
+
+    for (auto&& wordnetId : wnIds)
+    {
+      // Get keyword
+      auto kw{ _keywords.GetWholeKeywordByWordnetId(wordnetId) };
+
+      // If is non-hyper
+      if (kw->m_vectorIndex != SIZE_T_ERROR_VALUE)
+      {
+        
+        const auto& rankVec{ pImg->m_rawNetRankingSorted };
+
+        for (size_t i{ 0ULL }; i < rankVec.size(); ++i)
+        {
+          // If this is the word
+          if (rankVec[i].first == kw->m_vectorIndex)
+          {
+            ++hitsNonHyper[i];
+            ++hitsNonHyperTotal;
+          }
+        }
+      }
+      // Is hypernym
+      else
+      {
+        const auto& rankVec{ pImg->m_hypernymsRankingSorted };
+
+        for (size_t i{ 0ULL }; i < rankVec.size(); ++i)
+        {
+          // If this is the word
+          if (rankVec[i].first == wordnetId)
+          {
+            ++hitsHyper[i];
+            ++hitsHyperTotal;
+          }
+        }
+      }
+    }
+  }
+
+  float percNonHyper{ (float)hitsNonHyperTotal / (hitsHyperTotal + hitsNonHyperTotal) };
+  float percHyper{ 1 - percNonHyper };
+
+
+  UserAccuracyChartDataMisc nonHyperMisc{ (size_t)queriesSource, percNonHyper };
+  UserAccuracyChartDataMisc hyperMisc{ (size_t)queriesSource, percHyper };
+
+  float scaleDownNonHyper{ 10 };
+  float scaleDownHyper{ 10 };
+
+  ChartData nonHyperChartData;
+  ChartData hyperChartData;
+
+
+  nonHyperChartData.emplace_back(0, 0);
+  {
+    size_t chIndex{ 1ULL };
+    for (auto it = hitsNonHyper.begin(); it != hitsNonHyper.end(); )
+    {
+      size_t locMax{ 0ULL };
+      for (size_t i{ 0ULL }; i < scaleDownNonHyper; ++i, ++it)
+      {
+        if (it == hitsNonHyper.end())
+        {
+          break;
+        }
+
+        if (*it > locMax)
+        {
+          locMax = *it;
+        }
+      }
+
+      nonHyperChartData.emplace_back(chIndex * scaleDownNonHyper, locMax);
+      ++chIndex;
+    }
+  }
+
+  hyperChartData.emplace_back(0, 0);
+
+  {
+    size_t chIndex{ 1ULL };
+    for (auto it = hitsHyper.begin(); it != hitsHyper.end();)
+    {
+      size_t locMax{ 0ULL };
+      for (size_t i{ 0ULL }; i < scaleDownHyper; ++i, ++it)
+      {
+        if (it == hitsHyper.end())
+        {
+          break;
+
+        }
+        if (*it > locMax)
+        {
+          locMax = *it;
+        }
+      }
+
+      hyperChartData.emplace_back(chIndex * scaleDownNonHyper, locMax);
+      ++chIndex;
+    }
+  }
+
+  UserAccuracyChartData nonHyperData{ std::pair(std::move(nonHyperMisc), std::move(nonHyperChartData)) };
+  UserAccuracyChartData hyperData{ std::pair(std::move(hyperMisc), std::move(hyperChartData)) };
+
+  return std::tuple(std::move(nonHyperData), std::move(hyperData));
 }
 
 
