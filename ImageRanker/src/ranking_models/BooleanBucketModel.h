@@ -126,8 +126,29 @@ public:
         // Iterate through predicates
         for (auto&& var : clause)
         {
+          float factor{ 1.0f };
+          auto binRankVal{ (*pImgRankingVector)[var.second] };
+
+          switch (_settings.m_keywordFrequencyHandling)
+          {
+            // No care about TFIDF
+          case 0:
+
+            break;
+
+            // Multiply with TFIDF
+          case 1:
+            factor = (*pIndexKwFrequency)[var.second];
+            binRankVal = binRankVal * factor;
+            break;
+
+          default:
+            LOG_ERROR("Unknown keyword freq operation.");
+          }
+
+
           // If this variable satisfies this clause
-          if ((*pImgRankingVector)[var.second] >= _settings.m_trueTreshold)
+          if (binRankVal >= _settings.m_trueTreshold)
           {
             clauseSucc = true;
             break;
@@ -145,16 +166,16 @@ public:
           case eInBucketSorting::eSum:
             {
               // Summ sort
-              imageSubRank += (*pImgRankingVector)[var.second];
+              imageSubRank += binRankVal;
             }
             break;
 
           case eInBucketSorting::eMax:
             {
               // Get max
-              if (imageSubRank < (*pImgRankingVector)[var.second])
+              if (imageSubRank < binRankVal)
               {
-                imageSubRank = (*pImgRankingVector)[var.second];
+                imageSubRank = binRankVal;
               }
             }
             break;

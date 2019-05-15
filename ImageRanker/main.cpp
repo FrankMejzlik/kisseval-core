@@ -22,8 +22,8 @@ int main()
 
   auto result11{ 
     ranker.RunModelTestWrapper(
-      AggregationId::cXToTheP, RankingModelId::cViretBase, QueryOriginId::cDeveloper,
-      std::vector<std::string>({ "0"s, "0"s, "1"s }), std::vector<std::string>({ "1"s })
+      AggregationId::cXToTheP, RankingModelId::cBooleanBucket, QueryOriginId::cDeveloper,
+      std::vector<std::string>({ "0"s, "0.001"s, "1"s }), std::vector<std::string>({ "1"s })
     )
   };
 
@@ -34,8 +34,8 @@ int main()
 
   auto result12{
     ranker.RunModelTestWrapper(
-      AggregationId::cXToTheP, RankingModelId::cViretBase, QueryOriginId::cDeveloper,
-      std::vector<std::string>({ "1"s, "0"s, "1"s }), std::vector<std::string>({ "1"s })
+      AggregationId::cXToTheP, RankingModelId::cBooleanBucket, QueryOriginId::cDeveloper,
+      std::vector<std::string>({ "1"s, "00.0009"s, "1"s }), std::vector<std::string>({ "1"s })
     )
   };
 
@@ -45,18 +45,6 @@ int main()
   }
 
 
-  auto rr = ranker.GetStatisticsUserKeywordAccuracy();
-
-  
-  for (auto&& [x, y] : std::get<0>(rr).second)
-  {
-    std::cout << x << " -> " << y << std::endl;
-  }
-
-  for (auto&&[x, y] : std::get<1>(rr).second)
-  {
-    std::cout << x << " -> " << y << std::endl;
-  }
 
 
 

@@ -126,7 +126,7 @@ public:
             break;
 
           default:
-            LOG_ERROR("Unknown query operation.");
+            LOG_ERROR("Unknown keyword freq operation.");
           }
 
           // Skip all labels with too low ranking
