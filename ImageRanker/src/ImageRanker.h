@@ -144,6 +144,12 @@ public:
     size_t imageId = SIZE_T_ERROR_VALUE
   ) const;
 
+  std::tuple<std::vector<ImageReference>, std::vector<std::tuple<size_t, std::string, float>>, QueryResult> GetRelevantImagesWithSuggestedWrapper(
+    const std::string& queryEncodedPlaintext, size_t numResults,
+    AggregationId aggId, RankingModelId modelId,
+    const ModelSettings& modelSettings, const AggregationSettings& aggSettings,
+    size_t imageId
+  ) const;
 
   std::pair<uint8_t, uint8_t> GetGridTestProgress() const;
 

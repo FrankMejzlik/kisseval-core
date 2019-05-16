@@ -1409,6 +1409,83 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImag
   return resultResponse;
 }
 
+std::tuple<std::vector<ImageReference>, std::vector<std::tuple<size_t, std::string, float>>, QueryResult> ImageRanker::GetRelevantImagesWithSuggestedWrapper(
+  const std::string& queryEncodedPlaintext, size_t numResults,
+  AggregationId aggId, RankingModelId modelId,
+  const ModelSettings& modelSettings, const AggregationSettings& aggSettings,
+  size_t imageId
+) const
+{
+  // Decode query to logical CNF formula
+  CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(queryEncodedPlaintext)) };
+
+  // Get desired aggregation
+  auto pAggFn = GetAggregationById(aggId);
+  // Setup model correctly
+  pAggFn->SetAggregationSettings(aggSettings);
+
+  // Get disired model
+  auto pRankingModel = GetRankingModelById(modelId);
+  // Setup model correctly
+  pRankingModel->SetModelSettings(modelSettings);
+
+  // Rank it
+  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(queryFormula, pAggFn, &m_indexKwFrequency, _images, numResults, imageId)};
+
+
+  std::tuple<std::vector<ImageReference>, std::vector<std::tuple<size_t, std::string, float>>, QueryResult> resultResponse;
+
+
+  std::vector<std::tuple<size_t, std::string, float>> occuranceHistogram;
+  occuranceHistogram.reserve(_keywords.GetNetVectorSize());
+
+  // Prefil keyword wordnetIDs
+  for (size_t i{ 0ULL }; i < _keywords.GetNetVectorSize(); ++i)
+  {
+    occuranceHistogram.emplace_back(std::get<0>(_keywords.GetKeywordByVectorIndex(i)), std::get<1>(_keywords.GetKeywordByVectorIndex(i)), 0.0f);
+  }
+
+  for (auto&& imgId : imgOrder)
+  {
+    auto imagePtr = GetImageDataById(imgId);
+    auto min = imagePtr->m_min;
+
+    const auto& linBinVector{ imagePtr->m_aggVectors.at(200) };
+
+    // Add ranking to histogram
+    for (auto&& r : imagePtr->m_rawNetRankingSorted)
+    {
+
+      std::get<2>(occuranceHistogram[r.first]) += linBinVector[r.first];
+    }
+  }
+
+  // Sort suggested list
+  std::sort(occuranceHistogram.begin(), occuranceHistogram.end(), 
+    [](const std::tuple<size_t, std::string, float>& l, std::tuple<size_t, std::string, float>& r)
+    {
+      return std::get<2>(l) > std::get<2>(r);
+    }
+  );
+
+  // Prepare final result to return
+  {
+    size_t i{0ULL};
+    for (auto&& imgId : imgOrder)
+    {
+      std::get<0>(resultResponse).emplace_back(ImageReference(imgId, GetImageFilenameById(imgId)));
+      std::get<1>(resultResponse).emplace_back(std::move(occuranceHistogram[i]));
+
+      ++i;
+    }
+  }
+
+  // Fill in QueryResult
+  std::get<2>(resultResponse).m_targetImageRank = targetImgRank;
+
+  return resultResponse;
+}
+
 
 
 const Image* ImageRanker::GetImageDataById(size_t imageId) const
