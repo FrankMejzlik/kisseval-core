@@ -277,9 +277,11 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query) const
     if (c == '&') continue;
 
 
-    if (c == '~') nextIdNegate = true;
-
-    if (std::isdigit(c))
+    if (c == '~')
+    {
+      nextIdNegate = true;
+    }
+    else if (std::isdigit(c))
     {
       idSs << c;
     }
@@ -298,7 +300,7 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query) const
         // Add their negations as ANDs
         for (auto&& id : vecIds)
         {
-          Clause tmp{ std::pair(false, id) };        
+          Clause tmp{ std::pair(true, id) };        
 
           resultFormula.push_back(tmp);
         }

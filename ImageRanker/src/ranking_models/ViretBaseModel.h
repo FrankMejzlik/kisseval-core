@@ -101,7 +101,7 @@ public:
       }
 
       
-
+      float numNegate{0.0f};
       // Itarate through clauses connected with AND
       for (auto&& clause : queryFormula)
       {
@@ -131,16 +131,18 @@ public:
             LOG_ERROR("Unknown keyword freq operation.");
           }
 
-          // Skip all labels with too low ranking
-          if (ranking < _settings.m_trueTreshold)
-          {
-            continue;
-          }
 
           // Is negative
           if (var.first)
           {
-            ranking = -ranking;
+            numNegate += ranking;
+            continue;
+          }
+
+          // Skip all labels with too low ranking
+          if (ranking < _settings.m_trueTreshold)
+          {
+            continue;
           }
 
           // Add up labels in one clause
@@ -162,6 +164,11 @@ public:
           LOG_ERROR("Unknown query operation.");
         }
 
+      }
+
+      if (numNegate > 0) 
+      {
+        imageRanking /= ((numNegate* 1000 * queryFormula.size()) + 1);
       }
 
       // Insert result to max heap
