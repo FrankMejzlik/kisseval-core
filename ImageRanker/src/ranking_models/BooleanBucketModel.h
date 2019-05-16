@@ -122,6 +122,7 @@ public:
       for (auto&& clause : queryFormula)
       {
         bool clauseSucc{ false };
+        size_t negatePenalty{0ULL};
 
         // Iterate through predicates
         for (auto&& var : clause)
@@ -151,26 +152,38 @@ public:
           if (binRankVal >= _settings.m_trueTreshold)
           {
             clauseSucc = true;
+
+            // If is negate
+            if (var.first)
+            {
+              negatePenalty = 1;
+            }
             break;
           }
 
-
-          switch (_settings.m_inBucketSorting)
           {
-          case eInBucketSorting::eNone:
+            // If is negate
+            if (var.first)
+            {
+              binRankVal = -binRankVal;
+            }
+
+            switch (_settings.m_inBucketSorting)
+            {
+            case eInBucketSorting::eNone:
             {
               // No sorting within bucket
             }
             break;
 
-          case eInBucketSorting::eSum:
+            case eInBucketSorting::eSum:
             {
               // Summ sort
               imageSubRank += binRankVal;
             }
             break;
 
-          case eInBucketSorting::eMax:
+            case eInBucketSorting::eMax:
             {
               // Get max
               if (imageSubRank < binRankVal)
@@ -180,8 +193,9 @@ public:
             }
             break;
 
-          default:
-            LOG_ERROR("Unknown query operation.");
+            default:
+              LOG_ERROR("Unknown query operation.");
+            }
           }
         }
 

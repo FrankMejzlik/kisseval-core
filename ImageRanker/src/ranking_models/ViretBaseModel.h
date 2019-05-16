@@ -100,11 +100,13 @@ public:
         LOG_ERROR("Unknown query operation.");
       }
 
-      float clauseRanking{ 0.0f };
+      
 
       // Itarate through clauses connected with AND
       for (auto&& clause : queryFormula)
       {
+        float clauseRanking{ 0.0f };
+
         // Iterate through all variables in clause
         for (auto&& var : clause)
         {
@@ -133,6 +135,12 @@ public:
           if (ranking < _settings.m_trueTreshold)
           {
             continue;
+          }
+
+          // Is negative
+          if (var.first)
+          {
+            ranking = -ranking;
           }
 
           // Add up labels in one clause
