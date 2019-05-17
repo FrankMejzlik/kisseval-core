@@ -11,7 +11,7 @@ using namespace std::literals::string_literals;
 #include <map>
 #include <locale>
 
-#include <set>
+#include <unordered_set>
 
 #include "config.h"
 
@@ -43,6 +43,10 @@ struct Keyword
 
   {}
 
+  bool IsHypernym() const { return !m_hyponyms.empty(); };
+  bool IsWeakHypernym() const { return m_vectorIndex == SIZE_T_ERROR_VALUE; };
+  bool IsLeafKeyword() const { return (IsHypernym() && IsWeakHypernym()); }
+
   size_t m_wordnetId;
   size_t m_vectorIndex;
   size_t m_descStartIndex;
@@ -50,7 +54,9 @@ struct Keyword
   std::string m_word;
   std::vector<size_t> m_hypernyms;
   std::vector<size_t> m_hyponyms;
-  std::set<size_t> m_hypernymIndices;
+
+  //! Set of indices that are hyponyms of this keyword
+  std::unordered_set<size_t> m_hyponymBinIndices;
 };
 
 class KeywordsContainer
@@ -64,6 +70,10 @@ public:
 
   std::vector<std::tuple<size_t, std::string, std::string>> GetNearKeywords(const std::string& prefix);
 
+
+  const Keyword* GetKeywordConstPtrByWordnetId(size_t wordnetId) const;
+  Keyword* GetKeywordPtrByWordnetId(size_t wordnetId) const;
+
   Keyword* MapDescIndexToKeyword(size_t descIndex) const;
 
 #if PUSH_DATA_TO_DB
@@ -72,6 +82,10 @@ public:
   Keyword* GetWholeKeywordByWordnetId(size_t wordnetId) const;
   std::string GetKeywordByWordnetId(size_t wordnetId)const ;
   KeywordData GetKeywordByVectorIndex(size_t index) const;
+
+
+  Keyword* GetKeywordPtrByVectorIndex(size_t index) const;
+  const Keyword* GetKeywordConstPtrByVectorIndex(size_t index) const;
 
   std::string GetKeywordDescriptionByWordnetId(size_t wordnetId) const;
   
@@ -106,7 +120,7 @@ public:
   std::vector<size_t> GetVectorKeywords(size_t wordnetId) const;
 
   std::vector<size_t> GetVectorKeywordsIndices(size_t wordnetId) const;
-  std::set<size_t> GetVectorKeywordsIndicesSet(size_t wordnetId) const;
+  void GetVectorKeywordsIndicesSet(std::unordered_set<size_t>& destSetRef, size_t wordnetId) const;
 
 
   std::string StringifyCnfFormula(const CnfFormula& formula)
@@ -190,9 +204,6 @@ private:
   std::map<size_t, Keyword*> _vecIndexToKeyword;
 
   std::vector<std::pair<size_t, Keyword*>> _descIndexToKeyword;
-
-  size_t _approxDescLen;
-
   
 
 #if PUSH_DATA_TO_DB

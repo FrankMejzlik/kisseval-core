@@ -48,8 +48,10 @@ ImageRanker::ImageRanker(
   _keywords(keywordClassesFilepath),
   _images(ParseRawNetRankingBinFile())
 {
+
   // Insert all desired aggregations
   _aggregations.emplace(AggregationId::cSoftmax, std::make_unique<AggregationSoftmax>());
+  //_aggregations.emplace(AggregationId::cSoftmaxCustom, std::make_unique<AggregationSoftmax>());
   _aggregations.emplace(AggregationId::cXToTheP, std::make_unique<AggregationXToTheP>());
 
   // Insert all desired ranking models
@@ -122,12 +124,22 @@ bool ImageRanker::InitializeFullMode()
 
   // Parse softmax file if available
   ParseSoftmaxBinFile();
-
+  
 
   // Load and process all aggregations
   for (auto&& agg : _aggregations)
   {
     agg.second->CalculateTransformedVectors(_images);
+  }
+
+
+  // Apply hypernym recalculation on all transformed vectors
+  for (auto&&[imageId, pImg] : _images)
+  {
+    for (auto&& [transformId, binVec] : pImg->m_aggVectors)
+    {
+      RecalculateHypernymsInVector(binVec);
+    }    
   }
 
   // Calculate approx document frequency
@@ -217,7 +229,7 @@ void ImageRanker::GenerateBestHypernymsForImages()
       if (pKw->m_vectorIndex == SIZE_T_ERROR_VALUE)
       {
         float totalRank{ 0.0f };
-        for (auto&& kwIndex : pKw->m_hypernymIndices)
+        for (auto&& kwIndex : pKw->m_hyponymBinIndices)
         {
           totalRank += pImg->m_rawNetRanking[kwIndex];
         }
@@ -848,37 +860,52 @@ bool ImageRanker::ParseSoftmaxBinFile()
       // Stride in bytes
       currOffset += sizeof(float);
     }
+
     // Store  vector of floats
-    imageIt->second->m_aggVectors.insert(std::pair(static_cast<size_t>(AggregationId::cSoftmax), std::move(softmaxVector)));
+    auto&& [pair, result]{imageIt->second->m_aggVectors.insert(std::pair(static_cast<size_t>(AggregationId::cSoftmax), std::move(softmaxVector)))};
+
+    // Recalculate all hypernyms in this vector
+    RecalculateHypernymsInVector(pair->second);
   }
 
   return true;
 }
 
+void ImageRanker::RecalculateHypernymsInVector(AggregationVector& binVectorRef)
+{
+  AggregationVector newBinVector;
+  newBinVector.reserve(binVectorRef.size());
 
-//void ImageRanker::CalculateMinMaxClampAgg()
-//{
-//  // Itarate through all images
-//  for (auto&& imgPair : _images)
-//  {
-//    Image& img{ imgPair.second };
-//
-//    img.m_minMaxLinearVector.reserve(img.m_rawNetRanking.size());
-//
-//    float amplitude{ img.m_max - img.m_min };
-//
-//    size_t i{ 0ULL };
-//    for (auto&& prob : img.m_rawNetRanking)
-//    {
-//      float newValue{ (prob - img.m_min) / (float)amplitude };
-//
-//      // Calculate the MAGIC!!
-//      img.m_minMaxLinearVector[i] = newValue;
-//
-//      ++i;
-//    }
-//  }
-//}
+  // Iterate over all bins in this vector
+  for (auto&& [it, i] { std::tuple(binVectorRef.begin(), size_t{ 0 }) }; it != binVectorRef.end(); ++it, ++i)
+  {
+    auto&& bin{*it};
+
+    auto pKw{ _keywords.GetKeywordConstPtrByVectorIndex(i) };
+
+    float binValue{0.0f};
+
+    // Iterate over all indices this keyword interjoins
+    for (auto&& kwIndex : pKw->m_hyponymBinIndices)
+    {
+      binValue += binVectorRef[kwIndex];
+    }
+
+    newBinVector.emplace_back(binValue);
+  }
+
+#if LOG_DEBUG
+
+  for (size_t i{ 0ULL }; i < newBinVector.size(); ++i)
+  {
+    LOG(std::to_string(binVectorRef[i]) +" => "s + std::to_string(newBinVector[i]));
+  }
+
+#endif
+
+  // Replace old values with new
+  binVectorRef = std::move(newBinVector);
+}
 
 
 std::string ImageRanker::EncodeAndQuery(const std::string& query) const
@@ -1334,7 +1361,7 @@ std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatist
         }
       }
 
-      nonHyperChartData.emplace_back(chIndex * scaleDownNonHyper, locMax);
+      nonHyperChartData.emplace_back(static_cast<uint32_t>(chIndex * scaleDownNonHyper), static_cast<uint32_t>(locMax));
       ++chIndex;
     }
   }
@@ -1359,7 +1386,7 @@ std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatist
         }
       }
 
-      hyperChartData.emplace_back(chIndex * scaleDownNonHyper, locMax);
+      hyperChartData.emplace_back(static_cast<uint32_t>(chIndex * scaleDownNonHyper), static_cast<uint32_t>(locMax));
       ++chIndex;
     }
   }
