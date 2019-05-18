@@ -1,8 +1,19 @@
 #pragma once
 
 #include <vector>
+#include <cstddef>
 
 #include "config.h"
+
+using size_t = std::size_t;
+
+/*
+ * User defined literals
+ */
+constexpr size_t operator ""_z(unsigned long long int x)
+{
+  return static_cast<size_t>(x);
+}
 
 using Clause = std::vector<std::pair<bool, size_t>>;
 using CnfFormula = std::vector<Clause>;

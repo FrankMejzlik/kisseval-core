@@ -1176,15 +1176,37 @@ std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(QueryOriginId dat
 
 std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSource) const
 {
+  static std::vector<UserImgQuery> cachedAllData;
   static std::vector<UserImgQuery> cachedData0;
   static std::vector<UserImgQuery> cachedData1;
   static std::vector<UserImgQuery> cachedData2;
 
+  static std::chrono::steady_clock::time_point cachedAllDataTs = std::chrono::steady_clock::now();
   static std::chrono::steady_clock::time_point cachedData0Ts = std::chrono::steady_clock::now();
   static std::chrono::steady_clock::time_point cachedData1Ts = std::chrono::steady_clock::now();
   static std::chrono::steady_clock::time_point cachedData2Ts = std::chrono::steady_clock::now();
 
   auto currentTime = std::chrono::steady_clock::now();
+
+  if (dataSource == QueryOriginId::cAll)
+  {
+    if (cachedAllData.empty() || cachedAllDataTs < currentTime)
+    {
+      cachedAllData.clear();
+
+      const auto& queries1 = GetCachedQueries(QueryOriginId::cDeveloper);
+      const auto& queries2 = GetCachedQueries(QueryOriginId::cPublic);
+
+      // Merge them
+      std::copy(queries1.begin(), queries1.end(), back_inserter(cachedAllData));
+      std::copy(queries2.begin(), queries2.end(), back_inserter(cachedAllData));
+
+      cachedAllDataTs = std::chrono::steady_clock::now();
+      cachedAllDataTs += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
+    }
+
+    return cachedAllData;
+  }
 
   switch (dataSource) 
   {

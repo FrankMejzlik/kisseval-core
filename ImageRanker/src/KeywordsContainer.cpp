@@ -271,7 +271,7 @@ void KeywordsContainer::GetVectorKeywordsIndicesSet(std::unordered_set<size_t>& 
   Keyword* pRootKw = GetKeywordPtrByWordnetId(wordnetId);
 
   // If this hypernyms has spot in data vector
-  if (!pRootKw->IsWeakHypernym())
+  if (!pRootKw->IsInBinVector())
   {
     // Add it to set as well
     destIndicesSetRef.emplace(pRootKw->m_vectorIndex);
@@ -284,6 +284,27 @@ void KeywordsContainer::GetVectorKeywordsIndicesSet(std::unordered_set<size_t>& 
     for (auto&& hypo : pRootKw->m_hyponyms)
     {
       GetVectorKeywordsIndicesSet(destIndicesSetRef, hypo);
+    }
+  }
+}
+
+void KeywordsContainer::GetVectorKeywordsIndicesSetShallow(std::unordered_set<size_t>& destIndicesSetRef, size_t wordnetId) const
+{
+  // Get this Keyword
+  Keyword* pRootKw = GetKeywordPtrByWordnetId(wordnetId);
+
+  // If this hypernyms has spot in data vector
+  if (!pRootKw->IsInBinVector())
+  {
+    // Add it to set as well
+    destIndicesSetRef.emplace(pRootKw->m_vectorIndex);
+  }
+  else
+  {
+    // Recursively get hyponyms into provided set
+    for (auto&& hypo : pRootKw->m_hyponyms)
+    {
+      GetVectorKeywordsIndicesSetShallow(destIndicesSetRef, hypo);
     }
   }
 }
@@ -323,7 +344,7 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query) const
       idSs.clear();
 
       std::unordered_set<size_t> vecIds;
-      GetVectorKeywordsIndicesSet(vecIds, wordnetId);
+      GetVectorKeywordsIndicesSetShallow(vecIds, wordnetId);
 
       // If this Clause should be negated
       if (nextIdNegate) 

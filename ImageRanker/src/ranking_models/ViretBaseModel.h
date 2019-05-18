@@ -6,16 +6,27 @@ class ViretModel :
   public RankingModelBase
 {
 public:
+  /*!
+   * List of possible settings what how to calculate rank 
+   */
   enum class eQueryOperations
   {
-    cMultiplyAdd,
-    cAddOnly
+    cMultSum,
+    cMultMax,
+    cSumSum,
+    cSumMax,
+    cMaxMax
   };
 
   struct Settings
   {
+    //! How to handle keyword frequency in ranking
     unsigned int m_keywordFrequencyHandling;
+
+    //! What values are considered significant enough to calculate with them
     float m_trueTreshold;
+
+    //! What operations are executed when creating rank for given image
     eQueryOperations m_queryOperation;
   };
 
@@ -75,6 +86,8 @@ public:
     std::pair<std::vector<size_t>, size_t> result;
     result.first.reserve(numResults);
 
+    
+
     // Check every image if satisfies query formula
     for (auto&& [imgId, pImg] : _imagesCont)
     {
@@ -82,38 +95,47 @@ public:
       const std::vector<float>* pImgRankingVector{ pImg->GetAggregationVectorById(pAggregation->GetGuidFromSettings()) };
 
 
-      // If Add and Multiply
+      // Initialize this image ranking value
       float imageRanking{ 1.0f };
 
-      // Choose correct operation
+      // ========================================
+      // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+      // SETTINGS: Choose correct operation with ranking
       switch (_settings.m_queryOperation)
       {
-      case eQueryOperations::cMultiplyAdd:
+      case eQueryOperations::cMultMax:
+      case eQueryOperations::cMultSum:
         imageRanking = 1.0f;
         break;
 
-      case eQueryOperations::cAddOnly:
+      case eQueryOperations::cSumSum:
+      case eQueryOperations::cSumMax:
+      case eQueryOperations::cMaxMax:
         imageRanking = 0.0f;
         break;
 
       default:
-        LOG_ERROR("Unknown query operation.");
+        LOG_ERROR("Unknown query operation "s + std::to_string(static_cast<int>(_settings.m_queryOperation)) + "."s);
       }
-
+      // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      // ========================================
       
-      float numNegate{0.0f};
+      float negateFactor{0.0f};
       // Itarate through clauses connected with AND
       for (auto&& clause : queryFormula)
       {
         float clauseRanking{ 0.0f };
 
         // Iterate through all variables in clause
-        for (auto&& var : clause)
+        for (auto&& literal : clause)
         {
-          auto ranking{ (*pImgRankingVector)[var.second] };
+          auto currKwRanking{ (*pImgRankingVector)[literal.second] };
 
-          float factor{1.0f};
-          // Choose correct KF handling
+          float factor{ 1.0f };
+
+          // ========================================
+          // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+          // SETTINGS: Choose correct KF handling
           switch (_settings.m_keywordFrequencyHandling)
           {
             // No care about TFIDF
@@ -123,75 +145,138 @@ public:
 
             // Multiply with TFIDF
           case 1:
-            factor =  (*pIndexKwFrequency)[var.second];
-            ranking = ranking * factor;
+            factor =  (*pIndexKwFrequency)[literal.second];
+            currKwRanking = currKwRanking * factor;
             break;
 
           default:
             LOG_ERROR("Unknown keyword freq operation.");
           }
+          // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          // ========================================
 
 
           // Is negative
-          if (var.first)
+          if (literal.first)
           {
-            numNegate += ranking;
+            negateFactor += currKwRanking;
             continue;
           }
 
           // Skip all labels with too low ranking
-          if (ranking < _settings.m_trueTreshold)
+          if (currKwRanking < _settings.m_trueTreshold)
           {
             continue;
           }
 
-          // Add up labels in one clause
-          clauseRanking += ranking;
+          // ========================================
+          // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+          // SETTINGS: Choose what to do with caluse ranks
+          switch (_settings.m_queryOperation)
+          {
+            // For sum based
+          case eQueryOperations::cMultSum:
+          case eQueryOperations::cSumSum:
+          {
+            // just accumulate
+            clauseRanking += currKwRanking;
+          }
+            break;
+
+            // For max based
+          case eQueryOperations::cMultMax:
+          case eQueryOperations::cSumMax:
+          case eQueryOperations::cMaxMax:
+          {
+            // Get just maximum
+            clauseRanking = std::max(clauseRanking, currKwRanking);
+          }
+            break;
+
+          default:
+            LOG_ERROR("Unknown query operation "s + std::to_string(static_cast<int>(_settings.m_queryOperation)) + "."s);
+          }
+          // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          // ========================================
         }
 
-        // Choose correct operation
+        // ========================================
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        // SETTINGS: Choose correct operation
         switch (_settings.m_queryOperation)
         {
-        case eQueryOperations::cMultiplyAdd:
+          // Outter operatin Multiplication
+        case eQueryOperations::cMultSum:
+        case eQueryOperations::cMultMax:
+        {
+          // Multiply all clause rankings
           imageRanking = imageRanking * clauseRanking;
+        }
           break;
 
-        case eQueryOperations::cAddOnly:
+          // Outter operatin Sum
+        case eQueryOperations::cSumSum:
+        case eQueryOperations::cSumMax:
+        {
+          // Add all clause rankings
           imageRanking = imageRanking + clauseRanking;
+        }
+          break;
+
+          // Outter operatin Max
+        case eQueryOperations::cMaxMax:
+        {
+          // Get just maximum
+          imageRanking = std::max(imageRanking, clauseRanking);
+        }
           break;
 
         default:
-          LOG_ERROR("Unknown query operation.");
+          LOG_ERROR("Unknown query operation "s + std::to_string(static_cast<int>(_settings.m_queryOperation)) + "."s);
         }
-
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        // ========================================
       }
 
-      if (numNegate > 0) 
+
+      // If there were some negative keywords
+      if (negateFactor > 0) 
       {
-        imageRanking /= ((numNegate* 1000 * queryFormula.size()) + 1);
+        imageRanking /= ((negateFactor * queryFormula.size()) + 1);
       }
 
       // Insert result to max heap
       maxHeap.push(std::pair(imageRanking, pImg->m_imageId));
     }
 
+
+    /*
+     * Ranking computed and stored in max heap,
+     * now we'll just extract it to desired result structure
+     */
+     
+    // Get size of heap
     size_t sizeHeap{ maxHeap.size() };
 
-    // Get out sorted results
-    for (size_t i = 0ULL; i < sizeHeap; ++i)
+    // Iterate over popping items in heap
+    for (size_t i{ 0_z }; i < sizeHeap; ++i)
     {
+      // Get copy of the greatest element from heap
       auto pair = maxHeap.top();
       maxHeap.pop();
 
-      // If is target image, save it
+      // If this is target image
       if (targetImageId == pair.second)
       {
+        // Store its rank (rank is one greater than index)
         result.second = i + 1;
       }
 
+      // If we extracted enough items user asked for
       if (i < numResults)
       {
-        result.first.emplace_back(pair.second);
+        // PLace it inside result structure
+        result.first.emplace_back(std::move(pair.second));
       }
 
     }
@@ -251,7 +336,7 @@ private:
   Settings GetDefaultSettings() const
   {
     // Return default settings instance
-    return Settings{ 0U, 0.01f , eQueryOperations::cMultiplyAdd };
+    return Settings{ 0U, 0.01f , eQueryOperations::cMultSum };
   }
 
 private:

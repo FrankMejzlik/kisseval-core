@@ -22,30 +22,10 @@ int main()
 
 
   auto result11{
-  ranker.GetRelevantImagesWithSuggestedWrapper(
-    "9376198&9225146&9225146&9433442&2837789", 1000,
-    AggregationId::cXToTheP, RankingModelId::cViretBase,
-    std::vector<std::string>({ "0"s, "0.001"s, "1"s }), std::vector<std::string>({ "1"s }),
-    15480
+  ranker.RunModelTestWrapper(
+    AggregationId::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)999,
+    std::vector<std::string>({ "0"s, "0.0"s, "0"s }), std::vector<std::string>({ "1"s })
   )
-  };
-
-  auto result22{
-  ranker.GetRelevantImagesWithSuggestedWrapper(
-    "9376198&9225146&9225146&9433442", 1000,
-    AggregationId::cXToTheP, RankingModelId::cViretBase,
-    std::vector<std::string>({ "0"s, "0.001"s, "1"s }), std::vector<std::string>({ "1"s }),
-    15480
-  )
-  };
-
-  auto result12{
-   ranker.GetRelevantImagesWithSuggestedWrapper(
-     "9376198&9225146&9225146&9433442&~2837789", 1000,
-     AggregationId::cXToTheP, RankingModelId::cViretBase,
-     std::vector<std::string>({ "0"s, "0.001"s, "1"s }), std::vector<std::string>({ "1"s }),
-     4826
-   )
   };
 
 

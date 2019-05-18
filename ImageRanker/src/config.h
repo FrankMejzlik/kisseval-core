@@ -55,7 +55,7 @@
 //! If set to 1, loaded data from files will be inserted into PRIMARY db
 #define PUSH_DATA_TO_DB 0
 
-#define LOG_DEBUG 1
+#define LOG_DEBUG 0
 
 //! Standard logging macro
 #define LOG(x) std::cout << x << std::endl;

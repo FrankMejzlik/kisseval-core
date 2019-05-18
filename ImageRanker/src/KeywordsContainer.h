@@ -44,8 +44,8 @@ struct Keyword
   {}
 
   bool IsHypernym() const { return !m_hyponyms.empty(); };
-  bool IsWeakHypernym() const { return m_vectorIndex == SIZE_T_ERROR_VALUE; };
-  bool IsLeafKeyword() const { return (IsHypernym() && IsWeakHypernym()); }
+  bool IsInBinVector() const { return m_vectorIndex == SIZE_T_ERROR_VALUE; };
+  bool IsLeafKeyword() const { return (IsHypernym() && IsInBinVector()); }
 
   size_t m_wordnetId;
   size_t m_vectorIndex;
@@ -121,6 +121,7 @@ public:
 
   std::vector<size_t> GetVectorKeywordsIndices(size_t wordnetId) const;
   void GetVectorKeywordsIndicesSet(std::unordered_set<size_t>& destSetRef, size_t wordnetId) const;
+  void GetVectorKeywordsIndicesSetShallow(std::unordered_set<size_t>& destIndicesSetRef, size_t wordnetId) const;
 
 
   std::string StringifyCnfFormula(const CnfFormula& formula)
