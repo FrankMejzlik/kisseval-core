@@ -92,9 +92,16 @@ public:
   void Clear();
   void SetMode(Mode value);
 
+  
 
   std::pair<std::vector<std::tuple<size_t, std::string, float>>, std::vector<std::tuple<size_t, std::string, float>>> GetImageKeywordsForInteractiveSearch(size_t imageId, size_t numResults);
-  ChartData SubmitInteractiveSearchSubmit(size_t imageId);
+  void SubmitInteractiveSearchSubmit(
+    InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, AggregationId transformId,
+    std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
+    std::string sessionId, size_t searchSessionIndex, int endStatus, size_t sessionDuration,
+    std::vector<InteractiveSearchAction> actions,
+    size_t userId = 0_z
+  );
 
   // So front end can display options dynamically
   // \todo Implement.

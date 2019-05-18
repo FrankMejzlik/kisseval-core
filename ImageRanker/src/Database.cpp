@@ -36,6 +36,7 @@ size_t Database::GetErrorCode() const
   return static_cast<size_t>(mysql_errno(_mysqlConnection));
 }
 
+
 size_t Database::EstablishConnection()
 { 
   _mysqlConnection = mysql_real_connect(
@@ -101,6 +102,11 @@ size_t Database::NoResultQuery(std::string_view query) const
   //(unsigned long) mysql_affected_rows(mysql));
 
   return GetErrorCode();
+}
+
+size_t Database::GetLastId() const
+{
+  return mysql_insert_id(_mysqlConnection);
 }
 
 std::pair< size_t, std::vector< std::vector<std::string>>> Database::ResultQuery(std::string_view query) const

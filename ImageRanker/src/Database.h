@@ -29,7 +29,7 @@ public:
   );
   ~Database() noexcept;
 
-
+  size_t GetLastId() const;
   std::string GetErrorDescription() const;
   size_t GetErrorCode() const;
 

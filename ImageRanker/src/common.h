@@ -17,7 +17,13 @@ constexpr size_t operator ""_z(unsigned long long int x)
 
 using Clause = std::vector<std::pair<bool, size_t>>;
 using CnfFormula = std::vector<Clause>;
+using InteractiveSearchAction = std::tuple<size_t, size_t, size_t>;
 
+enum class InteractiveSearchOrigin
+{
+  cDeveloper,
+  cPublic
+};
 
 enum class RankingModelId
 {

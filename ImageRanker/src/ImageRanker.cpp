@@ -1284,6 +1284,69 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
 }
 
 
+void ImageRanker::SubmitInteractiveSearchSubmit(
+  InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, AggregationId transformId,
+  std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
+  std::string sessionId, size_t searchSessionIndex, int endStatus, size_t sessionDuration,
+  std::vector<InteractiveSearchAction> actions,
+  size_t userId
+)
+{
+  
+  std::stringstream query1Ss;
+  query1Ss << "INSERT INTO `interactive_searches`(`type`, `target_image_id`, `model_id`, `transformation_id`, `model_settings`, `transformation_settings`, `session_id`, `user_id`, `search_session_index`, `end_status`, `session_duration`)";
+  query1Ss << "VALUES(" << (int)originType << "," << imageId << "," << (int)modelId << "," << (int)transformId << ",";
+
+  query1Ss << "\"";
+  for (auto&& s : modelSettings)
+  {
+    query1Ss << s << ";";
+  }
+  query1Ss << "\"";
+  query1Ss << ",";
+  query1Ss << "\"";
+  for (auto&& s : transformSettings)
+  {
+    query1Ss << s << ";";
+  }
+  query1Ss << "\"";
+  query1Ss << ",\"" << sessionId << "\"," << userId << "," << searchSessionIndex << "," << endStatus << "," << sessionDuration << ");";  
+
+  std::string query1{query1Ss.str()};
+  size_t result1{ _primaryDb.NoResultQuery(query1) };
+
+  size_t id{ _primaryDb.GetLastId() };
+
+
+  std::stringstream query2Ss;
+  query2Ss << "INSERT INTO `interactive_searches_actions`(`interactive_search_id`, `index`, `action`, `score`, `operand`)";
+  query2Ss << "VALUES";
+  {
+    size_t i{ 0_z };
+    for (auto&& action : actions)
+    {
+      query2Ss << "(" << id << "," << i << "," << std::get<0>(action) << "," << std::get<1>(action) << "," << std::get<2>(action) << ")";
+
+      if (i < actions.size() - 1)
+      {
+        query2Ss << ",";
+      }
+      ++i;
+    }
+    query2Ss << ";";
+  }
+  
+
+ 
+  std::string query2{ query2Ss.str() };
+  size_t result2{ _primaryDb.NoResultQuery(query2) };
+
+  if (result1 != 0 || result2 != 0)
+  {
+    LOG_ERROR("Failed to insert search session result.");
+  }
+}
+
 std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatisticsUserKeywordAccuracy(QueryOriginId queriesSource) const
 {
   std::vector<UserImgQueryRaw> queries;
