@@ -33,23 +33,32 @@ int main()
     AggregationId::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)999,
     std::vector<std::string>({ "0"s, "0.0"s, "1"s }), std::vector<std::string>({ "0"s })
   )
-  };
+  };*/
 
   auto result13{
   ranker.RunModelTestWrapper(
     AggregationId::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)999,
-    std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "0"s })
+    std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s })
   )
   };
-  */
-  auto result14{
-  ranker.GetRelevantImagesWrapper(
 
-    std::string("&-8252602+-441824+-3206282+-4296562+"), 100,
-    AggregationId::cXToTheP, RankingModelId::cViretBase,
-    std::vector<std::string>({ "0"s, "0.0"s, "3"s }), std::vector<std::string>({ "1"s, "1"s })
+  for (auto&& i : result13)
+  {
+    std::cout << i.first << " => " << i.second;
+  }
+
+  auto result14{
+  ranker.RunModelTestWrapper(
+    AggregationId::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)999,
+    std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "1"s })
   )
   };
+
+  for (auto&& i : result14)
+  {
+    std::cout << i.first << " => " << i.second;
+  }
+  
 
   
   return 0;

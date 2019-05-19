@@ -77,7 +77,7 @@ public:
 
   virtual size_t GetGuidFromSettings() const override
   {
-    return GetGuid(_settings.m_vectorIndex + (_settings.m_vectorIndex * 10));
+    return GetGuid(_settings.m_vectorIndex + (_settings.m_summedHypernyms * 10));
   }
 
 
