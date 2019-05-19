@@ -90,6 +90,7 @@ using ImageReference = std::pair<size_t, std::string>;
 /*! <wordnetID, keyword, description> */
 using KeywordReferences = std::vector<std::tuple<size_t, std::string, std::string>>;
 
+
 /*! <wordnetID, keyword, description> */
 using KeywordData = std::tuple<size_t, std::string, std::string>;
 

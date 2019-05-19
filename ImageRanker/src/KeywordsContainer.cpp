@@ -710,6 +710,100 @@ std::vector< std::tuple<size_t, std::string, std::string> > KeywordsContainer::G
   return resultWordnetIds;
 }
 
+std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& prefix)
+{
+  KeywordsContainer::KeywordLessThanStringComparator comparator;
+  size_t left = 0ULL;
+  size_t right = _keywords.size() - 1ULL;
+
+  size_t i = right / 2;
+
+  while (true)
+  {
+    // Test if middle one is less than
+    bool leftIsLess = comparator(_keywords[i]->m_word, prefix);
+
+    if (leftIsLess)
+    {
+      left = i + 1;
+    }
+    else
+    {
+      right = i;
+    }
+
+    if (right - left < 1)
+    {
+      break;
+    }
+
+    i = (right + left) / 2;
+
+  }
+
+  std::vector<Keyword*> resultKeywords;
+  resultKeywords.reserve(NUM_SUGESTIONS);
+  std::vector<Keyword*> postResultKeywords;
+
+
+
+  // Get desired number of results
+  for (size_t j = 0ULL; j < NUM_SUGESTIONS; ++j)
+  {
+    Keyword* pKeyword{ _keywords[left + j].get() };
+
+    // Check if prefix is equal to searched word
+
+    // Force lowercase
+    std::locale loc;
+    std::string lowerWord;
+    std::string lowerPrefix;
+
+    for (auto elem : pKeyword->m_word)
+    {
+      lowerWord.push_back(std::tolower(elem, loc));
+    }
+
+    for (auto elem : prefix)
+    {
+      lowerPrefix.push_back(std::tolower(elem, loc));
+    }
+
+    auto res = std::mismatch(lowerPrefix.begin(), lowerPrefix.end(), lowerWord.begin());
+
+    if (res.first == lowerPrefix.end())
+    {
+      resultKeywords.emplace_back(pKeyword);
+    }
+    else
+    {
+      postResultKeywords.emplace_back(pKeyword);
+    }
+  }
+
+  // If we need to add up desc search results
+  if (resultKeywords.size() < NUM_SUGESTIONS && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
+  {
+    std::vector<size_t> needleIndices = FindAllNeedles(_allDescriptions, prefix);
+
+    for (auto&& index : needleIndices)
+    {
+      Keyword* pKeyword = MapDescIndexToKeyword(index);
+
+      resultKeywords.emplace_back(pKeyword);
+    }
+  }
+
+  size_t j = 0ULL;
+  while (resultKeywords.size() < NUM_SUGESTIONS)
+  {
+    resultKeywords.push_back(postResultKeywords[j]);
+
+    ++j;
+  }
+
+  return resultKeywords;
+}
 
 Keyword* KeywordsContainer::MapDescIndexToKeyword(size_t descIndex) const
 {

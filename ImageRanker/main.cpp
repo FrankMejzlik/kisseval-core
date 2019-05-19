@@ -35,7 +35,7 @@ int main()
   )
   };*/
 
-  auto result13{
+  /*auto result13{
   ranker.RunModelTestWrapper(
     AggregationId::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)999,
     std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s })
@@ -57,8 +57,12 @@ int main()
   for (auto&& i : result14)
   {
     std::cout << i.first << " => " << i.second;
-  }
+  }*/
   
+
+  auto result{ ranker.GetNearKeywordsWithImages("Ca") };
+
+  auto result2{ ranker.GetImageKeywordsForInteractiveSearchWithExampleImages(1ULL, 10)};
 
   
   return 0;

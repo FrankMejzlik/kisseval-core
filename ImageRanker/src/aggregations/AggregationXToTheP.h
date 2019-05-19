@@ -27,14 +27,10 @@ public:
 public:
   AggregationXToTheP() :
     AggregationFunctionBase(AggregationId::cXToTheP),
-    _exponents({ 1.0f, 0.8f, 2.0f })
-  {
-  }
+    //_exponents({ 1.0f, 0.8f, 2.0f })
+    _exponents({ 1.0f})
+  {}
 
-  enum eExponents 
-  {
-    
-  };
  
   virtual bool CalculateTransformedVectors(const std::unordered_map<size_t, std::unique_ptr<Image>>& images) const
   {

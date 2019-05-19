@@ -216,7 +216,7 @@ void ImageRanker::ComputeApproxDocFrequency(size_t aggregationGuid, float tresho
   size_t i{ 0ULL };
   for (auto&& indexCount : indexKwFrequencyCount)
   {
-    m_indexKwFrequency.emplace_back(1 - ((float)indexCount / maxIndexCount.second));
+    m_indexKwFrequency.emplace_back( logf(( (float)maxIndexCount.second / indexCount)));
   }
 }
 
@@ -510,6 +510,57 @@ KeywordReferences ImageRanker::GetNearKeywords(const std::string& prefix)
 }
 
 
+std::vector<Keyword*> ImageRanker::GetNearKeywordsWithImages(const std::string& prefix)
+{
+  // Force lowercase
+  std::locale loc;
+  std::string lower;
+
+  // Convert to lowercase
+  for (auto elem : prefix)
+  {
+    lower.push_back(std::tolower(elem, loc));
+  }
+
+  auto suggestedKeywordsPtrs{ _keywords.GetNearKeywordsPtrs(lower) };
+
+  // Load representative images for keywords
+  for (auto&& pKw : suggestedKeywordsPtrs)
+  {
+    LoadRepresentativeImages(pKw);
+  }
+
+  return suggestedKeywordsPtrs;
+}
+
+
+
+bool ImageRanker::LoadRepresentativeImages(Keyword* pKw) const
+{
+  // If examples already loaded
+  if (!pKw->m_exampleImageFilenames.empty())
+  {
+    return true;
+  }
+
+  // Get first results for this keyword
+  auto relevantImages{ GetRelevantImagesWrapper(
+    std::to_string(pKw->m_wordnetId), 10,
+    DEFAULT_AGG_FUNCTION, DEFAULT_RANKING_MODEL,
+    DEFAULT_MODEL_SETTINGS, DEFAULT_TRANSFORM_SETTINGS
+  ).first };
+
+
+  // Push those into examples
+  for (auto&&[imageId, imageFilename] : relevantImages)
+  {
+    pKw->m_exampleImageFilenames.emplace_back(imageFilename);
+  }
+
+  return true;
+}
+
+
 KeywordData ImageRanker::GetKeywordByVectorIndex(size_t index)
 {
   return _keywords.GetKeywordByVectorIndex(index);
@@ -607,6 +658,75 @@ std::pair<std::vector<std::tuple<size_t, std::string, float>>, std::vector<std::
   return std::pair(std::move(hypernyms), std::move(nonHypernyms));
 }
 
+
+std::pair<
+  std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
+  std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>
+> ImageRanker::GetImageKeywordsForInteractiveSearchWithExampleImages(size_t imageId, size_t numResults)
+{
+  std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>  hypernyms;
+  hypernyms.reserve(numResults);
+  std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>  nonHypernyms;
+  nonHypernyms.reserve(numResults);
+
+  auto img = _images.find(imageId);
+
+  if (img == _images.end())
+  {
+    LOG_ERROR("Image not found.");
+  }
+
+
+  // Get hypers
+  size_t i{ 0ULL };
+  for (auto&& kw : img->second->m_hypernymsRankingSorted)
+  {
+    if (!(i < numResults))
+    {
+      break;
+    }
+
+    auto pKw{ _keywords.GetKeywordPtrByWordnetId(kw.first) };
+
+    std::string word{ pKw->m_word };
+
+    // Get example images
+    LoadRepresentativeImages(pKw);
+
+    std::vector<std::string> exampleImagesFilepaths{ pKw->m_exampleImageFilenames };
+    
+
+    hypernyms.emplace_back(std::tuple(kw.first, std::move(word), kw.second, std::move(exampleImagesFilepaths)));
+
+    ++i;
+  }
+
+  // Get kws
+  i = 0ULL;
+  for (auto&& kw : img->second->m_rawNetRankingSorted)
+  {
+    if (!(i < numResults))
+    {
+      break;
+    }
+
+    auto pKw{ _keywords.GetKeywordPtrByVectorIndex(kw.first) };
+
+    std::string word{ pKw->m_word };
+
+    // Get example images
+    LoadRepresentativeImages(pKw);
+
+    std::vector<std::string> exampleImagesFilepaths{ pKw->m_exampleImageFilenames };
+
+
+    nonHypernyms.emplace_back(std::tuple(pKw->m_wordnetId, std::move(word), kw.second, std::move(exampleImagesFilepaths)));
+
+    ++i;
+  }
+
+  return std::pair(std::move(hypernyms), std::move(nonHypernyms));
+}
 
 std::vector<std::string> ImageRanker::GetImageFilenamesFromDirectoryStructure() const
 {

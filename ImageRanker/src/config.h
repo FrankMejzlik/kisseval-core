@@ -12,16 +12,12 @@
 */
 #define KW_FREQUENCY_BASE_DATA 200
 
-#define CALC_MIN_MAX_CLAMP_AGG 1
-#define CALC_BOOL_AGG 1
-#define BOOL_AGG_TRESHOLD 0.5
-
-#define MIN_MAX_CLAMP_TRESHOLD 0.5
 
 //! Default settings for main evaluation
 #define DEFAULT_RANKING_MODEL RankingModelId::cViretBase
-#define DEFAULT_AGG_FUNCTION AggregationId::cSoftmax
-#define DEFAULT_MODEL_SETTINGS std::vector<std::string>({"0.0f"s, "1"s})
+#define DEFAULT_AGG_FUNCTION AggregationId::cXToTheP
+#define DEFAULT_MODEL_SETTINGS std::vector<std::string>({"0"s, "0.0f"s, "1"s})
+#define DEFAULT_TRANSFORM_SETTINGS std::vector<std::string>({"0"s, "0"s})
 
 
 #define CHART_DENSITY 100

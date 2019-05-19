@@ -47,6 +47,7 @@ struct Keyword
   bool IsInBinVector() const { return m_vectorIndex == SIZE_T_ERROR_VALUE; };
   bool IsLeafKeyword() const { return (IsHypernym() && IsInBinVector()); }
 
+
   size_t m_wordnetId;
   size_t m_vectorIndex;
   size_t m_descStartIndex;
@@ -57,6 +58,8 @@ struct Keyword
 
   //! Set of indices that are hyponyms of this keyword
   std::unordered_set<size_t> m_hyponymBinIndices;
+
+  std::vector<std::string> m_exampleImageFilenames;
 };
 
 class KeywordsContainer
@@ -68,10 +71,13 @@ public:
   //! Constructor from database data
   KeywordsContainer(std::vector< std::vector<std::string>>&& data);
 
+  [[deprecated]] 
   std::vector<std::tuple<size_t, std::string, std::string>> GetNearKeywords(const std::string& prefix);
 
+  std::vector<Keyword*> GetNearKeywordsPtrs(const std::string& prefix);
 
   const Keyword* GetKeywordConstPtrByWordnetId(size_t wordnetId) const;
+
   Keyword* GetKeywordPtrByWordnetId(size_t wordnetId) const;
 
   Keyword* MapDescIndexToKeyword(size_t descIndex) const;
@@ -79,8 +85,13 @@ public:
 #if PUSH_DATA_TO_DB
   bool PushKeywordsToDatabase(Database& db);
 #endif
+  [[deprecated]]
   Keyword* GetWholeKeywordByWordnetId(size_t wordnetId) const;
+
+  [[deprecated]]
   std::string GetKeywordByWordnetId(size_t wordnetId)const ;
+
+  [[deprecated]]
   KeywordData GetKeywordByVectorIndex(size_t index) const;
 
 

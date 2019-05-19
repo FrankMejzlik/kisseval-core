@@ -95,6 +95,13 @@ public:
   
 
   std::pair<std::vector<std::tuple<size_t, std::string, float>>, std::vector<std::tuple<size_t, std::string, float>>> GetImageKeywordsForInteractiveSearch(size_t imageId, size_t numResults);
+
+
+  std::pair<
+    std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>, 
+    std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>
+  > GetImageKeywordsForInteractiveSearchWithExampleImages(size_t imageId, size_t numResults);
+
   void SubmitInteractiveSearchSubmit(
     InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, AggregationId transformId,
     std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
@@ -141,6 +148,7 @@ public:
   ImageReference GetRandomImage() const;
 
   KeywordReferences GetNearKeywords(const std::string& prefix);
+  std::vector<Keyword*> GetNearKeywordsWithImages(const std::string& prefix);
   KeywordData GetKeywordByVectorIndex(size_t index);
 
 
@@ -173,6 +181,11 @@ public:
   std::tuple<UserAccuracyChartData, UserAccuracyChartData> GetStatisticsUserKeywordAccuracy(QueryOriginId queriesSource = QueryOriginId::cAll) const;
 
 
+  std::string GetKeywordDescriptionByWordnetId(size_t wordnetId)
+  {
+    return _keywords.GetKeywordDescriptionByWordnetId(wordnetId);
+  }
+
   // ^^^^^^^^^^^^^^^^^^^^^^^
   //////////////////////////
   //    API Methods
@@ -190,10 +203,7 @@ private:
     return _keywords.GetKeywordByWordnetId(wordnetId);
   }
 
-  std::string GetKeywordDescriptionByWordnetId(size_t wordnetId)
-  {
-    return _keywords.GetKeywordDescriptionByWordnetId(wordnetId);
-  }
+
 
   std::string GetImageFilenameById(size_t imageId) const;
   
@@ -313,6 +323,8 @@ private:
    * \return
    */
   std::vector<std::string> GetImageFilenamesFromDirectoryStructure() const;
+
+  bool LoadRepresentativeImages(Keyword* pKw) const;
 
   void GenerateBestHypernymsForImages();
 
