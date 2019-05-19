@@ -12,8 +12,14 @@ class AggregationXToTheP :
 public:
   struct Settings
   {
+    Settings():
+      m_exponent(1.0f),
+      m_vectorIndex(0),
+      m_summedHypernyms(0)
+    { }
     float m_exponent;
     size_t m_vectorIndex;
+    size_t m_summedHypernyms;
   };
 
 
@@ -56,6 +62,9 @@ public:
           aggVector.emplace_back( pow((bin - img->m_min)/ totalSum, exp));
         }
 
+        // Create copy for MAX based precalculations
+        img->m_aggVectors.emplace(GetGuid(i + 10), aggVector);
+
         // Insert this aggregation to IR agregations
         img->m_aggVectors.emplace(GetGuid(i), std::move(aggVector));
         
@@ -68,7 +77,7 @@ public:
 
   virtual size_t GetGuidFromSettings() const override
   {
-    return GetGuid(_settings.m_vectorIndex);
+    return GetGuid(_settings.m_vectorIndex + (_settings.m_vectorIndex * 10));
   }
 
 
@@ -77,7 +86,7 @@ public:
   Settings GetDefaultSettings() const
   {
     // Return default settings instance
-    return Settings{ 1.0f };
+    return Settings();
   }
 
   virtual void SetAggregationSettings(ModelSettings settingsString) override
@@ -112,6 +121,13 @@ public:
         _settings.m_vectorIndex = SIZE_T_ERROR_VALUE;
         LOG_ERROR("Unknown exponent in XToTheP aggregation.");
       }
+
+    }
+
+    // If setting 1 set
+    if (settingsString.size() >= 2 && settingsString[1].size() >= 0)
+    {
+      _settings.m_summedHypernyms = strToInt(settingsString[1]);
 
     }
   }

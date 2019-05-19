@@ -55,10 +55,12 @@
 //! If set to 1, loaded data from files will be inserted into PRIMARY db
 #define PUSH_DATA_TO_DB 0
 
-#define LOG_DEBUG 0
+#define LOG_DEBUG_HYPERNYMS_EXPANSION 0
+#define LOG_DEBUG_IMAGE_RANKING 0
 
 //! Standard logging macro
-#define LOG(x) std::cout << x << std::endl;
+#define LOG(x) std::cout << x << std::endl
+#define LOG_NO_ENDL(x) std::cout << x
 
 //! Basic log error macro
 #if THROW_ON_ERROR

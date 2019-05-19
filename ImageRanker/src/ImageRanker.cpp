@@ -138,7 +138,16 @@ bool ImageRanker::InitializeFullMode()
   {
     for (auto&& [transformId, binVec] : pImg->m_aggVectors)
     {
-      RecalculateHypernymsInVector(binVec);
+      // If is summ based aggregation precalculation
+      if (((transformId / 10) % 10) == 0)
+      {
+        RecalculateHypernymsInVectorUsingSum(binVec);
+      }
+      else 
+      {
+        RecalculateHypernymsInVectorUsingMax(binVec);
+      }
+      
     }    
   }
 
@@ -865,13 +874,13 @@ bool ImageRanker::ParseSoftmaxBinFile()
     auto&& [pair, result]{imageIt->second->m_aggVectors.insert(std::pair(static_cast<size_t>(AggregationId::cSoftmax), std::move(softmaxVector)))};
 
     // Recalculate all hypernyms in this vector
-    RecalculateHypernymsInVector(pair->second);
+    RecalculateHypernymsInVectorUsingSum(pair->second);
   }
 
   return true;
 }
 
-void ImageRanker::RecalculateHypernymsInVector(AggregationVector& binVectorRef)
+void ImageRanker::RecalculateHypernymsInVectorUsingSum(AggregationVector& binVectorRef)
 {
   AggregationVector newBinVector;
   newBinVector.reserve(binVectorRef.size());
@@ -894,12 +903,48 @@ void ImageRanker::RecalculateHypernymsInVector(AggregationVector& binVectorRef)
     newBinVector.emplace_back(binValue);
   }
 
-#if LOG_DEBUG
+#if LOG_DEBUG_HYPERNYMS_EXPANSION
 
-  for (size_t i{ 0ULL }; i < newBinVector.size(); ++i)
+  /*for (size_t i{ 0ULL }; i < newBinVector.size(); ++i)
   {
     LOG(std::to_string(binVectorRef[i]) +" => "s + std::to_string(newBinVector[i]));
+  }*/
+
+#endif
+
+  // Replace old values with new
+  binVectorRef = std::move(newBinVector);
+}
+
+void ImageRanker::RecalculateHypernymsInVectorUsingMax(AggregationVector& binVectorRef)
+{
+  AggregationVector newBinVector;
+  newBinVector.reserve(binVectorRef.size());
+
+  // Iterate over all bins in this vector
+  for (auto&& [it, i] { std::tuple(binVectorRef.begin(), size_t{ 0 }) }; it != binVectorRef.end(); ++it, ++i)
+  {
+    auto&& bin{ *it };
+
+    auto pKw{ _keywords.GetKeywordConstPtrByVectorIndex(i) };
+
+    float binValue{ 0.0f };
+
+    // Iterate over all indices this keyword interjoins
+    for (auto&& kwIndex : pKw->m_hyponymBinIndices)
+    {
+      binValue = std::max(binValue, binVectorRef[kwIndex]);
+    }
+
+    newBinVector.emplace_back(binValue);
   }
+
+#if LOG_DEBUG_HYPERNYMS_EXPANSION
+
+  /*for (size_t i{ 0ULL }; i < newBinVector.size(); ++i)
+  {
+    LOG(std::to_string(binVectorRef[i]) +" => "s + std::to_string(newBinVector[i]));
+  }*/
 
 #endif
 

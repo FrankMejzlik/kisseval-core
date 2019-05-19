@@ -121,8 +121,8 @@ public:
   std::vector<std::pair<TestSettings, ChartData>> RunGridTest(const std::vector<TestSettings>& testSettings);
 
 
-  void RecalculateHypernymsInVector(AggregationVector& binVectorRef);
-
+  void RecalculateHypernymsInVectorUsingSum(AggregationVector& binVectorRef);
+  void RecalculateHypernymsInVectorUsingMax(AggregationVector& binVectorRef);
   /*!
    * Gets all data about image with provided ID
    *

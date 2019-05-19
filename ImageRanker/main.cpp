@@ -41,26 +41,17 @@ int main()
     std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "0"s })
   )
   };
-
+  */
   auto result14{
-  ranker.RunModelTestWrapper(
-    AggregationId::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)999,
-    std::vector<std::string>({ "0"s, "0.0"s, "3"s }), std::vector<std::string>({ "0"s })
+  ranker.GetRelevantImagesWrapper(
+
+    std::string("&-8252602+-441824+-3206282+-4296562+"), 100,
+    AggregationId::cXToTheP, RankingModelId::cViretBase,
+    std::vector<std::string>({ "0"s, "0.0"s, "3"s }), std::vector<std::string>({ "1"s, "1"s })
   )
-  };*/
+  };
 
-  std::vector<InteractiveSearchAction> actions;
-  actions.emplace_back(1, 100, 299292929);
-  actions.emplace_back(1, 300, 41414);
-  actions.emplace_back(0, 100, 299292929);
-
-  ranker.SubmitInteractiveSearchSubmit(
-    (InteractiveSearchOrigin)0, 1000, (RankingModelId)2, (AggregationId)200,
-    std::vector<std::string>{"1.0", "2", "3"}, std::vector<std::string>{"0"},
-    "faef2309f2093f2j", 9, 0, 30303, actions
-  );
-
-
+  
   return 0;
 
 }

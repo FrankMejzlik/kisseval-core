@@ -17,21 +17,22 @@ KeywordsContainer::KeywordsContainer(const std::string& keywordClassesFilepath)
   // Iterate over all unique keywords 
   for (auto&& [wordnetId, pKw] : _wordnetIdToKeywords)
   {
-#if LOG_DEBUG
-    LOG("ID:"s + std::to_string(wordnetId) + " => "s + pKw->m_word);
+#if LOG_DEBUG_HYPERNYMS_EXPANSION
+    LOG_NO_ENDL(std::to_string(wordnetId) + "; "s + pKw->m_word +";");
 #endif
 
     GetVectorKeywordsIndicesSet(pKw->m_hyponymBinIndices, wordnetId);
 
-#if LOG_DEBUG
+#if LOG_DEBUG_HYPERNYMS_EXPANSION
     for (auto&& index : pKw->m_hyponymBinIndices)
     {
       auto kw = GetKeywordConstPtrByVectorIndex(index);
 
-      LOG(kw->m_word);
+      LOG_NO_ENDL(std::to_string(kw->m_vectorIndex) + ",");
     }
+    LOG("");
 #endif
-
+      
   }
 }
 

@@ -91,9 +91,27 @@ public:
     // Check every image if satisfies query formula
     for (auto&& [imgId, pImg] : _imagesCont)
     {
+    #if LOG_DEBUG_IMAGE_RANKING 
+      std::cout << "IMAGE ID  " << std::to_string(imgId) << std::endl;
+      std::cout << "======================" << std::endl;
+    #endif
+
       // Prepare pointer for ranking vector aggregation data
       const std::vector<float>* pImgRankingVector{ pImg->GetAggregationVectorById(pAggregation->GetGuidFromSettings()) };
 
+    #if LOG_DEBUG_IMAGE_RANKING 
+      std::cout << "Precomputed vector: ";
+      {
+        size_t i{ 0_z };
+        for (auto&& bin : *pImgRankingVector)
+        {
+          std::cout << "(" << std::to_string(i) << ", " << std::to_string(bin) << "),";
+
+          ++i;
+        }
+      }
+      std::cout << std::endl;
+    #endif
 
       // Initialize this image ranking value
       float imageRanking{ 1.0f };
@@ -121,15 +139,36 @@ public:
       // ========================================
       
       float negateFactor{0.0f};
+
+
+#if LOG_DEBUG_IMAGE_RANKING 
+      std::cout << "\n\nSTART => imageRanking = " << imageRanking << std::endl;
+
+      size_t clauseCounter{ 0_z };
+#endif
+
+
       // Itarate through clauses connected with AND
       for (auto&& clause : queryFormula)
       {
+#if LOG_DEBUG_IMAGE_RANKING 
+        std::cout << "==== new clause ====" << std::endl;
+        std::cout << "Processing clause " << std::to_string(clauseCounter) << std::endl;
+#endif
         float clauseRanking{ 0.0f };
 
         // Iterate through all variables in clause
         for (auto&& literal : clause)
         {
           auto currKwRanking{ (*pImgRankingVector)[literal.second] };
+
+#if LOG_DEBUG_IMAGE_RANKING 
+          std::cout << "\t==== new literal ====" << std::endl;
+          std::cout << "\tbinIndex = " << std::to_string(literal.second) << std::endl;
+          std::cout << "\tclauseRanking = " << std::to_string(clauseRanking) << std::endl;
+          std::cout << "\thisKeywordRanking = vector[binIndex] = " << std::to_string(currKwRanking) << std::endl;
+          std::cout << "\---" << std::endl;
+#endif
 
           float factor{ 1.0f };
 
@@ -188,8 +227,18 @@ public:
           case eQueryOperations::cSumMax:
           case eQueryOperations::cMaxMax:
           {
+#if LOG_DEBUG_IMAGE_RANKING 
+            std::cout << "\tclauseRanking = std::max(" << std::to_string(clauseRanking) << ", " << std::to_string(currKwRanking) << ")" <<std::endl;
+#endif
+
             // Get just maximum
             clauseRanking = std::max(clauseRanking, currKwRanking);
+
+
+#if LOG_DEBUG_IMAGE_RANKING 
+            std::cout << "\tclauseRanking = " << std::to_string(clauseRanking) << std::endl << std::endl;
+            std::cout << "\t==== literal ends ====" << std::endl;
+#endif
           }
             break;
 
@@ -218,8 +267,18 @@ public:
         case eQueryOperations::cSumSum:
         case eQueryOperations::cSumMax:
         {
+
+#if LOG_DEBUG_IMAGE_RANKING 
+          std::cout << "imageRanking = " << std::to_string(imageRanking ) << " + " <<  std::to_string(clauseRanking) << std::endl;
+#endif
+
           // Add all clause rankings
           imageRanking = imageRanking + clauseRanking;
+
+#if LOG_DEBUG_IMAGE_RANKING 
+          std::cout << "imageRanking = " << std::to_string(imageRanking) << std::endl;
+          std::cout << "==== clause ends ====" << std::endl;
+#endif
         }
           break;
 
@@ -236,6 +295,10 @@ public:
         }
         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         // ========================================
+
+#if LOG_DEBUG_IMAGE_RANKING
+        ++clauseCounter;
+#endif
       }
 
 
@@ -244,6 +307,13 @@ public:
       {
         imageRanking /= ((negateFactor * queryFormula.size()) + 1);
       }
+
+
+#if LOG_DEBUG_IMAGE_RANKING
+      std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+      std::cout << "!!!! FINAL RANK = " << std::to_string(imageRanking) << std::endl;
+      std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+#endif
 
       // Insert result to max heap
       maxHeap.push(std::pair(imageRanking, pImg->m_imageId));
