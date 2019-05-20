@@ -60,9 +60,9 @@ int main()
   }*/
   
 
-  auto result{ ranker.GetNearKeywordsWithImages("Ca") };
+  auto result{ ranker.GetNearKeywordsWithImages("Bla") };
 
-  auto result2{ ranker.GetImageKeywordsForInteractiveSearchWithExampleImages(1ULL, 10)};
+  //auto result2{ ranker.GetImageKeywordsForInteractiveSearchWithExampleImages(1ULL, 10)};
 
   
   return 0;

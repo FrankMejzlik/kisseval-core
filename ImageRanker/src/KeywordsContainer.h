@@ -5,6 +5,7 @@
 using namespace std::literals::string_literals;
 
 #include <algorithm>
+#include <cctype>
 #include <vector>
 #include <sstream>
 #include <fstream>
@@ -175,8 +176,22 @@ private:
   struct KeywordLessThanComparator {
     bool operator()(const std::unique_ptr<Keyword>& a, const std::unique_ptr<Keyword>& b) const
     {   
-      // Compare strings
-      auto result = a->m_word.compare(b->m_word);
+      // Force lowercase
+      std::locale loc;
+      std::string left;
+      std::string right;
+
+      for (auto elem : a->m_word)
+      {
+        left.push_back(std::tolower(elem, loc));
+      }
+
+      for (auto elem : b->m_word)
+      {
+        right.push_back(std::tolower(elem, loc));
+      }
+
+      auto result = left.compare(right);
 
       return result <= -1;
     }   
