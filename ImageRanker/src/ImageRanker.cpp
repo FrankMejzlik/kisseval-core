@@ -1584,8 +1584,31 @@ void ImageRanker::SubmitInteractiveSearchSubmit(
 )
 {
   
+
+  size_t isEmpty{ 0_z };
+
+  size_t countIn{ 0_z };
+  size_t countOut{ 0_z };
+
+  for (auto&& a : actions)
+  {
+    if (std::get<0>(a) == 0)
+    {
+      ++countOut;
+    }
+    else if (std::get<0>(a) == 1 || std::get<0>(a) == 2)
+    {
+      ++countIn;
+    }
+  }
+
+  if (countIn == countOut)
+  {
+    isEmpty = 1_z;
+  }
+
   std::stringstream query1Ss;
-  query1Ss << "INSERT INTO `interactive_searches`(`type`, `target_image_id`, `model_id`, `transformation_id`, `model_settings`, `transformation_settings`, `session_id`, `user_id`, `search_session_index`, `end_status`, `session_duration`)";
+  query1Ss << "INSERT INTO `interactive_searches`(`type`, `target_image_id`, `model_id`, `transformation_id`, `model_settings`, `transformation_settings`, `session_id`, `user_id`, `search_session_index`, `end_status`, `session_duration`,`is_empty`)";
   query1Ss << "VALUES(" << (int)originType << "," << imageId << "," << (int)modelId << "," << (int)transformId << ",";
 
   query1Ss << "\"";
@@ -1601,7 +1624,7 @@ void ImageRanker::SubmitInteractiveSearchSubmit(
     query1Ss << s << ";";
   }
   query1Ss << "\"";
-  query1Ss << ",\"" << sessionId << "\"," << userId << "," << searchSessionIndex << "," << endStatus << "," << sessionDuration << ");";  
+  query1Ss << ",\"" << sessionId << "\"," << userId << "," << searchSessionIndex << "," << endStatus << "," << sessionDuration << "," << isEmpty << ");";  
 
   std::string query1{query1Ss.str()};
   size_t result1{ _primaryDb.NoResultQuery(query1) };
