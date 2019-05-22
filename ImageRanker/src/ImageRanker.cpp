@@ -156,11 +156,137 @@ bool ImageRanker::InitializeFullMode()
 
   //GetStatisticsUserKeywordAccuracy();
 
+  PrintIntActionsCsv();
+
   // Initialize gridtests
   InitializeGridTests();
 
 
   return true;
+}
+
+
+void ImageRanker::PrintIntActionsCsv() const
+{
+  std::string query1{"SELECT id, session_duration, end_status FROM `image-ranker-collector-data2`.interactive_searches;"};
+  std::string query2{ "SELECT `interactive_search_id`, `index`, `action`, `score`, `operand` FROM `image-ranker-collector-data2`.interactive_searches_actions;" };
+  auto result1{ _primaryDb.ResultQuery(query1) };
+  auto result2{_primaryDb.ResultQuery(query2)};
+
+  auto actionIt{result2.second.begin()};
+
+  for (auto&& actionSess : result1.second)
+  {
+    size_t sessId{ (size_t)strToInt(actionSess[0]) };
+    size_t sessDuration{ (size_t)strToInt(actionSess[1]) };
+    size_t endStatus{ (size_t)strToInt(actionSess[2]) };
+
+    bool isInitial{ true };
+    std::vector<std::string> initialQuery;
+    std::vector<std::string> fullQuery;
+
+    size_t actionInitialCount{ 0_z };
+    size_t actionFinalCount{ 0_z };
+    std::string initialRank{ "" };
+    std::string finalRank{ "" };
+
+    for (; strToInt((*actionIt)[0]) == sessId; ++actionIt)
+    {
+      auto&& actionRow = (*actionIt);
+
+      if (actionRow[2] == "2")
+      {
+        isInitial = false;
+      }
+
+
+      if (isInitial)
+      {
+        ++actionInitialCount;
+        initialRank = actionRow[2];
+        finalRank = actionRow[2];
+      }
+      else
+      {
+        ++actionFinalCount;
+        ++actionInitialCount;
+        finalRank = actionRow[2];
+      }
+
+      if (actionRow[2] == "1" || actionRow[2] == "2")
+      {
+        if (isInitial)
+        {
+          initialQuery.push_back(actionRow[4]);
+        }
+        fullQuery.push_back(actionRow[4]);
+      }
+      else
+      {
+        for (auto it = initialQuery.begin(); it != initialQuery.end(); ++it)
+        {
+          if (*it == actionRow[4])
+          {
+            initialQuery.erase(it);
+            break;
+          }
+        }
+
+        for (auto it = fullQuery.begin(); it != fullQuery.end(); ++it)
+        {
+          if (*it == actionRow[4])
+          {
+            fullQuery.erase(it);
+            break;
+          }
+        }
+      }
+    }
+
+
+    if (initialQuery.empty() || fullQuery.empty())
+    {
+      continue;
+    }
+
+    std::cout << std::to_string(sessId) << "," << std::to_string(sessDuration) << "," << std::to_string(endStatus);
+
+    {
+      size_t initSize = initialQuery.size();
+      size_t i{ 0_z };
+      for (auto&& kwId : initialQuery)
+      {
+        std::cout << kwId;
+
+        if (i < initSize - 1)
+        {
+          std::cout << "&";
+        }
+        ++i;
+        std::cout << ",";
+      }
+    }
+    std::cout << initialRank << ",";
+    std::cout << std::to_string(actionInitialCount) << ",";
+
+    {
+      size_t initSize = fullQuery.size();
+      size_t i{ 0_z };
+      for (auto&& kwId : fullQuery)
+      {
+        std::cout << kwId;
+
+        if (i < initSize - 1)
+        {
+          std::cout << "&";
+        }
+        ++i;
+        std::cout << ",";
+      }
+    }
+    std::cout << finalRank << ",";
+    std::cout << std::to_string(actionFinalCount) << std::endl;
+  }
 }
 
 void ImageRanker::ComputeApproxDocFrequency(size_t aggregationGuid, float treshold)

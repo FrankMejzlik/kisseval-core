@@ -327,6 +327,7 @@ private:
   bool LoadRepresentativeImages(Keyword* pKw) const;
 
   void GenerateBestHypernymsForImages();
+  void PrintIntActionsCsv() const;
 
 #if PUSH_DATA_TO_DB
 
