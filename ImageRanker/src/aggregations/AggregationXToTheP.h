@@ -41,7 +41,7 @@ public:
       float totalSum{ 0ULL };
       for (auto&& bin : img->m_rawNetRanking)
       {
-        totalSum += (bin - img->m_min);
+        totalSum += ((bin - img->m_min) / (img->m_max - img->m_min));
       }
 
       // Iterate over all wanted exponents
@@ -55,7 +55,7 @@ public:
         {
           // Do final transformation f(x) = x ^ exp
           // xoxo: power after of before dividing with total sum?
-          aggVector.emplace_back( pow((bin - img->m_min)/ totalSum, exp));
+          aggVector.emplace_back( pow( (((bin - img->m_min) / (img->m_max - img->m_min)) / totalSum), exp));
         }
 
         // Create copy for MAX based precalculations
