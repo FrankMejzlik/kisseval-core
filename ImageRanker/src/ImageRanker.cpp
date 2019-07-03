@@ -1,8 +1,6 @@
 
 #include "ImageRanker.h"
 
-
-
 /*********************
   Ranking Models
  *********************/
@@ -906,7 +904,7 @@ std::vector<float>& ImageRanker::GetMainRankingVector(Image& image)
 }
 
 
-std::unordered_map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRankingBinFile()
+std::map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRankingBinFile()
 {
   // Get image filenames
   std::vector<std::string> imageFilenames{ GetImageFilenames() };
@@ -961,9 +959,13 @@ std::unordered_map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRanki
   size_t currOffset = 40ULL;
 
 
+  // Initialize video ID counter
+  size_t prevVideoId{SIZE_T_ERROR_VALUE};
+  std::stack<Image*> videoFrames;
+
 
   // Declare result vector
-  std::unordered_map<size_t, std::unique_ptr<Image>> images;
+  std::map<size_t, std::unique_ptr<Image>> images;
 
   // Create line buffer
   std::vector<std::byte>  lineBuffer;
@@ -1030,7 +1032,6 @@ std::unordered_map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRanki
     // Get image filename 
     std::string filename{ imageFilenames[id / _imageIdStride] };
 
-
     // Push final row
     auto newIt = images.emplace(std::pair(
       id, 
@@ -1042,6 +1043,32 @@ std::unordered_map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRanki
       )
     ));
   }
+
+
+  // Iterate over all images in ASC order by their IDs
+  for (auto&&[imageId, pImg] : images)
+  {
+    //
+    // Determine how many successors from the same video it has
+    //
+
+    // Get ID of current video
+    size_t currVideoId{ GetVideoIdFromFrameFilename(pImg->m_filename) };
+
+    // If this frame is from next video
+    if (currVideoId != prevVideoId)
+    {
+      // Process and label all frames from this video
+      ProcessVideoShotsStack(videoFrames);
+
+      // Set new prev video ID
+      prevVideoId = currVideoId;
+    }
+
+    // Store this frame for future processing
+    videoFrames.push(pImg.get());
+  }
+
 
   return images;
 }
@@ -1297,7 +1324,7 @@ std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(st
 std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(size_t imageId, size_t N) const
 {
   // Find image in map
-  std::unordered_map<size_t, std::unique_ptr<Image>>::const_iterator imagePair = _images.find(imageId);
+  std::map<size_t, std::unique_ptr<Image>>::const_iterator imagePair = _images.find(imageId);
 
   // If no such image
   if (imagePair == _images.end())
@@ -1414,6 +1441,33 @@ ChartData ImageRanker::RunModelTestWrapper(
   return pRankingModel->RunModelTest(pNetDataTransformFn, &m_indexKwFrequency, testQueries, _images);
 }
 
+// xoxo
+void ImageRanker::ProcessVideoShotsStack(std::stack<Image*>& videoFrames)
+{
+  size_t i{ 0_z };
+
+  // Loop until stack is empty
+  while (!videoFrames.empty())
+  {
+    // Get top image from stack
+    auto pImg{ videoFrames.top() };
+    videoFrames.pop();
+
+    // Asign this number to this image
+    pImg->m_numSuccessorFrames = i;
+
+    ++i;
+  }
+}
+
+size_t ImageRanker::GetVideoIdFromFrameFilename(const std::string& filename) const
+{
+  // Extract string representing video ID
+  std::string videoIdString{ filename.substr(1, 5) };
+
+  // Return integral value of this string's representation
+  return strToInt(videoIdString);
+}
 
 std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(QueryOriginId dataSource) const
 {

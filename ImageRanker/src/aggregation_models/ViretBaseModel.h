@@ -56,7 +56,7 @@ public:
     const std::vector<CnfFormula>& queryFormulae,
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
-    const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont,
+    const std::map<size_t, std::unique_ptr<Image>>& _imagesCont,
     size_t numResults,
     size_t targetImageId
   ) const  override
@@ -358,7 +358,7 @@ public:
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::vector<UserImgQuery>& testQueries,
-    const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont
+    const std::map<size_t, std::unique_ptr<Image>>& _imagesCont
   ) const override
   {
 

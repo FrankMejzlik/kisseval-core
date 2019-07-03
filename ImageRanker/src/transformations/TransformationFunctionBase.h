@@ -21,7 +21,7 @@ public:
   // Required API for ranking models
 public:
   virtual void SetTransformationSettings(NetDataTransformSettings settingsString) = 0;
-  virtual bool CalculateTransformedVectors(const std::unordered_map<size_t, std::unique_ptr<Image>>& images) const = 0;
+  virtual bool CalculateTransformedVectors(const std::map<size_t, std::unique_ptr<Image>>& images) const = 0;
   virtual size_t GetGuidFromSettings() const = 0;
 
   // Methods

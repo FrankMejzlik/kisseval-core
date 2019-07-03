@@ -32,7 +32,7 @@ public:
 
   }
 
-  virtual bool CalculateTransformedVectors(const std::unordered_map<size_t, std::unique_ptr<Image>>& images) const
+  virtual bool CalculateTransformedVectors(const std::map<size_t, std::unique_ptr<Image>>& images) const
   {
     // Softmax file is loaded by default
     return true;

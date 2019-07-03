@@ -19,6 +19,7 @@ struct Image
     float mean, float variance
   ) :
     m_imageId(id),
+    m_numSuccessorFrames(SIZE_T_ERROR_VALUE),
     m_filename(std::move(filename)),
     m_rawNetRanking(std::move(rawNetRanking)),
     m_rawNetRankingSorted(),
@@ -68,6 +69,7 @@ struct Image
 
 
   size_t m_imageId;
+  size_t m_numSuccessorFrames;
   std::string m_filename;
 
   //! Raw vector as it came out of neural network

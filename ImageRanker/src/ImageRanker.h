@@ -6,6 +6,7 @@
 #include <string>
 using namespace std::string_literals;
 
+#include <stack>
 #include <fstream>
 #include <cmath>
 #include <stdexcept>
@@ -265,7 +266,7 @@ private:
    * 
    * \return  Hash map with all Image instances loaded
    */
-  std::unordered_map<size_t, std::unique_ptr<Image>> ParseRawNetRankingBinFile();
+  std::map<size_t, std::unique_ptr<Image>> ParseRawNetRankingBinFile();
 
   /*!
    * Parses Softmax binary file into all \ref Image instances we're now holding
@@ -338,6 +339,9 @@ private:
   void GenerateBestHypernymsForImages();
   void PrintIntActionsCsv() const;
 
+  void ProcessVideoShotsStack(std::stack<Image*>& videoFrames);
+  size_t GetVideoIdFromFrameFilename(const std::string& filename) const;
+
 #if PUSH_DATA_TO_DB
 
   bool PushDataToDatabase();
@@ -379,7 +383,7 @@ private:
   std::string _imageToIdMap;
 
   KeywordsContainer _keywords;
-  std::unordered_map<size_t, std::unique_ptr<Image>> _images;
+  std::map<size_t, std::unique_ptr<Image>> _images;
 
   std::vector<float> m_indexKwFrequency;
 
