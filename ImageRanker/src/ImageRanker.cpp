@@ -688,9 +688,12 @@ bool ImageRanker::LoadRepresentativeImages(Keyword* pKw) const
     return true;
   }
 
+  std::vector<std::string> queries;
+  queries.push_back(std::to_string(pKw->m_wordnetId));
+
   // Get first results for this keyword
   auto relevantImages{ GetRelevantImagesWrapper(
-    std::to_string(pKw->m_wordnetId), 10,
+    queries, 10,
     DEFAULT_AGG_FUNCTION, DEFAULT_RANKING_MODEL,
     DEFAULT_MODEL_SETTINGS, DEFAULT_TRANSFORM_SETTINGS
   ).first };
@@ -1931,15 +1934,23 @@ std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatist
 
 
 std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImagesWrapper(
-  const std::string& queryEncodedPlaintext, size_t numResults,
+  const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
   NetDataTransformation aggId, RankingModelId modelId,
   const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
   size_t imageId
 ) const
 {
-  // Decode query to logical CNF formula
-  CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(queryEncodedPlaintext)) };
+  std::vector<CnfFormula> formulae;
 
+  for (auto&& queryString : queriesEncodedPlaintext)
+  {
+    // Decode query to logical CNF formula
+    CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(queryString)) };
+
+    formulae.push_back(queryFormula);
+  }
+
+  
   // Get desired aggregation
   auto pAggFn = GetAggregationById(aggId);
   // Setup model correctly
@@ -1951,7 +1962,7 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImag
   pRankingModel->SetModelSettings(modelSettings);
 
   // Rank it
-  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(queryFormula, pAggFn, &m_indexKwFrequency, _images, numResults, imageId)};
+  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(formulae, pAggFn, &m_indexKwFrequency, _images, numResults, imageId)};
 
 
   std::pair<std::vector<ImageReference>, QueryResult> resultResponse;
@@ -1969,14 +1980,21 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImag
 }
 
 std::tuple<std::vector<ImageReference>, std::vector<std::tuple<size_t, std::string, float>>, QueryResult> ImageRanker::GetRelevantImagesWithSuggestedWrapper(
-  const std::string& queryEncodedPlaintext, size_t numResults,
+  const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
   NetDataTransformation aggId, RankingModelId modelId,
   const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
   size_t imageId
 ) const
 {
-  // Decode query to logical CNF formula
-  CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(queryEncodedPlaintext)) };
+  std::vector<CnfFormula> formulae;
+
+  for (auto&& queryString : queriesEncodedPlaintext)
+  {
+    // Decode query to logical CNF formula
+    CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(queryString)) };
+
+    formulae.push_back(queryFormula);
+  }
 
   // Get desired aggregation
   auto pAggFn = GetAggregationById(aggId);
@@ -1989,7 +2007,7 @@ std::tuple<std::vector<ImageReference>, std::vector<std::tuple<size_t, std::stri
   pRankingModel->SetModelSettings(modelSettings);
 
   // Rank it
-  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(queryFormula, pAggFn, &m_indexKwFrequency, _images, numResults, imageId)};
+  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(formulae, pAggFn, &m_indexKwFrequency, _images, numResults, imageId)};
 
 
   std::tuple<std::vector<ImageReference>, std::vector<std::tuple<size_t, std::string, float>>, QueryResult> resultResponse;

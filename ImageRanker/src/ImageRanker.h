@@ -153,14 +153,14 @@ public:
 
 
   std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImagesWrapper(
-    const std::string& queryEncodedPlaintext, size_t numResults,
+    const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
     NetDataTransformation aggId, RankingModelId modelId,
     const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
     size_t imageId = SIZE_T_ERROR_VALUE
   ) const;
 
   std::tuple<std::vector<ImageReference>, std::vector<std::tuple<size_t, std::string, float>>, QueryResult> GetRelevantImagesWithSuggestedWrapper(
-    const std::string& queryEncodedPlaintext, size_t numResults,
+    const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
     NetDataTransformation aggId, RankingModelId modelId,
     const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
     size_t imageId

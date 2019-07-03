@@ -56,7 +56,7 @@ public:
   }
 
   virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
-    CnfFormula queryFormula,
+    const std::vector<CnfFormula>& queryFormulae,
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont,
@@ -119,7 +119,7 @@ public:
       float imageSubRank{ 0.0f };
 
       // Itarate through clauses connected with AND
-      for (auto&& clause : queryFormula)
+      for (auto&& clause : queryFormulae[0])
       {
         bool clauseSucc{ false };
         size_t negatePenalty{0ULL};
@@ -258,7 +258,10 @@ public:
     // Iterate over test queries
     for (auto&&[imgId, queryFormula] : testQueries)
     {
-      auto resultImages = GetRankedImages(queryFormula, pAggregation, pIndexKwFrequency, _imagesCont, 0ULL, imgId);
+      std::vector<CnfFormula> formulae;
+      formulae.push_back(queryFormula);
+
+      auto resultImages = GetRankedImages(formulae, pAggregation, pIndexKwFrequency, _imagesCont, 0ULL, imgId);
 
       size_t transformedRank = resultImages.second / scaleDownFactor;
 

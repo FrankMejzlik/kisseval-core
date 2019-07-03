@@ -15,7 +15,7 @@ public:
   virtual void SetModelSettings(AggModelSettings settingsString) = 0;
 
   virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
-    CnfFormula queryFormula,
+    const std::vector<CnfFormula>& queryFormulae,
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont,
