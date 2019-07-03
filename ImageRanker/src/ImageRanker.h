@@ -42,8 +42,8 @@ using namespace std::string_literals;
 
 #include "GridTest.h"
 
-#include "aggregations.h"
-#include "ranking_models.h"
+#include "transformations.h"
+#include "aggregation_models.h"
 
 
 class ImageRanker
@@ -103,7 +103,7 @@ public:
   > GetImageKeywordsForInteractiveSearchWithExampleImages(size_t imageId, size_t numResults);
 
   void SubmitInteractiveSearchSubmit(
-    InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, AggregationId transformId,
+    InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, NetDataTransformation transformId,
     std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
     std::string sessionId, size_t searchSessionIndex, int endStatus, size_t sessionDuration,
     std::vector<InteractiveSearchAction> actions,
@@ -123,7 +123,7 @@ public:
    * \param dataSource
    * \param settings
    */
-  void SetMainSettings(AggregationId agg, RankingModelId rankingModel, ModelSettings settings);
+  void SetMainSettings(NetDataTransformation agg, RankingModelId rankingModel, AggModelSettings settings);
 
   std::vector<std::pair<TestSettings, ChartData>> RunGridTest(const std::vector<TestSettings>& testSettings);
 
@@ -154,15 +154,15 @@ public:
 
   std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImagesWrapper(
     const std::string& queryEncodedPlaintext, size_t numResults,
-    AggregationId aggId, RankingModelId modelId,
-    const ModelSettings& modelSettings, const AggregationSettings& aggSettings,
+    NetDataTransformation aggId, RankingModelId modelId,
+    const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
     size_t imageId = SIZE_T_ERROR_VALUE
   ) const;
 
   std::tuple<std::vector<ImageReference>, std::vector<std::tuple<size_t, std::string, float>>, QueryResult> GetRelevantImagesWithSuggestedWrapper(
     const std::string& queryEncodedPlaintext, size_t numResults,
-    AggregationId aggId, RankingModelId modelId,
-    const ModelSettings& modelSettings, const AggregationSettings& aggSettings,
+    NetDataTransformation aggId, RankingModelId modelId,
+    const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
     size_t imageId
   ) const;
 
@@ -171,8 +171,8 @@ public:
 
 
   ChartData RunModelTestWrapper(
-    AggregationId aggId, RankingModelId modelId, QueryOriginId dataSource,
-    const ModelSettings& settings, const AggregationSettings& aggSettings
+    NetDataTransformation aggId, RankingModelId modelId, QueryOriginId dataSource,
+    const SimulatedUserSettings& simulatedUserSettings, const AggModelSettings& aggModelSettings, const NetDataTransformSettings& netDataTransformSettings
   ) const;
 
 
@@ -192,6 +192,8 @@ public:
   //////////////////////////
   
 private:
+
+  SimulatedUser GetSimUserSettings(const SimulatedUserSettings& settings) const;
 
   void ComputeApproxDocFrequency(size_t aggregationGuid, float treshold);
 
@@ -233,7 +235,14 @@ private:
   
 
   std::vector<UserImgQueryRaw>& GetCachedQueriesRaw(QueryOriginId dataSource) const;
+  
   std::vector<UserImgQuery>& GetCachedQueries(QueryOriginId dataSource) const;
+
+
+  std::vector<UserImgQuery> GetSimulatedQueries(QueryOriginId dataSource, const SimulatedUser& pSimUser) const;
+  std::vector<UserImgQuery> GetSimulatedQueries(size_t count, const SimulatedUser& pSimUser) const;
+
+  UserImgQuery GetSimulatedQueryForImage(size_t imageId, const SimulatedUser& simUser) const;
 
   std::string EncodeAndQuery(const std::string& query) const;
 
@@ -300,7 +309,7 @@ private:
    * \param id
    * \return 
    */
-  AggregationFunctionBase* GetAggregationById(AggregationId id) const;
+  TransformationFunctionBase* GetAggregationById(NetDataTransformation id) const;
   
   /*!
    * Gets ranking model instance if found
@@ -343,17 +352,21 @@ private:
   Database _primaryDb;
   Database _secondaryDb;
 
+  std::mt19937_64 _generator;
+  std::uniform_real_distribution<double> _uniformRealDistribution;
+ 
+
   bool _isReinitNeeded;
   Mode _mode;
 
   //! Aggregation that will be used mainly
-  AggregationId _mainAggregation; 
+  NetDataTransformation _mainAggregation; 
 
   //! Ranking model that will be used mainly
   RankingModelId _mainRankingModel;
 
   //! Model settings that will be used mainly
-  ModelSettings _mainSettings;
+  AggModelSettings _mainSettings;
 
   size_t _imageIdStride;
 
@@ -371,7 +384,7 @@ private:
   std::vector<float> m_indexKwFrequency;
 
 
-  std::unordered_map<AggregationId, std::unique_ptr<AggregationFunctionBase>> _aggregations;
+  std::unordered_map<NetDataTransformation, std::unique_ptr<TransformationFunctionBase>> _aggregations;
   std::unordered_map<RankingModelId, std::unique_ptr<RankingModelBase>> _models;
 };
 

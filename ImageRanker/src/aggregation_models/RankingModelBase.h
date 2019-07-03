@@ -12,11 +12,11 @@ class RankingModelBase
 {
   // Required API for ranking models
 public:
-  virtual void SetModelSettings(ModelSettings settingsString) = 0;
+  virtual void SetModelSettings(AggModelSettings settingsString) = 0;
 
   virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
     CnfFormula queryFormula,
-    AggregationFunctionBase* pAggregation,
+    TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont,
     size_t numResults = SIZE_T_ERROR_VALUE,
@@ -24,7 +24,7 @@ public:
   ) const = 0;
 
   virtual ChartData RunModelTest(
-    AggregationFunctionBase* pAggregation,
+    TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::vector<UserImgQuery>& testQueries,
     const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont

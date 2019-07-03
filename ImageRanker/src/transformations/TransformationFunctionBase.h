@@ -9,18 +9,18 @@
 #include "utility.h"
 
 
-class AggregationFunctionBase
+class TransformationFunctionBase
 {
   // Methods
 public:
-  AggregationFunctionBase(AggregationId id) :
+  TransformationFunctionBase(NetDataTransformation id) :
     _id(id)
   {
   }
 
   // Required API for ranking models
 public:
-  virtual void SetAggregationSettings(AggregationSettings settingsString) = 0;
+  virtual void SetTransformationSettings(NetDataTransformSettings settingsString) = 0;
   virtual bool CalculateTransformedVectors(const std::unordered_map<size_t, std::unique_ptr<Image>>& images) const = 0;
   virtual size_t GetGuidFromSettings() const = 0;
 
@@ -40,5 +40,5 @@ public:
 
   // Attributes
 private:
-  AggregationId _id;
+  NetDataTransformation _id;
 };

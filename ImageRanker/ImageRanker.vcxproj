@@ -142,7 +142,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/aggregation_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
@@ -205,7 +205,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/aggregation_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
@@ -230,7 +230,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/aggregation_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
@@ -251,11 +251,10 @@
     <ClCompile Include="src\KeywordsContainer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\aggregations\AggregationFunctionBase.h" />
-    <ClInclude Include="src\aggregations\aggregations.h" />
-    <ClInclude Include="src\aggregations\AggregationSine.h" />
-    <ClInclude Include="src\aggregations\AggregationSoftmax.h" />
-    <ClInclude Include="src\aggregations\AggregationXToTheP.h" />
+    <ClInclude Include="src\transformations\TransformationFunctionBase.h" />
+    <ClInclude Include="src\transformations\transformations.h" />
+    <ClInclude Include="src\transformations\TransformationSoftmax.h" />
+    <ClInclude Include="src\transformations\TransformationLinearXToTheP.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\credentials.h" />
     <ClInclude Include="src\config.h" />
@@ -264,10 +263,10 @@
     <ClInclude Include="src\Image.hpp" />
     <ClInclude Include="src\ImageRanker.h" />
     <ClInclude Include="src\KeywordsContainer.h" />
-    <ClInclude Include="src\ranking_models\BooleanBucketModel.h" />
-    <ClInclude Include="src\ranking_models\RankingModelBase.h" />
-    <ClInclude Include="src\ranking_models\ranking_models.h" />
-    <ClInclude Include="src\ranking_models\ViretBaseModel.h" />
+    <ClInclude Include="src\aggregation_models\BooleanBucketModel.h" />
+    <ClInclude Include="src\aggregation_models\RankingModelBase.h" />
+    <ClInclude Include="src\aggregation_models\aggregation_models.h" />
+    <ClInclude Include="src\aggregation_models\ViretBaseModel.h" />
     <ClInclude Include="src\utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

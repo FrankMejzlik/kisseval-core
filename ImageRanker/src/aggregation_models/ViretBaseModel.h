@@ -31,7 +31,7 @@ public:
   };
 
 public:
-  virtual void SetModelSettings(ModelSettings settingsString) override
+  virtual void SetModelSettings(AggModelSettings settingsString) override
   {
     _settings = GetDefaultSettings();
 
@@ -54,7 +54,7 @@ public:
 
   virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
     CnfFormula queryFormula,
-    AggregationFunctionBase* pAggregation,
+    TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont,
     size_t numResults,
@@ -355,7 +355,7 @@ public:
   }
 
   virtual ChartData RunModelTest(
-    AggregationFunctionBase* pAggregation,
+    TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::vector<UserImgQuery>& testQueries,
     const std::unordered_map<size_t, std::unique_ptr<Image>>& _imagesCont

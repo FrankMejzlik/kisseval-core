@@ -20,6 +20,49 @@ int main()
 
   ranker.Initialize();
 
+  auto result13{
+  ranker.RunModelTestWrapper(
+    NetDataTransformation::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)10000,
+    std::vector<std::string>({ "1"s }), std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s })
+  )
+  };
+
+  for (auto&& i : result13)
+  {
+    std::cout << i.first << " => " << i.second << std::endl; 
+  }
+
+  std::cout << "========================" << std::endl;
+
+  auto result14{
+  ranker.RunModelTestWrapper(
+    NetDataTransformation::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)10000,
+    std::vector<std::string>({ "4"s }), std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s })
+  )
+  };
+
+  for (auto&& i : result14)
+  {
+    std::cout << i.first << " => " << i.second << std::endl;
+  }
+
+  std::cout << "========================" << std::endl;
+
+  auto result15{
+  ranker.RunModelTestWrapper(
+    NetDataTransformation::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)10000,
+    std::vector<std::string>({ "7"s }), std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s })
+  )
+  };
+
+  for (auto&& i : result15)
+  {
+    std::cout << i.first << " => " << i.second << std::endl;
+  }
+
+  std::cout << "========================" << std::endl;
+
+
 /*
   auto result11{
   ranker.RunModelTestWrapper(

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "AggregationFunctionBase.h"
+#include "TransformationFunctionBase.h"
 
 /*!
  * Aggregation of type f(x) = x^p
  */
-class AggregationXToTheP :
+class TransformationLinearXToTheP :
 
-  public AggregationFunctionBase
+  public TransformationFunctionBase
 {
 public:
   struct Settings
@@ -25,8 +25,8 @@ public:
 
   // Methods
 public:
-  AggregationXToTheP() :
-    AggregationFunctionBase(AggregationId::cXToTheP),
+  TransformationLinearXToTheP() :
+    TransformationFunctionBase(NetDataTransformation::cXToTheP),
     //_exponents({ 1.0f, 0.8f, 2.0f })
     _exponents({ 1.0f})
   {}
@@ -85,7 +85,7 @@ public:
     return Settings();
   }
 
-  virtual void SetAggregationSettings(ModelSettings settingsString) override
+  virtual void SetTransformationSettings(AggModelSettings settingsString) override
   {
     // If setting 0 set
     if (settingsString.size() >= 1 && settingsString[0].size() >= 0)

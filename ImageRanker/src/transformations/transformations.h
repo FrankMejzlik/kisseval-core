@@ -5,10 +5,7 @@
 // ==================================
 
 // Softmax exponential
-#include "AggregationSoftmax.h"
+#include "TransformationSoftmax.h"
 
 // f(x) = x^p
-#include "AggregationXToTheP.h"
-
-// f(x) = sin(x) on [0, M_PI]
-#include "AggregationSine.h"
+#include "TransformationLinearXToTheP.h"

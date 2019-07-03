@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#define SIMULATED_QUERIES_ENUM_OFSET 10000
+
 //! In seconds
 #define QUERIES_CACHE_LIFETIME 5
 
@@ -15,7 +17,7 @@
 
 //! Default settings for main evaluation
 #define DEFAULT_RANKING_MODEL RankingModelId::cViretBase
-#define DEFAULT_AGG_FUNCTION AggregationId::cXToTheP
+#define DEFAULT_AGG_FUNCTION NetDataTransformation::cXToTheP
 #define DEFAULT_MODEL_SETTINGS std::vector<std::string>({"0"s, "0.0f"s, "1"s})
 #define DEFAULT_TRANSFORM_SETTINGS std::vector<std::string>({"0"s, "0"s})
 

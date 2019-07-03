@@ -32,7 +32,7 @@ enum class RankingModelId
   cViretBase = 3
 };
 
-enum class AggregationId
+enum class NetDataTransformation
 {
   cSoftmax = 100,
   cXToTheP = 200,
@@ -45,7 +45,13 @@ enum class QueryOriginId
   cPublic = 1,
   cManaged = 2,
 
-  cAll = 999
+  cAll = 999,
+
+  // Simulated variants
+  cDeveloperSimulated = 10000,
+  cPublicSimulated = 10001,
+  cManagedSimulated = 10002,
+  cAllSimulated = 10999
 };
 
 
@@ -62,7 +68,16 @@ enum class QueryOriginId
 *      0: Multiply & (Add |)
 *      1: Add only
 */
-using ModelSettings = std::vector<std::string>;
+using AggModelSettings = std::vector<std::string>;
+
+
+/*!
+* FORMAT:
+*  0 => Simulated user exponent
+*/
+using SimulatedUserSettings = std::vector<std::string>;
+
+
 
 /*!
 * FORMAT:
@@ -71,10 +86,10 @@ using ModelSettings = std::vector<std::string>;
 *    0 => m_exponent
 *  3: cSine:
 */
-using AggregationSettings = std::vector<std::string>;
+using NetDataTransformSettings = std::vector<std::string>;
 
 using AggregationVector = std::vector<float>;
-using TestSettings = std::tuple<AggregationId, RankingModelId, QueryOriginId, ModelSettings, AggregationSettings>;
+using TestSettings = std::tuple<NetDataTransformation, RankingModelId, QueryOriginId, AggModelSettings, NetDataTransformSettings>;
 
 using Buffer = std::vector<std::byte>;
 
@@ -116,4 +131,16 @@ struct QueryResult
   }
 
   size_t m_targetImageRank;
+};
+
+
+class SimulatedUser
+{
+public:
+  SimulatedUser():
+    m_exponent(1)
+  { }
+
+public:
+  int m_exponent;
 };

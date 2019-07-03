@@ -84,6 +84,7 @@ struct Image
 
   //! Softmax probability ranking
   std::vector<float> m_softmaxVector;
+  std::vector<float> m_linearVector;
 
   //! Probability vector from custom MinMax Clamp method
   std::vector<float> m_minMaxLinearVector;

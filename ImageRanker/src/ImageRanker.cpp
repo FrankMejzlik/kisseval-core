@@ -30,6 +30,8 @@ ImageRanker::ImageRanker(
   size_t idOffset,
   Mode mode
 ) :
+ 
+
   _primaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
   _secondaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
 
@@ -49,10 +51,9 @@ ImageRanker::ImageRanker(
   _images(ParseRawNetRankingBinFile())
 {
 
-  // Insert all desired aggregations
-  _aggregations.emplace(AggregationId::cSoftmax, std::make_unique<AggregationSoftmax>());
-  //_aggregations.emplace(AggregationId::cSoftmaxCustom, std::make_unique<AggregationSoftmax>());
-  _aggregations.emplace(AggregationId::cXToTheP, std::make_unique<AggregationXToTheP>());
+  // Insert all desired transformations
+  _aggregations.emplace(NetDataTransformation::cSoftmax, std::make_unique<TransformationSoftmax>());
+  _aggregations.emplace(NetDataTransformation::cXToTheP, std::make_unique<TransformationLinearXToTheP>());
 
   // Insert all desired ranking models
   _models.emplace(RankingModelId::cViretBase, std::make_unique<ViretModel>());
@@ -136,6 +137,10 @@ bool ImageRanker::InitializeFullMode()
   // Apply hypernym recalculation on all transformed vectors
   for (auto&&[imageId, pImg] : _images)
   {
+    // \todo implement propperly
+    // Copy untouched vector for simulating user
+    pImg->m_linearVector = pImg->m_aggVectors.at(200);
+
     for (auto&& [transformId, binVec] : pImg->m_aggVectors)
     {
       // If is summ based aggregation precalculation
@@ -288,6 +293,20 @@ void ImageRanker::PrintIntActionsCsv() const
     std::cout << std::to_string(actionFinalCount) << std::endl;
   }
 }
+
+SimulatedUser ImageRanker::GetSimUserSettings(const SimulatedUserSettings& stringSettings) const
+{
+  SimulatedUser newSimUser;
+
+  // If setting 0 (Simulated user exponent) is set
+  if (stringSettings.size() >= 1 && stringSettings[0].size() >= 0)
+  {
+    newSimUser.m_exponent = strToInt(stringSettings[0]);
+  }
+
+  return newSimUser;
+}
+
 
 void ImageRanker::ComputeApproxDocFrequency(size_t aggregationGuid, float treshold)
 {
@@ -443,11 +462,11 @@ void ImageRanker::InitializeGridTests()
 }
 
 
-AggregationFunctionBase* ImageRanker::GetAggregationById(AggregationId id) const
+TransformationFunctionBase* ImageRanker::GetAggregationById(NetDataTransformation id) const
 {
   // Try to get this aggregation
   if (
-    auto result{ _aggregations.find(static_cast<AggregationId>(id)) };
+    auto result{ _aggregations.find(static_cast<NetDataTransformation>(id)) };
     result != _aggregations.end()
     ) {
     return result->second.get();
@@ -474,7 +493,7 @@ RankingModelBase* ImageRanker::GetRankingModelById(RankingModelId id) const
 }
 
 
-void ImageRanker::SetMainSettings(AggregationId agg, RankingModelId rankingModel, ModelSettings settings)
+void ImageRanker::SetMainSettings(NetDataTransformation agg, RankingModelId rankingModel, AggModelSettings settings)
 {
   _mainAggregation = agg;
   _mainRankingModel = rankingModel;
@@ -597,7 +616,7 @@ void ImageRanker::RunGridTestsFromTo(
     auto testSet{ (*it) };
 
     // Run test
-    auto chartData{ RunModelTestWrapper(std::get<0>(testSet), std::get<1>(testSet), std::get<2>(testSet), std::get<3>(testSet), std::get<4>(testSet)) };
+    auto chartData{ RunModelTestWrapper(std::get<0>(testSet), std::get<1>(testSet), std::get<2>(testSet), std::vector<std::string>({ "1"s }), std::get<3>(testSet), std::get<4>(testSet)) };
 
     pDest->emplace_back(testSet, std::move(chartData));
 
@@ -865,7 +884,7 @@ const std::vector<float>& ImageRanker::GetMainRankingVector(const Image& image) 
 {
   switch (_mainAggregation) 
   {
-  case AggregationId::cSoftmax:
+  case NetDataTransformation::cSoftmax:
     return image.m_softmaxVector;
     break;
 
@@ -876,7 +895,7 @@ std::vector<float>& ImageRanker::GetMainRankingVector(Image& image)
 {
   switch (_mainAggregation)
   {
-  case AggregationId::cSoftmax:
+  case NetDataTransformation::cSoftmax:
     return image.m_softmaxVector;
     break;
 
@@ -1117,7 +1136,7 @@ bool ImageRanker::ParseSoftmaxBinFile()
     }
 
     // Store  vector of floats
-    auto&& [pair, result]{imageIt->second->m_aggVectors.insert(std::pair(static_cast<size_t>(AggregationId::cSoftmax), std::move(softmaxVector)))};
+    auto&& [pair, result]{imageIt->second->m_aggVectors.insert(std::pair(static_cast<size_t>(NetDataTransformation::cSoftmax), std::move(softmaxVector)))};
 
     // Recalculate all hypernyms in this vector
     RecalculateHypernymsInVectorUsingSum(pair->second);
@@ -1357,25 +1376,39 @@ std::vector<std::string> ImageRanker::StringenizeAndQuery(const std::string& que
 
 
 ChartData ImageRanker::RunModelTestWrapper(
-  AggregationId aggId, RankingModelId modelId, QueryOriginId dataSource,
-  const ModelSettings& modelSettings, const AggregationSettings& aggSettings
+  NetDataTransformation aggId, RankingModelId modelId, QueryOriginId dataSource,
+  const SimulatedUserSettings& simulatedUserSettings, const AggModelSettings& aggModelSettings, const NetDataTransformSettings& netDataTransformSettings
 ) const
 {
-  // Get queries
-  auto testQueries = GetCachedQueries(dataSource);
+  std::vector<UserImgQuery> testQueries;
 
-  // Get desired aggregation
-  auto pAggFn = GetAggregationById(aggId);
-  // Setup model correctly
-  pAggFn->SetAggregationSettings(aggSettings);
+  // If data source should be simulated
+  if (static_cast<int>(dataSource) >= SIMULATED_QUERIES_ENUM_OFSET)
+  {
+    // Parse simulated user settings
+    auto simUser{ GetSimUserSettings(simulatedUserSettings) };
+
+    // Get simulated queries
+    testQueries = GetSimulatedQueries(dataSource, simUser);
+  }
+  else
+  {
+    // Get queries
+    testQueries = GetCachedQueries(dataSource);
+  }
+  
+  // Get desired transformation
+  auto pNetDataTransformFn = GetAggregationById(aggId);
+  // Setup transformation correctly
+  pNetDataTransformFn->SetTransformationSettings(netDataTransformSettings);
 
   // Get disired model
   auto pRankingModel = GetRankingModelById(modelId);
   // Setup model correctly
-  pRankingModel->SetModelSettings(modelSettings);
+  pRankingModel->SetModelSettings(aggModelSettings);
 
   // Run test
-  return pRankingModel->RunModelTest(pAggFn, &m_indexKwFrequency, testQueries, _images);
+  return pRankingModel->RunModelTest(pNetDataTransformFn, &m_indexKwFrequency, testQueries, _images);
 }
 
 
@@ -1462,6 +1495,106 @@ std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(QueryOriginId dat
   }
 
   return cachedData0;
+}
+
+
+UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const SimulatedUser& simUser) const
+{
+  constexpr size_t from{ 2_z };
+  constexpr size_t to{ 6_z };
+
+  auto pImgData{ GetImageDataById(imageId) };
+
+  const auto& linBinVector{ pImgData->m_linearVector };
+
+  // Calculate transformed vector
+  float totalSum{ 0.0f };
+  std::vector<float> transformedData;
+  for (auto&& value : linBinVector)
+  {
+    float newValue{ pow(value, simUser.m_exponent) };
+    transformedData.push_back(newValue);
+
+    totalSum += newValue;
+  }
+
+  // Get scaling coef
+  float scaleCoef{ 1 / totalSum };
+
+  // Normalize
+  size_t i{ 0_z };
+  float cummulSum{ 0.0f };
+  for (auto&& value : transformedData)
+  {
+    cummulSum += value * scaleCoef;
+    
+    transformedData[i] = cummulSum;
+
+    ++i;
+  }
+
+  std::random_device randDev;
+  std::mt19937 generator(randDev());
+  std::uniform_real_distribution<double> distribution(0.0, 1.0);
+
+  auto randLabel{ static_cast<float>(distribution(generator)) };
+
+  size_t numLabels{ static_cast<size_t>((randLabel * (to - from)) + from) };
+  std::vector<size_t> queryLabels;
+  for (size_t i{ 0_z }; i < numLabels; ++i)
+  {
+    // Get random number between [0, 1] from uniform distribution
+    float rand{static_cast<float>(distribution(generator)) };
+    size_t labelIndex{ 0 };
+
+    // Iterate through discrete points while we haven't found correct point
+    while (transformedData[labelIndex] < rand)
+    {
+      ++labelIndex;
+    }
+
+    queryLabels.push_back(labelIndex);
+  }
+
+  std::vector<Clause> queryFormula;
+  queryFormula.reserve(numLabels);
+
+  // Create final formula with wordnet IDs
+  for (auto&& index : queryLabels)
+  {
+    auto a = _keywords.GetKeywordPtrByVectorIndex(index);
+    Clause meta;
+    meta.emplace_back(false, a->m_vectorIndex);
+
+    queryFormula.emplace_back(std::move(meta));
+  }
+
+  return std::tuple(imageId, queryFormula);
+}
+
+
+std::vector<UserImgQuery> ImageRanker::GetSimulatedQueries(QueryOriginId dataSource, const SimulatedUser& simUser) const
+{
+  // Determine what id would that be if not simulated user
+  QueryOriginId dataSourceNotSimulated{ static_cast<QueryOriginId>(static_cast<int>(dataSource) - SIMULATED_QUERIES_ENUM_OFSET) };
+
+  // Fetch real user queries to immitate them
+  std::vector<UserImgQuery> realUsersQueries{ GetCachedQueries(dataSourceNotSimulated) };
+
+  // Prepare result structure
+  std::vector<UserImgQuery> resultSimulatedQueries;
+  // Reserve space properly
+  resultSimulatedQueries.reserve(realUsersQueries.size());
+
+  for (auto&& [imageId, formula] : realUsersQueries)
+  {
+    auto simulatedQuery{ GetSimulatedQueryForImage(imageId, simUser) };
+
+    resultSimulatedQueries.push_back(std::move(simulatedQuery));
+  }
+
+
+  return resultSimulatedQueries;
 }
 
 
@@ -1576,7 +1709,7 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
 
 
 void ImageRanker::SubmitInteractiveSearchSubmit(
-  InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, AggregationId transformId,
+  InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, NetDataTransformation transformId,
   std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
   std::string sessionId, size_t searchSessionIndex, int endStatus, size_t sessionDuration,
   std::vector<InteractiveSearchAction> actions,
@@ -1799,8 +1932,8 @@ std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatist
 
 std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImagesWrapper(
   const std::string& queryEncodedPlaintext, size_t numResults,
-  AggregationId aggId, RankingModelId modelId,
-  const ModelSettings& modelSettings, const AggregationSettings& aggSettings,
+  NetDataTransformation aggId, RankingModelId modelId,
+  const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
   size_t imageId
 ) const
 {
@@ -1810,7 +1943,7 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImag
   // Get desired aggregation
   auto pAggFn = GetAggregationById(aggId);
   // Setup model correctly
-  pAggFn->SetAggregationSettings(aggSettings);
+  pAggFn->SetTransformationSettings(aggSettings);
   
   // Get disired model
   auto pRankingModel = GetRankingModelById(modelId);
@@ -1837,8 +1970,8 @@ std::pair<std::vector<ImageReference>, QueryResult> ImageRanker::GetRelevantImag
 
 std::tuple<std::vector<ImageReference>, std::vector<std::tuple<size_t, std::string, float>>, QueryResult> ImageRanker::GetRelevantImagesWithSuggestedWrapper(
   const std::string& queryEncodedPlaintext, size_t numResults,
-  AggregationId aggId, RankingModelId modelId,
-  const ModelSettings& modelSettings, const AggregationSettings& aggSettings,
+  NetDataTransformation aggId, RankingModelId modelId,
+  const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
   size_t imageId
 ) const
 {
@@ -1848,7 +1981,7 @@ std::tuple<std::vector<ImageReference>, std::vector<std::tuple<size_t, std::stri
   // Get desired aggregation
   auto pAggFn = GetAggregationById(aggId);
   // Setup model correctly
-  pAggFn->SetAggregationSettings(aggSettings);
+  pAggFn->SetTransformationSettings(aggSettings);
 
   // Get disired model
   auto pRankingModel = GetRankingModelById(modelId);

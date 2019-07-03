@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "AggregationFunctionBase.h"
+#include "TransformationFunctionBase.h"
 
 
 
@@ -11,8 +11,8 @@
  * WARNING:
  *    Calling CalculateTransformedVectors() will load values from file.
  */
-class AggregationSoftmax :
-  public AggregationFunctionBase
+class TransformationSoftmax :
+  public TransformationFunctionBase
 {
 public:
   struct Settings
@@ -22,12 +22,12 @@ public:
 
   // Methods
 public:
-  AggregationSoftmax() :
-    AggregationFunctionBase(AggregationId::cSoftmax)
+  TransformationSoftmax() :
+    TransformationFunctionBase(NetDataTransformation::cSoftmax)
   {
   }
 
-  virtual void SetAggregationSettings(AggregationSettings settingsString) override
+  virtual void SetTransformationSettings(NetDataTransformSettings settingsString) override
   {
 
   }
