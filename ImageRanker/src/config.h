@@ -82,8 +82,8 @@
  * 0: localhost testing
  * 1: localhost data1
  * 2: localhost data2
- * 3: linode data1
- * 4: linode data2
+ * 3: Herkules --
+ * 4: Herkules "image-ranker-collector-data2"
  */
-#define PRIMARY_DB_ID 4
+#define PRIMARY_DB_ID 0
 #include "credentials.h"
