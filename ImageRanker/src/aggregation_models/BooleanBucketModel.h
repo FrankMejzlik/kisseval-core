@@ -18,6 +18,9 @@ public:
     unsigned int m_keywordFrequencyHandling;
     float m_trueTreshold;
     eInBucketSorting m_inBucketSorting;
+
+    eTempQueryOpOutter m_tempQueryOutterOperation;
+    eTempQueryOpInner m_tempQueryInnerOperation;
   };
 
   std::pair<std::vector<ImageReference>, QueryResult> RankImages()
@@ -30,7 +33,13 @@ public:
   Settings GetDefaultSettings() const
   {
     // Return default settings instance
-    return Settings{ 0U, 0.01f , eInBucketSorting::eNone };
+    return Settings{ 
+      0U, 
+      0.01f, 
+      eInBucketSorting::eNone,
+      eTempQueryOpOutter::cProduct, // Temporal query OUTTER operation
+      eTempQueryOpInner::cMax // Temporal query INNER operation 
+    };
   }
 
   virtual void SetModelSettings(AggModelSettings settingsString) override
@@ -51,6 +60,17 @@ public:
     if (settingsString.size() >= 3 && settingsString[2].size() >= 0)
     {
       _settings.m_inBucketSorting = static_cast<eInBucketSorting>(strToInt(settingsString[2]));
+    }
+
+    // If setting 3 set
+    if (settingsString.size() >= 4 && settingsString[3].size() >= 0)
+    {
+      _settings.m_tempQueryOutterOperation = static_cast<eTempQueryOpOutter>(strToInt(settingsString[3]));
+    }
+    // If setting 4 set
+    if (settingsString.size() >= 5 && settingsString[4].size() >= 0)
+    {
+      _settings.m_tempQueryInnerOperation = static_cast<eTempQueryOpInner>(strToInt(settingsString[4]));
     }
 
   }

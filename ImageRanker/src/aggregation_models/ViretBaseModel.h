@@ -28,6 +28,9 @@ public:
 
     //! What operations are executed when creating rank for given image
     eQueryOperations m_queryOperation;
+
+    eTempQueryOpOutter m_tempQueryOutterOperation;
+    eTempQueryOpInner m_tempQueryInnerOperation;
   };
 
 public:
@@ -49,6 +52,17 @@ public:
     if (settingsString.size() >= 3 && settingsString[2].size() >= 0)
     {
       _settings.m_queryOperation = static_cast<eQueryOperations>(strToInt(settingsString[2]));
+    }
+
+    // If setting 3 set
+    if (settingsString.size() >= 4 && settingsString[3].size() >= 0)
+    {
+      _settings.m_tempQueryOutterOperation = static_cast<eTempQueryOpOutter>(strToInt(settingsString[3]));
+    }
+    // If setting 4 set
+    if (settingsString.size() >= 5 && settingsString[4].size() >= 0)
+    {
+      _settings.m_tempQueryInnerOperation = static_cast<eTempQueryOpInner>(strToInt(settingsString[4]));
     }
   }
 
@@ -409,13 +423,21 @@ private:
   Settings GetDefaultSettings() const
   {
     // Return default settings instance
-    return Settings{ 0U, 0.01f , eQueryOperations::cMultSum };
+    return Settings{ 
+      0U, // Keyword frequency handling
+      0.01f, // Ignore threshold
+      eQueryOperations::cMultSum, // Normal query operations
+      eTempQueryOpOutter::cProduct, // Temporal query OUTTER operation
+      eTempQueryOpInner::cMax // Temporal query INNER operation 
+    }; 
   }
 
 private:
   Settings _settings;
 
 public:
+
+
   static float m_trueTresholdFrom;
   static float m_trueTresholdTo;
   static float m_trueTresholdStep;

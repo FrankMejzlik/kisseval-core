@@ -7,6 +7,20 @@
 
 using size_t = std::size_t;
 
+
+enum class eTempQueryOpOutter
+{
+  cSum,
+  cProduct
+};
+
+enum class eTempQueryOpInner
+{
+  cSum,
+  cProduct,
+  cMax
+};
+
 /*
  * User defined literals
  */
@@ -57,16 +71,41 @@ enum class QueryOriginId
 
 
 /*!
-* FORMAT:
-*  1: cBooleanBucket:
-*    0 => trueTreshold
-*    1 => inBucketSorting
-*  2: cBooleanExtended:
-*  3: cViretBase:
-*    0 => ignoreTreshold
-*    1 => rankCalcMethod
+*  FORMAT:
+*  ========================================================
+* (x) cBooleanBucket
+* --- 
+* 
+*    0 => keyword frequency handling
+*    1 => trueTreshold
+*    2 => inBucketSorting
+*    3 => outter temporal query operation (\ref eTempQueryOpOutter)
+*       0: sum
+*       1: product
+*    4 => inner temporal query operation  (\ref eTempQueryOpInner)
+*       0: sum
+*       1: product
+*       2: max
+* 
+*  ========================================================
+*  (x) cBooleanExtended:
+*  ---
+* 
+*  ========================================================
+*  (x) cViretBase
+*  ----
+*    0 => keyword frequency handling
+*    1 => ignoreTreshold
+*    2 => rankCalcMethod
 *      0: Multiply & (Add |)
 *      1: Add only
+*    3 => outter temporal query operation (\ref eTempQueryOpOutter)
+*       0: sum
+*       1: product
+*    4 => inner temporal query operation (\ref eTempQueryOpInner)
+*       0: sum
+*       1: product
+*       2: max
 */
 using AggModelSettings = std::vector<std::string>;
 
