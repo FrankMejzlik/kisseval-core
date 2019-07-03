@@ -8,12 +8,12 @@
 int main()
 {
   ImageRanker ranker{
-    R"(C:\Users\frank\source\repos\ir\data\dataset2\images\)",
-    R"(C:\Users\frank\source\repos\ir\data\dataset2\Studenti_NasNetLarge.pre-softmax)",
-    R"(C:\Users\frank\source\repos\ir\data\dataset2\keyword_classes.txt)",
-    R"(C:\Users\frank\source\repos\ir\data\dataset2\Studenti_NasNetLarge.softmax)",
-    R"(C:\Users\frank\source\repos\ir\data\dataset2\Studenti_NasNetLarge.deep-features)",
-    R"(C:\Users\frank\source\repos\ir\data\dataset2\files.txt)",
+    R"(c:\Users\devwe\source\repos\ImageRanker\data\dataset2\images\)",
+    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.pre-softmax)",
+    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\keyword_classes.txt)",
+    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.softmax)",
+    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.deep-features)",
+    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\files.txt)",
     1ULL,
     ImageRanker::Mode::cFull
   };

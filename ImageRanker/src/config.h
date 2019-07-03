@@ -79,8 +79,8 @@
  * Set what databases will be used as primary/secondary
  *
  * OPTIONS:
- * 0: localhost testing
- * 1: localhost data1
+ * 0: localhost "ir_base_test"
+ * 1: localhost "image-ranker-collector-data2"
  * 2: localhost data2
  * 3: Herkules --
  * 4: Herkules "image-ranker-collector-data2"

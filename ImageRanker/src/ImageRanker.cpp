@@ -156,7 +156,7 @@ bool ImageRanker::InitializeFullMode()
 
   //GetStatisticsUserKeywordAccuracy();
 
-  PrintIntActionsCsv();
+  //PrintIntActionsCsv();
 
   // Initialize gridtests
   InitializeGridTests();
