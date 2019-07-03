@@ -19,7 +19,7 @@ struct Image
     float mean, float variance
   ) :
     m_imageId(id),
-    m_numSuccessorFrames(SIZE_T_ERROR_VALUE),
+    m_numSuccessorFrames(0_z),
     m_filename(std::move(filename)),
     m_rawNetRanking(std::move(rawNetRanking)),
     m_rawNetRankingSorted(),

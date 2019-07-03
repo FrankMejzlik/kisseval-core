@@ -164,7 +164,7 @@ public:
     const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
     NetDataTransformation aggId, RankingModelId modelId,
     const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
-    size_t imageId
+    size_t imageId = SIZE_T_ERROR_VALUE
   ) const;
 
   std::pair<uint8_t, uint8_t> GetGridTestProgress() const;

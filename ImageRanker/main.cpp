@@ -20,13 +20,24 @@ int main()
 
   ranker.Initialize();
 
-  auto result13{
-  ranker.RunModelTestWrapper(
-    NetDataTransformation::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)10000,
-    std::vector<std::string>({ "1"s }), std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s })
-  )
-  };
+  auto result1{
+  ranker.GetRelevantImagesWithSuggestedWrapper(
+    std::vector<std::string>({"3438257"}), 100,
+    NetDataTransformation::cXToTheP, RankingModelId::cViretBase,
+    std::vector<std::string>({ "0"s, "0.0"s, "2"s, "1"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
+    5_z
+  )};
 
+
+  auto result2{
+  ranker.GetRelevantImagesWithSuggestedWrapper(
+    std::vector<std::string>({"3438257", "2753044"}), 100,
+    NetDataTransformation::cXToTheP, RankingModelId::cViretBase,
+    std::vector<std::string>({ "0"s, "0.0"s, "2"s, "1"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
+    5_z
+  ) };
+
+  /*
   for (auto&& i : result13)
   {
     std::cout << i.first << " => " << i.second << std::endl; 
@@ -61,8 +72,8 @@ int main()
   }
 
   std::cout << "========================" << std::endl;
-
-
+  */
+  
 /*
   auto result11{
   ranker.RunModelTestWrapper(
