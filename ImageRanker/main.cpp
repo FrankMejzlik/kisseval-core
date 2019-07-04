@@ -20,7 +20,7 @@ int main()
 
   ranker.Initialize();
 
-  auto result1{
+  /*auto result1{
   ranker.GetRelevantImagesWithSuggestedWrapper(
     std::vector<std::string>({"3438257"}), 100,
     NetDataTransformation::cXToTheP, RankingModelId::cViretBase,
@@ -35,34 +35,15 @@ int main()
     NetDataTransformation::cXToTheP, RankingModelId::cViretBase,
     std::vector<std::string>({ "0"s, "0.0"s, "2"s, "1"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
     5_z
-  ) };
+  ) };*/
 
-  /*
-  for (auto&& i : result13)
-  {
-    std::cout << i.first << " => " << i.second << std::endl; 
-  }
+  
 
-  std::cout << "========================" << std::endl;
-
-  auto result14{
-  ranker.RunModelTestWrapper(
-    NetDataTransformation::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)10000,
-    std::vector<std::string>({ "4"s }), std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s })
-  )
-  };
-
-  for (auto&& i : result14)
-  {
-    std::cout << i.first << " => " << i.second << std::endl;
-  }
-
-  std::cout << "========================" << std::endl;
 
   auto result15{
   ranker.RunModelTestWrapper(
-    NetDataTransformation::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)10000,
-    std::vector<std::string>({ "7"s }), std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s })
+    NetDataTransformation::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)20000,
+    std::vector<std::string>({ "4"s }), std::vector<std::string>({ "0"s, "0.0"s, "2"s, "1"s, "2"s }), std::vector<std::string>({ "1"s, "0"s })
   )
   };
 
@@ -72,7 +53,7 @@ int main()
   }
 
   std::cout << "========================" << std::endl;
-  */
+  
   
 /*
   auto result11{

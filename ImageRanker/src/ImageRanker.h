@@ -237,11 +237,12 @@ private:
 
   std::vector<UserImgQueryRaw>& GetCachedQueriesRaw(QueryOriginId dataSource) const;
   
-  std::vector<UserImgQuery>& GetCachedQueries(QueryOriginId dataSource) const;
+  std::vector< std::vector<UserImgQuery>>& GetCachedQueries(QueryOriginId dataSource) const;
 
 
-  std::vector<UserImgQuery> GetSimulatedQueries(QueryOriginId dataSource, const SimulatedUser& pSimUser) const;
-  std::vector<UserImgQuery> GetSimulatedQueries(size_t count, const SimulatedUser& pSimUser) const;
+  std::vector< std::vector<UserImgQuery>> GetSimulatedQueries(QueryOriginId dataSource, const SimulatedUser& pSimUser) const;
+  std::vector< std::vector<UserImgQuery>> GetSimulatedQueries(size_t count, const SimulatedUser& pSimUser) const;
+  std::vector< std::vector<UserImgQuery>> GetExtendedRealQueries(QueryOriginId dataSource, const SimulatedUser& simUser) const;
 
   UserImgQuery GetSimulatedQueryForImage(size_t imageId, const SimulatedUser& simUser) const;
 

@@ -26,7 +26,7 @@ public:
   virtual ChartData RunModelTest(
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
-    const std::vector<UserImgQuery>& testQueries,
+    const std::vector<std::vector<UserImgQuery>>& testQueries,
     const std::map<size_t, std::unique_ptr<Image>>& _imagesCont
   ) const = 0;
 };

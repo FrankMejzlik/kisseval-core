@@ -256,7 +256,7 @@ public:
   virtual ChartData RunModelTest(
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
-    const std::vector<UserImgQuery>& testQueries,
+    const std::vector<std::vector<UserImgQuery>>& testQueries,
     const std::map<size_t, std::unique_ptr<Image>>& _imagesCont
   ) const override
   {
@@ -276,10 +276,15 @@ public:
     }
 
     // Iterate over test queries
-    for (auto&&[imgId, queryFormula] : testQueries)
+    for (auto&& singleQuery : testQueries)
     {
+      auto imgId = std::get<0>(singleQuery[0]);
+
       std::vector<CnfFormula> formulae;
-      formulae.push_back(queryFormula);
+      for (auto&&[imgId, queryFormula] : singleQuery)
+      {
+        formulae.push_back(queryFormula);
+      }
 
       auto resultImages = GetRankedImages(formulae, pAggregation, pIndexKwFrequency, _imagesCont, 0ULL, imgId);
 

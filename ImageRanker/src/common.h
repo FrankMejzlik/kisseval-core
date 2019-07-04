@@ -65,7 +65,14 @@ enum class QueryOriginId
   cDeveloperSimulated = 10000,
   cPublicSimulated = 10001,
   cManagedSimulated = 10002,
-  cAllSimulated = 10999
+  cAllSimulated = 10999,
+
+  // Extended variants
+  cDeveloperExtended = 20000,
+  cPublicExtended = 20001,
+  cManagedExtended = 20002,
+  cAllExtended = 20999
+
 };
 
 

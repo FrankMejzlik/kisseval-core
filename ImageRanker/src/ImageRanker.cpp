@@ -178,8 +178,13 @@ void ImageRanker::PrintIntActionsCsv() const
 
   auto actionIt{result2.second.begin()};
 
+
+  std::vector<std::vector<size_t>> sessProgresses;
+
   for (auto&& actionSess : result1.second)
   {
+    std::vector<size_t> oneSess;
+
     size_t sessId{ (size_t)strToInt(actionSess[0]) };
     size_t sessDuration{ (size_t)strToInt(actionSess[1]) };
     size_t endStatus{ (size_t)strToInt(actionSess[2]) };
@@ -193,27 +198,36 @@ void ImageRanker::PrintIntActionsCsv() const
     std::string initialRank{ "" };
     std::string finalRank{ "" };
 
-    for (; strToInt((*actionIt)[0]) == sessId; ++actionIt)
+    for (; (result2.second.end() != actionIt && strToInt((*actionIt)[0]) == sessId); ++actionIt)
     {
+
+
       auto&& actionRow = (*actionIt);
 
       if (actionRow[2] == "2")
       {
         isInitial = false;
+
+
+        // Push rank before start of interactive refining
+        oneSess.push_back(strToInt(initialRank));
       }
 
 
       if (isInitial)
       {
         ++actionInitialCount;
-        initialRank = actionRow[2];
-        finalRank = actionRow[2];
+        initialRank = actionRow[3];
+        finalRank = actionRow[3];
       }
       else
       {
         ++actionFinalCount;
         ++actionInitialCount;
-        finalRank = actionRow[2];
+        finalRank = actionRow[3];
+
+        // Push rank 
+        oneSess.push_back(strToInt(finalRank));
       }
 
       if (actionRow[2] == "1" || actionRow[2] == "2")
@@ -246,6 +260,8 @@ void ImageRanker::PrintIntActionsCsv() const
       }
     }
 
+
+    
 
     if (initialQuery.empty() || fullQuery.empty())
     {
@@ -287,9 +303,61 @@ void ImageRanker::PrintIntActionsCsv() const
         std::cout << ",";
       }
     }
+    if (!oneSess.empty())
+    {
+      sessProgresses.emplace_back(std::move(oneSess));
+    }
+    
+
+
     std::cout << finalRank << ",";
     std::cout << std::to_string(actionFinalCount) << std::endl;
   }
+
+
+  std::set<size_t> m;
+
+  for (auto&& vec : sessProgresses)
+  {
+    auto s{vec.size()};
+    m.insert(s);
+  }
+
+  std::vector<std::vector<size_t>> ddata;
+
+  for (auto&& size : m)
+  {
+    std::vector<size_t> data;
+    data.resize(size, 0_z);
+
+    size_t i{ 0_z };
+
+    
+    for (auto&& vec : sessProgresses)
+    {
+      if (vec.size() == size)
+      {
+        size_t ii{ 0_z };
+        for (auto&& d : vec)
+        {
+          data[ii] += d;
+          ++ii;
+        }
+
+        ++i;
+      }
+      
+    }
+
+    // Divide
+    for (auto&& d : data)
+    {
+      d = d / i;
+    }
+
+    ddata.push_back(data);
+  }
+
 }
 
 SimulatedUser ImageRanker::GetSimUserSettings(const SimulatedUserSettings& stringSettings) const
@@ -1410,7 +1478,7 @@ ChartData ImageRanker::RunModelTestWrapper(
   const SimulatedUserSettings& simulatedUserSettings, const AggModelSettings& aggModelSettings, const NetDataTransformSettings& netDataTransformSettings
 ) const
 {
-  std::vector<UserImgQuery> testQueries;
+  std::vector<std::vector<UserImgQuery>> testQueries;
 
   // If data source should be simulated
   if (static_cast<int>(dataSource) >= SIMULATED_QUERIES_ENUM_OFSET)
@@ -1418,8 +1486,21 @@ ChartData ImageRanker::RunModelTestWrapper(
     // Parse simulated user settings
     auto simUser{ GetSimUserSettings(simulatedUserSettings) };
 
-    // Get simulated queries
-    testQueries = GetSimulatedQueries(dataSource, simUser);
+    if (static_cast<int>(dataSource) >= USER_PLUS_SIMULATED_QUERIES_ENUM_OFSET)
+    {
+      // xoxo
+      //
+      // Generate temporal queries for real user queries
+      //
+
+      // Get real user queries with simulated queries added
+      testQueries = GetExtendedRealQueries(dataSource, simUser);
+    }
+    else 
+    {
+      // Get simulated queries
+      testQueries = GetSimulatedQueries(dataSource, simUser);
+    }
   }
   else
   {
@@ -1630,37 +1711,96 @@ UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const Simula
 }
 
 
-std::vector<UserImgQuery> ImageRanker::GetSimulatedQueries(QueryOriginId dataSource, const SimulatedUser& simUser) const
+std::vector< std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(QueryOriginId dataSource, const SimulatedUser& simUser) const
 {
   // Determine what id would that be if not simulated user
   QueryOriginId dataSourceNotSimulated{ static_cast<QueryOriginId>(static_cast<int>(dataSource) - SIMULATED_QUERIES_ENUM_OFSET) };
 
   // Fetch real user queries to immitate them
-  std::vector<UserImgQuery> realUsersQueries{ GetCachedQueries(dataSourceNotSimulated) };
+  std::vector< std::vector<UserImgQuery>> realUsersQueries{ GetCachedQueries(dataSourceNotSimulated) };
 
   // Prepare result structure
-  std::vector<UserImgQuery> resultSimulatedQueries;
+  std::vector< std::vector<UserImgQuery>> resultSimulatedQueries;
   // Reserve space properly
   resultSimulatedQueries.reserve(realUsersQueries.size());
 
-  for (auto&& [imageId, formula] : realUsersQueries)
+  for (auto&& queries : realUsersQueries)
   {
-    auto simulatedQuery{ GetSimulatedQueryForImage(imageId, simUser) };
+    std::vector<UserImgQuery> singleQuery;
 
-    resultSimulatedQueries.push_back(std::move(simulatedQuery));
+    for (auto&&[imageId, formula] : queries)
+    {
+      auto simulatedQuery{ GetSimulatedQueryForImage(imageId, simUser) };
+
+      singleQuery.push_back(std::move(simulatedQuery));
+    }
+    resultSimulatedQueries.push_back(std::move(singleQuery));
   }
 
 
   return resultSimulatedQueries;
 }
 
-
-std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSource) const
+std::vector< std::vector<UserImgQuery>> ImageRanker::GetExtendedRealQueries(QueryOriginId dataSource, const SimulatedUser& simUser) const
 {
-  static std::vector<UserImgQuery> cachedAllData;
-  static std::vector<UserImgQuery> cachedData0;
-  static std::vector<UserImgQuery> cachedData1;
-  static std::vector<UserImgQuery> cachedData2;
+  // Determine what id would that be if not simulated user
+  QueryOriginId dataSourceNotSimulated{ static_cast<QueryOriginId>(static_cast<int>(dataSource) - USER_PLUS_SIMULATED_QUERIES_ENUM_OFSET) };
+
+  // Fetch real user queries to immitate them
+  std::vector< std::vector<UserImgQuery>> realUsersQueries{ GetCachedQueries(dataSourceNotSimulated) };
+
+  // Prepare result structure - copy of real user queries
+  std::vector< std::vector<UserImgQuery>> resultSimulatedQueries{ realUsersQueries };
+
+  std::random_device rd;     // only used once to initialise (seed) engine
+  std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
+  
+  size_t iterator{ 0_z };
+  for (auto&& queries : realUsersQueries)
+  {
+    for (auto&&[imageId, formula] : queries)
+    {
+      auto imgIt{ _images.find(imageId) };
+      if (imgIt == _images.end())
+      {
+        LOG_ERROR("aaa");
+      }
+      size_t numSuccs{ imgIt->second->m_numSuccessorFrames };
+      if (numSuccs <= 0)
+      {
+        break;
+      }
+      // Get how much we will offset from this image
+      std::uniform_int_distribution<size_t> uni(1, std::min((size_t)MAX_TEMP_QUERY_OFFSET, numSuccs));
+      size_t offset{ uni(rng) };
+
+      // Offset iterator
+      for (size_t i{ 0_z }; i < offset; ++i)
+      {
+        ++imgIt;
+      }
+
+      auto simulatedQuery{ GetSimulatedQueryForImage(imgIt->first, simUser) };
+
+      resultSimulatedQueries[iterator].push_back(std::move(simulatedQuery));
+
+      // Only the first one
+      break;
+    }
+    
+    ++iterator;
+  }
+
+  return resultSimulatedQueries;
+}
+
+
+std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(QueryOriginId dataSource) const
+{
+  static std::vector < std::vector<UserImgQuery>> cachedAllData;
+  static std::vector < std::vector<UserImgQuery>> cachedData0;
+  static std::vector < std::vector<UserImgQuery>> cachedData1;
+  static std::vector < std::vector<UserImgQuery>> cachedData2;
 
   static std::chrono::steady_clock::time_point cachedAllDataTs = std::chrono::steady_clock::now();
   static std::chrono::steady_clock::time_point cachedData0Ts = std::chrono::steady_clock::now();
@@ -1714,7 +1854,10 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
         size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
         CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1])) };
         
-        cachedData0.emplace_back(std::move(imageId), std::move(queryFormula));
+        std::vector<UserImgQuery> tmp;
+        tmp.emplace_back(std::move(imageId), std::move(queryFormula));
+
+        cachedData0.emplace_back(std::move(tmp));
       }
 
       cachedData0Ts = std::chrono::steady_clock::now();
@@ -1749,7 +1892,10 @@ std::vector<UserImgQuery>& ImageRanker::GetCachedQueries(QueryOriginId dataSourc
         size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
         CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1])) };
 
-        cachedData1.emplace_back(std::move(imageId), std::move(queryFormula));
+        std::vector<UserImgQuery> tmp;
+        tmp.emplace_back(std::move(imageId), std::move(queryFormula));
+
+        cachedData1.emplace_back(std::move(tmp));
       }
 
       cachedData1Ts = std::chrono::steady_clock::now();
