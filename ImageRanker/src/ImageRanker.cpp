@@ -1852,9 +1852,19 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(QueryOrig
       {
         
         size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
-        CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1])) };
+
+        CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS) };
+
+#if RUN_TESTS_ONLY_ON_NON_EMPTY_POSTREMOVE_HYPERNYM
+
+        CnfFormula queryFormulaTest{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), true) };
+        if (!queryFormulaTest.empty())
+
+#else 
 
         if (!queryFormula.empty())
+
+#endif
         {
           std::vector<UserImgQuery> tmp;
           tmp.emplace_back(std::move(imageId), std::move(queryFormula));
@@ -1890,12 +1900,18 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(QueryOrig
       // Parse DB results
       for (auto&& idQueryRow : dbData.second)
       {
-        
-
         size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
-        CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1])) };
 
+        CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS) };
+
+#if RUN_TESTS_ONLY_ON_NON_EMPTY_POSTREMOVE_HYPERNYM
+
+        CnfFormula queryFormulaTest{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), true) };
+        if (!queryFormulaTest.empty())
+
+#else 
         if (!queryFormula.empty())
+#endif
         {
           std::vector<UserImgQuery> tmp;
           tmp.emplace_back(std::move(imageId), std::move(queryFormula));

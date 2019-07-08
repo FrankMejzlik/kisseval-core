@@ -321,7 +321,7 @@ void KeywordsContainer::GetVectorKeywordsIndicesSetShallow(
 CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool skipConstructedHypernyms) const
 {
   // \todo implement properly
-  skipConstructedHypernyms = IGNORE_CONSTRUCTED_HYPERNYMS;
+  //skipConstructedHypernyms = IGNORE_CONSTRUCTED_HYPERNYMS;
 
   //EG: &-8252602+-8256735+-3206282+-4296562+
 
