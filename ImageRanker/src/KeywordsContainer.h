@@ -101,7 +101,10 @@ public:
 
   std::string GetKeywordDescriptionByWordnetId(size_t wordnetId) const;
   
-  CnfFormula GetCanonicalQuery(const std::string& query) const;
+  CnfFormula GetCanonicalQuery(
+    const std::string& query,
+    bool skipConstructedHypernyms = false
+  ) const;
 
 
 
@@ -133,7 +136,10 @@ public:
 
   std::vector<size_t> GetVectorKeywordsIndices(size_t wordnetId) const;
   void GetVectorKeywordsIndicesSet(std::unordered_set<size_t>& destSetRef, size_t wordnetId) const;
-  void GetVectorKeywordsIndicesSetShallow(std::unordered_set<size_t>& destIndicesSetRef, size_t wordnetId) const;
+  void GetVectorKeywordsIndicesSetShallow(
+    std::unordered_set<size_t>& destIndicesSetRef, size_t wordnetId,
+    bool skipConstructedHypernyms = false
+  ) const;
 
 
   std::string StringifyCnfFormula(const CnfFormula& formula)

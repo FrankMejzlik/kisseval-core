@@ -289,7 +289,10 @@ void KeywordsContainer::GetVectorKeywordsIndicesSet(std::unordered_set<size_t>& 
   }
 }
 
-void KeywordsContainer::GetVectorKeywordsIndicesSetShallow(std::unordered_set<size_t>& destIndicesSetRef, size_t wordnetId) const
+void KeywordsContainer::GetVectorKeywordsIndicesSetShallow(
+  std::unordered_set<size_t>& destIndicesSetRef, size_t wordnetId,
+  bool skipConstructedHypernyms
+) const
 {
   // Get this Keyword
   Keyword* pRootKw = GetKeywordPtrByWordnetId(wordnetId);
@@ -302,17 +305,24 @@ void KeywordsContainer::GetVectorKeywordsIndicesSetShallow(std::unordered_set<si
   }
   else
   {
-    // Recursively get hyponyms into provided set
-    for (auto&& hypo : pRootKw->m_hyponyms)
+    // If we want to include subsets of constructed hypernyms
+    if (!skipConstructedHypernyms)
     {
-      GetVectorKeywordsIndicesSetShallow(destIndicesSetRef, hypo);
+      // Recursively get hyponyms into provided set
+      for (auto&& hypo : pRootKw->m_hyponyms)
+      {
+        GetVectorKeywordsIndicesSetShallow(destIndicesSetRef, hypo);
+      }
     }
   }
 }
 
 
-CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query) const
+CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool skipConstructedHypernyms) const
 {
+  // \todo implement properly
+  skipConstructedHypernyms = IGNORE_CONSTRUCTED_HYPERNYMS;
+
   //EG: &-8252602+-8256735+-3206282+-4296562+
 
   std::stringstream idSs;
@@ -345,7 +355,13 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query) const
       idSs.clear();
 
       std::unordered_set<size_t> vecIds;
-      GetVectorKeywordsIndicesSetShallow(vecIds, wordnetId);
+      GetVectorKeywordsIndicesSetShallow(vecIds, wordnetId, skipConstructedHypernyms);
+
+      // If empty set returned
+      if (vecIds.empty())
+      {
+        break;
+      }
 
       // If this Clause should be negated
       if (nextIdNegate) 

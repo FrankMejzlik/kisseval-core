@@ -2,6 +2,13 @@
 
 #include <stdint.h>
 
+
+//! If constructed hypernyms should be ignored
+#define IGNORE_CONSTRUCTED_HYPERNYMS false
+
+//
+// Simulated user & temp queries settings
+//
 #define SIMULATED_QUERIES_ENUM_OFSET 10000
 #define USER_PLUS_SIMULATED_QUERIES_ENUM_OFSET 20000
 #define MAX_TEMP_QUERY_OFFSET 5
