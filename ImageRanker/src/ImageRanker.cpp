@@ -1853,11 +1853,14 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(QueryOrig
         
         size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
         CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1])) };
-        
-        std::vector<UserImgQuery> tmp;
-        tmp.emplace_back(std::move(imageId), std::move(queryFormula));
 
-        cachedData0.emplace_back(std::move(tmp));
+        if (!queryFormula.empty())
+        {
+          std::vector<UserImgQuery> tmp;
+          tmp.emplace_back(std::move(imageId), std::move(queryFormula));
+
+          cachedData0.emplace_back(std::move(tmp));
+        }
       }
 
       cachedData0Ts = std::chrono::steady_clock::now();
@@ -1892,10 +1895,13 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(QueryOrig
         size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
         CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1])) };
 
-        std::vector<UserImgQuery> tmp;
-        tmp.emplace_back(std::move(imageId), std::move(queryFormula));
+        if (!queryFormula.empty())
+        {
+          std::vector<UserImgQuery> tmp;
+          tmp.emplace_back(std::move(imageId), std::move(queryFormula));
 
-        cachedData1.emplace_back(std::move(tmp));
+          cachedData1.emplace_back(std::move(tmp));
+        }
       }
 
       cachedData1Ts = std::chrono::steady_clock::now();
