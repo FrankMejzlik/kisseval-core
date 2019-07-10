@@ -45,21 +45,9 @@ ImageRanker::ImageRanker(
   _deepFeaturesFilepath(deepFeaturesFilepath),
   _imageToIdMap(imageToIdMapFilepath),
 
-  _keywords(keywordClassesFilepath),
-  _images(ParseRawNetRankingBinFile())
-{
-
-  // Insert all desired transformations
-  _aggregations.emplace(NetDataTransformation::cSoftmax, std::make_unique<TransformationSoftmax>());
-  _aggregations.emplace(NetDataTransformation::cXToTheP, std::make_unique<TransformationLinearXToTheP>());
-
-  // Insert all desired ranking models
-  _models.emplace(RankingModelId::cViretBase, std::make_unique<ViretModel>());
-  _models.emplace(RankingModelId::cBooleanBucket, std::make_unique<BooleanBucketModel>());
-
-
+  _keywords(keywordClassesFilepath)
   
-
+{
   // Connect to database
   auto result{ _primaryDb.EstablishConnection() };
   if (result != 0ULL)
@@ -74,6 +62,10 @@ bool ImageRanker::Initialize()
   if (_mode == Mode::cCollector)
   {
     return InitializeCollectorMode();
+  }
+  if (_mode == Mode::cSearchTool)
+  {
+    return InitializeSearchToolMode();
   }
   else
   {
@@ -116,8 +108,77 @@ bool ImageRanker::InitializeCollectorMode()
   return true;
 }
 
+
+bool ImageRanker::InitializeSearchToolMode()
+{
+  // Parse binary images data 
+  _images = std::move(ParseRawNetRankingBinFile());
+
+  // Create best hypernyms
+  GenerateBestHypernymsForImages();
+
+  // Parse softmax file if available
+  ParseSoftmaxBinFile();
+
+
+  // Load and process all aggregations
+  for (auto&& agg : _aggregations)
+  {
+    agg.second->CalculateTransformedVectors(_images);
+  }
+
+
+  // Apply hypernym recalculation on all transformed vectors
+  for (auto&&[imageId, pImg] : _images)
+  {
+    // \todo implement propperly
+    // Copy untouched vector for simulating user
+    pImg->m_linearVector = pImg->m_aggVectors.at(200);
+
+    for (auto&&[transformId, binVec] : pImg->m_aggVectors)
+    {
+      // If is summ based aggregation precalculation
+      if (((transformId / 10) % 10) == 0)
+      {
+        RecalculateHypernymsInVectorUsingSum(binVec);
+      }
+      else
+      {
+        RecalculateHypernymsInVectorUsingMax(binVec);
+      }
+
+    }
+  }
+
+  // Calculate approx document frequency
+  ComputeApproxDocFrequency(200, TRUE_TRESHOLD_FOR_KW_FREQUENCY);
+
+  //GetStatisticsUserKeywordAccuracy();
+
+  //PrintIntActionsCsv();
+
+  // Initialize gridtests
+  InitializeGridTests();
+
+
+  return true;
+}
+
 bool ImageRanker::InitializeFullMode()
 {
+  // Parse binary images data 
+  _images = std::move(ParseRawNetRankingBinFile());
+
+  {
+    // Insert all desired transformations
+    _aggregations.emplace(NetDataTransformation::cSoftmax, std::make_unique<TransformationSoftmax>());
+    _aggregations.emplace(NetDataTransformation::cXToTheP, std::make_unique<TransformationLinearXToTheP>());
+
+    // Insert all desired ranking models
+    _models.emplace(RankingModelId::cViretBase, std::make_unique<ViretModel>());
+    _models.emplace(RankingModelId::cBooleanBucket, std::make_unique<BooleanBucketModel>());
+  }
+
   // Create best hypernyms
   GenerateBestHypernymsForImages();
 

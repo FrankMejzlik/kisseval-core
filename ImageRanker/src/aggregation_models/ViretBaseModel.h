@@ -449,7 +449,7 @@ public:
         {
         case eTempQueryOpOutter::cProduct:
 
-          imageRanking = imageRanking * (1 + tempQueryRanking);
+          imageRanking = imageRanking * tempQueryRanking;
 
           break;
 

@@ -119,20 +119,25 @@ using AggModelSettings = std::vector<std::string>;
 
 /*!
 * FORMAT:
+*  1: cSoftmax
+*  2: cXToTheP:
+*    0 => Exponent fot x^p postscale transformation
+*    1 => 
+*       0: SUM accumulated precoputed hypernyms
+*       1: MAX accumulated precoputed hypernyms
+*/
+using NetDataTransformSettings = std::vector<std::string>;
+
+
+/*!
+* FORMAT:
 *  0 => Simulated user exponent
 */
 using SimulatedUserSettings = std::vector<std::string>;
 
 
 
-/*!
-* FORMAT:
-*  1: cSoftmax
-*  2: cXToTheP:
-*    0 => m_exponent
-*  3: cSine:
-*/
-using NetDataTransformSettings = std::vector<std::string>;
+
 
 using AggregationVector = std::vector<float>;
 using TestSettings = std::tuple<NetDataTransformation, RankingModelId, QueryOriginId, AggModelSettings, NetDataTransformSettings>;

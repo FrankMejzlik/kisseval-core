@@ -55,7 +55,8 @@ public:
   enum class Mode
   {
     cFull,
-    cCollector
+    cCollector,
+    cSearchTool
   };
 
   
@@ -254,6 +255,13 @@ private:
    * \return True on success
    */
   bool InitializeCollectorMode();
+
+  /*!
+   * Initializes ImageRanker for working as search tool with reduced memory usage
+   *
+   * \return True on success
+   */
+  bool InitializeSearchToolMode();
 
   /*!
    * Initializes ImageRanker for working in IRApp
