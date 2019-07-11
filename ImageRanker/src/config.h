@@ -2,6 +2,17 @@
 
 #include <stdint.h>
 
+//
+// Frame filename format
+//
+#define FILENAME_VIDEO_ID_FROM 1
+#define FILENAME_VIDEO_ID_LEN 5
+
+#define FILENAME_SHOT_ID_FROM 8
+#define FILENAME_SHOT_ID_LEN 5
+
+//! If true, successors from whole videos will be considered (e.g. in temporal queries)
+#define USE_VIDEOS_AS_SHOTS 1
 
 //! If constructed hypernyms should be ignored
 #define IGNORE_CONSTRUCTED_HYPERNYMS false

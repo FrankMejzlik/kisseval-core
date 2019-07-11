@@ -767,6 +767,19 @@ ImageReference ImageRanker::GetRandomImage() const
   return ImageReference{ imageId, GetImageFilenameById(imageId) };
 }
 
+
+std::vector<ImageReference> ImageRanker::GetRandomImageSequence(size_t seqLength) const
+{
+  std::vector<ImageReference> resultImages;
+
+  for (size_t i{ 0_z }; i < seqLength; ++i)
+  {
+    resultImages.emplace_back(GetRandomImage());
+  }
+
+  return resultImages;
+}
+
 KeywordReferences ImageRanker::GetNearKeywords(const std::string& prefix)
 {
   // Force lowercase
@@ -934,9 +947,10 @@ std::pair<std::vector<std::tuple<size_t, std::string, float>>, std::vector<std::
 }
 
 
-std::pair<
+std::tuple<
   std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
-  std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>
+  std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
+  std::vector<std::pair<size_t, std::string>>
 > ImageRanker::GetImageKeywordsForInteractiveSearchWithExampleImages(size_t imageId, size_t numResults)
 {
   std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>  hypernyms;
@@ -1000,7 +1014,20 @@ std::pair<
     ++i;
   }
 
-  return std::pair(std::move(hypernyms), std::move(nonHypernyms));
+  // Get video/shot images
+  std::vector<std::pair<size_t, std::string>> succs;
+
+  size_t numSucc{ img->second->m_numSuccessorFrames };
+  for (size_t i{ 0_z }; i <= numSucc; ++i)
+  {
+    size_t nextId{img->second->m_imageId + (i * _imageIdStride) };
+
+    auto pImg{ GetImageDataById(nextId) };
+
+    succs.emplace_back(nextId, pImg->m_filename);
+  }
+
+  return std::tuple(std::move(hypernyms), std::move(nonHypernyms), std::move(succs));
 }
 
 std::vector<std::string> ImageRanker::GetImageFilenamesFromDirectoryStructure() const
@@ -1089,7 +1116,8 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRankingBinFile(
 
 
   // Initialize video ID counter
-  size_t prevVideoId{SIZE_T_ERROR_VALUE};
+  size_t prevVideoId{ SIZE_T_ERROR_VALUE };
+  size_t prevShotId{ SIZE_T_ERROR_VALUE };
   std::stack<Image*> videoFrames;
 
 
@@ -1184,6 +1212,11 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRankingBinFile(
     // Get ID of current video
     size_t currVideoId{ GetVideoIdFromFrameFilename(pImg->m_filename) };
 
+#if USE_VIDEOS_AS_SHOTS
+
+    // If this frame is from next video
+    if (currVideoId != prevVideoId)
+
     // If this frame is from next video
     if (currVideoId != prevVideoId)
     {
@@ -1193,6 +1226,23 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRankingBinFile(
       // Set new prev video ID
       prevVideoId = currVideoId;
     }
+
+#else
+
+    // Get ID of current shot
+    size_t currShotId{ GetShotIdFromFrameFilename(pImg->m_filename) };
+    // If this frame is from next video
+    if (currShotId != prevShotId || currVideoId != prevVideoId)
+    {
+      // Process and label all frames from this video
+      ProcessVideoShotsStack(videoFrames);
+
+      // Set new prev video ID
+      prevShotId = currShotId;
+      prevVideoId = currVideoId;
+    }
+
+#endif
 
     // Store this frame for future processing
     videoFrames.push(pImg.get());
@@ -1605,7 +1655,16 @@ void ImageRanker::ProcessVideoShotsStack(std::stack<Image*>& videoFrames)
 size_t ImageRanker::GetVideoIdFromFrameFilename(const std::string& filename) const
 {
   // Extract string representing video ID
-  std::string videoIdString{ filename.substr(1, 5) };
+  std::string videoIdString{ filename.substr(FILENAME_VIDEO_ID_FROM, FILENAME_VIDEO_ID_LEN) };
+
+  // Return integral value of this string's representation
+  return strToInt(videoIdString);
+}
+
+size_t ImageRanker::GetShotIdFromFrameFilename(const std::string& filename) const
+{
+  // Extract string representing video ID
+  std::string videoIdString{ filename.substr(FILENAME_SHOT_ID_FROM, FILENAME_SHOT_ID_LEN) };
 
   // Return integral value of this string's representation
   return strToInt(videoIdString);

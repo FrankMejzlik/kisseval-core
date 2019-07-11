@@ -99,9 +99,10 @@ public:
   std::pair<std::vector<std::tuple<size_t, std::string, float>>, std::vector<std::tuple<size_t, std::string, float>>> GetImageKeywordsForInteractiveSearch(size_t imageId, size_t numResults);
 
 
-  std::pair<
+  std::tuple<
     std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>, 
-    std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>
+    std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
+    std::vector<std::pair<size_t, std::string>>
   > GetImageKeywordsForInteractiveSearchWithExampleImages(size_t imageId, size_t numResults);
 
   void SubmitInteractiveSearchSubmit(
@@ -148,6 +149,8 @@ public:
 
 
   ImageReference GetRandomImage() const;
+  std::vector<ImageReference> GetRandomImageSequence(size_t seqLength) const;
+  
 
   KeywordReferences GetNearKeywords(const std::string& prefix);
   std::vector<Keyword*> GetNearKeywordsWithImages(const std::string& prefix);
@@ -350,6 +353,7 @@ private:
 
   void ProcessVideoShotsStack(std::stack<Image*>& videoFrames);
   size_t GetVideoIdFromFrameFilename(const std::string& filename) const;
+  size_t GetShotIdFromFrameFilename(const std::string& filename) const;
 
 #if PUSH_DATA_TO_DB
 
