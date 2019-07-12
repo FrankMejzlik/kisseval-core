@@ -13,7 +13,8 @@ int main()
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\keyword_classes.txt)",
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.softmax)",
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.deep-features)",
-    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\files.txt)",
+    //R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\files.txt)",
+    R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\keyframes\filelist.txt)",
     1ULL,
     ImageRanker::Mode::cSearchTool
   };

@@ -16,6 +16,7 @@ using namespace std::string_literals;
 #include <vector>
 #include <cstdint>
 #include <array>
+#include <filesystem>
 
 #include <chrono>
 #include <unordered_map>
@@ -282,7 +283,8 @@ private:
    */
   std::map<size_t, std::unique_ptr<Image>> ParseRawNetRankingBinFile();
   std::map<size_t, std::unique_ptr<Image>> LowMem_ParseRawNetRankingBinFile();
-  
+
+
 
   /*!
    * Parses Softmax binary file into all \ref Image instances we're now holding
@@ -342,6 +344,7 @@ private:
    * \return 
    */
   std::vector<std::string> GetImageFilenames() const;
+  std::vector<std::string> GetImageFilenamesTrecvid() const;
 
   /*!
    * Gets list of image filenames we're working with from dir structure
@@ -356,8 +359,22 @@ private:
   void PrintIntActionsCsv() const;
 
   void ProcessVideoShotsStack(std::stack<Image*>& videoFrames);
+
+  //! <video ID, shot ID, frame number>
+  std::tuple<size_t, size_t, size_t> ParseVideoFilename(const std::string& filename) const;
   size_t GetVideoIdFromFrameFilename(const std::string& filename) const;
   size_t GetShotIdFromFrameFilename(const std::string& filename) const;
+
+
+
+#if TRECVID_MAPPING
+  
+  size_t ConvertToTrecvidShotId(size_t ourFrameId) const;
+  std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> ParseTrecvidShotReferencesFromDirectory(const std::string& path) const;
+  void ResetTrecvidShotMap();
+
+
+#endif
 
 #if PUSH_DATA_TO_DB
 
@@ -407,6 +424,12 @@ private:
 
   std::unordered_map<NetDataTransformation, std::unique_ptr<TransformationFunctionBase>> _transformations;
   std::unordered_map<RankingModelId, std::unique_ptr<RankingModelBase>> _models;
+
+
+#if TRECVID_MAPPING
+  std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> _trecvidShotReferenceMap;
+#endif
+
 };
 
 

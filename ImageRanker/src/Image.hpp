@@ -17,6 +17,7 @@ struct Image
     std::vector<float>&& rawNetRanking,
     float min, float max,
     float mean, float variance,
+    unsigned int videoId, unsigned int shotId, unsigned int frameNumber,
     bool isLowMem
   ) :
     m_imageId(id),
@@ -27,6 +28,8 @@ struct Image
     m_min(min), m_max(max),
     m_mean(mean), m_variance(variance)
   {
+
+    
 
     // If not in low memory mode
     if (!isLowMem)
@@ -84,6 +87,11 @@ struct Image
   float m_max;
   float m_mean;
   float m_variance;
+
+  unsigned int m_videoId;
+  unsigned int m_shotId;
+  unsigned int m_frameNumber;
+
 
   //! Raw vector as it came out of neural network but SORTED
   std::vector<std::pair<uint32_t, float>> m_rawNetRankingSorted;

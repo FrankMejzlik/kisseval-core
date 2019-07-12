@@ -114,6 +114,14 @@ bool ImageRanker::InitializeSearchToolMode()
   // Parse binary images data with low memory version of parsing
   _images = std::move(LowMem_ParseRawNetRankingBinFile());
 
+
+#if TRECVID_MAPPING
+
+  // Parse TRECVID shot reference
+  _trecvidShotReferenceMap = ParseTrecvidShotReferencesFromDirectory(SHOT_REFERENCE_PATH);
+
+#endif
+
   // In Search tool mode only one transformation and one model should be used because of memory savings
   {
     // Insert all desired transformations
@@ -884,6 +892,43 @@ std::vector<std::string> ImageRanker::GetImageFilenames() const
   return result;
 }
 
+std::vector<std::string> ImageRanker::GetImageFilenamesTrecvid() const
+{
+  // If no map file provided, use directory layout
+  if (_imageToIdMap.empty())
+  {
+    LOG_ERROR("Image filename file not provided.");
+    return std::vector<std::string>();
+  }
+
+  // Open file with list of files in images dir
+  std::ifstream inFile(_imageToIdMap, std::ios::in);
+
+  // If failed to open file
+  if (!inFile)
+  {
+    LOG_ERROR(std::string("Error opening file :") + _imageToIdMap);
+  }
+
+  std::vector<std::string> result;
+
+  std::string line;
+
+  size_t i{ 0_z };
+
+  // While there are lines in file
+  while (std::getline(inFile, line))
+  {
+    //auto [videoId, shotId, frameNumber] { ParseVideoFilename(line) };
+
+    result.emplace_back(line);
+
+    ++i;
+  }
+
+  return result;
+}
+
 
 std::pair<std::vector<std::tuple<size_t, std::string, float>>, std::vector<std::tuple<size_t, std::string, float>>> ImageRanker::GetImageKeywordsForInteractiveSearch(size_t imageId, size_t numResults)
 {
@@ -1179,6 +1224,9 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRankingBinFile(
     // Get image filename 
     std::string filename{ imageFilenames[id / _imageIdStride] };
 
+    // Parse filename
+    auto [videoId, shotId, frameNumber] { ParseVideoFilename(filename) };
+
     // Push final row
     auto newIt = images.emplace(std::pair(
       id, 
@@ -1187,6 +1235,7 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRankingBinFile(
         std::move(filename), std::move(rawRankData),
         min, max, 
         mean, variance,
+        (unsigned int)videoId, (unsigned int)shotId, (unsigned int)frameNumber,
         false
       )
     ));
@@ -1247,7 +1296,7 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRankingBinFile(
 std::map<size_t, std::unique_ptr<Image>> ImageRanker::LowMem_ParseRawNetRankingBinFile()
 {
   // Get image filenames
-  std::vector<std::string> imageFilenames{ GetImageFilenames() };
+  std::vector<std::string> imageFilenames{ GetImageFilenamesTrecvid() };
 
   // Open file for reading as binary from the end side
   std::ifstream ifs(_rawNetRankingFilepath, std::ios::binary | std::ios::ate);
@@ -1373,6 +1422,9 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::LowMem_ParseRawNetRankingB
     // Get image filename 
     std::string filename{ imageFilenames[id / _imageIdStride] };
 
+    // Parse filename
+    auto [videoId, shotId, frameNumber] { ParseVideoFilename(filename) };
+
     // Push final row
     auto newIt = images.emplace(std::pair(
       id,
@@ -1381,6 +1433,7 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::LowMem_ParseRawNetRankingB
         std::move(filename), std::move(rawRankData),
         min, max,
         mean, variance,
+        (unsigned int)videoId, (unsigned int)shotId, (unsigned int)frameNumber,
         true // Low memory mode ON
         )
     ));
@@ -1437,6 +1490,144 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::LowMem_ParseRawNetRankingB
   return images;
 }
 
+
+void ImageRanker::ResetTrecvidShotMap()
+{
+  // Just reset all trues to falses
+  for (auto&& submap : _trecvidShotReferenceMap)
+  {
+    for (auto&&[pair, isTaken] : submap)
+    {
+      isTaken = false;
+    }
+  }
+}
+
+
+std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> 
+ImageRanker::ParseTrecvidShotReferencesFromDirectory(const std::string& path) const
+{
+  std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> resultMap;
+
+  for (auto&& file : std::filesystem::directory_iterator(path))
+  {
+    std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>> metaResult;
+
+    // Open file for reading as binary from the end side
+    std::ifstream ifs(file.path().string(), std::ios::ate);
+
+    // If failed to open file
+    if (!ifs)
+    {
+      LOG_ERROR("Error opening file: "s + file.path().string());
+    }
+
+    // Get end of file
+    auto end = ifs.tellg();
+
+    // Get iterator to begining
+    ifs.seekg(0, std::ios::beg);
+
+    // Compute size of file
+    auto size = std::size_t(end - ifs.tellg());
+
+    // If emtpy file
+    if (size == 0)
+    {
+      LOG_ERROR("Empty file opened!");
+    }
+
+
+    size_t lineNr{ 0_z };
+    std::string line;
+
+    // Iterate until there is something to read from file
+    while (std::getline(ifs, line))
+    {
+      ++lineNr;
+
+      // Skip first line - there are only column headers
+      if (lineNr == 1)
+      {
+        continue;
+      }
+
+      // WARNING:
+      // TRECVID shot reference starts videos from 1, we do from 0
+      // Index in this vector will match our indexing
+
+      unsigned int frameFrom;
+      unsigned int frameTo;
+      float byteBin;
+      std::stringstream lineStream(line);
+
+      lineStream >> frameFrom;
+      lineStream >> byteBin; // Throw this away
+      lineStream >> frameTo;
+
+      // Contains std::pair<std::pair<unsigned int, unsigned int>, bool>
+      metaResult.emplace_back(std::pair(frameFrom, frameTo), false);
+    }
+
+    // Add this file reference to map
+    resultMap.push_back(metaResult);
+  }
+
+  return resultMap;
+}
+
+
+#if TRECVID_MAPPING
+size_t ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId) const
+{
+  auto ourFrameIdDowncasted{ static_cast<unsigned int>(ourFrameId) };
+
+  // Get image pointer
+  const Image* pImg{ GetImageDataById(ourFrameId) };
+
+  // Get video ID, this is idx in trecvid map vector
+  auto videoId{ pImg->m_videoId };
+
+  // Get correct submap for this video
+  auto videoMap{ _trecvidShotReferenceMap[videoId] };
+
+  //
+  // Binary search frame interval, that this frame belongs to
+  //
+  auto shotIntervalIt = std::lower_bound(videoMap.begin(), videoMap.end(), std::pair(std::pair(ourFrameIdDowncasted, ourFrameIdDowncasted), false),
+    [](const std::pair<std::pair<unsigned int, unsigned int>, bool>& l, const std::pair<std::pair<unsigned int, unsigned int>, bool>& r)
+    {
+      auto lVal{ l.first };
+      auto rVal{ r.first };
+
+      return lVal.first < rVal.first && lVal.second < rVal.second;
+    }
+  );
+
+  // If this shot is already picked
+  if (shotIntervalIt->second == true)
+  {
+    // Return "Fail value"
+    return SIZE_T_ERROR_VALUE;
+  }
+  // Otherwise mark this shot as picked
+  else
+  {
+    shotIntervalIt->second = true;
+  }
+
+  // Get idx of this iterator
+  auto shotIdx{ shotIntervalIt - videoMap.begin() };
+  assert(shotIdx > 0);
+
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // Return index PLUS 1, because TRECVID vids start at 1
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  size_t shotId{ static_cast<size_t>(shotIdx + 1) };
+
+  return shotId;
+}
+#endif
 
 bool ImageRanker::ParseSoftmaxBinFile()
 {
@@ -1877,6 +2068,21 @@ void ImageRanker::ProcessVideoShotsStack(std::stack<Image*>& videoFrames)
 
     ++i;
   }
+}
+
+std::tuple<size_t, size_t, size_t> ImageRanker::ParseVideoFilename(const std::string& filename) const
+{
+  // Extract string representing video ID
+  std::string videoIdString{ filename.substr(FILENAME_START_INDEX + FILENAME_VIDEO_ID_FROM, FILENAME_VIDEO_ID_LEN) };
+
+  // Extract string representing shot ID
+  std::string shotIdString{ filename.substr(FILENAME_START_INDEX + FILENAME_SHOT_ID_FROM, FILENAME_SHOT_ID_LEN) };
+
+  // Extract string representing frame number
+  std::string frameNumberString{ filename.substr(FILENAME_START_INDEX + FILENAME_SHOT_ID_FROM, FILENAME_SHOT_ID_LEN) };
+
+  
+  return std::tuple(strToInt(videoIdString), strToInt(shotIdString), strToInt(frameNumberString));
 }
 
 size_t ImageRanker::GetVideoIdFromFrameFilename(const std::string& filename) const

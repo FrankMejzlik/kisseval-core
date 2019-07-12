@@ -3,13 +3,25 @@
 #include <stdint.h>
 
 //
+// TRECVID SPECIFIC
+//
+#define TRECVID_MAPPING 1
+#define SHOT_REFERENCE_PATH R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\shot_reference\)"
+
+
+//
 // Frame filename format
 //
+#define FILENAME_START_INDEX 6
+
 #define FILENAME_VIDEO_ID_FROM 1
 #define FILENAME_VIDEO_ID_LEN 5
 
 #define FILENAME_SHOT_ID_FROM 8
 #define FILENAME_SHOT_ID_LEN 5
+
+#define FILENAME_FRAME_NUMBER_FROM 40
+#define FILENAME_FRAME_NUMBER_LEN 6
 
 //! If true, successors from whole videos will be considered (e.g. in temporal queries)
 #define USE_VIDEOS_AS_SHOTS 1
