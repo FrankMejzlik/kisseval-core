@@ -15,7 +15,7 @@ int main()
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.deep-features)",
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\files.txt)",
     1ULL,
-    ImageRanker::Mode::cFull
+    ImageRanker::Mode::cSearchTool
   };
 
   ranker.Initialize();

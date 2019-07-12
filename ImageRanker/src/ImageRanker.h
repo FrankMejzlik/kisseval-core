@@ -54,9 +54,9 @@ public:
   //! ImageRanker modes
   enum class Mode
   {
-    cFull,
-    cCollector,
-    cSearchTool
+    cFull = 0,
+    cCollector = 1,
+    cSearchTool = 2
   };
 
   
@@ -133,6 +133,8 @@ public:
 
   void RecalculateHypernymsInVectorUsingSum(AggregationVector& binVectorRef);
   void RecalculateHypernymsInVectorUsingMax(AggregationVector& binVectorRef);
+  void LowMem_RecalculateHypernymsInVectorUsingSum(AggregationVector& binVectorRef);
+  void LowMem_RecalculateHypernymsInVectorUsingMax(AggregationVector& binVectorRef);
   /*!
    * Gets all data about image with provided ID
    *
@@ -279,6 +281,8 @@ private:
    * \return  Hash map with all Image instances loaded
    */
   std::map<size_t, std::unique_ptr<Image>> ParseRawNetRankingBinFile();
+  std::map<size_t, std::unique_ptr<Image>> LowMem_ParseRawNetRankingBinFile();
+  
 
   /*!
    * Parses Softmax binary file into all \ref Image instances we're now holding
@@ -401,7 +405,7 @@ private:
   std::vector<float> m_indexKwFrequency;
 
 
-  std::unordered_map<NetDataTransformation, std::unique_ptr<TransformationFunctionBase>> _aggregations;
+  std::unordered_map<NetDataTransformation, std::unique_ptr<TransformationFunctionBase>> _transformations;
   std::unordered_map<RankingModelId, std::unique_ptr<RankingModelBase>> _models;
 };
 

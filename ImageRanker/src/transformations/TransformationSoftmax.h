@@ -38,6 +38,12 @@ public:
     return true;
   }
 
+  virtual bool LowMem_CalculateTransformedVectors(const std::map<size_t, std::unique_ptr<Image>>& images, size_t settings) const
+  {
+    // Softmax file is loaded by default
+    return true;
+  }
+
 
   virtual size_t GetGuidFromSettings() const override
   {

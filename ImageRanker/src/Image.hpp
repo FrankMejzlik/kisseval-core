@@ -16,7 +16,8 @@ struct Image
     std::string&& filename,
     std::vector<float>&& rawNetRanking,
     float min, float max,
-    float mean, float variance
+    float mean, float variance,
+    bool isLowMem
   ) :
     m_imageId(id),
     m_numSuccessorFrames(0_z),
@@ -27,24 +28,28 @@ struct Image
     m_mean(mean), m_variance(variance)
   {
 
-    // Create sorted array
-    size_t i{ 0ULL };
-    for (auto&& img : m_rawNetRanking)
+    // If not in low memory mode
+    if (!isLowMem)
     {
-      m_rawNetRankingSorted.emplace_back(std::pair(static_cast<uint32_t>(i), img));
-
-      ++i;
-    }
-
-
-    // Sort it
-    std::sort(
-      m_rawNetRankingSorted.begin(), m_rawNetRankingSorted.end(),
-      [](const std::pair<size_t, float>& a, const std::pair<size_t, float>& b) -> bool
+      // Create sorted array
+      size_t i{ 0ULL };
+      for (auto&& img : m_rawNetRanking)
       {
-        return a.second > b.second;
+        m_rawNetRankingSorted.emplace_back(std::pair(static_cast<uint32_t>(i), img));
+
+        ++i;
       }
-    );
+
+
+      // Sort it
+      std::sort(
+        m_rawNetRankingSorted.begin(), m_rawNetRankingSorted.end(),
+        [](const std::pair<size_t, float>& a, const std::pair<size_t, float>& b) -> bool
+        {
+          return a.second > b.second;
+        }
+      );
+    }
 
 
   }

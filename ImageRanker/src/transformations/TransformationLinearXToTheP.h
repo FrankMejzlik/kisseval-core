@@ -71,6 +71,70 @@ public:
     return true;
   }
 
+  /*!
+   * 
+   * 
+   * \param images
+   * \param settings 
+   *    LSb - 0: 
+   *      0 -> Precompute SUM based data vector
+   *      1 -> Precompute MAX based data vector
+   * \return 
+   */
+  virtual bool LowMem_CalculateTransformedVectors(const std::map<size_t, std::unique_ptr<Image>>& images, size_t settings) const
+  {
+    // Itarate over all images
+    for (auto&&[imgId, img] : images)
+    {
+      // Calculate total sum of this bin vector
+      float totalSum{ 0ULL };
+      for (auto&& bin : img->m_rawNetRanking)
+      {
+        totalSum += ((bin - img->m_min) / (img->m_max - img->m_min));
+      }
+
+      // Iterate over all wanted exponents
+      size_t i{ 0ULL };
+      for (auto&& exp : _exponents)
+      {
+        // Allow only one exponent
+        if (i >= 1)
+        {
+          break;
+        }
+
+        {
+          size_t j{ 0_z };
+          for (auto&& bin : img->m_rawNetRanking)
+          {
+            // Do final transformation f(x) = x ^ exp
+            img->m_rawNetRanking[j] = pow((((bin - img->m_min) / (img->m_max - img->m_min)) / totalSum), exp);
+
+            ++j;
+          }
+        }
+
+
+        // If only SUM based data vector wanted
+        if (settings % 1 == 0)
+        {
+          // Move source vector to new destination
+          img->m_aggVectors.emplace(GetGuid(i), std::move(img->m_rawNetRanking));
+        }
+        // If only MAX based data vector wanted
+        else 
+        {
+          // Move source vector to new destination
+          img->m_aggVectors.emplace(GetGuid(i + 10), std::move(img->m_rawNetRanking));
+        }
+
+        ++i;
+      }
+    }
+
+    return true;
+  }
+
   virtual size_t GetGuidFromSettings() const override
   {
     return GetGuid(_settings.m_vectorIndex + (_settings.m_summedHypernyms * 10));

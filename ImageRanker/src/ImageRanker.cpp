@@ -111,56 +111,46 @@ bool ImageRanker::InitializeCollectorMode()
 
 bool ImageRanker::InitializeSearchToolMode()
 {
-  // Parse binary images data 
-  _images = std::move(ParseRawNetRankingBinFile());
+  // Parse binary images data with low memory version of parsing
+  _images = std::move(LowMem_ParseRawNetRankingBinFile());
 
-  // Create best hypernyms
-  GenerateBestHypernymsForImages();
-
-  // Parse softmax file if available
-  ParseSoftmaxBinFile();
-
-
-  // Load and process all aggregations
-  for (auto&& agg : _aggregations)
+  // In Search tool mode only one transformation and one model should be used because of memory savings
   {
-    agg.second->CalculateTransformedVectors(_images);
+    // Insert all desired transformations
+    //_aggregations.emplace(NetDataTransformation::cSoftmax, std::make_unique<TransformationSoftmax>());
+    _transformations.emplace(NetDataTransformation::cXToTheP, std::make_unique<TransformationLinearXToTheP>());
+
+    // Insert all desired ranking models
+    _models.emplace(RankingModelId::cViretBase, std::make_unique<ViretModel>());
+    _models.emplace(RankingModelId::cBooleanBucket, std::make_unique<BooleanBucketModel>());
   }
 
+  // Load and process all transformations
+  for (auto&& transf : _transformations)
+  {
+    // Send in 1 for MAX based precalculations
+    transf.second->LowMem_CalculateTransformedVectors(_images, 0);
+  }
 
   // Apply hypernym recalculation on all transformed vectors
   for (auto&&[imageId, pImg] : _images)
   {
-    // \todo implement propperly
-    // Copy untouched vector for simulating user
-    pImg->m_linearVector = pImg->m_aggVectors.at(200);
-
     for (auto&&[transformId, binVec] : pImg->m_aggVectors)
     {
       // If is summ based aggregation precalculation
       if (((transformId / 10) % 10) == 0)
       {
-        RecalculateHypernymsInVectorUsingSum(binVec);
+        LowMem_RecalculateHypernymsInVectorUsingSum(binVec);
       }
       else
       {
-        RecalculateHypernymsInVectorUsingMax(binVec);
+        LowMem_RecalculateHypernymsInVectorUsingMax(binVec);
       }
 
     }
   }
 
-  // Calculate approx document frequency
-  ComputeApproxDocFrequency(200, TRUE_TRESHOLD_FOR_KW_FREQUENCY);
-
-  //GetStatisticsUserKeywordAccuracy();
-
-  //PrintIntActionsCsv();
-
-  // Initialize gridtests
-  InitializeGridTests();
-
-
+  LOG("ImageRanker initialized in mode 'SearchTool'!");
   return true;
 }
 
@@ -171,8 +161,8 @@ bool ImageRanker::InitializeFullMode()
 
   {
     // Insert all desired transformations
-    _aggregations.emplace(NetDataTransformation::cSoftmax, std::make_unique<TransformationSoftmax>());
-    _aggregations.emplace(NetDataTransformation::cXToTheP, std::make_unique<TransformationLinearXToTheP>());
+    _transformations.emplace(NetDataTransformation::cSoftmax, std::make_unique<TransformationSoftmax>());
+    _transformations.emplace(NetDataTransformation::cXToTheP, std::make_unique<TransformationLinearXToTheP>());
 
     // Insert all desired ranking models
     _models.emplace(RankingModelId::cViretBase, std::make_unique<ViretModel>());
@@ -187,7 +177,7 @@ bool ImageRanker::InitializeFullMode()
   
 
   // Load and process all aggregations
-  for (auto&& agg : _aggregations)
+  for (auto&& agg : _transformations)
   {
     agg.second->CalculateTransformedVectors(_images);
   }
@@ -593,8 +583,8 @@ TransformationFunctionBase* ImageRanker::GetAggregationById(NetDataTransformatio
 {
   // Try to get this aggregation
   if (
-    auto result{ _aggregations.find(static_cast<NetDataTransformation>(id)) };
-    result != _aggregations.end()
+    auto result{ _transformations.find(static_cast<NetDataTransformation>(id)) };
+    result != _transformations.end()
     ) {
     return result->second.get();
   }
@@ -1196,7 +1186,8 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRankingBinFile(
         id, 
         std::move(filename), std::move(rawRankData),
         min, max, 
-        mean, variance
+        mean, variance,
+        false
       )
     ));
   }
@@ -1226,6 +1217,200 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::ParseRawNetRankingBinFile(
       // Set new prev video ID
       prevVideoId = currVideoId;
     }
+
+#else
+
+    // Get ID of current shot
+    size_t currShotId{ GetShotIdFromFrameFilename(pImg->m_filename) };
+    // If this frame is from next video
+    if (currShotId != prevShotId || currVideoId != prevVideoId)
+    {
+      // Process and label all frames from this video
+      ProcessVideoShotsStack(videoFrames);
+
+      // Set new prev video ID
+      prevShotId = currShotId;
+      prevVideoId = currVideoId;
+    }
+
+#endif
+
+    // Store this frame for future processing
+    videoFrames.push(pImg.get());
+  }
+
+
+  return images;
+}
+
+
+std::map<size_t, std::unique_ptr<Image>> ImageRanker::LowMem_ParseRawNetRankingBinFile()
+{
+  // Get image filenames
+  std::vector<std::string> imageFilenames{ GetImageFilenames() };
+
+  // Open file for reading as binary from the end side
+  std::ifstream ifs(_rawNetRankingFilepath, std::ios::binary | std::ios::ate);
+
+  // If failed to open file
+  if (!ifs)
+  {
+    LOG_ERROR("Error opening file: "s + _rawNetRankingFilepath);
+  }
+
+  // Get end of file
+  auto end = ifs.tellg();
+
+  // Get iterator to begining
+  ifs.seekg(0, std::ios::beg);
+
+  // Compute size of file
+  auto size = std::size_t(end - ifs.tellg());
+
+  // If emtpy file
+  if (size == 0)
+  {
+    LOG_ERROR("Empty file opened!");
+  }
+
+
+  // Create 4B buffer
+  std::array<std::byte, sizeof(int32_t)>  smallBuffer;
+
+  // Discard first 36B of data
+  ifs.ignore(36ULL);
+
+  // Read number of items in each vector per image
+  ifs.read((char*)smallBuffer.data(), sizeof(int32_t));
+
+  // If something happened
+  if (!ifs)
+  {
+    LOG_ERROR("Error reading file: "s + _rawNetRankingFilepath);
+  }
+
+  // Parse number of present floats in every row
+  int32_t numFloats = ParseIntegerLE(smallBuffer.data());
+
+  // Calculate byte length of each row
+  size_t byteRowLengths = numFloats * sizeof(float) + sizeof(int32_t);
+
+  // Where rows data start
+  size_t currOffset = 40ULL;
+
+
+  // Initialize video ID counter
+  size_t prevVideoId{ SIZE_T_ERROR_VALUE };
+  size_t prevShotId{ SIZE_T_ERROR_VALUE };
+  std::stack<Image*> videoFrames;
+
+
+  // Declare result vector
+  std::map<size_t, std::unique_ptr<Image>> images;
+
+  // Create line buffer
+  std::vector<std::byte>  lineBuffer;
+  lineBuffer.resize(byteRowLengths);
+
+  // Iterate until there is something to read from file
+  while (ifs.read((char*)lineBuffer.data(), byteRowLengths))
+  {
+    // Get picture ID of this row
+    size_t id = ParseIntegerLE(lineBuffer.data());
+
+    // Stride in bytes
+    currOffset = sizeof(float);
+
+    // Initialize vector of floats for this row
+    std::vector<float> rawRankData;
+
+
+    // Reserve exact capacitys
+    rawRankData.reserve(numFloats);
+
+    float sum{ 0.0f };
+    float min{ std::numeric_limits<float>::max() };
+    float max{ -std::numeric_limits<float>::max() };
+
+    // Iterate through all floats in row
+    for (size_t i = 0ULL; i < numFloats; ++i)
+    {
+      float rankValue{ ParseFloatLE(&lineBuffer[currOffset]) };
+
+      // Update min
+      if (rankValue < min)
+      {
+        min = rankValue;
+      }
+      // Update max
+      if (rankValue > max)
+      {
+        max = rankValue;
+      }
+
+      // Add to sum
+      sum += rankValue;
+
+      // Push float value in
+      rawRankData.emplace_back(rankValue);
+
+      // Stride in bytes
+      currOffset += sizeof(float);
+    }
+
+    // Calculate mean value
+    float mean{ sum / numFloats };
+
+    // Calculate variance
+    float varSum{ 0.0f };
+    for (auto&& val : rawRankData)
+    {
+      float tmp{ val - mean };
+      varSum += (tmp * tmp);
+    }
+    float variance = sqrtf((float)1 / (numFloats - 1) * varSum);
+
+    // Get image filename 
+    std::string filename{ imageFilenames[id / _imageIdStride] };
+
+    // Push final row
+    auto newIt = images.emplace(std::pair(
+      id,
+      std::make_unique<Image>(
+        id,
+        std::move(filename), std::move(rawRankData),
+        min, max,
+        mean, variance,
+        true // Low memory mode ON
+        )
+    ));
+  }
+
+
+  // Iterate over all images in ASC order by their IDs
+  for (auto&&[imageId, pImg] : images)
+  {
+    //
+    // Determine how many successors from the same video it has
+    //
+
+    // Get ID of current video
+    size_t currVideoId{ GetVideoIdFromFrameFilename(pImg->m_filename) };
+
+#if USE_VIDEOS_AS_SHOTS
+
+    // If this frame is from next video
+    if (currVideoId != prevVideoId)
+
+      // If this frame is from next video
+      if (currVideoId != prevVideoId)
+      {
+        // Process and label all frames from this video
+        ProcessVideoShotsStack(videoFrames);
+
+        // Set new prev video ID
+        prevVideoId = currVideoId;
+      }
 
 #else
 
@@ -1424,6 +1609,48 @@ void ImageRanker::RecalculateHypernymsInVectorUsingMax(AggregationVector& binVec
 
   // Replace old values with new
   binVectorRef = std::move(newBinVector);
+}
+
+void ImageRanker::LowMem_RecalculateHypernymsInVectorUsingSum(AggregationVector& binVectorRef)
+{
+  // Iterate over all bins in this vector
+  for (auto&& [it, i] { std::tuple(binVectorRef.begin(), size_t{ 0 }) }; it != binVectorRef.end(); ++it, ++i)
+  {
+    auto& bin{ *it };
+    auto pKw{ _keywords.GetKeywordConstPtrByVectorIndex(i) };
+
+    float binValue{ 0.0f };
+
+    // Iterate over all indices this keyword interjoins
+    for (auto&& kwIndex : pKw->m_hyponymBinIndices)
+    {
+      binValue += binVectorRef[kwIndex];
+    }
+
+    // Write in new value
+    bin = binValue;
+  }
+}
+
+void ImageRanker::LowMem_RecalculateHypernymsInVectorUsingMax(AggregationVector& binVectorRef)
+{
+  // Iterate over all bins in this vector
+  for (auto&& [it, i] { std::tuple(binVectorRef.begin(), size_t{ 0 }) }; it != binVectorRef.end(); ++it, ++i)
+  {
+    auto&& bin{ *it };
+
+    auto pKw{ _keywords.GetKeywordConstPtrByVectorIndex(i) };
+
+    float binValue{ 0.0f };
+
+    // Iterate over all indices this keyword interjoins
+    for (auto&& kwIndex : pKw->m_hyponymBinIndices)
+    {
+      binValue = std::max(binValue, binVectorRef[kwIndex]);
+    }
+
+    bin = binValue;
+  }
 }
 
 
