@@ -194,6 +194,19 @@ public:
     return _keywords.GetKeywordDescriptionByWordnetId(wordnetId);
   }
 
+#if TRECVID_MAPPING
+
+  //! return: <elapsed time, [<video ID, shot ID>]>
+  std::tuple<float, std::vector<std::pair<size_t, size_t>>> TrecvidGetRelevantShots(
+    const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
+    NetDataTransformation aggId, RankingModelId modelId,
+    const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
+    float elapsedTime,
+    size_t imageId = SIZE_T_ERROR_VALUE
+  );
+
+#endif
+
   // ^^^^^^^^^^^^^^^^^^^^^^^
   //////////////////////////
   //    API Methods
@@ -369,10 +382,9 @@ private:
 
 #if TRECVID_MAPPING
   
-  size_t ConvertToTrecvidShotId(size_t ourFrameId) const;
+  std::pair<size_t, size_t> ConvertToTrecvidShotId(size_t ourFrameId);
   std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> ParseTrecvidShotReferencesFromDirectory(const std::string& path) const;
   void ResetTrecvidShotMap();
-
 
 #endif
 

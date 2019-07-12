@@ -12,7 +12,8 @@
 //
 // Frame filename format
 //
-#define FILENAME_START_INDEX 6
+//#define FILENAME_START_INDEX 6 // Trecvid one
+#define FILENAME_START_INDEX 0
 
 #define FILENAME_VIDEO_ID_FROM 1
 #define FILENAME_VIDEO_ID_LEN 5

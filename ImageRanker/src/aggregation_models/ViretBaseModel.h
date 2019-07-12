@@ -11,11 +11,11 @@ public:
    */
   enum class eQueryOperations
   {
-    cMultSum,
-    cMultMax,
-    cSumSum,
-    cSumMax,
-    cMaxMax
+    cMultSum = 0,
+    cMultMax = 1,
+    cSumSum = 2,
+    cSumMax = 3,
+    cMaxMax= 4
   };
 
   struct Settings

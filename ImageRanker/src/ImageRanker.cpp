@@ -1448,7 +1448,7 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::LowMem_ParseRawNetRankingB
     //
 
     // Get ID of current video
-    size_t currVideoId{ GetVideoIdFromFrameFilename(pImg->m_filename) };
+    size_t currVideoId{ pImg->m_videoId };
 
 #if USE_VIDEOS_AS_SHOTS
 
@@ -1468,7 +1468,7 @@ std::map<size_t, std::unique_ptr<Image>> ImageRanker::LowMem_ParseRawNetRankingB
 #else
 
     // Get ID of current shot
-    size_t currShotId{ GetShotIdFromFrameFilename(pImg->m_filename) };
+    size_t currShotId{ pImg->m_shotId };
     // If this frame is from next video
     if (currShotId != prevShotId || currVideoId != prevVideoId)
     {
@@ -1503,6 +1503,81 @@ void ImageRanker::ResetTrecvidShotMap()
   }
 }
 
+std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGetRelevantShots(
+  const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
+  NetDataTransformation aggId, RankingModelId modelId,
+  const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
+  float elapsedTime,
+  size_t imageId
+)
+{
+  // Start timer
+  auto start = std::chrono::steady_clock::now();
+
+  std::vector<CnfFormula> formulae;
+
+  for (auto&& queryString : queriesEncodedPlaintext)
+  {
+    // Decode query to logical CNF formula
+    CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(queryString)) };
+
+    formulae.push_back(queryFormula);
+  }
+
+  // Get desired aggregation
+  auto pAggFn = GetAggregationById(aggId);
+  // Setup model correctly
+  pAggFn->SetTransformationSettings(aggSettings);
+
+  // Get disired model
+  auto pRankingModel = GetRankingModelById(modelId);
+  // Setup model correctly
+  pRankingModel->SetModelSettings(modelSettings);
+
+  // Rank it
+  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(formulae, pAggFn, &m_indexKwFrequency, _images, 20000, imageId)};
+
+
+  std::tuple<float, std::vector<size_t>> resultResponse;
+
+  std::vector<std::pair<size_t, size_t>> resultTrecvidShotIds;
+  resultTrecvidShotIds.reserve(numResults);
+
+  for (auto&& ourFrameId : imgOrder)
+  {
+    // If we have enough shots already
+    if (resultTrecvidShotIds.size() >= numResults)
+    {
+      // Stop
+      break;
+    }
+
+    std::pair<size_t, size_t> trecvidVideoIdShotIdPair{ ConvertToTrecvidShotId(ourFrameId) };
+
+    // If this shot is already picked
+    if (trecvidVideoIdShotIdPair.first == SIZE_T_ERROR_VALUE || trecvidVideoIdShotIdPair.second == SIZE_T_ERROR_VALUE)
+    {
+      // Go on to next our frame
+      continue;
+    }
+
+    // Add this TRECVID shot ID to resultset
+    resultTrecvidShotIds.push_back(trecvidVideoIdShotIdPair);
+  }
+
+  // Stop timer
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+
+  size_t calculationElapsedInMs{ static_cast<size_t>(duration.count()) };
+  float totalElapsed{ elapsedTime + ((float)calculationElapsedInMs / 1000)};
+
+  float totalElapsedRounded{ ((float)((int)(totalElapsed * 10))) / 10 };
+
+  // Reset trecvid shot reference map
+  ResetTrecvidShotMap();
+
+  return std::tuple(totalElapsedRounded, resultTrecvidShotIds);
+}
 
 std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> 
 ImageRanker::ParseTrecvidShotReferencesFromDirectory(const std::string& path) const
@@ -1578,7 +1653,7 @@ ImageRanker::ParseTrecvidShotReferencesFromDirectory(const std::string& path) co
 
 
 #if TRECVID_MAPPING
-size_t ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId) const
+std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
 {
   auto ourFrameIdDowncasted{ static_cast<unsigned int>(ourFrameId) };
 
@@ -1589,7 +1664,7 @@ size_t ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId) const
   auto videoId{ pImg->m_videoId };
 
   // Get correct submap for this video
-  auto videoMap{ _trecvidShotReferenceMap[videoId] };
+  auto& videoMap{ _trecvidShotReferenceMap[videoId] };
 
   //
   // Binary search frame interval, that this frame belongs to
@@ -1608,7 +1683,7 @@ size_t ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId) const
   if (shotIntervalIt->second == true)
   {
     // Return "Fail value"
-    return SIZE_T_ERROR_VALUE;
+    return std::pair(SIZE_T_ERROR_VALUE, SIZE_T_ERROR_VALUE);
   }
   // Otherwise mark this shot as picked
   else
@@ -1625,7 +1700,7 @@ size_t ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId) const
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   size_t shotId{ static_cast<size_t>(shotIdx + 1) };
 
-  return shotId;
+  return std::pair(videoId, shotId);
 }
 #endif
 
@@ -2079,7 +2154,7 @@ std::tuple<size_t, size_t, size_t> ImageRanker::ParseVideoFilename(const std::st
   std::string shotIdString{ filename.substr(FILENAME_START_INDEX + FILENAME_SHOT_ID_FROM, FILENAME_SHOT_ID_LEN) };
 
   // Extract string representing frame number
-  std::string frameNumberString{ filename.substr(FILENAME_START_INDEX + FILENAME_SHOT_ID_FROM, FILENAME_SHOT_ID_LEN) };
+  std::string frameNumberString{ filename.substr(FILENAME_START_INDEX + FILENAME_FRAME_NUMBER_FROM, FILENAME_FRAME_NUMBER_LEN) };
 
   
   return std::tuple(strToInt(videoIdString), strToInt(shotIdString), strToInt(frameNumberString));

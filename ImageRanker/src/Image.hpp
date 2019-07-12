@@ -26,7 +26,10 @@ struct Image
     m_rawNetRanking(std::move(rawNetRanking)),
     m_rawNetRankingSorted(),
     m_min(min), m_max(max),
-    m_mean(mean), m_variance(variance)
+    m_mean(mean), m_variance(variance),
+    m_videoId(videoId),
+    m_shotId(shotId),
+    m_frameNumber(frameNumber)
   {
 
     

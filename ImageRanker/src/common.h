@@ -104,8 +104,11 @@ enum class QueryOriginId
 *    0 => keyword frequency handling
 *    1 => ignoreTreshold
 *    2 => rankCalcMethod
-*      0: Multiply & (Add |)
-*      1: Add only
+*       cMultSum = 0,
+*       cMultMax = 1,
+*       cSumSum = 2,
+*       cSumMax = 3,
+*       cMaxMax= 4
 *    3 => outter temporal query operation (\ref eTempQueryOpOutter)
 *       0: sum
 *       1: product
