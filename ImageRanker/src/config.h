@@ -7,13 +7,16 @@
 //
 #define TRECVID_MAPPING 1
 #define SHOT_REFERENCE_PATH R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\shot_reference\)"
+#define DEBUG_SHOW_OUR_FRAME_IDS 1
 
-
+#define TEST_QUERIES_ID_MULTIPLIER 50
 //
 // Frame filename format
 //
-//#define FILENAME_START_INDEX 6 // Trecvid one
-#define FILENAME_START_INDEX 0
+#define MAX_SUCC_CHECK_COUNT 10
+
+#define FILENAME_START_INDEX 6 // Trecvid one
+//#define FILENAME_START_INDEX 0
 
 #define FILENAME_VIDEO_ID_FROM 1
 #define FILENAME_VIDEO_ID_LEN 5

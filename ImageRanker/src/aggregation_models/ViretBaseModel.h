@@ -339,9 +339,15 @@ public:
     // Iterate through all successors and compute their rankings
     //
 
+    size_t count{ 0_z };
     // If this frame has some succesor frames
     while (imgIt->second->m_numSuccessorFrames > 0) 
     {
+      if (count >= MAX_SUCC_CHECK_COUNT)
+      {
+        break;
+      }
+
       auto bckpImgIt = imgIt;
 
       // Move iterator to successor
@@ -373,7 +379,9 @@ public:
 
       default:
         LOG_ERROR("Uknown temporal inner operation.");
-      }      
+      }  
+
+      ++count;
     }
 
     return resultRanking;

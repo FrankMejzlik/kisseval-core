@@ -808,10 +808,10 @@ std::vector<Keyword*> ImageRanker::GetNearKeywordsWithImages(const std::string& 
   auto suggestedKeywordsPtrs{ _keywords.GetNearKeywordsPtrs(lower) };
 
   // Load representative images for keywords
-  for (auto&& pKw : suggestedKeywordsPtrs)
+  /*for (auto&& pKw : suggestedKeywordsPtrs)
   {
     LoadRepresentativeImages(pKw);
-  }
+  }*/
 
   return suggestedKeywordsPtrs;
 }
@@ -920,6 +920,8 @@ std::vector<std::string> ImageRanker::GetImageFilenamesTrecvid() const
   while (std::getline(inFile, line))
   {
     //auto [videoId, shotId, frameNumber] { ParseVideoFilename(line) };
+
+    line = line.substr(6, line.length() - 6);
 
     result.emplace_back(line);
 
@@ -1511,6 +1513,29 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
   size_t imageId
 )
 {
+
+#if DEBUG_SHOW_OUR_FRAME_IDS
+
+  std::cout << "===============================" << std::endl;
+  std::cout << "transformation ID = " << std::to_string((size_t)aggId) << std::endl;
+  std::cout << "model ID = " << std::to_string((size_t)modelId) << std::endl;
+  std::cout << "model settings: " << std::endl;
+  for (auto&& q : modelSettings)
+  {
+
+    std::cout << q << std::endl;
+  }
+
+  std::cout << "transform settings:" << std::endl;
+  for (auto&& q : aggSettings)
+  {
+
+    std::cout << q << std::endl;
+  }
+  std::cout << "elapsed time  = " << elapsedTime << std::endl;
+
+#endif
+
   // Start timer
   auto start = std::chrono::steady_clock::now();
 
@@ -1543,6 +1568,18 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
   std::vector<std::pair<size_t, size_t>> resultTrecvidShotIds;
   resultTrecvidShotIds.reserve(numResults);
 
+#if DEBUG_SHOW_OUR_FRAME_IDS
+
+  std::cout << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << std::endl;
+  for (auto&& q : queriesEncodedPlaintext)
+  {
+
+    std::cout << "Q:" << q << std::endl;
+  }
+  std::cout << "--------------------" << std::endl;
+
+#endif
+
   for (auto&& ourFrameId : imgOrder)
   {
     // If we have enough shots already
@@ -1551,6 +1588,12 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
       // Stop
       break;
     }
+
+#if DEBUG_SHOW_OUR_FRAME_IDS
+
+    std::cout << ourFrameId << std::endl;
+
+#endif
 
     std::pair<size_t, size_t> trecvidVideoIdShotIdPair{ ConvertToTrecvidShotId(ourFrameId) };
 
@@ -2148,13 +2191,13 @@ void ImageRanker::ProcessVideoShotsStack(std::stack<Image*>& videoFrames)
 std::tuple<size_t, size_t, size_t> ImageRanker::ParseVideoFilename(const std::string& filename) const
 {
   // Extract string representing video ID
-  std::string videoIdString{ filename.substr(FILENAME_START_INDEX + FILENAME_VIDEO_ID_FROM, FILENAME_VIDEO_ID_LEN) };
+  std::string videoIdString{ filename.substr(FILENAME_VIDEO_ID_FROM, FILENAME_VIDEO_ID_LEN) };
 
   // Extract string representing shot ID
-  std::string shotIdString{ filename.substr(FILENAME_START_INDEX + FILENAME_SHOT_ID_FROM, FILENAME_SHOT_ID_LEN) };
+  std::string shotIdString{ filename.substr(FILENAME_SHOT_ID_FROM, FILENAME_SHOT_ID_LEN) };
 
   // Extract string representing frame number
-  std::string frameNumberString{ filename.substr(FILENAME_START_INDEX + FILENAME_FRAME_NUMBER_FROM, FILENAME_FRAME_NUMBER_LEN) };
+  std::string frameNumberString{ filename.substr(FILENAME_FRAME_NUMBER_FROM, FILENAME_FRAME_NUMBER_LEN) };
 
   
   return std::tuple(strToInt(videoIdString), strToInt(shotIdString), strToInt(frameNumberString));
@@ -2479,7 +2522,7 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(QueryOrig
       for (auto&& idQueryRow : dbData.second)
       {
         
-        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
+        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) * TEST_QUERIES_ID_MULTIPLIER };
 
         CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS) };
 
@@ -2528,7 +2571,7 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(QueryOrig
       // Parse DB results
       for (auto&& idQueryRow : dbData.second)
       {
-        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
+        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) * TEST_QUERIES_ID_MULTIPLIER };
 
         CnfFormula queryFormula{ _keywords.GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS) };
 

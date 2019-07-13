@@ -7,7 +7,7 @@
 
 int main()
 {
-  ImageRanker ranker{
+  /*ImageRanker ranker{
     R"(c:\Users\devwe\source\repos\ImageRanker\data\dataset2\images\)",
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.pre-softmax)",
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\keyword_classes.txt)",
@@ -16,9 +16,9 @@ int main()
     R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\files.txt)",
     1ULL,
     ImageRanker::Mode::cSearchTool
-  };
+  };*/
 
-  /*ImageRanker ranker{
+  ImageRanker ranker{
     R"(c:\Users\devwe\source\repos\ImageRankerApp\public\images\)",
     R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\net_data\nasnet_large.pre-softmax)",
     R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\net_data\keyword_classes.txt)",
@@ -27,7 +27,7 @@ int main()
     R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\keyframes\filelist.txt)",
     1ULL,
     ImageRanker::Mode::cSearchTool
-  };*/
+  };
 
   ranker.Initialize();
 
