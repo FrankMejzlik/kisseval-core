@@ -116,7 +116,7 @@ public:
 
 
         // If only SUM based data vector wanted
-        if (settings % 1 == 0)
+        if (settings % 2 == 0)
         {
           // Move source vector to new destination
           img->m_aggVectors.emplace(GetGuid(i), std::move(img->m_rawNetRanking));

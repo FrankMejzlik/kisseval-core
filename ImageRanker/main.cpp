@@ -45,7 +45,7 @@ int main()
    ranker.TrecvidGetRelevantShots(
      std::vector<std::string>({"3438257", "2753044"}), 1000_z,
      NetDataTransformation::cXToTheP, RankingModelId::cViretBase,
-     std::vector<std::string>({ "0"s, "0.0"s, "0"s, "1"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
+     std::vector<std::string>({ "0"s, "0.0"s, "3"s, "0"s, "2"s }), std::vector<std::string>({ "1"s, "1"s }),
      0.0f
    ) };
 
@@ -53,7 +53,7 @@ int main()
     ranker.TrecvidGetRelevantShots(
       std::vector<std::string>({"480993", ""}), 1000_z,
       NetDataTransformation::cXToTheP, RankingModelId::cViretBase,
-      std::vector<std::string>({ "0"s, "0.0"s, "0"s, "1"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
+      std::vector<std::string>({ "0"s, "0.0"s, "3"s, "0"s, "2"s }), std::vector<std::string>({ "1"s, "1"s }),
       0.0f
     ) };
 

@@ -1620,6 +1620,21 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
   // Reset trecvid shot reference map
   ResetTrecvidShotMap();
 
+#if 0
+
+  std::set<std::pair<size_t, size_t>> set;
+  for (auto&&[videoId, shotId] : resultTrecvidShotIds)
+  {
+    auto result{ set.insert(std::pair(videoId, shotId)) };
+
+    if (result.second == false)
+    {
+      LOG_ERROR("Duplicate!!!");
+    }
+  }
+
+#endif
+
   return std::tuple(totalElapsedRounded, std::move(resultTrecvidShotIds));
 }
 
@@ -1708,14 +1723,18 @@ std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
   // Get video ID, this is idx in trecvid map vector
   auto videoId{ static_cast<size_t>(pImg->m_videoId) };
 
+  // Get correct submap for this video
+  auto& videoMap{ _trecvidShotReferenceMap[videoId] };
+
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // Return ID PLUS 1, because TRECVID vids start at 1 and our source file starts at 0
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   videoId = videoId + 1;
 
-
-  // Get correct submap for this video
-  auto& videoMap{ _trecvidShotReferenceMap[videoId] };
+  if (ourFrameNumber > 1)
+  {
+    ourFrameNumber = ourFrameNumber - 1;
+  }
 
   //
   // Binary search frame interval, that this frame belongs to
@@ -1730,7 +1749,10 @@ std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
     }
   );
 
-  assert(shotIntervalIt != videoMap.end());
+  if (shotIntervalIt == videoMap.end())
+  {
+    LOG_ERROR("Something went wrong!");
+  }
 
   // If this shot is already picked
   if (shotIntervalIt->second == true)
