@@ -766,7 +766,14 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
   // Get desired number of results
   for (size_t j = 0ULL; j < NUM_SUGESTIONS; ++j)
   {
-    Keyword* pKeyword{ _keywords[left + j].get() };
+    size_t idx{left + j};
+
+    if (idx >= _keywords.size())
+    {
+      break;
+    }
+
+    Keyword* pKeyword{ _keywords[idx].get() };
 
     // Check if prefix is equal to searched word
 
@@ -813,6 +820,11 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
   size_t j = 0ULL;
   while (resultKeywords.size() < NUM_SUGESTIONS)
   {
+    if (j >= postResultKeywords.size())
+    {
+      break;
+    }
+
     resultKeywords.push_back(postResultKeywords[j]);
 
     ++j;
