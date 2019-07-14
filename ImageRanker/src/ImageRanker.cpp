@@ -1797,9 +1797,10 @@ std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   videoId = videoId + 1;
 
+  size_t ourFrameNumberA;
   if (ourFrameNumber > 1)
   {
-    ourFrameNumber = ourFrameNumber - 1;
+    ourFrameNumberA = ourFrameNumber - 1;
   }
 
   //
@@ -1817,7 +1818,17 @@ std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
 
   if (shotIntervalIt == videoMap.end())
   {
-    LOG_ERROR("Something went wrong!");
+    std::cout << "videoId = " << videoId << std::endl;
+    std::cout << "ourFrameNumber = " << ourFrameNumber << std::endl;
+    std::cout << "shot ref intervals:" << std::endl;
+
+    for (auto&& [pair, t] : videoMap)
+    {
+      std::cout << "[" << pair.first << ", " << pair.second << "]" << std::endl;
+    }
+    LOG("This frame not present in shot reference.");
+
+    return std::pair(SIZE_T_ERROR_VALUE, SIZE_T_ERROR_VALUE);
   }
 
   // If this shot is already picked
