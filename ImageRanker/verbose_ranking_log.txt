@@ -1,0 +1,19 @@
+ImageRanker initialized in mode 'SearchTool'!
+===============================
+transformation ID = 200
+model ID = 3
+model settings: 
+0
+0.0
+3
+0
+2
+transform settings:
+1
+1
+elapsed time  = 0
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+Q:3438257
+Q:2753044
+--------------------
+458107

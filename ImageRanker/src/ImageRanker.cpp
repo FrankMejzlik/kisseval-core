@@ -120,6 +120,9 @@ bool ImageRanker::InitializeSearchToolMode()
   // Parse TRECVID shot reference
   _trecvidShotReferenceMap = ParseTrecvidShotReferencesFromDirectory(SHOT_REFERENCE_PATH);
 
+  // Parse file containing dropped shots
+  _tvDroppedShots = ParseTrecvidDroppedShotsFile(DROPPED_SHOTS_FILEPATH);
+
 #endif
 
   // In Search tool mode only one transformation and one model should be used because of memory savings
@@ -1562,7 +1565,7 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
   pRankingModel->SetModelSettings(modelSettings);
 
   // Rank it
-  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(formulae, pAggFn, &m_indexKwFrequency, _images, 20000, imageId)};
+  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(formulae, pAggFn, &m_indexKwFrequency, _images, 40000, imageId)};
 
 
 
@@ -1603,6 +1606,15 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
     {
       // Go on to next our frame
       continue;
+    }
+
+    // Check if it is dropped shot
+    for (auto&& [dVideoId, dShotId] : _tvDroppedShots)
+    {
+      if (trecvidVideoIdShotIdPair.first == dVideoId && trecvidVideoIdShotIdPair.second == dShotId)
+      {
+        continue;
+      }
     }
 
     // Add this TRECVID shot ID to resultset
@@ -1708,6 +1720,60 @@ ImageRanker::ParseTrecvidShotReferencesFromDirectory(const std::string& path) co
   }
 
   return resultMap;
+}
+
+
+
+std::vector<std::pair<size_t, size_t>> ImageRanker::ParseTrecvidDroppedShotsFile(const std::string& filepath) const
+{
+  std::vector<std::pair<size_t, size_t>> metaResult;
+
+  // Open file for reading as binary from the end side
+  std::ifstream ifs(filepath, std::ios::ate);
+
+  // If failed to open file
+  if (!ifs)
+  {
+    LOG_ERROR("Error opening file: "s + filepath);
+  }
+
+  // Get end of file
+  auto end = ifs.tellg();
+
+  // Get iterator to begining
+  ifs.seekg(0, std::ios::beg);
+
+  // Compute size of file
+  auto size = std::size_t(end - ifs.tellg());
+
+  // If emtpy file
+  if (size == 0)
+  {
+    LOG_ERROR("Empty file opened!");
+  }
+
+
+  size_t lineNr{ 0_z };
+  std::string line;
+
+  // Iterate until there is something to read from file
+  while (std::getline(ifs, line))
+  {
+    ++lineNr;
+
+    // cut "shot" prefix
+    line = line.substr(4);
+
+    std::string videoIdStr{line.substr(0, 5)};
+    size_t videoId{ (size_t)strToInt(videoIdStr)};
+
+    line = line.substr(6);
+    size_t shotId{ (size_t)strToInt(line) };
+
+    metaResult.emplace_back(videoId, shotId);
+  }
+
+  return metaResult;
 }
 
 

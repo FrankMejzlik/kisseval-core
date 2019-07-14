@@ -384,6 +384,7 @@ private:
   
   std::pair<size_t, size_t> ConvertToTrecvidShotId(size_t ourFrameId);
   std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> ParseTrecvidShotReferencesFromDirectory(const std::string& path) const;
+  std::vector<std::pair<size_t, size_t>> ParseTrecvidDroppedShotsFile(const std::string& filepath) const;
   void ResetTrecvidShotMap();
 
 #endif
@@ -440,6 +441,7 @@ private:
 
 #if TRECVID_MAPPING
   std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> _trecvidShotReferenceMap;
+  std::vector<std::pair<size_t, size_t>> _tvDroppedShots;
 #endif
 
 };
