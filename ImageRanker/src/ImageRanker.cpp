@@ -140,7 +140,7 @@ bool ImageRanker::InitializeSearchToolMode()
     transf.second->LowMem_CalculateTransformedVectors(_images, 0);
   }
 
-#if 0
+
   // Apply hypernym recalculation on all transformed vectors
   for (auto&&[imageId, pImg] : _images)
   {
@@ -158,7 +158,7 @@ bool ImageRanker::InitializeSearchToolMode()
 
     }
   }
-#endif
+
 
   LOG("ImageRanker initialized in mode 'SearchTool'!");
   return true;
