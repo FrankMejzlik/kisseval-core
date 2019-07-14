@@ -39,16 +39,25 @@ int main()
     5_z
   )};*/
 
+  for (size_t i{ 0_z }; i < 10000; ++i)
+  {
+    auto result1{
+   ranker.TrecvidGetRelevantShots(
+     std::vector<std::string>({"3438257", "2753044"}), 1000_z,
+     NetDataTransformation::cXToTheP, RankingModelId::cViretBase,
+     std::vector<std::string>({ "0"s, "0.0"s, "0"s, "1"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
+     0.0f
+   ) };
 
-  auto result2{
-  ranker.TrecvidGetRelevantShots(
-    std::vector<std::string>({"3438257", "2753044"}), 1000_z,
-    NetDataTransformation::cXToTheP, RankingModelId::cViretBase,
-    std::vector<std::string>({ "0"s, "0.0"s, "0"s, "1"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
-    0.0f
-  ) };
+    auto result2{
+    ranker.TrecvidGetRelevantShots(
+      std::vector<std::string>({"480993", ""}), 1000_z,
+      NetDataTransformation::cXToTheP, RankingModelId::cViretBase,
+      std::vector<std::string>({ "0"s, "0.0"s, "0"s, "1"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
+      0.0f
+    ) };
 
-  
+  }
 
 
   /*auto result15{

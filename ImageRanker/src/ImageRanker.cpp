@@ -140,6 +140,7 @@ bool ImageRanker::InitializeSearchToolMode()
     transf.second->LowMem_CalculateTransformedVectors(_images, 0);
   }
 
+#if 0
   // Apply hypernym recalculation on all transformed vectors
   for (auto&&[imageId, pImg] : _images)
   {
@@ -157,6 +158,7 @@ bool ImageRanker::InitializeSearchToolMode()
 
     }
   }
+#endif
 
   LOG("ImageRanker initialized in mode 'SearchTool'!");
   return true;
@@ -1563,7 +1565,6 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
   auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(formulae, pAggFn, &m_indexKwFrequency, _images, 20000, imageId)};
 
 
-  std::tuple<float, std::vector<size_t>> resultResponse;
 
   std::vector<std::pair<size_t, size_t>> resultTrecvidShotIds;
   resultTrecvidShotIds.reserve(numResults);
@@ -1605,7 +1606,7 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
     }
 
     // Add this TRECVID shot ID to resultset
-    resultTrecvidShotIds.push_back(trecvidVideoIdShotIdPair);
+    resultTrecvidShotIds.emplace_back(std::move(trecvidVideoIdShotIdPair));
   }
 
   // Stop timer
@@ -1619,7 +1620,7 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
   // Reset trecvid shot reference map
   ResetTrecvidShotMap();
 
-  return std::tuple(totalElapsedRounded, resultTrecvidShotIds);
+  return std::tuple(totalElapsedRounded, std::move(resultTrecvidShotIds));
 }
 
 std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> 
@@ -1702,9 +1703,10 @@ std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
 
   // Get image pointer
   const Image* pImg{ GetImageDataById(ourFrameId) };
+  auto ourFrameNumber{ pImg->m_frameNumber };
 
   // Get video ID, this is idx in trecvid map vector
-  auto videoId{ pImg->m_videoId };
+  auto videoId{ static_cast<size_t>(pImg->m_videoId) };
 
   // Get correct submap for this video
   auto& videoMap{ _trecvidShotReferenceMap[videoId] };
@@ -1712,7 +1714,7 @@ std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
   //
   // Binary search frame interval, that this frame belongs to
   //
-  auto shotIntervalIt = std::lower_bound(videoMap.begin(), videoMap.end(), std::pair(std::pair(ourFrameIdDowncasted, ourFrameIdDowncasted), false),
+  auto shotIntervalIt = std::lower_bound(videoMap.begin(), videoMap.end(), std::pair(std::pair(ourFrameNumber, ourFrameNumber), false),
     [](const std::pair<std::pair<unsigned int, unsigned int>, bool>& l, const std::pair<std::pair<unsigned int, unsigned int>, bool>& r)
     {
       auto lVal{ l.first };
@@ -1721,6 +1723,8 @@ std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
       return lVal.first < rVal.first && lVal.second < rVal.second;
     }
   );
+
+  assert(shotIntervalIt != videoMap.end());
 
   // If this shot is already picked
   if (shotIntervalIt->second == true)
@@ -1736,7 +1740,7 @@ std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
 
   // Get idx of this iterator
   auto shotIdx{ shotIntervalIt - videoMap.begin() };
-  assert(shotIdx > 0);
+  assert(shotIdx >= 0);
 
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // Return index PLUS 1, because TRECVID vids start at 1
