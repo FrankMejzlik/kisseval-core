@@ -137,7 +137,7 @@ bool ImageRanker::InitializeSearchToolMode()
   for (auto&& transf : _transformations)
   {
     // Send in 1 for MAX based precalculations
-    transf.second->LowMem_CalculateTransformedVectors(_images, 0);
+    transf.second->LowMem_CalculateTransformedVectors(_images, PRECOMPUTE_MAX_BASED_DATA);
   }
 
 
@@ -1707,6 +1707,12 @@ std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
 
   // Get video ID, this is idx in trecvid map vector
   auto videoId{ static_cast<size_t>(pImg->m_videoId) };
+
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // Return ID PLUS 1, because TRECVID vids start at 1 and our source file starts at 0
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  videoId = videoId + 1;
+
 
   // Get correct submap for this video
   auto& videoMap{ _trecvidShotReferenceMap[videoId] };

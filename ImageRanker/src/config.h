@@ -5,6 +5,7 @@
 //
 // TRECVID SPECIFIC
 //
+#define PRECOMPUTE_MAX_BASED_DATA 1
 #define TRECVID_MAPPING 1
 #define SHOT_REFERENCE_PATH R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\shot_reference\)"
 #define DEBUG_SHOW_OUR_FRAME_IDS 1
