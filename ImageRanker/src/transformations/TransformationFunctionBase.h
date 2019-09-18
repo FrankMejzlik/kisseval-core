@@ -8,20 +8,21 @@
 #include "common.h"
 #include "utility.h"
 
+class Image;
 
 class TransformationFunctionBase
 {
   // Methods
 public:
-  TransformationFunctionBase(NetDataTransformation id) :
+  TransformationFunctionBase(InputDataTransformId id) :
     _id(id)
   {
   }
 
   // Required API for ranking models
 public:
-  virtual void SetTransformationSettings(NetDataTransformSettings settingsString) = 0;
-  virtual bool CalculateTransformedVectors(const std::map<size_t, std::unique_ptr<Image>>& images) const = 0;
+  virtual void SetTransformationSettings(InputDataTransformSettings settingsString) = 0;
+  virtual bool CalculateTransformedVectors(const std::vector<std::unique_ptr<Image>>& images) const = 0;
 
   /*!
    * Calculates transformed data vector with low memory usage
@@ -32,7 +33,7 @@ public:
    * \param images
    * \return 
    */
-  virtual bool LowMem_CalculateTransformedVectors(const std::map<size_t, std::unique_ptr<Image>>& images, size_t settings) const = 0;
+  virtual bool LowMem_CalculateTransformedVectors(const std::vector<std::unique_ptr<Image>>& images, size_t settings) const = 0;
   virtual size_t GetGuidFromSettings() const = 0;
 
   // Methods
@@ -51,5 +52,5 @@ public:
 
   // Attributes
 private:
-  NetDataTransformation _id;
+  InputDataTransformId _id;
 };

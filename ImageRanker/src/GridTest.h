@@ -43,7 +43,7 @@ public:
 
 
 
-  static std::vector<NetDataTransformation> m_aggregations;
+  static std::vector<InputDataTransformId> m_aggregations;
   static std::vector<QueryOriginId> m_queryOrigins;
   static std::vector<RankingModelId> m_rankingModels;
   static std::vector<TestSettings> m_testSettings;

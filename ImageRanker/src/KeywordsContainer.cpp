@@ -1,24 +1,59 @@
 
 
+#include "KeywordsContainer.h"
+
 #include <algorithm>
 #include <cctype>
 
-#include "KeywordsContainer.h"
+#include "ImageRanker.h"
 
+KeywordsContainer::KeywordsContainer(ImageRanker* pRanker, eKeywordsDataType type, const std::string& keywordClassesFilepath) :
+  _pRanker(pRanker),
+  _pDataType(type),
+  _keywordsFilepath(keywordClassesFilepath)
+{}
 
-KeywordsContainer::KeywordsContainer(const std::string& keywordClassesFilepath)
+bool KeywordsContainer::Initialize()
 {
-  // Parse data
-  ParseKeywordClassesFile(keywordClassesFilepath);
+  std::tuple<
+    std::string,
+    std::map<size_t, Keyword*>,
+    std::map<size_t, Keyword*>,
+    std::vector<std::pair<size_t, Keyword*>>,
+    std::vector<std::unique_ptr<Keyword>>> res;
+
+  switch (_pDataType)
+  {
+  case eKeywordsDataType::cViret1:
+
+    // Parse data
+    res = _pRanker->GetFileParser()->ParseKeywordClassesFile_ViretFormat(_keywordsFilepath);
+
+    break;
+
+  case eKeywordsDataType::cGoogleAI:
+    // Parse data
+    res = _pRanker->GetFileParser()->ParseKeywordClassesFile_GoogleAiVisionFormat(_keywordsFilepath);
+
+    break;
+
+  }
+
+  // Store results
+  _allDescriptions = std::move(std::get<0>(res));
+  _vecIndexToKeyword = std::move(std::get<1>(res));
+  _wordnetIdToKeywords = std::move(std::get<2>(res));
+  _descIndexToKeyword = std::move(std::get<3>(res));
+  _keywords = std::move(std::get<4>(res));
 
   // Sort keywords
   std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
 
   // Iterate over all unique keywords 
-  for (auto&& [wordnetId, pKw] : _wordnetIdToKeywords)
+  for (auto&&[wordnetId, pKw] : _wordnetIdToKeywords)
   {
 #if LOG_DEBUG_HYPERNYMS_EXPANSION
-    LOG_NO_ENDL(std::to_string(wordnetId) + "; "s + pKw->m_word +";");
+    LOG_NO_ENDL(std::to_string(wordnetId) + "; "s + pKw->m_word + ";");
 #endif
 
     GetVectorKeywordsIndicesSet(pKw->m_hyponymBinIndices, wordnetId);
@@ -32,20 +67,11 @@ KeywordsContainer::KeywordsContainer(const std::string& keywordClassesFilepath)
     }
     LOG("");
 #endif
-      
+
   }
+
+  return true;
 }
-
-
-KeywordsContainer::KeywordsContainer(std::vector< std::vector<std::string>>&& data)
-{
-  // Parse data
-  ParseKeywordDbDataStructure(std::move(data));
-
-  // Sort keywords
-  std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
-}
-
 
 
 KeywordData KeywordsContainer::GetKeywordByVectorIndex(size_t index) const
@@ -82,87 +108,6 @@ const Keyword* KeywordsContainer::GetKeywordConstPtrByVectorIndex(size_t index) 
   }
 
   return result->second;
-}
-
-bool KeywordsContainer::ParseKeywordDbDataStructure(std::vector< std::vector<std::string>>&& data)
-{
-  /*
-  ROW DATA format:
-    0 => Wordnet ID
-    1 => Vector index
-    2 => Word
-    3 => Description
-    4 => Hypernyms
-    5 => Hyponyms
-  */
-
-  std::string lineBuffer;
-
-  // While there is something to read
-  for (auto&& row : data)
-  {
-    std::stringstream wordnetIdSs(row[0]);
-    size_t wordnetId;
-    wordnetIdSs >> wordnetId;
-
-    std::stringstream vectIndSs(row[1]);
-    std::string word = row[2];
-    size_t vectorIndex;
-
-    if (row[1].empty())
-    {
-      vectorIndex = 0ULL;
-    }
-    else
-    {
-      vectIndSs >> vectorIndex;
-    }
-
-    // Get index that this description starts
-    size_t descStartIndex = _allDescriptions.size();
-    size_t descEndIndex = descStartIndex + row[3].size() - 1ULL;
-
-    std::stringstream hypernymsSs(row[4]);
-    std::vector<size_t> hypernyms;
-
-    // Extract hypernyms
-    std::string hypernymIdString;
-    while (std::getline(hypernymsSs, hypernymIdString, ';'))
-    {
-      size_t hypernymId;
-      std::stringstream hypernymIdStringSs{ hypernymIdString };
-      hypernymIdStringSs >> hypernymId;
-
-      hypernyms.push_back(hypernymId);
-    }
-
-    std::stringstream hyponymsSs(row[5]);
-    std::vector<size_t> hyponyms;
-
-    // Extract hyponyms
-    std::string hyponymIdString;
-    while (std::getline(hyponymsSs, hyponymIdString, ';'))
-    {
-      size_t hyponymId;
-      std::stringstream hyponymIdStringSs{ hyponymIdString };
-      hyponymIdStringSs >> hyponymId;
-
-      hyponyms.push_back(hyponymId);
-    }
-
-    // Append description to all of them
-    _allDescriptions.append(row[3]);
-    _allDescriptions.push_back('\0');
-
-
-    // Insert this record into table
-    _keywords.emplace_back(std::make_unique<Keyword>(wordnetId, vectorIndex, std::move(word), descStartIndex, row[3].size(), std::move(hypernyms), std::move(hyponyms)));
-
-    // Insert into wordnetId -> Keyword
-    _wordnetIdToKeywords.insert(std::make_pair(wordnetId, _keywords.back().get()));
-
-  }
-  return true;
 }
 
 
@@ -451,138 +396,8 @@ std::vector<size_t> KeywordsContainer::GetCanonicalQueryNoRecur(const std::strin
 
 
 
-bool KeywordsContainer::ParseKeywordClassesFile(const std::string& filepath)
-{
-  // Open file with list of files in images dir
-  std::ifstream inFile(filepath, std::ios::in);
 
-  // If failed to open file
-  if (!inFile)
-  {
-    LOG_ERROR(std::string("Error opening file :") + filepath);
-  }
-
-  std::string lineBuffer;
-
-  // While there is something to read
-  while (std::getline(inFile, lineBuffer))
-  {
-
-    // Extract file name
-    std::stringstream lineBufferStream(lineBuffer);
-
-    std::vector<std::string> tokens;
-    std::string token;
-    size_t i = 0ULL;
-
-    while (std::getline(lineBufferStream, token, CSV_DELIMITER))
-    {
-      tokens.push_back(token);
-
-      ++i;
-    }
-
-
-    // Index of vector
-    std::stringstream vectIndSs(tokens[0]);
-    std::stringstream wordnetIdSs(tokens[1]);
-
-    size_t vectorIndex;
-    size_t wordnetId;
-    std::string indexClassname = tokens[2];
-
-
-    // Get index that this description starts
-    size_t descStartIndex = _allDescriptions.size();
-    size_t descEndIndex = descStartIndex + tokens[5].size() - 1ULL;
-
-    // Append description to all of them
-    _allDescriptions.append(tokens[5]);
-    _allDescriptions.push_back('\0');
-
-    // If pure hypernym
-    if (tokens[0] == "H")
-    {
-      vectorIndex = SIZE_T_ERROR_VALUE;
-    }
-    else
-    {
-      vectIndSs >> vectorIndex;
-    }
-    
-    wordnetIdSs >> wordnetId;
-
-
-    // Get all hyponyms
-    std::vector<size_t> hyponyms;
-
-    std::stringstream hyponymsSs(tokens[3]);
-    std::string stringHyponym;
-    
-    while (std::getline(hyponymsSs, stringHyponym, SYNONYM_DELIMITER))
-    {
-      std::stringstream hyponymIdSs(stringHyponym);
-      size_t hyponymId;
-
-      hyponymIdSs >> hyponymId;
-
-      hyponyms.push_back(hyponymId);
-    }
-
-    // Get all hyperyms
-    std::vector<size_t> hyperyms;
-
-    std::stringstream hyperymsSs(tokens[4]);
-    std::string stringHypernym;
-
-    while (std::getline(hyperymsSs, stringHypernym, SYNONYM_DELIMITER))
-    {
-      std::stringstream hyperymIdSs(stringHypernym);
-      size_t hyperymId;
-
-      hyperymIdSs >> hyperymId;
-
-      hyperyms.push_back(hyperymId);
-    }
-
-
-    // Create sstream from concatenated string of synonyms
-    std::stringstream classnames(indexClassname);
-    std::string finalWord;
-
-
-    // Insert all synonyms as well
-    while (std::getline(classnames, finalWord, SYNONYM_DELIMITER))
-    {
-    #if PUSH_DATA_TO_DB
-
-      // Insert this word representation into all words
-      _words.insert(finalWord);
-
-      // Create WordnetID -> word pairs
-      _keywordToWord.push_back(std::make_pair(wordnetId, finalWord));
-
-    #endif
-
-
-      // Insert this record into table
-      _keywords.emplace_back(std::make_unique<Keyword>(wordnetId, vectorIndex, std::move(finalWord), descStartIndex, tokens[3].size(), std::move(hyperyms), std::move(hyponyms)));
-      
-      // Insert into desc -> Keyword
-      _descIndexToKeyword.push_back(std::pair(descStartIndex, _keywords.back().get()));
-
-      // Insert into wordnetId -> Keyword
-      _wordnetIdToKeywords.insert(std::make_pair(wordnetId, _keywords.back().get()));
-
-      // Insert into vector index -> Keyword
-      _vecIndexToKeyword.insert(std::make_pair(vectorIndex, _keywords.back().get()));
-    }
-  }
-  return true;
-}
-
-
-std::vector<size_t> KeywordsContainer::FindAllNeedles(std::string_view hey, std::string_view needle)
+std::vector<size_t> KeywordsContainer::FindAllNeedles(std::string_view hey, std::string_view needle) const
 {
   // Step 0. Should not be empty heying
   if (hey.size() == 0 || needle.size() == 0)
@@ -726,7 +541,7 @@ std::vector< std::tuple<size_t, std::string, std::string> > KeywordsContainer::G
   return resultWordnetIds;
 }
 
-std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& prefix)
+std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsConstPtrs(const std::string& prefix) const
 {
   KeywordsContainer::KeywordLessThanStringComparator comparator;
   size_t left = 0ULL;
@@ -757,9 +572,9 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
 
   }
 
-  std::vector<Keyword*> resultKeywords;
+  std::vector<const Keyword*> resultKeywords;
   resultKeywords.reserve(NUM_SUGESTIONS);
-  std::vector<Keyword*> postResultKeywords;
+  std::vector<const Keyword*> postResultKeywords;
 
 
 
@@ -833,9 +648,116 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
   return resultKeywords;
 }
 
+
+std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& prefix)
+{
+  KeywordsContainer::KeywordLessThanStringComparator comparator;
+  size_t left = 0ULL;
+  size_t right = _keywords.size() - 1ULL;
+
+  size_t i = right / 2;
+
+  while (true)
+  {
+    // Test if middle one is less than
+    bool leftIsLess = comparator(_keywords[i]->m_word, prefix);
+
+    if (leftIsLess)
+    {
+      left = i + 1;
+    }
+    else
+    {
+      right = i;
+    }
+
+    if (right - left < 1)
+    {
+      break;
+    }
+
+    i = (right + left) / 2;
+
+  }
+
+  std::vector<Keyword*> resultKeywords;
+  resultKeywords.reserve(NUM_SUGESTIONS);
+  std::vector<Keyword*> postResultKeywords;
+
+
+
+  // Get desired number of results
+  for (size_t j = 0ULL; j < NUM_SUGESTIONS; ++j)
+  {
+    size_t idx{ left + j };
+
+    if (idx >= _keywords.size())
+    {
+      break;
+    }
+
+    Keyword* pKeyword{ _keywords[idx].get() };
+
+    // Check if prefix is equal to searched word
+
+    // Force lowercase
+    std::locale loc;
+    std::string lowerWord;
+    std::string lowerPrefix;
+
+    for (auto elem : pKeyword->m_word)
+    {
+      lowerWord.push_back(std::tolower(elem, loc));
+    }
+
+    for (auto elem : prefix)
+    {
+      lowerPrefix.push_back(std::tolower(elem, loc));
+    }
+
+    auto res = std::mismatch(lowerPrefix.begin(), lowerPrefix.end(), lowerWord.begin());
+
+    if (res.first == lowerPrefix.end())
+    {
+      resultKeywords.emplace_back(pKeyword);
+    }
+    else
+    {
+      postResultKeywords.emplace_back(pKeyword);
+    }
+  }
+
+  // If we need to add up desc search results
+  if (resultKeywords.size() < NUM_SUGESTIONS && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
+  {
+    std::vector<size_t> needleIndices = FindAllNeedles(_allDescriptions, prefix);
+
+    for (auto&& index : needleIndices)
+    {
+      Keyword* pKeyword = MapDescIndexToKeyword(index);
+
+      resultKeywords.emplace_back(pKeyword);
+    }
+  }
+
+  size_t j = 0ULL;
+  while (resultKeywords.size() < NUM_SUGESTIONS)
+  {
+    if (j >= postResultKeywords.size())
+    {
+      break;
+    }
+
+    resultKeywords.push_back(postResultKeywords[j]);
+
+    ++j;
+  }
+
+  return resultKeywords;
+}
+
 Keyword* KeywordsContainer::MapDescIndexToKeyword(size_t descIndex) const
 {
-
   size_t left = 0ULL;
   size_t right = _descIndexToKeyword.size();
 

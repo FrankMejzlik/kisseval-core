@@ -7,7 +7,145 @@
 
 using size_t = std::size_t;
 
+// Forward decls
+class Keyword;
+class Image;
 
+/*!
+ * Enum assigning IDs to types
+ */
+enum class eKeywordsDataType
+{
+  cViret1 = 0,
+  cGoogleAI = 100
+};
+
+template <eKeywordsDataType Enum>
+inline std::string ToString(size_t id)
+{
+  std::string resultString;
+
+  switch (id)
+  {
+  case 0:
+    resultString += "Viret";
+    break;
+
+  case 100:
+    resultString += "Google AI Vision";
+    break;
+  }
+
+  return resultString;
+}
+
+/*!
+ * Type representing reference to file containing keyword descriptions
+ * 
+ * FORMAT:
+ *  (type ID, filepath)
+ * 
+ *  Type ID - unique ID determining what format file is in (e.g. Viret, Google AI Vision)
+ *    \see enum class eKeywordsDataType
+ * 
+ *  filepath - String containing filepath (relative of absolute) to file
+ * 
+ */
+using KeywordsFileRef = std::tuple<eKeywordsDataType, std::string>;
+
+
+
+/*!
+ * Enum assigning IDs to scoring data types
+ */
+enum class eImageScoringDataType
+{
+  cNasNet = 0,
+  cGoogLeNet = 1,
+  cGoogleAI_ = 100
+};
+
+template <eImageScoringDataType Enum>
+inline std::string ToString(size_t id)
+{
+  std::string resultString;
+
+  switch (id)
+  {
+  case 0:
+    resultString += "NasNet";
+    break;
+
+  case 1:
+    resultString += "GoogLeNet";
+    break;
+
+  case 100:
+    resultString += "Google AI Vision";
+    break;
+  }
+
+  return resultString;
+}
+
+/*!
+ * Type representing reference to file containing input image scoring data
+ *
+ * FORMAT:
+ *  (KW type ID, scoring type ID, filepath)
+ *
+ *  KW type ID - unique ID determining what format file is in (e.g. Viret, Google AI Vision)
+ *    \see enum class eKeywordsDataType
+ *  scoring type ID - unique ID determining what how scoring data has been generated
+ *    \see enum class eImageScoringDataType
+ *  filepath - String containing filepath (relative of absolute) to file
+ *
+ */
+using ScoringDataFileRef = std::tuple<eKeywordsDataType, eImageScoringDataType, const std::string>;
+
+
+/*!
+ * Structure holding data about occurance rate of one keyword
+ * 
+ * FORMAT:
+ *  ( synsetId, synsetWord, totalValue )
+ * 
+ * synsetId - ID of this synset
+ * synsetWord - string representing this synset
+ * totalValue - accumulated total value of this synset in given resultset
+ */
+using KeywordOccurance = std::tuple<size_t, std::string, float>;
+
+/*!
+ * Structure for returnig relevant images based on input query
+ * 
+ * FORMAT:
+ *  ( sortedRelevantImages,  kwOccurances, targetImagePosition )
+ * 
+ * sortedRelevantImages - images sorted based on ranking for given query
+ * kwOccurances - keyword occurances for given number of results
+ *  \see KeywordOccurance
+ * targetImagePosition - position of image that was set as target
+ */
+using RelevantImagesResponse = std::tuple<std::vector<const Image*>, std::vector<KeywordOccurance>, size_t>;
+
+//! Identifier for ( kwTypeId, scoringTypeId )
+using KwScoringDataId = std::tuple<eKeywordsDataType, eImageScoringDataType>;
+
+//! Unique ID for type of final data transformation
+using TransformFullId = size_t;
+
+/*!
+ * Structure representing ptr to keyword and its scores
+ * 
+ * FORMAT:
+ *  [ ( keywordPtr, keywordScore ), (...)  ]
+ */ 
+using KeywordPtrScoringPair = std::vector<std::tuple<Keyword*, float>>;
+
+using ImageIdFilenameTuple = std::tuple<size_t, std::string>;
+
+// ------------------------------------------------
 enum class eTempQueryOpOutter
 {
   cSum,
@@ -46,7 +184,7 @@ enum class RankingModelId
   cViretBase = 3
 };
 
-enum class NetDataTransformation
+enum class InputDataTransformId
 {
   cSoftmax = 100,
   cXToTheP = 200,
@@ -117,7 +255,7 @@ enum class QueryOriginId
 *       1: product
 *       2: max
 */
-using AggModelSettings = std::vector<std::string>;
+using RankingModelSettings = std::vector<std::string>;
 
 
 /*!
@@ -129,7 +267,7 @@ using AggModelSettings = std::vector<std::string>;
 *       0: SUM accumulated precoputed hypernyms
 *       1: MAX accumulated precoputed hypernyms
 */
-using NetDataTransformSettings = std::vector<std::string>;
+using InputDataTransformSettings = std::vector<std::string>;
 
 
 /*!
@@ -142,8 +280,8 @@ using SimulatedUserSettings = std::vector<std::string>;
 
 
 
-using AggregationVector = std::vector<float>;
-using TestSettings = std::tuple<NetDataTransformation, RankingModelId, QueryOriginId, AggModelSettings, NetDataTransformSettings>;
+
+using TestSettings = std::tuple<InputDataTransformId, RankingModelId, QueryOriginId, RankingModelSettings, InputDataTransformSettings>;
 
 using Buffer = std::vector<std::byte>;
 
@@ -154,10 +292,14 @@ using GameSessionQueryResult = std::tuple<std::string, std::string, std::vector<
 //! Array of those is submited from front-end app game
 using GameSessionInputQuery = std::tuple<std::string, size_t, std::string>;
 
-using ImageReference = std::pair<size_t, std::string>;
-
-/*! <wordnetID, keyword, description> */
-using KeywordReferences = std::vector<std::tuple<size_t, std::string, std::string>>;
+/*!
+ * Keywords that are possible for given prefix
+ * 
+ * FORMAT:
+ *  [ nearKeywords ]
+ * 
+ */
+using NearKeywordsResponse = std::vector<Keyword*>;
 
 
 /*! <wordnetID, keyword, description> */
@@ -176,16 +318,6 @@ using UserImgQueryRaw = std::tuple<size_t, std::vector<size_t>>;
 using UserAccuracyChartDataMisc = std::tuple<size_t, float>;
 
 using UserAccuracyChartData = std::pair<UserAccuracyChartDataMisc, ChartData>;
-//! Structure for returning results of queries
-struct QueryResult
-{
-  QueryResult() :
-    m_targetImageRank(0ULL)
-  {
-  }
-
-  size_t m_targetImageRank;
-};
 
 
 class SimulatedUser
@@ -198,3 +330,5 @@ public:
 public:
   int m_exponent;
 };
+
+

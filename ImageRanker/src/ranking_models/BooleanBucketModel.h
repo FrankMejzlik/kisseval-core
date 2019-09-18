@@ -2,6 +2,8 @@
 
 #include "RankingModelBase.h"
 
+#include <queue>
+
 class BooleanBucketModel :
   public RankingModelBase
 {
@@ -23,10 +25,6 @@ public:
     eTempQueryOpInner m_tempQueryInnerOperation;
   };
 
-  std::pair<std::vector<ImageReference>, QueryResult> RankImages()
-  {
-
-  }
 
   // Methods
 public:
@@ -42,7 +40,7 @@ public:
     };
   }
 
-  virtual void SetModelSettings(AggModelSettings settingsString) override
+  virtual void SetModelSettings(RankingModelSettings settingsString) override
   {
     _settings =  GetDefaultSettings();
 
@@ -77,9 +75,10 @@ public:
 
   virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
     const std::vector<CnfFormula>& queryFormulae,
+    KwScoringDataId kwScDataId,
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
-    const std::map<size_t, std::unique_ptr<Image>>& _imagesCont,
+    const std::vector<std::unique_ptr<Image>>& _imagesCont,
     size_t numResults = SIZE_T_ERROR_VALUE,
     size_t targetImageId = SIZE_T_ERROR_VALUE
   ) const override
@@ -130,10 +129,10 @@ public:
 
 
     // Check every image if satisfies query formula
-    for (auto&&[imgId, pImg] : _imagesCont)
+    for (auto&& pImg : _imagesCont)
     {
       // Prepare pointer for ranking vector aggregation data
-      const std::vector<float>* pImgRankingVector{ pImg->GetAggregationVectorById(pAggregation->GetGuidFromSettings()) };
+      const std::vector<float>* pImgRankingVector{ pImg->GetAggregationVectorById(kwScDataId, pAggregation->GetGuidFromSettings()) };
 
       size_t imageSucc{ 0ULL };
       float imageSubRank{ 0.0f };
@@ -254,10 +253,11 @@ public:
 
 
   virtual ChartData RunModelTest(
+    KwScoringDataId kwScDataId,
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::vector<std::vector<UserImgQuery>>& testQueries,
-    const std::map<size_t, std::unique_ptr<Image>>& _imagesCont
+    const std::vector<std::unique_ptr<Image>>& _imagesCont
   ) const override
   {
     uint32_t maxRank = (uint32_t)_imagesCont.size();
@@ -286,7 +286,7 @@ public:
         formulae.push_back(queryFormula);
       }
 
-      auto resultImages = GetRankedImages(formulae, pAggregation, pIndexKwFrequency, _imagesCont, 0ULL, imgId);
+      auto resultImages = GetRankedImages(formulae, kwScDataId, pAggregation, pIndexKwFrequency, _imagesCont, 0ULL, imgId);
 
       size_t transformedRank = resultImages.second / scaleDownFactor;
 

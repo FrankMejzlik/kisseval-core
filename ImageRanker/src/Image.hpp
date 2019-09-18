@@ -7,109 +7,126 @@
 
 #include "common.h"
 
-struct Image
+class Image
 {
+public:
+  struct ScoringDataInfo
+  {
+    float m_min;
+    float m_max;
+    float m_mean;
+    float m_variance;
+  };
+
+public:
   Image() = default;
 
   Image(
     size_t id,
-    std::string&& filename,
-    std::vector<float>&& rawNetRanking,
-    float min, float max,
-    float mean, float variance,
-    unsigned int videoId, unsigned int shotId, unsigned int frameNumber,
-    bool isLowMem
+    size_t index,
+    const std::string& filename,
+    size_t videoId, size_t shotId, size_t frameNumber
   ) :
     m_imageId(id),
+    m_index(index),
     m_numSuccessorFrames(0_z),
     m_filename(std::move(filename)),
-    m_rawNetRanking(std::move(rawNetRanking)),
-    m_rawNetRankingSorted(),
-    m_min(min), m_max(max),
-    m_mean(mean), m_variance(variance),
     m_videoId(videoId),
     m_shotId(shotId),
     m_frameNumber(frameNumber)
+  {}
+
+  std::unordered_map<TransformFullId, std::vector<float>>* GetScoringVectorsPtr(KwScoringDataId kwScDataId)
   {
-
-    
-
-    // If not in low memory mode
-    if (!isLowMem)
-    {
-      // Create sorted array
-      size_t i{ 0ULL };
-      for (auto&& img : m_rawNetRanking)
-      {
-        m_rawNetRankingSorted.emplace_back(std::pair(static_cast<uint32_t>(i), img));
-
-        ++i;
-      }
-
-
-      // Sort it
-      std::sort(
-        m_rawNetRankingSorted.begin(), m_rawNetRankingSorted.end(),
-        [](const std::pair<size_t, float>& a, const std::pair<size_t, float>& b) -> bool
-        {
-          return a.second > b.second;
-        }
-      );
-    }
-
-
-  }
-
-  size_t GetNumBins() const { return m_rawNetRanking.size(); }
-  const std::vector<float>* GetAggregationVectorById(size_t id) const
-  {
-    // If found
+    // If this kwsc ID found
     if (
-      auto&& it{ m_aggVectors.find(id) }; 
-      it != m_aggVectors.end()
-    )
+      auto&& transformMapIt{ _transformedImageScoringData.find(kwScDataId) };
+      transformMapIt != _transformedImageScoringData.end())
     {
-      return &(it->second);
-    }   
-    else 
+      return &(transformMapIt->second);
+    }
+    else
     {
-      LOG_ERROR("Aggregation not found!");
       return nullptr;
     }
   }
 
+  const std::unordered_map<TransformFullId, std::vector<float>>* GetScoringVectorsConstPtr(KwScoringDataId kwScDataId) const
+  {
+    // If this kwsc ID found
+    if (
+      auto&& transformMapIt{ _transformedImageScoringData.find(kwScDataId) };
+      transformMapIt != _transformedImageScoringData.end())
+    {
+      return &(transformMapIt->second);
+    }
+    else
+    {
+      return nullptr;
+    }
+  }
+
+  size_t GetNumBins(KwScoringDataId kwScDataId) const 
+  { 
+    // If this kwsc ID found
+    if (
+      auto ptr{ GetScoringVectorsConstPtr(kwScDataId) };
+      ptr != nullptr)
+    {
+      return ptr->size();
+    }
+    
+    return SIZE_T_ERROR_VALUE;    
+  }
+
+  const std::vector<float>* GetAggregationVectorById(KwScoringDataId kwScDataId, size_t transformId) const
+  {
+    // If found
+    if (
+      auto ptr{ GetScoringVectorsConstPtr(kwScDataId) };
+      ptr != nullptr)
+    {
+      if (
+        auto&& it{ ptr->find(transformId) };
+        it != ptr->end())
+      {
+        return &(it->second);
+      }
+      else
+      {
+        LOG_ERROR("Transformation not found!");
+        return nullptr;
+      }
+    }
+    else 
+    {
+      LOG_ERROR("KwScoringData ID not found!");
+      return nullptr;
+    }
+  }
+ 
+
 
   size_t m_imageId;
+  size_t m_index;
   size_t m_numSuccessorFrames;
   std::string m_filename;
 
-  //! Raw vector as it came out of neural network
-  std::vector<float> m_rawNetRanking;
-
-  float m_min;
-  float m_max;
-  float m_mean;
-  float m_variance;
-
-  unsigned int m_videoId;
-  unsigned int m_shotId;
-  unsigned int m_frameNumber;
+  size_t m_videoId;
+  size_t m_shotId;
+  size_t m_frameNumber;
 
 
-  //! Raw vector as it came out of neural network but SORTED
-  std::vector<std::pair<uint32_t, float>> m_rawNetRankingSorted;
-  std::vector<std::pair<size_t, float>> m_hypernymsRankingSorted;
+  //! Data clone for user simulation
+  std::map <KwScoringDataId, std::vector<float>> _rawSimUserData;
 
-  //! Softmax probability ranking
-  std::vector<float> m_softmaxVector;
-  std::vector<float> m_linearVector;
+  //! Top ranked keywords for this image
+  std::map<KwScoringDataId, KeywordPtrScoringPair> _topKeywords;
 
-  //! Probability vector from custom MinMax Clamp method
-  std::vector<float> m_minMaxLinearVector;
-  
-  
-
+  //! Raw input data
+  std::map<KwScoringDataId, std::vector<float>> _rawImageScoringData;
+  std::map<KwScoringDataId, ScoringDataInfo> _rawImageScoringDataInfo;
 
   //! Aggregation vectors calculated by provided aggregations
-  std::unordered_map<size_t, AggregationVector> m_aggVectors;
+  std::map<KwScoringDataId, std::unordered_map<TransformFullId, std::vector<float>>> _transformedImageScoringData;
 };

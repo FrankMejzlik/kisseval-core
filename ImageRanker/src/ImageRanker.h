@@ -31,21 +31,23 @@ using namespace std::string_literals;
 #include <thread>
 #include <atomic>
 #include <chrono>
+#include <iomanip>
 
 #include "config.h"
 
 #include "common.h"
 #include "utility.h"
 #include "Database.h"
+#include "FileParser.h"
 #include "Image.hpp"
 #include "KeywordsContainer.h"
-
-#include <iomanip>
 
 #include "GridTest.h"
 
 #include "transformations.h"
-#include "aggregation_models.h"
+#include "ranking_models.h"
+
+
 
 
 class ImageRanker
@@ -53,9 +55,9 @@ class ImageRanker
   // Structures
 public:
   //! ImageRanker modes
-  enum class Mode
+  enum class eMode
   {
-    cFull = 0,
+    cFullAnalytical = 0,
     cCollector = 1,
     cSearchTool = 2
   };
@@ -68,22 +70,16 @@ public:
   //! Constructor with data from files with presoftmax file
   ImageRanker(
     const std::string& imagesPath,
-    const std::string& rawNetRankingFilepath,
-    const std::string& keywordClassesFilepath,
-    const std::string& softmaxFilepath = ""s,
-    const std::string& deepFeaturesFilepath = ""s,
+    const std::vector<KeywordsFileRef>& keywordsFileRefs,
+    const std::vector<ScoringDataFileRef>& imageScoringFileRefs,
+    const std::vector<ScoringDataFileRef>& imageSoftmaxScoringFileRefs = std::vector<ScoringDataFileRef>(),
+    const std::vector<ScoringDataFileRef>& deepFeaturesFileRefs = std::vector<ScoringDataFileRef>(),
     const std::string& imageToIdMapFilepath = ""s,
-    size_t idOffset = 1ULL,
-    Mode mode = DEFAULT_MODE
+    size_t idStride = 1ULL,
+    eMode mode = DEFAULT_MODE
   );
 
   ~ImageRanker() noexcept = default;
-
-
-  //////////////////////////
-  //    API Methods
-  //////////////////////////
-  // vvvvvvvvvvvvvvvvvvvvvvv
 
   /*!
    * Initializes IR with current settings
@@ -92,32 +88,48 @@ public:
    */
   bool Initialize();
   bool Reinitialize();
-  void Clear();
-  void SetMode(Mode value);
-
   
+  eMode GetMode() const;
+  void SetMode(eMode value);
+  size_t GetIdOffset() const;
+  void SetIdOffset(size_t value);
+  const std::string& GetImagesPath() const;
+  void SetImagesPath(const std::string& path);
+  const std::string& GetScoreDataFilepath() const;
+  void SetScoreDataFilepath(const std::string& path);
+  const std::string& GetKeywordsFilepath() const;
+  void SetKeywordsFilepath(const std::string& path);
+  const std::string& GetSoftmaxDataFilepath() const;
+  void SetSoftmaxDataFilepath(const std::string& path);
+  const std::string& GetDeepFeaturesFilepath() const;
+  void SetDeepFeaturesFilepath(const std::string& path);
+  const std::string& GetImageToIdMapFilepath() const;
+  void SetImageToIdMapFilepath(const std::string& path);
 
-  std::pair<std::vector<std::tuple<size_t, std::string, float>>, std::vector<std::tuple<size_t, std::string, float>>> GetImageKeywordsForInteractiveSearch(size_t imageId, size_t numResults);
+  const FileParser* GetFileParser() const;
+  
+  void ClearData();
 
+  size_t MapIdToVectorIndex(size_t id) const;
 
   std::tuple<
-    std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>, 
+    std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
     std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
     std::vector<std::pair<size_t, std::string>>
-  > GetImageKeywordsForInteractiveSearchWithExampleImages(size_t imageId, size_t numResults);
+  >
+  GetImageKeywordsForInteractiveSearch(
+    size_t imageId, size_t numResults, KwScoringDataId kwScDataId,
+    bool withExampleImages
+  );
 
   void SubmitInteractiveSearchSubmit(
-    InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, NetDataTransformation transformId,
+    InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, InputDataTransformId transformId,
     std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
     std::string sessionId, size_t searchSessionIndex, int endStatus, size_t sessionDuration,
     std::vector<InteractiveSearchAction> actions,
     size_t userId = 0_z
   );
 
-  // So front end can display options dynamically
-  // \todo Implement.
-  void GetActiveAggregations() const;
-  void GetActiveRankingModels() const;
 
   /*!
    * Set how ranker will rank by default
@@ -127,15 +139,15 @@ public:
    * \param dataSource
    * \param settings
    */
-  void SetMainSettings(NetDataTransformation agg, RankingModelId rankingModel, AggModelSettings settings);
+  void SetMainSettings(InputDataTransformId agg, RankingModelId rankingModel, RankingModelSettings settings);
 
   std::vector<std::pair<TestSettings, ChartData>> RunGridTest(const std::vector<TestSettings>& testSettings);
 
 
-  void RecalculateHypernymsInVectorUsingSum(AggregationVector& binVectorRef);
-  void RecalculateHypernymsInVectorUsingMax(AggregationVector& binVectorRef);
-  void LowMem_RecalculateHypernymsInVectorUsingSum(AggregationVector& binVectorRef);
-  void LowMem_RecalculateHypernymsInVectorUsingMax(AggregationVector& binVectorRef);
+  void RecalculateHypernymsInVectorUsingSum(std::vector<float>& binVectorRef);
+  void RecalculateHypernymsInVectorUsingMax(std::vector<float>& binVectorRef);
+  void LowMem_RecalculateHypernymsInVectorUsingSum(std::vector<float>& binVectorRef);
+  void LowMem_RecalculateHypernymsInVectorUsingMax(std::vector<float>& binVectorRef);
   /*!
    * Gets all data about image with provided ID
    *
@@ -143,6 +155,7 @@ public:
    * \return
    */
   const Image* GetImageDataById(size_t imageId) const;
+  Image* GetImageDataById(size_t imageId);
 
 
   /*!
@@ -151,27 +164,20 @@ public:
   std::vector<GameSessionQueryResult> SubmitUserQueriesWithResults(std::vector<GameSessionInputQuery> inputQueries, QueryOriginId origin = QueryOriginId::cPublic);
 
 
-  ImageReference GetRandomImage() const;
-  std::vector<ImageReference> GetRandomImageSequence(size_t seqLength) const;
+  const Image* GetRandomImage() const;
+  std::vector<const Image*> GetRandomImageSequence(size_t seqLength) const;
   
 
-  KeywordReferences GetNearKeywords(const std::string& prefix);
-  std::vector<Keyword*> GetNearKeywordsWithImages(const std::string& prefix);
+  NearKeywordsResponse GetNearKeywords(const std::string& prefix, bool withExampleImages);
   KeywordData GetKeywordByVectorIndex(size_t index);
 
-
-  std::pair<std::vector<ImageReference>, QueryResult> GetRelevantImagesWrapper(
-    const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
-    NetDataTransformation aggId, RankingModelId modelId,
-    const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
-    size_t imageId = SIZE_T_ERROR_VALUE
-  ) const;
-
-  std::tuple<std::vector<ImageReference>, std::vector<std::tuple<size_t, std::string, float>>, QueryResult> GetRelevantImagesWithSuggestedWrapper(
+  RelevantImagesResponse GetRelevantImages(
+    KwScoringDataId kwScDataId,
     const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
-    NetDataTransformation aggId, RankingModelId modelId,
-    const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
-    size_t imageId = SIZE_T_ERROR_VALUE
+    InputDataTransformId aggId, RankingModelId modelId,
+    const RankingModelSettings& modelSettings, const InputDataTransformSettings& aggSettings,
+    size_t imageId = SIZE_T_ERROR_VALUE,
+    bool withOccuranceValue = false
   ) const;
 
   std::pair<uint8_t, uint8_t> GetGridTestProgress() const;
@@ -179,8 +185,10 @@ public:
 
 
   ChartData RunModelTestWrapper(
-    NetDataTransformation aggId, RankingModelId modelId, QueryOriginId dataSource,
-    const SimulatedUserSettings& simulatedUserSettings, const AggModelSettings& aggModelSettings, const NetDataTransformSettings& netDataTransformSettings
+    KwScoringDataId kwScDataId,
+    InputDataTransformId aggId, RankingModelId modelId, QueryOriginId dataSource,
+    const SimulatedUserSettings& simulatedUserSettings, const RankingModelSettings& aggModelSettings, 
+    const InputDataTransformSettings& netDataTransformSettings
   ) const;
 
 
@@ -191,7 +199,7 @@ public:
 
   std::string GetKeywordDescriptionByWordnetId(size_t wordnetId)
   {
-    return _keywords.GetKeywordDescriptionByWordnetId(wordnetId);
+    return _pViretKws->GetKeywordDescriptionByWordnetId(wordnetId);
   }
 
 #if TRECVID_MAPPING
@@ -199,8 +207,9 @@ public:
   //! return: <elapsed time, [<video ID, shot ID>]>
   std::tuple<float, std::vector<std::pair<size_t, size_t>>> TrecvidGetRelevantShots(
     const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
-    NetDataTransformation aggId, RankingModelId modelId,
-    const AggModelSettings& modelSettings, const NetDataTransformSettings& aggSettings,
+    KwScoringDataId kwScDataId,
+    InputDataTransformId aggId, RankingModelId modelId,
+    const RankingModelSettings& modelSettings, const InputDataTransformSettings& aggSettings,
     float elapsedTime,
     size_t imageId = SIZE_T_ERROR_VALUE
   );
@@ -223,10 +232,8 @@ private:
 
   std::string GetKeywordByWordnetId(size_t wordnetId) const
   {
-    return _keywords.GetKeywordByWordnetId(wordnetId);
+    return _pViretKws->GetKeywordByWordnetId(wordnetId);
   }
-
-
 
   std::string GetImageFilenameById(size_t imageId) const;
   
@@ -234,26 +241,15 @@ private:
   
   bool LoadKeywordsFromDatabase(Database::Type type);
   bool LoadImagesFromDatabase(Database::Type type);
-  std::vector<std::pair<std::string, float>> GetHighestProbKeywords(size_t imageId, size_t N) const;
+  std::vector<std::pair<std::string, float>> GetHighestProbKeywords(KwScoringDataId kwScDataId, size_t imageId, size_t N) const;
 
   std::vector<std::string> TokenizeAndQuery(std::string_view query) const;
   std::vector<std::string> StringenizeAndQuery(const std::string& query) const;
 
-  std::unordered_map<size_t, std::pair<size_t, std::string> > ParseKeywordClassesTextFile(std::string_view filepath) const;
-
-  std::unordered_map<size_t, std::pair<size_t, std::string> > ParseHypernymKeywordClassesTextFile(std::string_view filepath) const;
-
   size_t GetNumImages() const { return _images.size(); };
 
-  const std::vector<float>& GetMainRankingVector(const Image& image) const;
-  std::vector<float>& GetMainRankingVector(Image& image);
 
   void InitializeGridTests();
-
-
-
-
-  
 
   std::vector<UserImgQueryRaw>& GetCachedQueriesRaw(QueryOriginId dataSource) const;
   
@@ -306,13 +302,6 @@ private:
    */
   bool ParseSoftmaxBinFile();
   
-  /*!
-  * Loads bytes from specified file into buffer
-  *
-  * \param filepath  Path to file to load.
-  * \return New vector byte buffer.
-  */
-  std::vector<std::byte> LoadFileToBuffer(std::string_view filepath) const;
 
   /*!
   * Parses Little Endian integer from provided buffer starting at specified index
@@ -333,7 +322,7 @@ private:
    * 
    * \return True if default order of images in directory should be used
    */
-  bool UseDefaultImageFilenames() const { return (_imageToIdMap.empty() ? true : false); };
+  bool UseDefaultImageFilenames() const { return (_imageToIdMapFilepath.empty() ? true : false); };
 
   /*!
    * Gets aggregation instance if found
@@ -341,7 +330,7 @@ private:
    * \param id
    * \return 
    */
-  TransformationFunctionBase* GetAggregationById(NetDataTransformation id) const;
+  TransformationFunctionBase* GetAggregationById(InputDataTransformId id) const;
   
   /*!
    * Gets ranking model instance if found
@@ -359,25 +348,10 @@ private:
   std::vector<std::string> GetImageFilenames() const;
   std::vector<std::string> GetImageFilenamesTrecvid() const;
 
-  /*!
-   * Gets list of image filenames we're working with from dir structure
-   *
-   * \return
-   */
-  std::vector<std::string> GetImageFilenamesFromDirectoryStructure() const;
-
-  bool LoadRepresentativeImages(Keyword* pKw) const;
+  bool LoadRepresentativeImages(Keyword* pKw);
 
   void GenerateBestHypernymsForImages();
   void PrintIntActionsCsv() const;
-
-  void ProcessVideoShotsStack(std::stack<Image*>& videoFrames);
-
-  //! <video ID, shot ID, frame number>
-  std::tuple<size_t, size_t, size_t> ParseVideoFilename(const std::string& filename) const;
-  size_t GetVideoIdFromFrameFilename(const std::string& filename) const;
-  size_t GetShotIdFromFrameFilename(const std::string& filename) const;
-
 
 
 #if TRECVID_MAPPING
@@ -389,54 +363,34 @@ private:
 
 #endif
 
-#if PUSH_DATA_TO_DB
-
-  bool PushDataToDatabase();
-  bool PushKeywordsToDatabase();
-  bool PushImagesToDatabase();
-
-#endif // PUSH_DATA_TO_DB
-
 
   // Attributes
 private:
+  FileParser _fileParser;
   Database _primaryDb;
   Database _secondaryDb;
 
-  std::mt19937_64 _generator;
-  std::uniform_real_distribution<double> _uniformRealDistribution;
- 
-
-  bool _isReinitNeeded;
-  Mode _mode;
-
-  //! Aggregation that will be used mainly
-  NetDataTransformation _mainAggregation; 
-
-  //! Ranking model that will be used mainly
-  RankingModelId _mainRankingModel;
-
-  //! Model settings that will be used mainly
-  AggModelSettings _mainSettings;
-
+  eMode _mode;
   size_t _imageIdStride;
-
+  std::string _imageToIdMapFilepath;
   std::string _imagesPath;
-  std::string _rawNetRankingFilepath;
+  std::map<KwScoringDataId, std::string> _imageScoringFileRefs;
+  std::map<KwScoringDataId, std::string> _imageSoftmaxScoringFileRefs;
+  std::map<KwScoringDataId, std::string> _deepFeaturesFileRefs;
+    
+  std::map<eKeywordsDataType, KeywordsContainer> _keywordContainers;
+  KeywordsContainer* _pViretKws;
+  KeywordsContainer* _pGoogleKws;
 
-  std::string _softmaxFilepath;
-  std::string _deepFeaturesFilepath;
-
-  std::string _imageToIdMap;
-
-  KeywordsContainer _keywords;
-  std::map<size_t, std::unique_ptr<Image>> _images;
-
-  std::vector<float> m_indexKwFrequency;
-
-
-  std::unordered_map<NetDataTransformation, std::unique_ptr<TransformationFunctionBase>> _transformations;
+  std::unordered_map<InputDataTransformId, std::unique_ptr<TransformationFunctionBase>> _transformations;
   std::unordered_map<RankingModelId, std::unique_ptr<RankingModelBase>> _models;
+
+  std::vector<std::unique_ptr<Image>> _images;
+
+  std::vector<float> _indexKwFrequency;
+
+
+  
 
 
 #if TRECVID_MAPPING
@@ -445,5 +399,3 @@ private:
 #endif
 
 };
-
-

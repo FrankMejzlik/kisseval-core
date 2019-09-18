@@ -2,6 +2,15 @@
 
 #include <stdint.h>
 
+#define SOLUTION_DIR R"(c:\Users\devwe\source\repos\ImageRanker\)"s
+
+//
+// Keyword types
+//
+#define DEFAULT_KEYWORD_DATA_TYPE eKeywordsDataType::cViret1
+#define DEFAULT_SCORING_DATA_TYPE eImageScoringDataType::cNasNet
+
+
 //
 // TRECVID SPECIFIC
 //
@@ -57,7 +66,7 @@
 
 //! Default settings for main evaluation
 #define DEFAULT_RANKING_MODEL RankingModelId::cViretBase
-#define DEFAULT_AGG_FUNCTION NetDataTransformation::cXToTheP
+#define DEFAULT_AGG_FUNCTION InputDataTransformId::cXToTheP
 #define DEFAULT_MODEL_SETTINGS std::vector<std::string>({"0"s, "0.0f"s, "1"s})
 #define DEFAULT_TRANSFORM_SETTINGS std::vector<std::string>({"0"s, "0"s})
 
@@ -74,24 +83,16 @@
 #define STAGING 0
 #define PRODUCTION 0
 
-#define DEFAULT_MODE ImageRanker::Mode::cCollector
+#define DEFAULT_MODE ImageRanker::eMode::cCollector
 
 //! Will throw exception on LOG_ERROR
 #define THROW_ON_ERROR 1
 
 #define MIN_DESC_SEARCH_LENGTH 3
 
-//! What is delimiter for synonyms in data files
-#define SYNONYM_DELIMITER '#'
-
-//! What is delimiter in CSV data files
-#define CSV_DELIMITER '~'
-
 //! How many suggestions will be returned when called \ref ImageRanker::GetNearKeywords
 #define NUM_SUGESTIONS 5ULL
 
-//! If set to 1, loaded data from files will be inserted into PRIMARY db
-#define PUSH_DATA_TO_DB 0
 
 #define LOG_DEBUG_HYPERNYMS_EXPANSION 0
 #define LOG_DEBUG_IMAGE_RANKING 0

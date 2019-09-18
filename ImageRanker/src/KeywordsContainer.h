@@ -19,11 +19,14 @@ using namespace std::literals::string_literals;
 #include "utility.h"
 #include "Database.h"
 
+class ImageRanker;
+
 using Clause = std::vector<std::pair<bool, size_t>>;
 using CnfFormula = std::vector<Clause>;
 
-struct Keyword
+class Keyword
 {
+public:
   Keyword() = default;
   Keyword(
     size_t wordnetId, 
@@ -66,15 +69,16 @@ struct Keyword
 class KeywordsContainer
 {
 public:
-  KeywordsContainer() = default;
-  KeywordsContainer(const std::string& keywordClassesFilepath);
+  KeywordsContainer() = delete;
+  KeywordsContainer(ImageRanker* pRanker, eKeywordsDataType type, const std::string& keywordClassesFilepath);
 
-  //! Constructor from database data
-  KeywordsContainer(std::vector< std::vector<std::string>>&& data);
+  bool Initialize();
+
 
   [[deprecated]] 
   std::vector<std::tuple<size_t, std::string, std::string>> GetNearKeywords(const std::string& prefix);
 
+  std::vector<const Keyword*> GetNearKeywordsConstPtrs(const std::string& prefix) const;
   std::vector<Keyword*> GetNearKeywordsPtrs(const std::string& prefix);
 
   const Keyword* GetKeywordConstPtrByWordnetId(size_t wordnetId) const;
@@ -170,10 +174,7 @@ public:
   std::vector<size_t> GetCanonicalQueryNoRecur(const std::string& query) const;
 
 private:
-  bool ParseKeywordClassesFile(const std::string& filepath);
-  bool ParseKeywordDbDataStructure(std::vector< std::vector<std::string>>&& data);
-
-  
+ 
 
   /*!
   * Functor for comparing our string=>wordnetId structure
@@ -221,14 +222,17 @@ private:
   };
 
   public:
-  std::vector<size_t> FindAllNeedles(std::string_view hey, std::string_view needle);
+  std::vector<size_t> FindAllNeedles(std::string_view hey, std::string_view needle) const;
   //! Keywords
-  std::vector< std::unique_ptr<Keyword> > _keywords;
+  std::vector<std::unique_ptr<Keyword>> _keywords;
 
   //! Maps wordnetID to Keyword
   std::map<size_t, Keyword*> _wordnetIdToKeywords;
 private:
- 
+  ImageRanker* _pRanker;
+  eKeywordsDataType _pDataType;
+
+  std::string _keywordsFilepath;
 
   //! One huge string of all descriptions for fast keyword search
   std::string _allDescriptions;

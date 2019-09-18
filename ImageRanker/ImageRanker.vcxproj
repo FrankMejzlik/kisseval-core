@@ -142,7 +142,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/aggregation_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
@@ -205,7 +205,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/aggregation_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
@@ -230,7 +230,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/aggregation_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
@@ -244,13 +244,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\FileParser.cpp" />
     <ClCompile Include="src\Database.cpp" />
     <ClCompile Include="src\GridTest.cpp" />
     <ClCompile Include="src\ImageRanker.cpp" />
     <ClCompile Include="src\KeywordsContainer.cpp" />
+    <ClCompile Include="src\ranking_models\BooleanBucketModel.cpp" />
+    <ClCompile Include="src\ranking_models\RankingModelBase.cpp" />
+    <ClCompile Include="src\ranking_models\ViretModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\data_format_config.h" />
+    <ClInclude Include="src\FileParser.h" />
     <ClInclude Include="src\transformations\TransformationFunctionBase.h" />
     <ClInclude Include="src\transformations\transformations.h" />
     <ClInclude Include="src\transformations\TransformationSoftmax.h" />
@@ -263,10 +269,10 @@
     <ClInclude Include="src\Image.hpp" />
     <ClInclude Include="src\ImageRanker.h" />
     <ClInclude Include="src\KeywordsContainer.h" />
-    <ClInclude Include="src\aggregation_models\BooleanBucketModel.h" />
-    <ClInclude Include="src\aggregation_models\RankingModelBase.h" />
-    <ClInclude Include="src\aggregation_models\aggregation_models.h" />
-    <ClInclude Include="src\aggregation_models\ViretBaseModel.h" />
+    <ClInclude Include="src\ranking_models\BooleanBucketModel.h" />
+    <ClInclude Include="src\ranking_models\RankingModelBase.h" />
+    <ClInclude Include="src\ranking_models\ranking_models.h" />
+    <ClInclude Include="src\ranking_models\ViretModel.h" />
     <ClInclude Include="src\utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

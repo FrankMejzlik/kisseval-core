@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Database.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -28,6 +25,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\GridTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ranking_models\ViretModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ranking_models\RankingModelBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ranking_models\BooleanBucketModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FileParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,13 +71,10 @@
     <ClInclude Include="src\GridTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\aggregation_models\BooleanBucketModel.h">
+    <ClInclude Include="src\ranking_models\BooleanBucketModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\aggregation_models\RankingModelBase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\aggregation_models\ViretBaseModel.h">
+    <ClInclude Include="src\ranking_models\RankingModelBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\transformations\TransformationLinearXToTheP.h">
@@ -80,7 +89,16 @@
     <ClInclude Include="src\transformations\transformations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\aggregation_models\aggregation_models.h">
+    <ClInclude Include="src\ranking_models\ranking_models.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ranking_models\ViretModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FileParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\data_format_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

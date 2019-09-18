@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+using namespace std::literals;
 #include <sstream>
 #include <random>
 #include <charconv>
@@ -43,8 +44,6 @@ inline int GetRandomInteger(int from, int to)
 
   return randFromDistribution(rng);
 }
-
-#include <sstream>
 
 inline float strToFloat(const std::string& str)
 {

@@ -23,22 +23,22 @@ public:
   // Methods
 public:
   TransformationSoftmax() :
-    TransformationFunctionBase(NetDataTransformation::cSoftmax)
+    TransformationFunctionBase(InputDataTransformId::cSoftmax)
   {
   }
 
-  virtual void SetTransformationSettings(NetDataTransformSettings settingsString) override
+  virtual void SetTransformationSettings(InputDataTransformSettings settingsString) override
   {
 
   }
 
-  virtual bool CalculateTransformedVectors(const std::map<size_t, std::unique_ptr<Image>>& images) const
+  virtual bool CalculateTransformedVectors(const std::vector<std::unique_ptr<Image>>& images) const
   {
     // Softmax file is loaded by default
     return true;
   }
 
-  virtual bool LowMem_CalculateTransformedVectors(const std::map<size_t, std::unique_ptr<Image>>& images, size_t settings) const
+  virtual bool LowMem_CalculateTransformedVectors(const std::vector<std::unique_ptr<Image>>& images, size_t settings) const
   {
     // Softmax file is loaded by default
     return true;

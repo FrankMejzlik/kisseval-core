@@ -3,10 +3,9 @@
 #include "TransformationFunctionBase.h"
 
 /*!
- * Aggregation of type f(x) = x^p
+ * Transformation doing linear scale to [0, 1] and normalization
  */
 class TransformationLinearXToTheP :
-
   public TransformationFunctionBase
 {
 public:
@@ -26,46 +25,53 @@ public:
   // Methods
 public:
   TransformationLinearXToTheP() :
-    TransformationFunctionBase(NetDataTransformation::cXToTheP),
-    //_exponents({ 1.0f, 0.8f, 2.0f })
+    TransformationFunctionBase(InputDataTransformId::cXToTheP),
     _exponents({ 1.0f})
+    // \todo Implement exponent rigorously mathematically
   {}
 
  
-  virtual bool CalculateTransformedVectors(const std::map<size_t, std::unique_ptr<Image>>& images) const
+  virtual bool CalculateTransformedVectors(const std::vector<std::unique_ptr<Image>>& images) const
   {
     // Itarate over all images
-    for (auto&& [imgId, img] : images)
+    for (auto&& img : images)
     {
-      // Calculate total sum of this bin vector
-      float totalSum{ 0ULL };
-      for (auto&& bin : img->m_rawNetRanking)
+      // Iterate over all input datasets      
+      for (auto&&[kwScDataId, rawDataVector] : img->_rawImageScoringData)
       {
-        totalSum += ((bin - img->m_min) / (img->m_max - img->m_min));
-      }
-
-      // Iterate over all wanted exponents
-      size_t i{0ULL};
-      for (auto&& exp : _exponents)
-      {
-        std::vector<float> aggVector;
-        aggVector.reserve(img->GetNumBins());
-
-        for (auto&& bin : img->m_rawNetRanking)
+        // Get data info
+        auto dataInfo{ img->_rawImageScoringDataInfo.at(kwScDataId) };
+      
+        // Calculate total sum of this bin vector
+        float totalSum{ 0ULL };
+        for (auto&& bin : rawDataVector)
         {
-          // Do final transformation f(x) = x ^ exp
-          // xoxo: power after of before dividing with total sum?
-          aggVector.emplace_back( pow( (((bin - img->m_min) / (img->m_max - img->m_min)) / totalSum), exp));
+          totalSum += ((bin - dataInfo.m_min) / (dataInfo.m_max - dataInfo.m_min));
         }
 
-        // Create copy for MAX based precalculations
-        img->m_aggVectors.emplace(GetGuid(i + 10), aggVector);
+        // Iterate over all wanted exponents
+        size_t i{ 0ULL };
+        for (auto&& exp : _exponents)
+        {
+          std::vector<float> transformedDataVector;
+          transformedDataVector.reserve(rawDataVector.size());
 
-        // Insert this aggregation to IR agregations
-        img->m_aggVectors.emplace(GetGuid(i), std::move(aggVector));
-        
-        ++i;
-      } 
+          for (auto&& bin : rawDataVector)
+          {
+            transformedDataVector.emplace_back(
+              ((bin - dataInfo.m_min) / (dataInfo.m_max - dataInfo.m_min)) / totalSum
+            );
+          }
+
+          // Create one copy for MAX based precalculations ->  10^1 = 1
+          img->_transformedImageScoringData[kwScDataId].emplace(GetGuid(i + 10), transformedDataVector);
+
+          // Second one for SUM based precalculations ->
+          img->_transformedImageScoringData[kwScDataId].emplace(GetGuid(i), std::move(transformedDataVector));
+
+          ++i;
+        }
+      }
     }
 
     return true;
@@ -81,8 +87,11 @@ public:
    *      1 -> Precompute MAX based data vector
    * \return 
    */
-  virtual bool LowMem_CalculateTransformedVectors(const std::map<size_t, std::unique_ptr<Image>>& images, size_t settings) const
+  virtual bool LowMem_CalculateTransformedVectors(const std::vector<std::unique_ptr<Image>>& images, size_t settings) const
   {
+    LOG_ERROR("Not implemented");
+    return false;
+    /*
     // Itarate over all images
     for (auto&&[imgId, img] : images)
     {
@@ -119,20 +128,21 @@ public:
         if (settings % 2 == 0)
         {
           // Move source vector to new destination
-          img->m_aggVectors.emplace(GetGuid(i), std::move(img->m_rawNetRanking));
+          img->_transformedImageScoringData.emplace(GetGuid(i), std::move(img->m_rawNetRanking));
         }
         // If only MAX based data vector wanted
         else 
         {
           // Move source vector to new destination
-          img->m_aggVectors.emplace(GetGuid(i + 10), std::move(img->m_rawNetRanking));
+          img->_transformedImageScoringData.emplace(GetGuid(i + 10), std::move(img->m_rawNetRanking));
         }
 
         ++i;
       }
     }
 
-    return true;
+    return true; 
+    */
   }
 
   virtual size_t GetGuidFromSettings() const override
@@ -149,7 +159,7 @@ public:
     return Settings();
   }
 
-  virtual void SetTransformationSettings(AggModelSettings settingsString) override
+  virtual void SetTransformationSettings(RankingModelSettings settingsString) override
   {
     // If setting 0 set
     if (settingsString.size() >= 1 && settingsString[0].size() >= 0)

@@ -7,57 +7,34 @@
 
 int main()
 {
-  /*ImageRanker ranker{
-    R"(c:\Users\devwe\source\repos\ImageRanker\data\dataset2\images\)",
-    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.pre-softmax)",
-    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\keyword_classes.txt)",
-    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.softmax)",
-    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\Studenti_NasNetLarge.deep-features)",
-    R"(C:\Users\devwe\source\repos\ImageRanker\data\dataset2\files.txt)",
-    1ULL,
-    ImageRanker::Mode::cSearchTool
-  };*/
-
   ImageRanker ranker{
     R"(c:\Users\devwe\source\repos\ImageRankerApp\public\images\)",
-    R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\net_data\nasnet_large.pre-softmax)",
-    R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\net_data\keyword_classes.txt)",
-    R"()",
-    R"()",
-    R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\keyframes\filelist.txt)",
+    std::vector<KeywordsFileRef>{
+        std::tuple(eKeywordsDataType::cViret1, SOLUTION_DIR + R"(data/imageset1/viret_keywords/dataset1/keyword_classes.txt)"s)
+    },
+    std::vector<ScoringDataFileRef>{
+      std::tuple(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet, SOLUTION_DIR + R"(data/imageset1/viret_keywords/dataset1/Studenti_NasNetLarge.pre-softmax)"))
+    },
+    std::vector<ScoringDataFileRef>{
+      std::tuple(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet, SOLUTION_DIR + R"(data/imageset1/viret_keywords/dataset1/Studenti_NasNetLarge.softmax)"))
+    }, 
+    std::vector<ScoringDataFileRef>{},
+    SOLUTION_DIR + R"(data/imageset1/viret_keywords/dataset1/files.txt)",
     1ULL,
-    ImageRanker::Mode::cSearchTool
+    ImageRanker::eMode::cFullAnalytical
   };
 
   ranker.Initialize();
 
-  /*auto result1{
-  ranker.GetRelevantImagesWithSuggestedWrapper(
+  auto result1{
+  ranker.GetRelevantImages(
+    std::tuple{eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet},
     std::vector<std::string>({"3438257"}), 100,
-    NetDataTransformation::cXToTheP, RankingModelId::cViretBase,
+    InputDataTransformId::cXToTheP, RankingModelId::cViretBase,
     std::vector<std::string>({ "0"s, "0.0"s, "2"s, "1"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
-    5_z
-  )};*/
+    5_z, false
+  )};
 
-  for (size_t i{ 0_z }; i < 10000; ++i)
-  {
-    auto result1{
-   ranker.TrecvidGetRelevantShots(
-     std::vector<std::string>({"3438257", "2753044"}), 1000_z,
-     NetDataTransformation::cXToTheP, RankingModelId::cViretBase,
-     std::vector<std::string>({ "0"s, "0.0"s, "3"s, "0"s, "2"s }), std::vector<std::string>({ "1"s, "1"s }),
-     0.0f
-   ) };
-
-    auto result2{
-    ranker.TrecvidGetRelevantShots(
-      std::vector<std::string>({"480993", ""}), 1000_z,
-      NetDataTransformation::cXToTheP, RankingModelId::cViretBase,
-      std::vector<std::string>({ "0"s, "0.0"s, "3"s, "0"s, "2"s }), std::vector<std::string>({ "1"s, "1"s }),
-      0.0f
-    ) };
-
-  }
 
 
   /*auto result15{
@@ -115,7 +92,7 @@ int main()
   }*/
   
 
-  auto result{ ranker.GetNearKeywordsWithImages("Bla") };
+  auto result{ ranker.GetNearKeywords("Bla", true) };
 
   //auto result2{ ranker.GetImageKeywordsForInteractiveSearchWithExampleImages(1ULL, 10)};
 

@@ -2,6 +2,8 @@
 
 #include "RankingModelBase.h"
 
+#include <queue>
+
 class ViretModel :
   public RankingModelBase
 {
@@ -34,7 +36,7 @@ public:
   };
 
 public:
-  virtual void SetModelSettings(AggModelSettings settingsString) override
+  virtual void SetModelSettings(RankingModelSettings settingsString) override
   {
     _settings = GetDefaultSettings();
 
@@ -68,11 +70,12 @@ public:
 
 
   float GetImageQueryRanking(
-    size_t imageId, Image* pImg,
+    KwScoringDataId kwScDataId,
+    Image* pImg,
     const std::vector<CnfFormula>& queryFormulae,
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
-    const std::map<size_t, std::unique_ptr<Image>>& _imagesCont
+    const std::vector<std::unique_ptr<Image>>& _imagesCont
   ) const
   {
 #if LOG_DEBUG_IMAGE_RANKING 
@@ -81,7 +84,7 @@ public:
 #endif
 
     // Prepare pointer for ranking vector aggregation data
-    const std::vector<float>* pImgRankingVector{ pImg->GetAggregationVectorById(pAggregation->GetGuidFromSettings()) };
+    const std::vector<float>* pImgRankingVector{ pImg->GetAggregationVectorById(kwScDataId, pAggregation->GetGuidFromSettings()) };
 
 #if LOG_DEBUG_IMAGE_RANKING 
     std::cout << "Precomputed vector: ";
@@ -296,11 +299,12 @@ public:
   }
 
   float GetImageTemporalQueryRanking(
-    size_t imageId, Image* pImg,
+    KwScoringDataId kwScDataId,
+    Image* pImg,
     const std::vector<CnfFormula>& queryFormulae,
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
-    const std::map<size_t, std::unique_ptr<Image>>& _imagesCont
+    const std::vector<std::unique_ptr<Image>>& _imagesCont
   ) const
   {
     //
@@ -326,7 +330,7 @@ public:
     }
 
     // Get iterator to this image
-    auto imgIt{ _imagesCont.find(imageId) };
+    auto imgIt{ _imagesCont.begin() + pImg->m_index };
 
     // If item not found
     if (imgIt == _imagesCont.end())
@@ -341,7 +345,7 @@ public:
 
     size_t count{ 0_z };
     // If this frame has some succesor frames
-    while (imgIt->second->m_numSuccessorFrames > 0) 
+    while (pImg->m_numSuccessorFrames > 0)
     {
       if (count >= MAX_SUCC_CHECK_COUNT)
       {
@@ -357,7 +361,8 @@ public:
 
       // Get image ranking of image
       auto imageRanking{ GetImageQueryRanking(
-        imgIt->second->m_imageId, imgIt->second.get(),
+        kwScDataId,
+        imgIt->get(),
         queryFormulae, pAggregation, pIndexKwFrequency, _imagesCont
       )};
 
@@ -389,9 +394,10 @@ public:
 
   virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
     const std::vector<CnfFormula>& queryFormulae,
+    KwScoringDataId kwScDataId,
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
-    const std::map<size_t, std::unique_ptr<Image>>& _imagesCont,
+    const std::vector<std::unique_ptr<Image>>& _imagesCont,
     size_t numResults,
     size_t targetImageId
   ) const  override
@@ -423,7 +429,7 @@ public:
 
 
     // Check every image if satisfies query formula
-    for (auto&& [imgId, pImg] : _imagesCont)
+    for (auto&& pImg : _imagesCont)
     {
       //
       // Get ranking of main frame
@@ -431,7 +437,8 @@ public:
 
       // Get image ranking of main image
       auto imageRanking{ GetImageQueryRanking(
-        imgId, pImg.get(),
+        kwScDataId,
+        pImg.get(),
         queryFormulae, pAggregation, pIndexKwFrequency, _imagesCont
       )};
 
@@ -447,7 +454,8 @@ public:
         subFormulae.push_back(queryFormulae[1]);
 
         auto tempQueryRanking{ GetImageTemporalQueryRanking(
-          imgId, pImg.get(),
+          kwScDataId,
+          pImg.get(),
           subFormulae, pAggregation, pIndexKwFrequency, _imagesCont
         )};
 
@@ -522,10 +530,11 @@ public:
   }
 
   virtual ChartData RunModelTest(
+    KwScoringDataId kwScDataId,
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::vector<std::vector<UserImgQuery>>& testQueries,
-    const std::map<size_t, std::unique_ptr<Image>>& _imagesCont
+    const std::vector<std::unique_ptr<Image>>& _imagesCont
   ) const override
   {
 
@@ -555,7 +564,7 @@ public:
         formulae.push_back(queryFormula);
       }
 
-      auto resultImages = GetRankedImages(formulae, pAggregation, pIndexKwFrequency, _imagesCont, 0ULL, imgId);
+      auto resultImages = GetRankedImages(formulae, kwScDataId, pAggregation, pIndexKwFrequency, _imagesCont, 0ULL, imgId);
 
       size_t transformedRank = resultImages.second / scaleDownFactor;
 
