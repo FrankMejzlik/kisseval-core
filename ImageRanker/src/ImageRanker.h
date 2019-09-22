@@ -75,7 +75,7 @@ public:
     const std::vector<ScoringDataFileRef>& imageSoftmaxScoringFileRefs = std::vector<ScoringDataFileRef>(),
     const std::vector<ScoringDataFileRef>& deepFeaturesFileRefs = std::vector<ScoringDataFileRef>(),
     const std::string& imageToIdMapFilepath = ""s,
-    size_t idStride = 1ULL,
+    size_t idOffset = 1ULL,
     eMode mode = DEFAULT_MODE
   );
 
@@ -206,8 +206,8 @@ public:
 
   //! return: <elapsed time, [<video ID, shot ID>]>
   std::tuple<float, std::vector<std::pair<size_t, size_t>>> TrecvidGetRelevantShots(
-    const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
     KwScoringDataId kwScDataId,
+    const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
     InputDataTransformId aggId, RankingModelId modelId,
     const RankingModelSettings& modelSettings, const InputDataTransformSettings& aggSettings,
     float elapsedTime,

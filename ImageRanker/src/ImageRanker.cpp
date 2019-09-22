@@ -282,8 +282,14 @@ bool ImageRanker::InitializeFullMode()
     for (auto&&[ksScDataId, transformedData] : pImg->_transformedImageScoringData)
     {
       // \todo implement propperly
+
       // Copy untouched vector for simulating user from [0, 1] linear scale transformation
       pImg->_rawSimUserData.emplace(ksScDataId, pImg->GetScoringVectorsConstPtr(ksScDataId)->at(200));
+
+      if (std::get<0>(ksScDataId) == eKeywordsDataType::cGoogleAI)
+      {
+        continue;
+      }
 
       for (auto&&[transformId, binVec] : transformedData)
       {
@@ -2100,8 +2106,8 @@ void ImageRanker::PrintIntActionsCsv() const
 #if TRECVID_MAPPING
 
 std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGetRelevantShots(
-  const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
   KwScoringDataId kwScDataId,
+  const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
   InputDataTransformId aggId, RankingModelId modelId,
   const RankingModelSettings& modelSettings, const InputDataTransformSettings& aggSettings,
   float elapsedTime,

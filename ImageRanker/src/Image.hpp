@@ -81,6 +81,20 @@ public:
 
   const std::vector<float>* GetAggregationVectorById(KwScoringDataId kwScDataId, size_t transformId) const
   {
+    // If no transform
+    if (transformId == NO_TRANSFORM_ID)
+    {
+      auto i = _rawImageScoringData.find(kwScDataId);
+
+      if (i == _rawImageScoringData.end())
+      {
+        LOG_ERROR("KsSc ID not found!");
+      }
+
+      return &(i->second);
+    }
+
+
     // If found
     if (
       auto ptr{ GetScoringVectorsConstPtr(kwScDataId) };

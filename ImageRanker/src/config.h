@@ -3,6 +3,12 @@
 #include <stdint.h>
 
 #define SOLUTION_DIR R"(c:\Users\devwe\source\repos\ImageRanker\)"s
+//
+// Google data setings
+//
+#define GOOGLE_AI_NO_LABEL_SCORE 0.00001f
+
+#define NO_TRANSFORM_ID 999_z
 
 //
 // Keyword types

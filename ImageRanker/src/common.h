@@ -20,19 +20,18 @@ enum class eKeywordsDataType
   cGoogleAI = 100
 };
 
-template <eKeywordsDataType Enum>
-inline std::string ToString(size_t id)
+inline std::string ToString(eKeywordsDataType id)
 {
   std::string resultString;
 
   switch (id)
   {
-  case 0:
-    resultString += "Viret";
+  case eKeywordsDataType::cViret1:
+    resultString += "eKeywordsDataType::cViret1";
     break;
 
-  case 100:
-    resultString += "Google AI Vision";
+  case eKeywordsDataType::cGoogleAI:
+    resultString += "eKeywordsDataType::cGoogleAI";
     break;
   }
 
@@ -62,26 +61,25 @@ enum class eImageScoringDataType
 {
   cNasNet = 0,
   cGoogLeNet = 1,
-  cGoogleAI_ = 100
+  cGoogleAI = 100
 };
 
-template <eImageScoringDataType Enum>
-inline std::string ToString(size_t id)
+inline std::string ToString(eImageScoringDataType id)
 {
   std::string resultString;
 
   switch (id)
   {
-  case 0:
-    resultString += "NasNet";
+  case eImageScoringDataType::cNasNet:
+    resultString += "cGoogleAI_";
     break;
 
-  case 1:
-    resultString += "GoogLeNet";
+  case eImageScoringDataType::cGoogLeNet:
+    resultString += "cGoogleAI_";
     break;
 
-  case 100:
-    resultString += "Google AI Vision";
+  case eImageScoringDataType::cGoogleAI:
+    resultString += "cGoogleAI_";
     break;
   }
 
@@ -101,7 +99,7 @@ inline std::string ToString(size_t id)
  *  filepath - String containing filepath (relative of absolute) to file
  *
  */
-using ScoringDataFileRef = std::tuple<eKeywordsDataType, eImageScoringDataType, const std::string>;
+using ScoringDataFileRef = std::tuple<eKeywordsDataType, eImageScoringDataType, std::string>;
 
 
 /*!

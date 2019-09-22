@@ -10,10 +10,12 @@ int main()
   ImageRanker ranker{
     R"(c:\Users\devwe\source\repos\ImageRankerApp\public\images\)",
     std::vector<KeywordsFileRef>{
-        std::tuple(eKeywordsDataType::cViret1, SOLUTION_DIR + R"(data/imageset1/viret_keywords/dataset1/keyword_classes.txt)"s)
+        std::tuple(eKeywordsDataType::cViret1, SOLUTION_DIR + R"(data/imageset1/viret_keywords/dataset1/keyword_classes.txt)"s),
+          std::tuple(eKeywordsDataType::cGoogleAI, SOLUTION_DIR + R"(data/imageset1/google_keywords/dataset1/keyword_classes.google.txt)"s)
     },
     std::vector<ScoringDataFileRef>{
-      std::tuple(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet, SOLUTION_DIR + R"(data/imageset1/viret_keywords/dataset1/Studenti_NasNetLarge.pre-softmax)"))
+      std::tuple(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet, SOLUTION_DIR + R"(data/imageset1/viret_keywords/dataset1/Studenti_NasNetLarge.pre-softmax)")),
+      std::tuple(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI, SOLUTION_DIR + R"(data/imageset1/google_keywords/dataset1/scoringData.google.bin)"))
     },
     std::vector<ScoringDataFileRef>{
       std::tuple(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet, SOLUTION_DIR + R"(data/imageset1/viret_keywords/dataset1/Studenti_NasNetLarge.softmax)"))

@@ -31,6 +31,35 @@ public:
 
   int32_t ParseIntegerLE(const std::byte* pFirstByte) const;
   float ParseFloatLE(const std::byte* pFirstByte) const;
+
+  std::array<char, 4> floatToBytesLE(float number)
+  {
+    std::array<char, 4> byteArray;
+
+    char* bitNumber{ reinterpret_cast<char*>(&number) };
+
+    std::get<0>(byteArray) = bitNumber[0];
+    std::get<1>(byteArray) = bitNumber[1];
+    std::get<2>(byteArray) = bitNumber[2];
+    std::get<3>(byteArray) = bitNumber[3];
+
+    return byteArray;
+  }
+
+  std::array<char, 4> uint32ToBytesLE(uint32_t number)
+  {
+    std::array<char, 4> byteArray;
+
+    char* bitNumber{ reinterpret_cast<char*>(&number) };
+
+    std::get<0>(byteArray) = bitNumber[0];
+    std::get<1>(byteArray) = bitNumber[1];
+    std::get<2>(byteArray) = bitNumber[2];
+    std::get<3>(byteArray) = bitNumber[3];
+
+    return byteArray;
+  }
+
   void ProcessVideoShotsStack(std::stack<Image*>& videoFrames) const;
 
   std::vector<ImageIdFilenameTuple> GetImageFilenames(const std::string& _imageToIdMapFilepath) const;
