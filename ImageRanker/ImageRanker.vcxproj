@@ -258,6 +258,7 @@
     <ClInclude Include="src\data_format_config.h" />
     <ClInclude Include="src\FileParser.h" />
     <ClInclude Include="src\transformations\TransformationFunctionBase.h" />
+    <ClInclude Include="src\transformations\TransformationNoTransform.h" />
     <ClInclude Include="src\transformations\transformations.h" />
     <ClInclude Include="src\transformations\TransformationSoftmax.h" />
     <ClInclude Include="src\transformations\TransformationLinearXToTheP.h" />

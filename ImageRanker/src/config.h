@@ -10,7 +10,7 @@
 //
 #define GOOGLE_AI_NO_LABEL_SCORE 0.00001f
 
-#define NO_TRANSFORM_ID 999_z
+#define NO_TRANSFORM_ID 900_z
 
 //
 // Keyword types

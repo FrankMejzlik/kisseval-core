@@ -221,6 +221,7 @@ bool ImageRanker::InitializeFullMode()
   //
   {
     // Insert all desired transformations
+    _transformations.emplace(InputDataTransformId::cNoTransform, std::make_unique<TransformationNoTransform>());
     _transformations.emplace(InputDataTransformId::cSoftmax, std::make_unique<TransformationSoftmax>());
     _transformations.emplace(InputDataTransformId::cXToTheP, std::make_unique<TransformationLinearXToTheP>());
 
@@ -569,7 +570,7 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
     }
 
     // If this record paired
-    if (totalCounter <= 0)
+    if (i <= 0)
     {
       imageIdOccuranceMap.erase(imageId);
     }

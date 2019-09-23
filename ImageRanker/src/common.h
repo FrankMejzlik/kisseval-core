@@ -186,7 +186,8 @@ enum class InputDataTransformId
 {
   cSoftmax = 100,
   cXToTheP = 200,
-  cSine = 300
+  cSine = 300,
+  cNoTransform = NO_TRANSFORM_ID
 };
 
 enum class QueryOriginId

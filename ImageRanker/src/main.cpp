@@ -35,7 +35,7 @@ int main()
   //ranker.SubmitUserQueriesWithResults(
   //  std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), methodInput, (QueryOriginId)10);
   //
-  for (int i{ 0 }; i < 100; ++i)
+  /*for (int i{ 0 }; i < 100; ++i)
   {
     auto r1{ ranker.GetCouplingImage() };
     auto r2{ ranker.GetCouplingImage() };
@@ -43,7 +43,7 @@ int main()
     auto r4{ ranker.GetCouplingImage() };
     auto r5{ ranker.GetCouplingImage() };
     auto r6{ ranker.GetCouplingImage() };
-  }
+  }*/
   /*
   auto result11{
   ranker.RunModelTestWrapper(
@@ -68,12 +68,12 @@ int main()
   for (auto&& i : result12)
   {
     std::cout << i.first << " => " << i.second << std::endl;
-  }
+  } */
   std::cout << "========================" << std::endl;
   auto result13{
   ranker.RunModelTestWrapper(
-    std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet),
-    InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (QueryOriginId)999,
+    std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
+    InputDataTransformId::cNoTransform, RankingModelId::cViretBase, (QueryOriginId)999,
     std::vector<std::string>({ "0"s }),
     std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s })
   )
@@ -85,7 +85,7 @@ int main()
   }
 
 
-  */
+ 
 
   auto result{ ranker.GetNearKeywords(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), "b", 20, true) };
 

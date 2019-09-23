@@ -9,3 +9,5 @@
 
 // f(x) = x^p
 #include "TransformationLinearXToTheP.h"
+
+#include "TransformationNoTransform.h"
