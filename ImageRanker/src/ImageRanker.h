@@ -111,6 +111,7 @@ public:
   void ClearData();
 
   size_t MapIdToVectorIndex(size_t id) const;
+  KeywordsContainer* GetCorrectKwContainerPtr(KwScoringDataId kwScDataId) const;
 
   std::tuple<
     std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
@@ -169,11 +170,12 @@ public:
 
 
   const Image* GetRandomImage() const;
+  std::tuple<const Image*, bool, size_t> GetCouplingImage() const;
   std::vector<const Image*> GetRandomImageSequence(size_t seqLength) const;
   
 
   NearKeywordsResponse GetNearKeywords(KwScoringDataId kwScDataId, const std::string& prefix, bool withExampleImages);
-  Keyword* GetKeywordByVectorIndex(size_t index);
+  Keyword* GetKeywordByVectorIndex(KwScoringDataId kwScDataId, size_t index);
 
   RelevantImagesResponse GetRelevantImages(
     KwScoringDataId kwScDataId,

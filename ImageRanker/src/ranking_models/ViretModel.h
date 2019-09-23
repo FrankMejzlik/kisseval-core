@@ -559,7 +559,7 @@ public:
       auto imgId = std::get<0>(singleQuery[0]);
 
       std::vector<CnfFormula> formulae;
-      for (auto&&[imgId, queryFormula] : singleQuery)
+      for (auto&&[imgId, queryFormula, withExamples] : singleQuery)
       {
         formulae.push_back(queryFormula);
       }

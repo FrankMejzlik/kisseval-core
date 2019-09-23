@@ -488,6 +488,91 @@ const Image* ImageRanker::GetRandomImage() const
   return GetImageDataById(imageId);
 }
 
+std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
+{
+  // Get Viret KW data
+  auto queriesViret{ GetCachedQueries(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), QueryOriginId::cAll) };
+
+  auto queriesGoogle{ GetCachedQueries(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), QueryOriginId::cAll) };
+
+  // image ID -> (Number of annotations left for this ID, Number of them without examples)
+  std::map<size_t, std::pair<size_t, size_t>> imageIdOccuranceMap;
+  
+  // Add pluses there first
+  for (auto&& v : queriesViret)
+  {
+    auto&&[imageId, fml, withExamples] = v[0];
+
+    auto countRes{ imageIdOccuranceMap.count(imageId) };
+
+    // If not existent Image ID add it
+    if (countRes <= 0)
+    {
+      imageIdOccuranceMap.emplace(imageId, std::pair{ 0_z, 0_z });
+    }
+
+    // Increment count
+    ++imageIdOccuranceMap[imageId].first;
+
+    // If should be without examples
+    if (!withExamples)
+    {
+      ++imageIdOccuranceMap[imageId].second;
+    }
+  }
+
+
+  // Subtract already created Google mathing ones
+  for (auto&& v : queriesGoogle)
+  {
+    auto&&[imageId, fml, withExamples] = v[0];
+
+    auto countRes{ imageIdOccuranceMap.count(imageId) };
+
+    // Skip Google ones that are not created for viret
+    if (countRes <= 0)
+    {
+      continue;
+    }
+
+    // Increment count
+    auto i{ imageIdOccuranceMap[imageId].first };
+    auto ii{ imageIdOccuranceMap[imageId].second };
+
+    // If without examples
+    if (!withExamples)
+    {
+      if (i > 0)
+      {
+        if (ii > 0)
+        {
+          --i;
+          --ii;
+        }
+        else
+        {
+          continue;
+        }
+      }
+    }
+    else 
+    {
+      if (i > 0)
+      {
+        --i;
+      }
+    }
+  }
+
+  // Get random item from map
+  auto it = imageIdOccuranceMap.begin();
+  std::advance(it, rand() % imageIdOccuranceMap.size());
+
+  auto pImg{GetImageDataById(it->first)};
+
+  return std::tuple(pImg, it->second.second, imageIdOccuranceMap.size() - 1);
+}
+
 std::vector<const Image*> ImageRanker::GetRandomImageSequence(size_t seqLength) const
 {
   std::vector<const Image*> resultImagePtrs;
@@ -572,9 +657,9 @@ bool ImageRanker::LoadRepresentativeImages(KwScoringDataId kwScDataId, Keyword* 
   return true;
 }
 
-Keyword* ImageRanker::GetKeywordByVectorIndex(size_t index)
+Keyword* ImageRanker::GetKeywordByVectorIndex(KwScoringDataId kwScDataId, size_t index)
 {
-  return _pViretKws->GetKeywordPtrByVectorIndex(index);
+  return GetCorrectKwContainerPtr(kwScDataId)->GetKeywordPtrByVectorIndex(index);
 }
 
 std::vector<std::string> ImageRanker::GetImageFilenamesTrecvid() const
@@ -1158,7 +1243,7 @@ UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const Simula
     queryFormula.emplace_back(std::move(meta));
   }
 
-  return std::tuple(imageId, queryFormula);
+  return std::tuple(imageId, queryFormula, true);
 }
 
 std::vector< std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource, const SimulatedUser& simUser) const
@@ -1178,7 +1263,7 @@ std::vector< std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(KwScori
   {
     std::vector<UserImgQuery> singleQuery;
 
-    for (auto&&[imageId, formula] : queries)
+    for (auto&&[imageId, formula, withExamples] : queries)
     {
       auto simulatedQuery{ GetSimulatedQueryForImage(imageId, simUser) };
 
@@ -1208,7 +1293,7 @@ std::vector< std::vector<UserImgQuery>> ImageRanker::GetExtendedRealQueries(KwSc
   size_t iterator{ 0_z };
   for (auto&& queries : realUsersQueries)
   {
-    for (auto&&[imageId, formula] : queries)
+    for (auto&&[imageId, formula, withExamples] : queries)
     {
       auto imgIt{ _images.begin() + MapIdToVectorIndex(imageId) };
 
@@ -1293,7 +1378,7 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
 
       // Fetch pairs of <Q, Img>
       std::string query("\
-        SELECT image_id, query FROM `" + _primaryDb.GetDbName() +"`.queries \
+        SELECT image_id, query, type FROM `" + _primaryDb.GetDbName() +"`.queries \
           WHERE ( type = " + std::to_string((int)dataSource) + " OR type =  " + std::to_string(((int)dataSource + 10)) + ") AND \
             keyword_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + " AND \
             scoring_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + ";");
@@ -1311,11 +1396,12 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
         
         size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) * TEST_QUERIES_ID_MULTIPLIER };
 
-        CnfFormula queryFormula{ _pViretKws->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS) };
+        CnfFormula queryFormula{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS) };
+        bool wasWithExamples{ (bool)((strToInt(idQueryRow[2]) / 10) % 2 ) };
 
 #if RUN_TESTS_ONLY_ON_NON_EMPTY_POSTREMOVE_HYPERNYM
 
-        CnfFormula queryFormulaTest{ _pViretKws->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), true) };
+        CnfFormula queryFormulaTest{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), true) };
         if (!queryFormulaTest.empty())
 
 #else 
@@ -1325,7 +1411,7 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
 #endif
         {
           std::vector<UserImgQuery> tmp;
-          tmp.emplace_back(std::move(imageId), std::move(queryFormula));
+          tmp.emplace_back(std::move(imageId), std::move(queryFormula), wasWithExamples);
 
           cachedData0.emplace_back(std::move(tmp));
         }
@@ -1348,7 +1434,7 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
 
       // Fetch pairs of <Q, Img>
       std::string query("\
-        SELECT image_id, query FROM `" + _primaryDb.GetDbName() + "`.queries \
+        SELECT image_id, query, type FROM `" + _primaryDb.GetDbName() + "`.queries \
           WHERE (type = " + std::to_string((int)dataSource) + " OR type = " + std::to_string(((int)dataSource + 10)) + ") AND \
             keyword_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + " AND \
             scoring_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + ";");
@@ -1365,11 +1451,12 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
       {
         size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) * TEST_QUERIES_ID_MULTIPLIER };
 
-        CnfFormula queryFormula{ _pViretKws->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS) };
+        CnfFormula queryFormula{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS) };
+        bool wasWithExamples{ (bool)((strToInt(idQueryRow[2]) / 10) % 2) };
 
 #if RUN_TESTS_ONLY_ON_NON_EMPTY_POSTREMOVE_HYPERNYM
 
-        CnfFormula queryFormulaTest{ _pViretKws->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), true) };
+        CnfFormula queryFormulaTest{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), true) };
         if (!queryFormulaTest.empty())
 
 #else 
@@ -1377,7 +1464,7 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
 #endif
         {
           std::vector<UserImgQuery> tmp;
-          tmp.emplace_back(std::move(imageId), std::move(queryFormula));
+          tmp.emplace_back(std::move(imageId), std::move(queryFormula), wasWithExamples);
 
           cachedData1.emplace_back(std::move(tmp));
         }
@@ -1619,6 +1706,28 @@ std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatist
 
 }
 
+
+KeywordsContainer* ImageRanker::GetCorrectKwContainerPtr(KwScoringDataId kwScDataId) const
+{
+  KeywordsContainer* ptr{nullptr};
+
+  switch (std::get<0>(kwScDataId))
+  {
+  case eKeywordsDataType::cViret1:
+    ptr = _pViretKws;
+    break;
+
+  case eKeywordsDataType::cGoogleAI:
+    ptr = _pGoogleKws;
+    break;
+
+  default:
+    LOG_ERROR("ImageRanker::GetCorrectKwContainerPtr(): Incorrect KW type!");
+  }
+
+  return ptr;
+}
+
 RelevantImagesResponse ImageRanker::GetRelevantImages(
   KwScoringDataId kwScDataId,
   const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
@@ -1629,21 +1738,9 @@ RelevantImagesResponse ImageRanker::GetRelevantImages(
 ) const
 {
   std::vector<CnfFormula> formulae;
-  KeywordsContainer* pKws{nullptr};
 
-  switch (std::get<0>(kwScDataId))
-  {
-  case eKeywordsDataType::cViret1:
-    pKws = _pViretKws;
-    break;
-
-  case eKeywordsDataType::cGoogleAI:
-    pKws = _pGoogleKws;
-    break;
-
-    
-  }
-
+  KeywordsContainer* pKws{ GetCorrectKwContainerPtr(kwScDataId)};
+  
   for (auto&& queryString : queriesEncodedPlaintext)
   {
     // Decode query to logical CNF formula

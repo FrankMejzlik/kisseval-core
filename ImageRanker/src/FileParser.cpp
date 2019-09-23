@@ -497,7 +497,7 @@ bool FileParser::ParseRawScoringData_ViretFormat(
       std::pair<size_t, float> pair{ maxHeap.top() };
       maxHeap.pop();
 
-      auto pKw{ _pRanker->GetKeywordByVectorIndex(pair.first) };
+      auto pKw{ _pRanker->GetKeywordByVectorIndex(kwScDataId, pair.first) };
 
       topKeywords.emplace_back(pKw, pair.second);
     }

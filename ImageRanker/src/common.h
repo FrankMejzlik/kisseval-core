@@ -308,7 +308,7 @@ using KeywordData = std::tuple<size_t, std::string, std::string>;
  */
 using ChartData = std::vector <std::pair<uint32_t, uint32_t>>;
 
-using UserImgQuery = std::tuple<size_t, CnfFormula>;
+using UserImgQuery = std::tuple<size_t, CnfFormula, bool>;
 using UserImgQueryRaw = std::tuple<size_t, std::vector<size_t>>;
 
 
