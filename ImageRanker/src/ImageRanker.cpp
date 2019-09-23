@@ -536,8 +536,8 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
     }
 
     // Increment count
-    auto i{ imageIdOccuranceMap[imageId].first };
-    auto ii{ imageIdOccuranceMap[imageId].second };
+    auto& i{ imageIdOccuranceMap[imageId].first };
+    auto& ii{ imageIdOccuranceMap[imageId].second };
 
     // If without examples
     if (!withExamples)
@@ -581,7 +581,7 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
 
   auto pImg{GetImageDataById(it->first)};
 
-  return std::tuple(pImg, it->second.second, imageIdOccuranceMap.size() - 1);
+  return std::tuple(pImg, !((bool)it->second.second), imageIdOccuranceMap.size() - 1);
 }
 
 std::vector<const Image*> ImageRanker::GetRandomImageSequence(size_t seqLength) const
