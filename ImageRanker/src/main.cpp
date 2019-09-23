@@ -35,14 +35,15 @@ int main()
   //ranker.SubmitUserQueriesWithResults(
   //  std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), methodInput, (QueryOriginId)10);
   //
-
-  auto r1{ ranker.GetCouplingImage() };
-  auto r2{ ranker.GetCouplingImage() };
-  auto r3{ ranker.GetCouplingImage() };
-  auto r4{ ranker.GetCouplingImage() };
-  auto r5{ ranker.GetCouplingImage() };
-  auto r6{ ranker.GetCouplingImage() };
-
+  for (int i{ 0 }; i < 100; ++i)
+  {
+    auto r1{ ranker.GetCouplingImage() };
+    auto r2{ ranker.GetCouplingImage() };
+    auto r3{ ranker.GetCouplingImage() };
+    auto r4{ ranker.GetCouplingImage() };
+    auto r5{ ranker.GetCouplingImage() };
+    auto r6{ ranker.GetCouplingImage() };
+  }
   /*
   auto result11{
   ranker.RunModelTestWrapper(

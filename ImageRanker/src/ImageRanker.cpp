@@ -569,7 +569,7 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
     }
 
     // If this record paired
-    if (i <= 0)
+    if (totalCounter <= 0)
     {
       imageIdOccuranceMap.erase(imageId);
     }
@@ -578,9 +578,14 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
   // Get random item from map
   auto it = imageIdOccuranceMap.begin();
 
+  if (totalCounter <= 0)
+  {
+    return std::tuple(GetRandomImage(), true, 0_z);
+  }
+
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_int_distribution<size_t> dis(0_z, totalCounter);
+  std::uniform_int_distribution<size_t> dis(0_z, totalCounter - 1_z);
 
   std::advance(it, dis(gen));
 
