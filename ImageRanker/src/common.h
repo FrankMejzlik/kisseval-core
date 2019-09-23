@@ -71,15 +71,15 @@ inline std::string ToString(eImageScoringDataType id)
   switch (id)
   {
   case eImageScoringDataType::cNasNet:
-    resultString += "cGoogleAI_";
+    resultString += "cNasNet";
     break;
 
   case eImageScoringDataType::cGoogLeNet:
-    resultString += "cGoogleAI_";
+    resultString += "cGoogLeNet";
     break;
 
   case eImageScoringDataType::cGoogleAI:
-    resultString += "cGoogleAI_";
+    resultString += "cGoogleAI";
     break;
   }
 

@@ -423,8 +423,22 @@ bool FileParser::ParseRawScoringData_ViretFormat(
     // Stride in bytes
     currOffset = sizeof(float);
 
+    auto cmp = [](const std::pair<size_t, float>& left, const std::pair<size_t, float>& right)
+    {
+      return left.second < right.second;
+    };
+
     // Initialize vector of floats for this row
     std::vector<float> rawRankData;
+
+    // Reserve enough space in container
+    std::vector<std::pair<size_t, float>> container;
+
+    std::priority_queue<
+      std::pair<size_t, float>,
+      std::vector<std::pair<size_t, float>>,
+      decltype(cmp)
+    > maxHeap(cmp, std::move(container));
 
 
     // Reserve exact capacitys
@@ -456,6 +470,8 @@ bool FileParser::ParseRawScoringData_ViretFormat(
       // Push float value in
       rawRankData.emplace_back(rankValue);
 
+      maxHeap.push(std::pair(i, rankValue));
+
       // Stride in bytes
       currOffset += sizeof(float);
     }
@@ -472,9 +488,22 @@ bool FileParser::ParseRawScoringData_ViretFormat(
     }
     float variance = sqrtf((float)1 / (numFloats - 1) * varSum);
 
-    
-
     Image* pImg{ imagesCont[_pRanker->MapIdToVectorIndex(id)].get() };
+    std::vector<std::tuple<Keyword*, float>> topKeywords;
+    topKeywords.reserve(NUM_TOP_KEYWORDS);
+
+    for (size_t ii{ 0_z }; ii < NUM_TOP_KEYWORDS; ++ii)
+    {
+      std::pair<size_t, float> pair{ maxHeap.top() };
+      maxHeap.pop();
+
+      auto pKw{ _pRanker->GetKeywordByVectorIndex(pair.first) };
+
+      topKeywords.emplace_back(pKw, pair.second);
+    }
+
+    // Push top keywpords
+    pImg->_topKeywords.emplace(kwScDataId, std::move(topKeywords));
 
     // Push parsed data into the Image instance
     pImg->_rawImageScoringData.emplace(kwScDataId, std::move(rawRankData));

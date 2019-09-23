@@ -1,0 +1,4 @@
+Not implemented: ImageRanker::InitializeGridTests()!
+GridTests initialized.
+Aplication initialized in FULL MODE.
+========================

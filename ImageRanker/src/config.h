@@ -3,6 +3,8 @@
 #include <stdint.h>
 
 #define SOLUTION_DIR R"(c:\Users\devwe\source\repos\ImageRanker\)"s
+
+#define NUM_TOP_KEYWORDS 100_z
 //
 // Google data setings
 //
@@ -18,6 +20,12 @@
 
 
 //
+// Query tests settings
+//
+#define TEST_QUERIES_ID_MULTIPLIER 1
+
+
+//
 // TRECVID SPECIFIC
 //
 #define PRECOMPUTE_MAX_BASED_DATA 1
@@ -26,7 +34,7 @@
 #define DROPPED_SHOTS_FILEPATH R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\dropped_shots.txt)"
 #define DEBUG_SHOW_OUR_FRAME_IDS 1
 
-#define TEST_QUERIES_ID_MULTIPLIER 50
+
 //
 // Frame filename format
 //
@@ -60,7 +68,7 @@
 
 
 //! In seconds
-#define QUERIES_CACHE_LIFETIME 5
+#define QUERIES_CACHE_LIFETIME 0
 
 #define TRUE_TRESHOLD_FOR_KW_FREQUENCY 0.001f
 /*!

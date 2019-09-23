@@ -161,15 +161,19 @@ public:
   /*!
    * This processes input queries that come from users, generates results and sends them back
    */
-  std::vector<GameSessionQueryResult> SubmitUserQueriesWithResults(std::vector<GameSessionInputQuery> inputQueries, QueryOriginId origin = QueryOriginId::cPublic);
+  std::vector<GameSessionQueryResult> SubmitUserQueriesWithResults(
+    KwScoringDataId kwScDataId,
+    std::vector<GameSessionInputQuery> inputQueries, 
+    QueryOriginId origin = QueryOriginId::cPublic
+  );
 
 
   const Image* GetRandomImage() const;
   std::vector<const Image*> GetRandomImageSequence(size_t seqLength) const;
   
 
-  NearKeywordsResponse GetNearKeywords(const std::string& prefix, bool withExampleImages);
-  KeywordData GetKeywordByVectorIndex(size_t index);
+  NearKeywordsResponse GetNearKeywords(KwScoringDataId kwScDataId, const std::string& prefix, bool withExampleImages);
+  Keyword* GetKeywordByVectorIndex(size_t index);
 
   RelevantImagesResponse GetRelevantImages(
     KwScoringDataId kwScDataId,
@@ -197,9 +201,25 @@ public:
   std::tuple<UserAccuracyChartData, UserAccuracyChartData> GetStatisticsUserKeywordAccuracy(QueryOriginId queriesSource = QueryOriginId::cAll) const;
 
 
-  std::string GetKeywordDescriptionByWordnetId(size_t wordnetId)
+  std::string GetKeywordDescriptionByWordnetId(KwScoringDataId kwScDataId, size_t wordnetId)
   {
-    return _pViretKws->GetKeywordDescriptionByWordnetId(wordnetId);
+    KeywordsContainer* pkws{ nullptr };
+
+    switch (std::get<0>(kwScDataId))
+    {
+    case eKeywordsDataType::cViret1:
+      pkws = _pViretKws;
+      break;
+
+    case eKeywordsDataType::cGoogleAI:
+      pkws = _pGoogleKws;
+      break;
+
+    default:
+      LOG_ERROR("Invalid keyword data type.");
+    }
+
+    return pkws->GetKeywordDescriptionByWordnetId(wordnetId);
   }
 
 #if TRECVID_MAPPING
@@ -230,9 +250,22 @@ private:
   size_t GetRandomImageId() const;
  
 
-  std::string GetKeywordByWordnetId(size_t wordnetId) const
+  std::string GetKeywordByWordnetId(KwScoringDataId kwScDataId, size_t wordnetId) const
   {
-    return _pViretKws->GetKeywordByWordnetId(wordnetId);
+    KeywordsContainer* pkws{ nullptr };
+
+    // Save shortcuts
+    switch (std::get<0>(kwScDataId))
+    {
+    case eKeywordsDataType::cViret1:
+      pkws = _pViretKws;
+      break;
+
+    case eKeywordsDataType::cGoogleAI:
+      pkws = _pGoogleKws;
+      break;
+    }
+    return pkws->GetKeywordByWordnetId(wordnetId);
   }
 
   std::string GetImageFilenameById(size_t imageId) const;
@@ -244,7 +277,7 @@ private:
   std::vector<std::pair<std::string, float>> GetHighestProbKeywords(KwScoringDataId kwScDataId, size_t imageId, size_t N) const;
 
   std::vector<std::string> TokenizeAndQuery(std::string_view query) const;
-  std::vector<std::string> StringenizeAndQuery(const std::string& query) const;
+  std::vector<std::string> StringenizeAndQuery(KwScoringDataId kwScDataId, const std::string& query) const;
 
   size_t GetNumImages() const { return _images.size(); };
 
@@ -253,12 +286,12 @@ private:
 
   std::vector<UserImgQueryRaw>& GetCachedQueriesRaw(QueryOriginId dataSource) const;
   
-  std::vector< std::vector<UserImgQuery>>& GetCachedQueries(QueryOriginId dataSource) const;
+  std::vector< std::vector<UserImgQuery>>& GetCachedQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource) const;
 
 
-  std::vector< std::vector<UserImgQuery>> GetSimulatedQueries(QueryOriginId dataSource, const SimulatedUser& pSimUser) const;
+  std::vector< std::vector<UserImgQuery>> GetSimulatedQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource, const SimulatedUser& pSimUser) const;
   std::vector< std::vector<UserImgQuery>> GetSimulatedQueries(size_t count, const SimulatedUser& pSimUser) const;
-  std::vector< std::vector<UserImgQuery>> GetExtendedRealQueries(QueryOriginId dataSource, const SimulatedUser& simUser) const;
+  std::vector< std::vector<UserImgQuery>> GetExtendedRealQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource, const SimulatedUser& simUser) const;
 
   UserImgQuery GetSimulatedQueryForImage(size_t imageId, const SimulatedUser& simUser) const;
 
@@ -348,7 +381,7 @@ private:
   std::vector<std::string> GetImageFilenames() const;
   std::vector<std::string> GetImageFilenamesTrecvid() const;
 
-  bool LoadRepresentativeImages(Keyword* pKw);
+  bool LoadRepresentativeImages(KwScoringDataId kwScDataId, Keyword* pKw);
 
   void GenerateBestHypernymsForImages();
   void PrintIntActionsCsv() const;

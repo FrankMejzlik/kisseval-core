@@ -46,7 +46,16 @@ public:
         float totalSum{ 0ULL };
         for (auto&& bin : rawDataVector)
         {
-          totalSum += ((bin - dataInfo.m_min) / (dataInfo.m_max - dataInfo.m_min));
+          // If normal value
+          if (bin >= dataInfo.m_min)
+          {
+            totalSum += ((bin - dataInfo.m_min) / (dataInfo.m_max - dataInfo.m_min));
+          }
+          // Else zero epsilon substitution
+          else 
+          {
+            totalSum += bin;
+          }
         }
 
         // Iterate over all wanted exponents
@@ -58,9 +67,15 @@ public:
 
           for (auto&& bin : rawDataVector)
           {
-            transformedDataVector.emplace_back(
-              ((bin - dataInfo.m_min) / (dataInfo.m_max - dataInfo.m_min)) / totalSum
-            );
+            if (bin >= dataInfo.m_min)
+            {
+              transformedDataVector.emplace_back(
+                ((bin - dataInfo.m_min) / (dataInfo.m_max - dataInfo.m_min)) / totalSum
+              );
+            }
+            else {
+              transformedDataVector.emplace_back(bin);
+            }
           }
 
           // Create one copy for MAX based precalculations ->  10^1 = 1

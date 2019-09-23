@@ -351,92 +351,94 @@ std::vector<std::pair<TestSettings, ChartData>> ImageRanker::RunGridTest(
   const std::vector<TestSettings>& userTestsSettings
 )
 {
-  // Final result set
-  std::vector<std::pair<TestSettings, ChartData>> results;
+  LOG_ERROR("ImageRanker::RunGridTest() NOT IMPLEMENTED");
+  return std::vector<std::pair<TestSettings, ChartData>>();
+  //// Final result set
+  //std::vector<std::pair<TestSettings, ChartData>> results;
 
-  std::vector<std::thread> tPool;
-  tPool.reserve(10);
+  //std::vector<std::thread> tPool;
+  //tPool.reserve(10);
 
-  constexpr unsigned int numThreads{8};
-  size_t numTests{ GridTest::m_testSettings.size() };
+  //constexpr unsigned int numThreads{8};
+  //size_t numTests{ GridTest::m_testSettings.size() };
 
-  size_t numTestsPerThread{(numTests / numThreads) + 1};
+  //size_t numTestsPerThread{(numTests / numThreads) + 1};
 
-  size_t from{ 0ULL };
-  size_t to{ 0ULL };
+  //size_t from{ 0ULL };
+  //size_t to{ 0ULL };
 
-  // Cache all queries to avoid data races
-  GetCachedQueries(QueryOriginId::cDeveloper);
-  GetCachedQueries(QueryOriginId::cPublic);
+  //// Cache all queries to avoid data races
+  //GetCachedQueries(QueryOriginId::cDeveloper);
+  //GetCachedQueries(QueryOriginId::cPublic);
 
-  std::thread tProgress(&GridTest::ReportTestProgress);
+  //std::thread tProgress(&GridTest::ReportTestProgress);
 
-  // Start threads
-  for (size_t i{ 0ULL }; i < numThreads; ++i)
-  {
-    to = from + numTestsPerThread;
+  //// Start threads
+  //for (size_t i{ 0ULL }; i < numThreads; ++i)
+  //{
+  //  to = from + numTestsPerThread;
 
-    tPool.emplace_back(&ImageRanker::RunGridTestsFromTo, this, &results, from, to);
+  //  tPool.emplace_back(&ImageRanker::RunGridTestsFromTo, this, &results, from, to);
 
-    from = to;
-  }
+  //  from = to;
+  //}
 
-  // Wait for threads
-  for (auto&& t : tPool)
-  {
-    t.join();
-  }
-  tProgress.join();
+  //// Wait for threads
+  //for (auto&& t : tPool)
+  //{
+  //  t.join();
+  //}
+  //tProgress.join();
 
-  // xoxo
+  //// xoxo
 
-  auto cmp = [](const std::pair<size_t, size_t>& left, const std::pair<size_t, size_t>& right)
-  {
-    return left.second < right.second;
-  };
+  //auto cmp = [](const std::pair<size_t, size_t>& left, const std::pair<size_t, size_t>& right)
+  //{
+  //  return left.second < right.second;
+  //};
 
-  std::priority_queue<std::pair<size_t, size_t>, std::vector<std::pair<size_t, size_t>>, decltype(cmp)> maxHeap(cmp);
+  //std::priority_queue<std::pair<size_t, size_t>, std::vector<std::pair<size_t, size_t>>, decltype(cmp)> maxHeap(cmp);
 
-  // Choose the winner
-  size_t i{0ULL};
-  for (auto&& test : results)
-  {
-    size_t score{0ULL};
-    size_t j{ 0ULL };
+  //// Choose the winner
+  //size_t i{0ULL};
+  //for (auto&& test : results)
+  //{
+  //  size_t score{0ULL};
+  //  size_t j{ 0ULL };
 
-    size_t numHalf{ test.second.size() / 2 };
-    for (auto&& val : test.second)
-    {
-      // Only calculate first half
-      if (j >= numHalf)
-      {
-        break;
-      }
-      score += val.second;
+  //  size_t numHalf{ test.second.size() / 2 };
+  //  for (auto&& val : test.second)
+  //  {
+  //    // Only calculate first half
+  //    if (j >= numHalf)
+  //    {
+  //      break;
+  //    }
+  //    score += val.second;
 
-      ++j;
-    }
+  //    ++j;
+  //  }
 
-    maxHeap.push(std::pair(i, score));
+  //  maxHeap.push(std::pair(i, score));
 
-    ++i;
-  }
+  //  ++i;
+  //}
 
-  LOG("All tests complete.");
+  //LOG("All tests complete.");
 
-  std::vector<std::pair<TestSettings, ChartData>> resultsReal;
+  //std::vector<std::pair<TestSettings, ChartData>> resultsReal;
 
-  for (size_t i{ 0ULL }; i < 15; ++i)
-  {
-    auto item = maxHeap.top();
-    maxHeap.pop();
+  //for (size_t i{ 0ULL }; i < 15; ++i)
+  //{
+  //  auto item = maxHeap.top();
+  //  maxHeap.pop();
 
-    resultsReal.emplace_back(results[item.first]);
-  }
-  
-  LOG("Winner models and settings selected.");
+  //  resultsReal.emplace_back(results[item.first]);
+  //}
+  //
+  //LOG("Winner models and settings selected.");
 
-  return resultsReal;
+  //return resultsReal;
 }
 
 void ImageRanker::RunGridTestsFromTo(
@@ -500,7 +502,7 @@ std::vector<const Image*> ImageRanker::GetRandomImageSequence(size_t seqLength) 
 }
 
 NearKeywordsResponse ImageRanker::GetNearKeywords(
-  const std::string& prefix, bool withExampleImages
+  KwScoringDataId kwScDataId, const std::string& prefix, bool withExampleImages
 )
 {
   // Force lowercase
@@ -513,21 +515,35 @@ NearKeywordsResponse ImageRanker::GetNearKeywords(
     lower.push_back(std::tolower(elem, loc));
   }
 
-  auto suggestedKeywordsPtrs{ _pViretKws->GetNearKeywordsPtrs(lower) };
+  KeywordsContainer* pkws{nullptr};
+
+  // Save shortcuts
+  switch (std::get<0>(kwScDataId))
+  {
+  case eKeywordsDataType::cViret1:
+    pkws = _pViretKws;
+    break;
+
+  case eKeywordsDataType::cGoogleAI:
+    pkws = _pGoogleKws;
+    break;
+  }
+
+  auto suggestedKeywordsPtrs{ pkws->GetNearKeywordsPtrs(lower) };
 
   if (withExampleImages)
   {
     // Load representative images for keywords
     for (auto&& pKw : suggestedKeywordsPtrs)
     {
-      LoadRepresentativeImages(pKw);
+      LoadRepresentativeImages(kwScDataId, pKw);
     }
   }
 
   return suggestedKeywordsPtrs;
 }
 
-bool ImageRanker::LoadRepresentativeImages(Keyword* pKw)
+bool ImageRanker::LoadRepresentativeImages(KwScoringDataId kwScDataId, Keyword* pKw)
 {
   // If examples already loaded
   if (!pKw->m_exampleImageFilenames.empty())
@@ -540,7 +556,7 @@ bool ImageRanker::LoadRepresentativeImages(Keyword* pKw)
 
   // Get first results for this keyword
   std::vector<const Image*> relevantImages{ std::get<0>(GetRelevantImages(
-    std::tuple(DEFAULT_KEYWORD_DATA_TYPE, DEFAULT_SCORING_DATA_TYPE),
+    kwScDataId,
     queries, 10,
     DEFAULT_AGG_FUNCTION, DEFAULT_RANKING_MODEL,
     DEFAULT_MODEL_SETTINGS, DEFAULT_TRANSFORM_SETTINGS
@@ -556,9 +572,9 @@ bool ImageRanker::LoadRepresentativeImages(Keyword* pKw)
   return true;
 }
 
-KeywordData ImageRanker::GetKeywordByVectorIndex(size_t index)
+Keyword* ImageRanker::GetKeywordByVectorIndex(size_t index)
 {
-  return _pViretKws->GetKeywordByVectorIndex(index);
+  return _pViretKws->GetKeywordPtrByVectorIndex(index);
 }
 
 std::vector<std::string> ImageRanker::GetImageFilenamesTrecvid() const
@@ -633,7 +649,7 @@ ImageRanker::GetImageKeywordsForInteractiveSearch(
     // Get example images
     if (withExampleImages)
     {
-      LoadRepresentativeImages(kwPtr);
+      LoadRepresentativeImages(kwScDataId, kwPtr);
 
       exampleImagesFilepaths = kwPtr->m_exampleImageFilenames;
     }
@@ -787,7 +803,7 @@ std::string ImageRanker::EncodeAndQuery(const std::string& query) const
   return resultEncodedGraph;
 }
 
-std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(std::vector<GameSessionInputQuery> inputQueries, QueryOriginId origin)
+std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(KwScoringDataId kwScDataId, std::vector<GameSessionInputQuery> inputQueries, QueryOriginId origin)
 {
   /******************************
     Save query to database
@@ -799,7 +815,7 @@ std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(st
   size_t originNumber{ static_cast<size_t>(origin) };
 
   // Store it into database
-  std::string sqlQuery{ "INSERT INTO `queries` (query, image_id, type, sessionId) VALUES " };
+  std::string sqlQuery{ "INSERT INTO `queries` (query, keyword_data_type, scoring_data_type, image_id, type, sessionId) VALUES " };
 
   for (auto&& query : inputQueries)
   {
@@ -807,9 +823,9 @@ std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(st
     size_t imageId = std::get<1>(query);
     std::string queryString = std::get<2>(query);
 
-
-
-    sqlQuery += "('"s + EncodeAndQuery(queryString) + "', " + std::to_string(imageId) + ", "s + std::to_string(originNumber) + ", '"s + std::get<0>(query) + "'),"s;
+    sqlQuery += "('"s + EncodeAndQuery(queryString) + "', "s + std::to_string((size_t)std::get<0>(kwScDataId)) + ", "s 
+      + std::to_string((size_t)std::get<1>(kwScDataId)) + ", " + std::to_string(imageId) + ", "s 
+      + std::to_string(originNumber) + ", '"s + std::get<0>(query) + "'),"s;
   }
 
   sqlQuery.pop_back();
@@ -830,7 +846,7 @@ std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(st
   for (auto&& query : inputQueries)
   {
     // Get user keywords tokens
-    std::vector<std::string> userKeywords{ StringenizeAndQuery(std::get<2>(query)) };
+    std::vector<std::string> userKeywords{ StringenizeAndQuery(kwScDataId, std::get<2>(query)) };
 
     // Get image ID
     size_t imageId = std::get<1>(query);
@@ -856,6 +872,8 @@ size_t ImageRanker::MapIdToVectorIndex(size_t id) const
 
 std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(KwScoringDataId kwScDataId, size_t imageId, size_t N) const
 {
+  N = std::min(N, NUM_TOP_KEYWORDS);
+
   // Find image in map
   Image* pImg = _images[MapIdToVectorIndex(imageId)].get();
 
@@ -904,7 +922,7 @@ std::vector<std::string> ImageRanker::TokenizeAndQuery(std::string_view query) c
   return resultTokens;
 }
 
-std::vector<std::string> ImageRanker::StringenizeAndQuery(const std::string& query) const
+std::vector<std::string> ImageRanker::StringenizeAndQuery(KwScoringDataId kwScDataId, const std::string& query) const
 {
   // Create sstram from query
   std::stringstream querySs{ query.data() };
@@ -925,7 +943,7 @@ std::vector<std::string> ImageRanker::StringenizeAndQuery(const std::string& que
     tokenSs >> wordnetId;
 
     // Push new token into result
-    resultTokens.emplace_back(GetKeywordByWordnetId(wordnetId));
+    resultTokens.emplace_back(GetKeywordByWordnetId(kwScDataId, wordnetId));
   }
 
   return resultTokens;
@@ -943,6 +961,8 @@ ChartData ImageRanker::RunModelTestWrapper(
   // If data source should be simulated
   if (static_cast<int>(dataSource) >= SIMULATED_QUERIES_ENUM_OFSET)
   {
+    LOG_ERROR("RunModelTestWrapper() - NOT IMPLEMENTED");
+
     // Parse simulated user settings
     auto simUser{ GetSimUserSettings(simulatedUserSettings) };
 
@@ -954,18 +974,18 @@ ChartData ImageRanker::RunModelTestWrapper(
       //
 
       // Get real user queries with simulated queries added
-      testQueries = GetExtendedRealQueries(dataSource, simUser);
+      testQueries = GetExtendedRealQueries(kwScDataId, dataSource, simUser);
     }
     else 
     {
       // Get simulated queries
-      testQueries = GetSimulatedQueries(dataSource, simUser);
+      testQueries = GetSimulatedQueries(kwScDataId, dataSource, simUser);
     }
   }
   else
   {
     // Get queries
-    testQueries = GetCachedQueries(dataSource);
+    testQueries = GetCachedQueries(kwScDataId, dataSource);
   }
   
   // Get desired transformation
@@ -1141,13 +1161,13 @@ UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const Simula
   return std::tuple(imageId, queryFormula);
 }
 
-std::vector< std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(QueryOriginId dataSource, const SimulatedUser& simUser) const
+std::vector< std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource, const SimulatedUser& simUser) const
 {
   // Determine what id would that be if not simulated user
   QueryOriginId dataSourceNotSimulated{ static_cast<QueryOriginId>(static_cast<int>(dataSource) - SIMULATED_QUERIES_ENUM_OFSET) };
 
   // Fetch real user queries to immitate them
-  std::vector< std::vector<UserImgQuery>> realUsersQueries{ GetCachedQueries(dataSourceNotSimulated) };
+  std::vector< std::vector<UserImgQuery>> realUsersQueries{ GetCachedQueries(kwScDataId, dataSourceNotSimulated) };
 
   // Prepare result structure
   std::vector< std::vector<UserImgQuery>> resultSimulatedQueries;
@@ -1171,13 +1191,13 @@ std::vector< std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(QueryOr
   return resultSimulatedQueries;
 }
 
-std::vector< std::vector<UserImgQuery>> ImageRanker::GetExtendedRealQueries(QueryOriginId dataSource, const SimulatedUser& simUser) const
+std::vector< std::vector<UserImgQuery>> ImageRanker::GetExtendedRealQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource, const SimulatedUser& simUser) const
 {
   // Determine what id would that be if not simulated user
   QueryOriginId dataSourceNotSimulated{ static_cast<QueryOriginId>(static_cast<int>(dataSource) - USER_PLUS_SIMULATED_QUERIES_ENUM_OFSET) };
 
   // Fetch real user queries to immitate them
-  std::vector< std::vector<UserImgQuery>> realUsersQueries{ GetCachedQueries(dataSourceNotSimulated) };
+  std::vector< std::vector<UserImgQuery>> realUsersQueries{ GetCachedQueries(kwScDataId, dataSourceNotSimulated) };
 
   // Prepare result structure - copy of real user queries
   std::vector< std::vector<UserImgQuery>> resultSimulatedQueries{ realUsersQueries };
@@ -1229,7 +1249,7 @@ std::vector< std::vector<UserImgQuery>> ImageRanker::GetExtendedRealQueries(Quer
   return resultSimulatedQueries;
 }
 
-std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(QueryOriginId dataSource) const
+std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource) const
 {
   static std::vector < std::vector<UserImgQuery>> cachedAllData;
   static std::vector < std::vector<UserImgQuery>> cachedData0;
@@ -1249,8 +1269,8 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(QueryOrig
     {
       cachedAllData.clear();
 
-      const auto& queries1 = GetCachedQueries(QueryOriginId::cDeveloper);
-      const auto& queries2 = GetCachedQueries(QueryOriginId::cPublic);
+      const auto& queries1 = GetCachedQueries(kwScDataId, QueryOriginId::cDeveloper);
+      const auto& queries2 = GetCachedQueries(kwScDataId, QueryOriginId::cPublic);
 
       // Merge them
       std::copy(queries1.begin(), queries1.end(), back_inserter(cachedAllData));
@@ -1272,7 +1292,11 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(QueryOrig
       cachedData0.clear();
 
       // Fetch pairs of <Q, Img>
-      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
+      std::string query("\
+        SELECT image_id, query FROM `" + _primaryDb.GetDbName() +"`.queries \
+          WHERE ( type = " + std::to_string((int)dataSource) + " OR type =  " + std::to_string(((int)dataSource + 10)) + ") AND \
+            keyword_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + " AND \
+            scoring_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + ";");
       
       auto dbData = _primaryDb.ResultQuery(query);
 
@@ -1323,7 +1347,12 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(QueryOrig
       cachedData1.clear();
 
       // Fetch pairs of <Q, Img>
-      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
+      std::string query("\
+        SELECT image_id, query FROM `" + _primaryDb.GetDbName() + "`.queries \
+          WHERE (type = " + std::to_string((int)dataSource) + " OR type = " + std::to_string(((int)dataSource + 10)) + ") AND \
+            keyword_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + " AND \
+            scoring_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + ";");
+
       auto dbData = _primaryDb.ResultQuery(query);
 
       if (dbData.first != 0)
@@ -1600,11 +1629,25 @@ RelevantImagesResponse ImageRanker::GetRelevantImages(
 ) const
 {
   std::vector<CnfFormula> formulae;
+  KeywordsContainer* pKws{nullptr};
+
+  switch (std::get<0>(kwScDataId))
+  {
+  case eKeywordsDataType::cViret1:
+    pKws = _pViretKws;
+    break;
+
+  case eKeywordsDataType::cGoogleAI:
+    pKws = _pGoogleKws;
+    break;
+
+    
+  }
 
   for (auto&& queryString : queriesEncodedPlaintext)
   {
     // Decode query to logical CNF formula
-    CnfFormula queryFormula{ _pViretKws->GetCanonicalQuery(EncodeAndQuery(queryString)) };
+    CnfFormula queryFormula{ pKws->GetCanonicalQuery(EncodeAndQuery(queryString)) };
 
     formulae.push_back(queryFormula);
   }
@@ -1626,7 +1669,7 @@ RelevantImagesResponse ImageRanker::GetRelevantImages(
   RelevantImagesResponse resultResponse;
 
   std::vector<std::tuple<size_t, std::string, float>> occuranceHistogram;
-  occuranceHistogram.reserve(_pViretKws->GetNetVectorSize());
+  occuranceHistogram.reserve(pKws->GetNetVectorSize());
 
 
   if (withOccuranceValue)

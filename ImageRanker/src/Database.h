@@ -32,6 +32,10 @@ public:
   size_t GetLastId() const;
   std::string GetErrorDescription() const;
   size_t GetErrorCode() const;
+  const std::string& GetDbName() const
+  {
+    return _dbName;
+  };
 
   std::string EscapeString(const std::string& stringToEscape) const;
   size_t EstablishConnection();
