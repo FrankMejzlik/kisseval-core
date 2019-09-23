@@ -498,6 +498,8 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
   // image ID -> (Number of annotations left for this ID, Number of them without examples)
   std::map<size_t, std::pair<size_t, size_t>> imageIdOccuranceMap;
   
+  size_t totalCounter{ 0_z };
+
   // Add pluses there first
   for (auto&& v : queriesViret)
   {
@@ -513,6 +515,7 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
 
     // Increment count
     ++imageIdOccuranceMap[imageId].first;
+    ++totalCounter;
 
     // If should be without examples
     if (!withExamples)
@@ -548,6 +551,7 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
         {
           --i;
           --ii;
+          --totalCounter;
         }
         else
         {
@@ -560,6 +564,7 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
       if (i > 0)
       {
         --i;
+        --totalCounter;
       }
     }
 
@@ -575,13 +580,13 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
 
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_int_distribution<size_t> dis(0_z, imageIdOccuranceMap.size());
+  std::uniform_int_distribution<size_t> dis(0_z, totalCounter);
 
   std::advance(it, dis(gen));
 
   auto pImg{GetImageDataById(it->first)};
 
-  return std::tuple(pImg, !((bool)it->second.second), imageIdOccuranceMap.size() - 1);
+  return std::tuple(pImg, !((bool)it->second.second), totalCounter);
 }
 
 std::vector<const Image*> ImageRanker::GetRandomImageSequence(size_t seqLength) const
