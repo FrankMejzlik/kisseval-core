@@ -174,7 +174,7 @@ public:
   std::vector<const Image*> GetRandomImageSequence(size_t seqLength) const;
   
 
-  NearKeywordsResponse GetNearKeywords(KwScoringDataId kwScDataId, const std::string& prefix, bool withExampleImages);
+  NearKeywordsResponse GetNearKeywords(KwScoringDataId kwScDataId, const std::string& prefix, size_t numResults, bool withExampleImages);
   Keyword* GetKeywordByVectorIndex(KwScoringDataId kwScDataId, size_t index);
 
   RelevantImagesResponse GetRelevantImages(

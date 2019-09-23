@@ -562,11 +562,22 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
         --i;
       }
     }
+
+    // If this record paired
+    if (i <= 0)
+    {
+      imageIdOccuranceMap.erase(imageId);
+    }
   }
 
   // Get random item from map
   auto it = imageIdOccuranceMap.begin();
-  std::advance(it, rand() % imageIdOccuranceMap.size());
+
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<size_t> dis(0_z, imageIdOccuranceMap.size());
+
+  std::advance(it, dis(gen));
 
   auto pImg{GetImageDataById(it->first)};
 
@@ -587,7 +598,7 @@ std::vector<const Image*> ImageRanker::GetRandomImageSequence(size_t seqLength) 
 }
 
 NearKeywordsResponse ImageRanker::GetNearKeywords(
-  KwScoringDataId kwScDataId, const std::string& prefix, bool withExampleImages
+  KwScoringDataId kwScDataId, const std::string& prefix, size_t numResults, bool withExampleImages
 )
 {
   // Force lowercase
@@ -614,7 +625,7 @@ NearKeywordsResponse ImageRanker::GetNearKeywords(
     break;
   }
 
-  auto suggestedKeywordsPtrs{ pkws->GetNearKeywordsPtrs(lower) };
+  auto suggestedKeywordsPtrs{ pkws->GetNearKeywordsPtrs(lower, numResults) };
 
   if (withExampleImages)
   {

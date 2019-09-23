@@ -649,7 +649,7 @@ std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsConstPtrs(const st
 }
 
 
-std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& prefix)
+std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& prefix, size_t numResults)
 {
   KeywordsContainer::KeywordLessThanStringComparator comparator;
   size_t left = 0ULL;
@@ -681,13 +681,13 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
   }
 
   std::vector<Keyword*> resultKeywords;
-  resultKeywords.reserve(NUM_SUGESTIONS);
+  resultKeywords.reserve(numResults);
   std::vector<Keyword*> postResultKeywords;
 
 
 
   // Get desired number of results
-  for (size_t j = 0ULL; j < NUM_SUGESTIONS; ++j)
+  for (size_t j = 0ULL; j < numResults; ++j)
   {
     size_t idx{ left + j };
 

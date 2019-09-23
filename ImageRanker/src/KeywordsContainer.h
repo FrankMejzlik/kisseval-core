@@ -79,7 +79,7 @@ public:
   std::vector<std::tuple<size_t, std::string, std::string>> GetNearKeywords(const std::string& prefix);
 
   std::vector<const Keyword*> GetNearKeywordsConstPtrs(const std::string& prefix) const;
-  std::vector<Keyword*> GetNearKeywordsPtrs(const std::string& prefix);
+  std::vector<Keyword*> GetNearKeywordsPtrs(const std::string& prefix, size_t numResults);
 
   const Keyword* GetKeywordConstPtrByWordnetId(size_t wordnetId) const;
 
