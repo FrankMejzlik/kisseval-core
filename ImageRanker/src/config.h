@@ -57,7 +57,7 @@
 
 //! If constructed hypernyms should be ignored
 #define IGNORE_CONSTRUCTED_HYPERNYMS false
-#define RUN_TESTS_ONLY_ON_NON_EMPTY_POSTREMOVE_HYPERNYM 1
+#define RUN_TESTS_ONLY_ON_NON_EMPTY_POSTREMOVE_HYPERNYM 0
 
 //
 // Simulated user & temp queries settings
