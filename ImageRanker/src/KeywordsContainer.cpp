@@ -779,6 +779,14 @@ Keyword* KeywordsContainer::MapDescIndexToKeyword(size_t descIndex) const
 
     if (right - left <= 1)
     {
+      if (descIndex < _descIndexToKeyword[right].first)
+      {
+        return _descIndexToKeyword[left].second;
+      }
+      else 
+      {
+        return _descIndexToKeyword[right].second;
+      }
       break;
     }
 
@@ -786,7 +794,7 @@ Keyword* KeywordsContainer::MapDescIndexToKeyword(size_t descIndex) const
 
   }
 
-  return _descIndexToKeyword[left].second;
+  
 }
 
 std::string KeywordsContainer::GetKeywordByWordnetId(size_t wordnetId) const

@@ -599,10 +599,20 @@ std::vector<const Image*> ImageRanker::GetRandomImageSequence(size_t seqLength) 
 {
   std::vector<const Image*> resultImagePtrs;
 
-  for (size_t i{ 0_z }; i < seqLength; ++i)
+  const Image* firstImgPtr{nullptr};
+
+  do 
   {
-    // \todo Implement to return images from the same video
-    resultImagePtrs.emplace_back(GetRandomImage());
+    firstImgPtr = GetRandomImage();
+  } 
+  while (firstImgPtr->m_numSuccessorFrames <= (seqLength - 1));
+
+  resultImagePtrs.emplace_back(firstImgPtr);
+
+  for (size_t i{ 1_z }; i <= (seqLength - 1); ++i)
+  {
+    auto ptr = GetImageDataById(firstImgPtr->m_imageId + (i * _imageIdStride));
+    resultImagePtrs.emplace_back(ptr);
   }
 
   return resultImagePtrs;
@@ -970,7 +980,7 @@ std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(Kw
 
     userResult.emplace_back(
       std::get<0>(query), std::move(imageFilename), std::move(userKeywords), 
-      GetHighestProbKeywords(std::tuple(DEFAULT_KEYWORD_DATA_TYPE, DEFAULT_SCORING_DATA_TYPE), imageId, 10ULL)
+      GetHighestProbKeywords(kwScDataId, imageId, 10ULL)
     );
   }
 

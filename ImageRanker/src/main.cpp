@@ -87,7 +87,7 @@ int main()
 
   auto r1 = ranker.GetRelevantImages(
     std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
-    std::vector<std::string>{ "15&15&15&15&15&15&15&15&15&15&53" }, 100_z,
+    std::vector<std::string>{ "15&15&15&15&15&15&15&15&15&15&53", "15&15&15&15&15&15&15&15&15&15&53" }, 100_z,
     InputDataTransformId::cNoTransform, RankingModelId::cViretBase,
     std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
     1_z
@@ -95,15 +95,15 @@ int main()
 
   auto r2 = ranker.GetRelevantImages(
     std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
-    std::vector<std::string>{ "15&15&15&15&15&15&15&15&15&15&53" }, 100_z,
+    std::vector<std::string>{ "15&15&15&15&15&15&15&15&15&15&53", "15&15&15&15&15&15&15&15&15&15&53" }, 100_z,
     InputDataTransformId::cNoTransform, RankingModelId::cViretBase,
     std::vector<std::string>({ "0"s, "0.0"s, "0"s }), std::vector<std::string>({ "1"s, "0"s }),
     1_z
   );
 
-  auto result{ ranker.GetNearKeywords(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), "b", 20, true) };
+  //auto result{ ranker.GetNearKeywords(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), "bike", 20, true) };
 
-  //auto result2{ ranker.GetImageKeywordsForInteractiveSearchWithExampleImages(1ULL, 10)};
+  //auto result2{ ranker.GetRandomImageSequence(2)};
 
   
   return 0;

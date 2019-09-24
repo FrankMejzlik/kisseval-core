@@ -345,7 +345,7 @@ public:
 
     size_t count{ 0_z };
     // If this frame has some succesor frames
-    while (pImg->m_numSuccessorFrames > 0)
+    for (size_t ii{0_z}; ii < pImg->m_numSuccessorFrames; ++ii)
     {
       if (count >= MAX_SUCC_CHECK_COUNT)
       {
