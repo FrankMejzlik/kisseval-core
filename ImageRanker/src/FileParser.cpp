@@ -494,6 +494,9 @@ bool FileParser::ParseRawScoringData_ViretFormat(
 
     for (size_t ii{ 0_z }; ii < NUM_TOP_KEYWORDS; ++ii)
     {
+      if (maxHeap.size() <= 0)
+        break;
+
       std::pair<size_t, float> pair{ maxHeap.top() };
       maxHeap.pop();
 
@@ -742,6 +745,20 @@ bool FileParser::ParseRawScoringData_GoogleAiVisionFormat(
     ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
     uint32_t numLabels = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
 
+    auto cmp = [](const std::pair<size_t, float>& left, const std::pair<size_t, float>& right)
+    {
+      return left.second < right.second;
+    };
+
+    // Reserve enough space in container
+    std::vector<std::pair<size_t, float>> container;
+
+    std::priority_queue<
+      std::pair<size_t, float>,
+      std::vector<std::pair<size_t, float>>,
+      decltype(cmp)
+    > maxHeap(cmp, std::move(container));
+
     for (size_t iLabel{ 0_z }; iLabel < numLabels; ++iLabel)
     {
       ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
@@ -766,6 +783,8 @@ bool FileParser::ParseRawScoringData_GoogleAiVisionFormat(
 
       // Add to sum
       sum += score;
+
+      maxHeap.push(std::pair(kwId, score));
     }
 
     // Calculate mean value
@@ -781,6 +800,25 @@ bool FileParser::ParseRawScoringData_GoogleAiVisionFormat(
     float variance = sqrtf((float)1 / (numLabels - 1) * varSum);
 
     Image* pImg{ imagesCont[imageId].get() };
+
+    std::vector<std::tuple<Keyword*, float>> topKeywords;
+    topKeywords.reserve(NUM_TOP_KEYWORDS);
+
+    for (size_t ii{ 0_z }; ii < NUM_TOP_KEYWORDS; ++ii)
+    {
+      if (maxHeap.size() <= 0)
+        break;
+
+      std::pair<size_t, float> pair{ maxHeap.top() };
+      maxHeap.pop();
+
+      auto pKw{ _pRanker->GetKeywordByVectorIndex(kwScDataId, pair.first) };
+
+      topKeywords.emplace_back(pKw, pair.second);
+    }
+
+    // Push top keywpords
+    pImg->_topKeywords.emplace(kwScDataId, std::move(topKeywords));
 
     // Push parsed data into the Image instance
     pImg->_rawImageScoringData.emplace(kwScDataId, std::move(scoringData));

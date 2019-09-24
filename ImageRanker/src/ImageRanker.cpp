@@ -736,9 +736,14 @@ ImageRanker::GetImageKeywordsForInteractiveSearch(
   nonHypernyms.reserve(numResults);
 
   auto img{ GetImageDataById(imageId) };
-  if (img != nullptr)
+  if (img == nullptr)
   {
     LOG_ERROR("Image not found.");
+    return std::tuple<
+      std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
+      std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
+      std::vector<std::pair<size_t, std::string>>
+    >();
   }
 
   // Get kws
