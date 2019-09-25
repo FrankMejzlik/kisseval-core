@@ -124,6 +124,7 @@ public:
   );
 
   void SubmitInteractiveSearchSubmit(
+    KwScoringDataId kwScDataId,
     InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, InputDataTransformId transformId,
     std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
     std::string sessionId, size_t searchSessionIndex, int endStatus, size_t sessionDuration,

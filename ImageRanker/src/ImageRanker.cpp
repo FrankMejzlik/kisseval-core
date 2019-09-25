@@ -1520,6 +1520,7 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
 }
 
 void ImageRanker::SubmitInteractiveSearchSubmit(
+  KwScoringDataId kwScDataId,
   InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, InputDataTransformId transformId,
   std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
   std::string sessionId, size_t searchSessionIndex, int endStatus, size_t sessionDuration,
@@ -1550,8 +1551,8 @@ void ImageRanker::SubmitInteractiveSearchSubmit(
   }
 
   std::stringstream query1Ss;
-  query1Ss << "INSERT INTO `interactive_searches`(`type`, `target_image_id`, `model_id`, `transformation_id`, `model_settings`, `transformation_settings`, `session_id`, `user_id`, `search_session_index`, `end_status`, `session_duration`,`is_empty`)";
-  query1Ss << "VALUES(" << (int)originType << "," << imageId << "," << (int)modelId << "," << (int)transformId << ",";
+  query1Ss << "INSERT INTO `interactive_searches`(`keyword_data_type`, `scoring_data_type`, `type`, `target_image_id`, `model_id`, `transformation_id`, `model_settings`, `transformation_settings`, `session_id`, `user_id`, `search_session_index`, `end_status`, `session_duration`,`is_empty`)";
+  query1Ss << "VALUES(" << std::to_string((int)std::get<0>(kwScDataId)) << ", " << std::to_string((int)std::get<1>(kwScDataId)) << "," <<  (int)originType << "," << imageId << "," << (int)modelId << "," << (int)transformId << ",";
 
   query1Ss << "\"";
   for (auto&& s : modelSettings)

@@ -728,7 +728,7 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
   }
 
   // If we need to add up desc search results
-  if (resultKeywords.size() < NUM_SUGESTIONS && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
+  if (resultKeywords.size() < numResults && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
   {
     std::vector<size_t> needleIndices = FindAllNeedles(_allDescriptions, prefix);
 
@@ -741,7 +741,7 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
   }
 
   size_t j = 0ULL;
-  while (resultKeywords.size() < NUM_SUGESTIONS)
+  while (resultKeywords.size() < numResults)
   {
     if (j >= postResultKeywords.size())
     {
@@ -759,7 +759,7 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
 Keyword* KeywordsContainer::MapDescIndexToKeyword(size_t descIndex) const
 {
   size_t left = 0ULL;
-  size_t right = _descIndexToKeyword.size();
+  size_t right = _descIndexToKeyword.size() - 1;
 
   size_t i = (right + left) / 2;
 
