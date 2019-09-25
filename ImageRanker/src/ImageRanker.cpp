@@ -1009,6 +1009,9 @@ std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(K
   // Get first N highest probabilites
   for (size_t i = 0ULL; i < N; ++i)
   {
+    if (i >= kwScorePairs.size())
+      break;
+
     float kwScore{ std::get<1>(kwScorePairs[i]) };
 
     // Get keyword string
