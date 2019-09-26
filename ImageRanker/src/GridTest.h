@@ -44,7 +44,7 @@ public:
 
 
   static std::vector<InputDataTransformId> m_aggregations;
-  static std::vector<QueryOriginId> m_queryOrigins;
+  static std::vector<DataSourceTypeId> m_queryOrigins;
   static std::vector<RankingModelId> m_rankingModels;
   static std::vector<TestSettings> m_testSettings;
 };

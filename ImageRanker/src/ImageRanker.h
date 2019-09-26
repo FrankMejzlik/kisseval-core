@@ -110,6 +110,27 @@ public:
   
   void ClearData();
 
+  std::tuple<
+    KeywordsGeneralStatsTuple, 
+    ScoringsGeneralStatsTuple, 
+    AnnotatorDataGeneralStatsTuple,
+    RankerDataGeneralStatsTuple
+  >
+  GetGeneralStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const;
+
+  KeywordsGeneralStatsTuple GetGeneralKeywordsStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const;
+  ScoringsGeneralStatsTuple GetGeneralScoringStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const;
+  AnnotatorDataGeneralStatsTuple GetGeneralAnnotatorDataStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const;
+  RankerDataGeneralStatsTuple GetGeneralRankerDataStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const;
+
+
+  std::string ExportDataFile(KwScoringDataId kwScDataId, eExportFileTypeId fileType, const std::string& outputFilepath) const;
+
+  bool ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath) const;
+  bool ExportNormalizedScores(KwScoringDataId kwScDataId, const std::string& outputFilepath) const;
+  bool ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath) const;
+
+
   size_t MapIdToVectorIndex(size_t id) const;
   KeywordsContainer* GetCorrectKwContainerPtr(KwScoringDataId kwScDataId) const;
 
@@ -166,7 +187,7 @@ public:
   std::vector<GameSessionQueryResult> SubmitUserQueriesWithResults(
     KwScoringDataId kwScDataId,
     std::vector<GameSessionInputQuery> inputQueries, 
-    QueryOriginId origin = QueryOriginId::cPublic
+    DataSourceTypeId origin = DataSourceTypeId::cPublic
   );
 
 
@@ -193,7 +214,7 @@ public:
 
   ChartData RunModelTestWrapper(
     KwScoringDataId kwScDataId,
-    InputDataTransformId aggId, RankingModelId modelId, QueryOriginId dataSource,
+    InputDataTransformId aggId, RankingModelId modelId, DataSourceTypeId dataSource,
     const SimulatedUserSettings& simulatedUserSettings, const RankingModelSettings& aggModelSettings, 
     const InputDataTransformSettings& netDataTransformSettings
   ) const;
@@ -201,7 +222,7 @@ public:
 
   
 
-  std::tuple<UserAccuracyChartData, UserAccuracyChartData> GetStatisticsUserKeywordAccuracy(QueryOriginId queriesSource = QueryOriginId::cAll) const;
+  std::tuple<UserAccuracyChartData, UserAccuracyChartData> GetStatisticsUserKeywordAccuracy(DataSourceTypeId queriesSource = DataSourceTypeId::cAll) const;
 
 
   std::string GetKeywordDescriptionByWordnetId(KwScoringDataId kwScDataId, size_t wordnetId)
@@ -287,14 +308,14 @@ private:
 
   void InitializeGridTests();
 
-  std::vector<UserImgQueryRaw>& GetCachedQueriesRaw(QueryOriginId dataSource) const;
+  std::vector<UserImgQueryRaw>& GetCachedQueriesRaw(DataSourceTypeId dataSource) const;
   
-  std::vector< std::vector<UserImgQuery>>& GetCachedQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource) const;
+  std::vector< std::vector<UserImgQuery>>& GetCachedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource) const;
 
 
-  std::vector< std::vector<UserImgQuery>> GetSimulatedQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource, const SimulatedUser& pSimUser) const;
+  std::vector< std::vector<UserImgQuery>> GetSimulatedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& pSimUser) const;
   std::vector< std::vector<UserImgQuery>> GetSimulatedQueries(size_t count, const SimulatedUser& pSimUser) const;
-  std::vector< std::vector<UserImgQuery>> GetExtendedRealQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource, const SimulatedUser& simUser) const;
+  std::vector< std::vector<UserImgQuery>> GetExtendedRealQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const;
 
   UserImgQuery GetSimulatedQueryForImage(size_t imageId, const SimulatedUser& simUser) const;
 
@@ -425,7 +446,11 @@ private:
 
   std::vector<float> _indexKwFrequency;
 
-
+  mutable std::map<KwScoringDataId, size_t> _stat_minLabels;
+  mutable std::map<KwScoringDataId, size_t> _stat_maxLabels;
+  mutable std::map<KwScoringDataId, float> _stat_avgLabels;
+  mutable std::map<KwScoringDataId, float> _stat_medianLabels;
+  mutable std::map<KwScoringDataId, float> _stat_labelHit;
   
 
 

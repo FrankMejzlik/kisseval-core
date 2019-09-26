@@ -104,5 +104,8 @@
     <ClInclude Include="src\transformations\TransformationNoTransform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\custom_exceptions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

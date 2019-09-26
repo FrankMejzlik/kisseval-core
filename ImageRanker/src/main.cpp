@@ -106,10 +106,26 @@ int main()
     "sess393939", 84, 0, 103, std::vector<InteractiveSearchAction>());*/
 
 
- auto result{ ranker.GetNearKeywords(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), "cart", 20, true) };
+ //auto result{ ranker.GetNearKeywords(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), "cart", 20, true) };
 
   //auto result2{ ranker.GetRandomImageSequence(2)};
 
+  auto r{ranker.ExportDataFile(
+    std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), 
+    eExportFileTypeId::cUserAnnotatorQueries, R"(c:\Users\devwe\Downloads\annotator_q.txt)"s
+  )};
+
+  auto r2{ ranker.ExportDataFile(
+    std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
+    eExportFileTypeId::cQueryNumHits, R"(c:\Users\devwe\Downloads\numHits.txt)"s
+  ) };
+
+  auto r3{ ranker.ExportDataFile(
+    std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
+    eExportFileTypeId::cNetNormalizedScores, R"(c:\Users\devwe\Downloads\netNormalized.txt)"s
+  ) };
+
+  auto rrr = ranker.GetGeneralStatistics(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), DataSourceTypeId::cAll);
   
   return 0;
 

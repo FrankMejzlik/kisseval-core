@@ -8,7 +8,8 @@
 //
 // Google data setings
 //
-#define GOOGLE_AI_NO_LABEL_SCORE 0.00001f
+#define GOOGLE_AI_NO_LABEL_SCORE 0.001f
+#define VIRET_TRESHOLD_LINEAR_01 0.001f
 
 #define NO_TRANSFORM_ID 900_z
 
@@ -113,6 +114,9 @@
 
 //! Standard logging macro
 #define LOG(x) std::cout << x << std::endl
+
+#define LOG_WARN(x) std::cout << x << std::endl
+
 #define LOG_NO_ENDL(x) std::cout << x
 
 //! Basic log error macro

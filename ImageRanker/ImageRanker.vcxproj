@@ -255,6 +255,7 @@
     <ClCompile Include="src\ranking_models\ViretModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\custom_exceptions.h" />
     <ClInclude Include="src\data_format_config.h" />
     <ClInclude Include="src\FileParser.h" />
     <ClInclude Include="src\transformations\TransformationFunctionBase.h" />

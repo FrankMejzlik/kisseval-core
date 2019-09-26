@@ -4,6 +4,7 @@
 #include <cstddef>
 
 #include "config.h"
+#include "custom_exceptions.h"
 
 using size_t = std::size_t;
 
@@ -143,6 +144,44 @@ using KeywordPtrScoringPair = std::vector<std::tuple<Keyword*, float>>;
 
 using ImageIdFilenameTuple = std::tuple<size_t, std::string>;
 
+/*!
+ * 
+ * (num of distincts keywords)
+ */
+using KeywordsGeneralStatsTuple = std::tuple<size_t>;
+
+/*!
+ *
+ * (..)
+ */
+using ScoringsGeneralStatsTuple = std::tuple<size_t>;
+
+/*!
+ *
+ * (min number of labels, max # labels, avg labels, median labels, prob of hit)
+ */
+using AnnotatorDataGeneralStatsTuple = std::tuple<size_t, size_t, float, float, float>;
+
+/*!
+ *
+ * ()
+ */
+using RankerDataGeneralStatsTuple = std::tuple<size_t>;
+
+
+/*!
+ *      0 - eUserAnnotatorQueries
+ *      1 -  eNetNormalizedScores
+ *      2 - eQueryNumHits
+ * 
+ */
+enum class eExportFileTypeId {
+  cUserAnnotatorQueries = 0,
+  cNetNormalizedScores = 1,
+  cQueryNumHits = 2
+};
+
+
 // ------------------------------------------------
 enum class eTempQueryOpOutter
 {
@@ -169,6 +208,14 @@ using Clause = std::vector<std::pair<bool, size_t>>;
 using CnfFormula = std::vector<Clause>;
 using InteractiveSearchAction = std::tuple<size_t, size_t, size_t>;
 
+struct StatPerKwSc
+{
+  StatPerKwSc() :
+    m_labelHitProb{0.0f}
+  {}
+  float m_labelHitProb;
+};
+
 enum class InteractiveSearchOrigin
 {
   cDeveloper,
@@ -190,7 +237,7 @@ enum class InputDataTransformId
   cNoTransform = NO_TRANSFORM_ID
 };
 
-enum class QueryOriginId
+enum class DataSourceTypeId
 {
   cDeveloper = 0,
   cPublic = 1,
@@ -280,7 +327,7 @@ using SimulatedUserSettings = std::vector<std::string>;
 
 
 
-using TestSettings = std::tuple<InputDataTransformId, RankingModelId, QueryOriginId, RankingModelSettings, InputDataTransformSettings>;
+using TestSettings = std::tuple<InputDataTransformId, RankingModelId, DataSourceTypeId, RankingModelSettings, InputDataTransformSettings>;
 
 using Buffer = std::vector<std::byte>;
 

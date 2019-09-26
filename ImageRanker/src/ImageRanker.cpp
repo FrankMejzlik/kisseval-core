@@ -120,6 +120,380 @@ void ImageRanker::ClearData()
   _images.clear();
 }
 
+
+std::tuple<
+  KeywordsGeneralStatsTuple,
+  ScoringsGeneralStatsTuple,
+  AnnotatorDataGeneralStatsTuple,
+  RankerDataGeneralStatsTuple
+>
+ImageRanker::GetGeneralStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const
+{
+  // Goes first
+  AnnotatorDataGeneralStatsTuple annotatorStatsTuple{ GetGeneralAnnotatorDataStatistics(kwScDataId, dataSourceType) };
+
+  KeywordsGeneralStatsTuple keywordsStatsTuple{ GetGeneralKeywordsStatistics(kwScDataId, dataSourceType) };
+  ScoringsGeneralStatsTuple scoringStatsTuple{ GetGeneralScoringStatistics(kwScDataId, dataSourceType) };
+  RankerDataGeneralStatsTuple rankerStatsTuple{ GetGeneralRankerDataStatistics(kwScDataId, dataSourceType) };
+
+  return std::tuple(std::move(keywordsStatsTuple), std::move(scoringStatsTuple), std::move(annotatorStatsTuple), std::move(rankerStatsTuple));
+}
+
+
+KeywordsGeneralStatsTuple ImageRanker::GetGeneralKeywordsStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const
+{
+  KeywordsGeneralStatsTuple resultTuple;
+
+  if (std::get<0>(kwScDataId) == eKeywordsDataType::cViret1)
+  {
+    std::get<0>(resultTuple) = 2008;
+  }
+  else
+  {
+    // Get number of distincts keywords
+    std::get<0>(resultTuple) = GetCorrectKwContainerPtr(kwScDataId)->_keywords.size();
+  }
+
+  return resultTuple;
+}
+ScoringsGeneralStatsTuple ImageRanker::GetGeneralScoringStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const
+{
+  ScoringsGeneralStatsTuple resultTuple;
+
+  return resultTuple;
+}
+AnnotatorDataGeneralStatsTuple ImageRanker::GetGeneralAnnotatorDataStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const
+{
+  AnnotatorDataGeneralStatsTuple resultTuple;
+
+  // If not computed, do so
+  if (_stat_labelHit.count(kwScDataId) <= 0_z)
+  {
+    ExportUserAnnotatorNumHits(kwScDataId, DataSourceTypeId::cAll, "./a.tmp");
+  }
+
+  std::get<0>(resultTuple) = _stat_minLabels.at(kwScDataId);
+  std::get<1>(resultTuple) = _stat_maxLabels.at(kwScDataId);
+  std::get<2>(resultTuple) = _stat_avgLabels.at(kwScDataId);
+  std::get<3>(resultTuple) = _stat_medianLabels.at(kwScDataId);
+  std::get<4>(resultTuple) = _stat_labelHit.at(kwScDataId);
+
+  return resultTuple;
+}
+RankerDataGeneralStatsTuple ImageRanker::GetGeneralRankerDataStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const
+{
+  RankerDataGeneralStatsTuple resultTuple;
+
+  return resultTuple;
+}
+
+std::string ImageRanker::ExportDataFile(KwScoringDataId kwScDataId, eExportFileTypeId fileType, const std::string& outputFilepath) const
+{
+  bool succ{ true };
+
+  try
+  {
+    switch (fileType)
+    {
+    case eExportFileTypeId::cUserAnnotatorQueries:
+      succ = ExportUserAnnotatorData(kwScDataId, DataSourceTypeId::cAll, outputFilepath);
+      break;
+
+    case eExportFileTypeId::cNetNormalizedScores:
+      succ = ExportNormalizedScores(kwScDataId, outputFilepath);
+      break;
+
+    case eExportFileTypeId::cQueryNumHits:
+      succ = ExportUserAnnotatorNumHits(kwScDataId, DataSourceTypeId::cAll, outputFilepath);
+      break;
+
+    default:
+      LOG_ERROR("Unknown export data type! (ImageRanker::ExportDataFile())");
+    }
+  } 
+  catch (const UnableToCreateFileExcept& e)
+  {
+    succ = false;
+  }
+
+  if (!succ)
+  {
+    return ""s;
+  }
+  
+  return outputFilepath;
+}
+
+
+bool ImageRanker::ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath) const
+{
+  std::string strType = "";
+  if (dataSource == DataSourceTypeId::cAll)
+  {
+    strType = "( type=0 OR type=1 OR type=10 OR type=11 )";
+  }
+  else if (dataSource == DataSourceTypeId::cDeveloper)
+  {
+    strType = "( type=0 OR type=10 )";
+  }
+  else {
+    strType = "( type=1 OR type=11 )";
+  }
+
+
+  // Fetch pairs of <Q, Img>
+  std::string query("\
+        SELECT image_id, type, query  FROM `" + _primaryDb.GetDbName() + "`.queries \
+          WHERE " + strType + " AND \
+            keyword_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + " AND \
+            scoring_data_type = " + std::to_string((int)std::get<1>(kwScDataId)) + ";");
+
+  auto dbData = _primaryDb.ResultQuery(query);
+
+  if (dbData.first != 0)
+  {
+    LOG_ERROR("Error getting queries from database."s);
+  }
+     
+  std::ofstream outFileStream(outputFilepath);
+  if (!outFileStream.is_open())
+  {
+    LOG_WARN("Unable to create file: " + outputFilepath);
+    throw UnableToCreateFileExcept("Unable to create file: "s + outputFilepath);
+  }
+  
+
+  for (auto&& idQueryRow : dbData.second)
+  {
+    // Image ID
+    outFileStream << std::to_string(static_cast<size_t>(strToInt(idQueryRow[0].data())) * TEST_QUERIES_ID_MULTIPLIER) << ",";
+
+    // Source type
+    outFileStream << idQueryRow[1];
+
+    auto ids{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQueryNoRecur(idQueryRow[2]) };
+
+    for (auto&& id : ids)
+    {
+      outFileStream << "," << std::to_string(id);
+    }
+
+    outFileStream << std::endl;
+  }
+
+  outFileStream.close();
+
+  return true;
+}
+
+bool ImageRanker::ExportNormalizedScores(KwScoringDataId kwScDataId, const std::string& outputFilepath) const
+{
+  std::ofstream outFileStream(outputFilepath);
+  if (!outFileStream.is_open())
+  {
+    LOG_WARN("Unable to create file: " + outputFilepath);
+    throw UnableToCreateFileExcept("Unable to create file: "s + outputFilepath);
+  }
+
+  bool isGoogle{std::get<0>(kwScDataId) == eKeywordsDataType::cGoogleAI ? true : false};
+
+  for (auto&& img : _images)
+  {
+    outFileStream << img->m_imageId;
+
+    auto rawVec{ img->_rawImageScoringData.at(kwScDataId) };
+
+    // Normalize vector
+    float totalSum{0.0f};
+    for (auto&& score : rawVec)
+    {
+      // If google ignore zero values
+      if (isGoogle && score <= GOOGLE_AI_NO_LABEL_SCORE)
+      {
+        continue;
+      }
+
+      totalSum += score;
+    }
+
+    size_t i{ 0_z };
+    for (auto&& score : rawVec)
+    {
+      // If google ignore zero values
+      if (isGoogle && score <= GOOGLE_AI_NO_LABEL_SCORE)
+      {
+        ++i;
+        continue;
+      }
+
+      float scoreNorm{score / totalSum};
+
+      auto kwPtr{ GetCorrectKwContainerPtr(kwScDataId)->GetKeywordPtrByVectorIndex(i) };
+
+      outFileStream << "," << kwPtr->m_wordnetId << "," << scoreNorm;
+
+      ++i;
+    }
+    outFileStream << std::endl;
+  }
+
+  outFileStream.close();
+
+  return true;
+}
+
+bool ImageRanker::ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath) const
+{
+  std::string strType = "";
+  if (dataSource == DataSourceTypeId::cAll)
+  {
+    strType = "( type=0 OR type=1 OR type=10 OR type=11 )";
+  }
+  else if (dataSource == DataSourceTypeId::cDeveloper)
+  {
+    strType = "( type=0 OR type=10 )";
+  }
+  else {
+    strType = "( type=1 OR type=11 )";
+  }
+
+  bool isGoogle{ std::get<0>(kwScDataId) == eKeywordsDataType::cGoogleAI ? true : false };
+
+  // Fetch pairs of <Q, Img>
+  std::string query("\
+        SELECT id, image_id, type, query  FROM `" + _primaryDb.GetDbName() + "`.queries \
+          WHERE " + strType + " AND \
+            keyword_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + " AND \
+            scoring_data_type = " + std::to_string((int)std::get<1>(kwScDataId)) + ";");
+
+  auto dbData = _primaryDb.ResultQuery(query);
+
+  if (dbData.first != 0)
+  {
+    LOG_ERROR("Error getting queries from database."s);
+  }
+
+  std::ofstream outFileStream(outputFilepath);
+  if (!outFileStream.is_open())
+  {
+    LOG_WARN("Unable to create file: " + outputFilepath);
+    throw UnableToCreateFileExcept("Unable to create file: "s + outputFilepath);
+  }
+
+  size_t totalTotalLabels{ 0_z };
+  size_t totalTotalHits{ 0_z };
+  size_t minLabels{ 0_z };
+  size_t maxLabels{ 0_z };
+  std::vector<size_t> labelNums;
+
+  for (auto&& idQueryRow : dbData.second)
+  {
+    // Query ID
+    outFileStream << idQueryRow[0].data() << ",";
+
+    size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[1].data())) * TEST_QUERIES_ID_MULTIPLIER };
+
+    // Image ID
+    outFileStream << std::to_string(imageId) << ",";
+
+    // Source type
+    outFileStream << idQueryRow[2] << ",";
+
+    auto ids{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQueryNoRecur(idQueryRow[3]) };
+
+    size_t hitCount{ 0_z };
+
+    auto imgPtr{ GetImageDataById(imageId) };
+    const std::vector<float>* scoreVector{nullptr};
+
+    if (std::get<0>(kwScDataId) == eKeywordsDataType::cViret1)
+    {
+      scoreVector =  &imgPtr->_transformedImageScoringData.at(kwScDataId).at(200);
+    }
+    else
+    {
+      scoreVector = &imgPtr->_rawImageScoringData.at(kwScDataId);
+    }
+
+
+    
+
+    for (auto&& id : ids)
+    {
+      auto ptrKw{ GetCorrectKwContainerPtr(kwScDataId)->GetKeywordConstPtrByWordnetId(id) };
+
+      auto score{ (*scoreVector)[ptrKw->m_vectorIndex] };
+
+      //  If hit
+      if (isGoogle)
+      {
+        if (score > GOOGLE_AI_NO_LABEL_SCORE)
+        {
+          ++hitCount;
+        }
+      } 
+      else 
+      {
+        if (score > VIRET_TRESHOLD_LINEAR_01)
+        {
+          ++hitCount;
+        }
+      }
+
+    }
+
+    outFileStream << hitCount << "," << ids.size() << std::endl;
+
+    minLabels = std::min(minLabels, ids.size());
+    maxLabels = std::max(maxLabels, ids.size());
+
+    labelNums.emplace_back(ids.size());
+
+    totalTotalLabels += ids.size();
+    totalTotalHits += hitCount;
+  }
+
+  size_t avgLabels{ totalTotalLabels / dbData.second .size() };
+
+  size_t idxFirst{ dbData.second.size() / 2};
+  bool numQueriesOdd{ dbData.second.size() % 2 == 1 ? true : false };
+  float medianLabels{ 0.0f };
+
+  if (idxFirst == 0)
+  {
+    LOG_ERROR("WROOOONG! Will go out of bounds! (ImageRanker::ExportUserAnnotatorNumHits())");
+  }
+
+
+  if (numQueriesOdd)
+  {
+    medianLabels = labelNums[idxFirst];
+  }
+  else
+  {
+    medianLabels = (labelNums[idxFirst - 1] + labelNums[idxFirst] ) / 2;
+  }
+  
+
+  // Save prob hit
+  _stat_minLabels.erase(kwScDataId);
+  _stat_minLabels.emplace(kwScDataId, minLabels);
+
+  _stat_maxLabels.erase(kwScDataId);
+  _stat_maxLabels.emplace(kwScDataId, maxLabels);
+
+  _stat_avgLabels.erase(kwScDataId);
+  _stat_avgLabels.emplace(kwScDataId, avgLabels);
+
+  _stat_medianLabels.erase(kwScDataId);
+  _stat_medianLabels.emplace(kwScDataId, medianLabels);
+
+  _stat_labelHit.erase(kwScDataId);
+  _stat_labelHit.emplace(kwScDataId,(float)totalTotalHits / totalTotalLabels);
+
+  return true;
+}
+
 bool ImageRanker::Reinitialize()
 { 
   // Clear all current working data
@@ -492,9 +866,9 @@ const Image* ImageRanker::GetRandomImage() const
 std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
 {
   // Get Viret KW data
-  auto queriesViret{ GetCachedQueries(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), QueryOriginId::cAll) };
+  auto queriesViret{ GetCachedQueries(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), DataSourceTypeId::cAll) };
 
-  auto queriesGoogle{ GetCachedQueries(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), QueryOriginId::cAll) };
+  auto queriesGoogle{ GetCachedQueries(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), DataSourceTypeId::cAll) };
 
   // image ID -> (Number of annotations left for this ID, Number of them without examples)
   std::map<size_t, std::pair<size_t, size_t>> imageIdOccuranceMap;
@@ -925,7 +1299,7 @@ std::string ImageRanker::EncodeAndQuery(const std::string& query) const
   return resultEncodedGraph;
 }
 
-std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(KwScoringDataId kwScDataId, std::vector<GameSessionInputQuery> inputQueries, QueryOriginId origin)
+std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(KwScoringDataId kwScDataId, std::vector<GameSessionInputQuery> inputQueries, DataSourceTypeId origin)
 {
   /******************************
     Save query to database
@@ -1076,7 +1450,7 @@ std::vector<std::string> ImageRanker::StringenizeAndQuery(KwScoringDataId kwScDa
 
 ChartData ImageRanker::RunModelTestWrapper(
   KwScoringDataId kwScDataId,
-  InputDataTransformId aggId, RankingModelId modelId, QueryOriginId dataSource,
+  InputDataTransformId aggId, RankingModelId modelId, DataSourceTypeId dataSource,
   const SimulatedUserSettings& simulatedUserSettings, const RankingModelSettings& aggModelSettings, 
   const InputDataTransformSettings& netDataTransformSettings
 ) const
@@ -1127,90 +1501,6 @@ ChartData ImageRanker::RunModelTestWrapper(
   return pRankingModel->RunModelTest(kwScDataId, pNetDataTransformFn, &_indexKwFrequency, testQueries, _images);
 }
 
-std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(QueryOriginId dataSource) const
-{
-  static std::vector<UserImgQueryRaw> cachedData0;
-  static std::vector<UserImgQueryRaw> cachedData1;
-  static std::vector<UserImgQueryRaw> cachedData2;
-
-  static std::chrono::steady_clock::time_point cachedData0Ts = std::chrono::steady_clock::now();
-  static std::chrono::steady_clock::time_point cachedData1Ts = std::chrono::steady_clock::now();
-  static std::chrono::steady_clock::time_point cachedData2Ts = std::chrono::steady_clock::now();
-
-  auto currentTime = std::chrono::steady_clock::now();
-
-  switch (dataSource)
-  {
-  case QueryOriginId::cDeveloper:
-
-    if (cachedData0.empty() || cachedData0Ts < currentTime)
-    {
-      cachedData0.clear();
-
-      // Fetch pairs of <Q, Img>
-      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
-
-      auto dbData = _primaryDb.ResultQuery(query);
-
-      if (dbData.first != 0)
-      {
-        LOG_ERROR("Error getting queries from database."s);
-      }
-
-      // Parse DB results
-      for (auto&& idQueryRow : dbData.second)
-      {
-
-        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
-        std::vector<size_t> queryWordnetIds{ _pViretKws->GetCanonicalQueryNoRecur(idQueryRow[1]) };
-
-        cachedData0.emplace_back(std::move(imageId), std::move(queryWordnetIds));
-      }
-
-      cachedData0Ts = std::chrono::steady_clock::now();
-      cachedData0Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
-
-    }
-
-    return cachedData0;
-
-    break;
-
-  case QueryOriginId::cPublic:
-
-    if (cachedData1.empty() || cachedData1Ts < currentTime)
-    {
-      cachedData1.clear();
-
-      // Fetch pairs of <Q, Img>
-      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
-      auto dbData = _primaryDb.ResultQuery(query);
-
-      if (dbData.first != 0)
-      {
-        LOG_ERROR("Error getting queries from database."s);
-      }
-
-      // Parse DB results
-      for (auto&& idQueryRow : dbData.second)
-      {
-        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
-        std::vector<size_t> queryWordnetIds{ _pViretKws->GetCanonicalQueryNoRecur(idQueryRow[1]) };
-
-        cachedData1.emplace_back(std::move(imageId), std::move(queryWordnetIds));
-      }
-
-      cachedData1Ts = std::chrono::steady_clock::now();
-      cachedData1Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
-    }
-
-    return cachedData1;
-
-    break;
-  }
-
-  return cachedData0;
-}
 
 UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const SimulatedUser& simUser) const
 {
@@ -1286,10 +1576,10 @@ UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const Simula
   return std::tuple(imageId, queryFormula, true);
 }
 
-std::vector< std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource, const SimulatedUser& simUser) const
+std::vector< std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const
 {
   // Determine what id would that be if not simulated user
-  QueryOriginId dataSourceNotSimulated{ static_cast<QueryOriginId>(static_cast<int>(dataSource) - SIMULATED_QUERIES_ENUM_OFSET) };
+  DataSourceTypeId dataSourceNotSimulated{ static_cast<DataSourceTypeId>(static_cast<int>(dataSource) - SIMULATED_QUERIES_ENUM_OFSET) };
 
   // Fetch real user queries to immitate them
   std::vector< std::vector<UserImgQuery>> realUsersQueries{ GetCachedQueries(kwScDataId, dataSourceNotSimulated) };
@@ -1316,10 +1606,10 @@ std::vector< std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(KwScori
   return resultSimulatedQueries;
 }
 
-std::vector< std::vector<UserImgQuery>> ImageRanker::GetExtendedRealQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource, const SimulatedUser& simUser) const
+std::vector< std::vector<UserImgQuery>> ImageRanker::GetExtendedRealQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const
 {
   // Determine what id would that be if not simulated user
-  QueryOriginId dataSourceNotSimulated{ static_cast<QueryOriginId>(static_cast<int>(dataSource) - USER_PLUS_SIMULATED_QUERIES_ENUM_OFSET) };
+  DataSourceTypeId dataSourceNotSimulated{ static_cast<DataSourceTypeId>(static_cast<int>(dataSource) - USER_PLUS_SIMULATED_QUERIES_ENUM_OFSET) };
 
   // Fetch real user queries to immitate them
   std::vector< std::vector<UserImgQuery>> realUsersQueries{ GetCachedQueries(kwScDataId, dataSourceNotSimulated) };
@@ -1374,7 +1664,93 @@ std::vector< std::vector<UserImgQuery>> ImageRanker::GetExtendedRealQueries(KwSc
   return resultSimulatedQueries;
 }
 
-std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoringDataId kwScDataId, QueryOriginId dataSource) const
+std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(DataSourceTypeId dataSource) const
+{
+  static std::vector<UserImgQueryRaw> cachedData0;
+  static std::vector<UserImgQueryRaw> cachedData1;
+  static std::vector<UserImgQueryRaw> cachedData2;
+
+  static std::chrono::steady_clock::time_point cachedData0Ts = std::chrono::steady_clock::now();
+  static std::chrono::steady_clock::time_point cachedData1Ts = std::chrono::steady_clock::now();
+  static std::chrono::steady_clock::time_point cachedData2Ts = std::chrono::steady_clock::now();
+
+  auto currentTime = std::chrono::steady_clock::now();
+
+  switch (dataSource)
+  {
+  case DataSourceTypeId::cDeveloper:
+
+    if (cachedData0.empty() || cachedData0Ts < currentTime)
+    {
+      cachedData0.clear();
+
+      // Fetch pairs of <Q, Img>
+      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
+
+      auto dbData = _primaryDb.ResultQuery(query);
+
+      if (dbData.first != 0)
+      {
+        LOG_ERROR("Error getting queries from database."s);
+      }
+
+      // Parse DB results
+      for (auto&& idQueryRow : dbData.second)
+      {
+
+        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
+        std::vector<size_t> queryWordnetIds{ _pViretKws->GetCanonicalQueryNoRecur(idQueryRow[1]) };
+
+        cachedData0.emplace_back(std::move(imageId), std::move(queryWordnetIds));
+      }
+
+      cachedData0Ts = std::chrono::steady_clock::now();
+      cachedData0Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
+
+    }
+
+    return cachedData0;
+
+    break;
+
+  case DataSourceTypeId::cPublic:
+
+    if (cachedData1.empty() || cachedData1Ts < currentTime)
+    {
+      cachedData1.clear();
+
+      // Fetch pairs of <Q, Img>
+      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
+      auto dbData = _primaryDb.ResultQuery(query);
+
+      if (dbData.first != 0)
+      {
+        LOG_ERROR("Error getting queries from database."s);
+      }
+
+      // Parse DB results
+      for (auto&& idQueryRow : dbData.second)
+      {
+        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
+        std::vector<size_t> queryWordnetIds{ _pViretKws->GetCanonicalQueryNoRecur(idQueryRow[1]) };
+
+        cachedData1.emplace_back(std::move(imageId), std::move(queryWordnetIds));
+      }
+
+      cachedData1Ts = std::chrono::steady_clock::now();
+      cachedData1Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
+    }
+
+    return cachedData1;
+
+    break;
+  }
+
+  return cachedData0;
+}
+
+
+std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource) const
 {
   static std::vector < std::vector<UserImgQuery>> cachedAllData;
   static std::vector < std::vector<UserImgQuery>> cachedData0;
@@ -1388,14 +1764,14 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
 
   auto currentTime = std::chrono::steady_clock::now();
 
-  if (dataSource == QueryOriginId::cAll)
+  if (dataSource == DataSourceTypeId::cAll)
   {
     if (cachedAllData.empty() || cachedAllDataTs < currentTime)
     {
       cachedAllData.clear();
 
-      const auto& queries1 = GetCachedQueries(kwScDataId, QueryOriginId::cDeveloper);
-      const auto& queries2 = GetCachedQueries(kwScDataId, QueryOriginId::cPublic);
+      const auto& queries1 = GetCachedQueries(kwScDataId, DataSourceTypeId::cDeveloper);
+      const auto& queries2 = GetCachedQueries(kwScDataId, DataSourceTypeId::cPublic);
 
       // Merge them
       std::copy(queries1.begin(), queries1.end(), back_inserter(cachedAllData));
@@ -1410,7 +1786,7 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
 
   switch (dataSource) 
   {
-  case QueryOriginId::cDeveloper:
+  case DataSourceTypeId::cDeveloper:
 
     if (cachedData0.empty() || cachedData0Ts < currentTime)
     {
@@ -1421,7 +1797,7 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
         SELECT image_id, query, type FROM `" + _primaryDb.GetDbName() +"`.queries \
           WHERE ( type = " + std::to_string((int)dataSource) + " OR type =  " + std::to_string(((int)dataSource + 10)) + ") AND \
             keyword_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + " AND \
-            scoring_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + ";");
+            scoring_data_type = " + std::to_string((int)std::get<1>(kwScDataId)) + ";");
       
       auto dbData = _primaryDb.ResultQuery(query);
 
@@ -1466,7 +1842,7 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
 
     break;
 
-  case QueryOriginId::cPublic:
+  case DataSourceTypeId::cPublic:
 
     if (cachedData1.empty() || cachedData1Ts < currentTime)
     {
@@ -1477,7 +1853,7 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
         SELECT image_id, query, type FROM `" + _primaryDb.GetDbName() + "`.queries \
           WHERE (type = " + std::to_string((int)dataSource) + " OR type = " + std::to_string(((int)dataSource + 10)) + ") AND \
             keyword_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + " AND \
-            scoring_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + ";");
+            scoring_data_type = " + std::to_string((int)std::get<1>(kwScDataId)) + ";");
 
       auto dbData = _primaryDb.ResultQuery(query);
 
@@ -1607,7 +1983,7 @@ void ImageRanker::SubmitInteractiveSearchSubmit(
   }
 }
 
-std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatisticsUserKeywordAccuracy(QueryOriginId queriesSource) const
+std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatisticsUserKeywordAccuracy(DataSourceTypeId queriesSource) const
 {
   LOG_ERROR("Not implemented: GetStatisticsUserKeywordAccuracy()");
   return std::tuple<UserAccuracyChartData, UserAccuracyChartData>();
