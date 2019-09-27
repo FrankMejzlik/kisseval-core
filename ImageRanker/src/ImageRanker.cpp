@@ -385,9 +385,12 @@ bool ImageRanker::ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSou
   size_t minLabels{ 0_z };
   size_t maxLabels{ 0_z };
   std::vector<size_t> labelNums;
+  
 
   for (auto&& idQueryRow : dbData.second)
   {
+    size_t numNetLabels{ 0_z };
+
     // Query ID
     outFileStream << idQueryRow[0].data() << ",";
 
@@ -413,6 +416,23 @@ bool ImageRanker::ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSou
     else
     {
       scoreVector = &imgPtr->_rawImageScoringData.at(kwScDataId);
+    }
+
+    // Count number of label given by net
+    for (auto&& score : *scoreVector)
+    {
+      //  If hit
+      if (isGoogle)
+      {
+        if (score > GOOGLE_AI_NO_LABEL_SCORE)
+        {
+          ++numNetLabels;
+        }
+      }
+      else
+      {
+        ++numNetLabels;
+      }
     }
 
 
@@ -442,7 +462,7 @@ bool ImageRanker::ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSou
 
     }
 
-    outFileStream << hitCount << "," << ids.size() << std::endl;
+    outFileStream << hitCount << "," << ids.size() << "," << numNetLabels << std::endl;
 
     minLabels = std::min(minLabels, ids.size());
     maxLabels = std::max(maxLabels, ids.size());
