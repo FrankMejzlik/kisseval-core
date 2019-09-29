@@ -86,8 +86,7 @@
 #define DEFAULT_TRANSFORM_SETTINGS std::vector<std::string>({"0"s, "0"s})
 
 
-#define CHART_DENSITY 100
-#define CHART_NUM_X_POINTS 100
+#define MODEL_TEST_CHART_NUM_X_POINTS 100
 
 /*!
   * Boolean model settings
@@ -110,7 +109,8 @@
 
 
 #define LOG_DEBUG_HYPERNYMS_EXPANSION 0
-#define LOG_DEBUG_IMAGE_RANKING 1
+#define LOG_DEBUG_IMAGE_RANKING 0
+#define LOG_DEBUG_RUN_TESTS 1
 
 //! Standard logging macro
 #define LOG(x) std::cout << x << std::endl

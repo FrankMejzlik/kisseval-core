@@ -346,9 +346,11 @@ public:
       imageRanking /= ((negateFactor * queryFormulae[0].size()) + 1);
     }
 
+#if LOG_DEBUG_IMAGE_RANKING
     std::cout << "imageRanking = " << imageRanking << std::endl;
     std::cout << "<= <= <= END COMPUTE IMAGE SCORE" << std::endl;
     std::cout << "====================================" << std::endl << std::endl;
+#endif
 
     return imageRanking;
   }
@@ -597,14 +599,19 @@ public:
     const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
   ) const override
   {
+#if LOG_DEBUG_RUN_TESTS
+    std::cout << "Running model test ... " << std::endl;
+    std::cout << "Result chart will have " << MODEL_TEST_CHART_NUM_X_POINTS << " discrete points on X axis" << std::endl;
+    std::cout << "=====================================" << std::endl;
+#endif
 
     uint32_t maxRank = (uint32_t)_imagesCont.size();
 
     // To have 100 samples
-    uint32_t scaleDownFactor = maxRank / CHART_DENSITY;
+    uint32_t scaleDownFactor = maxRank / MODEL_TEST_CHART_NUM_X_POINTS;
 
     std::vector<std::pair<uint32_t, uint32_t>> result;
-    result.resize(CHART_DENSITY + 1);
+    result.resize(MODEL_TEST_CHART_NUM_X_POINTS + 1);
 
     uint32_t label{ 0ULL };
     for (auto&& column : result)
@@ -626,21 +633,66 @@ public:
 
       auto resultImages = GetRankedImages(formulae, kwScDataId, pAggregation, pIndexKwFrequency, _imagesCont, keywordContainers, 0ULL, imgId);
 
-      size_t transformedRank = resultImages.second / scaleDownFactor;
 
+      // Rank index is -1 from rank
+      size_t transformedRank = (resultImages.second - 1) / scaleDownFactor;
       // Increment this hit
       ++result[transformedRank].second;
+
+#if LOG_DEBUG_RUN_TESTS
+      std::cout << "----------------------------" << std::endl;
+      std::cout << "Image ID " << imgId << "=> " << (resultImages.second - 1) << "/" << maxRank << std::endl;
+
+      size_t from{ transformedRank * scaleDownFactor };
+      size_t to{ (transformedRank + 1) * scaleDownFactor - 1 };
+
+      std::cout << "Add hit to interval [" << from << ", " << to << "] => " << result[transformedRank].second << " found" << std::endl;
+
+#endif
     }
 
 
     uint32_t currCount{ 0ULL };
 
-    // Compute final chart values
-    for (auto&& r : result)
+
+#if LOG_DEBUG_RUN_TESTS
+    std::cout << "=====================================" << std::endl;
+    std::cout << "Final hit counts:" << std::endl;
+
     {
-      uint32_t tmp{ r.second };
-      r.second = currCount;
-      currCount += tmp;
+      size_t ii{ 0_z };
+      for (auto&& r : result)
+      {
+        size_t from{ ii * scaleDownFactor };
+        size_t to{ (ii + 1) * scaleDownFactor - 1 };
+
+        std::cout << "[" << from << ", " << to << "] => " << r.second << " found" << std::endl;
+
+        ++ii;
+      }
+    }
+
+    std::cout << "=====================================" << std::endl;
+    std::cout << "Cumulative number of hits (as rank starting with 1):" << std::endl;
+#endif
+
+    {
+      size_t ii{ 0_z };
+      // Compute final chart values
+      for (auto&& r : result)
+      {
+        uint32_t tmp{ r.second };
+        r.second = currCount;
+        currCount += tmp;
+
+#if LOG_DEBUG_RUN_TESTS
+        size_t to{ (ii) * scaleDownFactor };
+
+        std::cout << "[0, " << to << "] => " << r.second << " images found" << std::endl;
+#endif
+
+        ++ii;
+      }
     }
 
     return result;

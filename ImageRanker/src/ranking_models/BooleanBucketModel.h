@@ -265,10 +265,10 @@ public:
     uint32_t maxRank = (uint32_t)_imagesCont.size();
 
     // To have 100 samples
-    uint32_t scaleDownFactor = maxRank / CHART_DENSITY;
+    uint32_t scaleDownFactor = maxRank / MODEL_TEST_CHART_NUM_X_POINTS;
 
     std::vector<std::pair<uint32_t, uint32_t>> result;
-    result.resize(CHART_DENSITY + 1);
+    result.resize(MODEL_TEST_CHART_NUM_X_POINTS + 1);
 
     uint32_t label{ 0ULL };
     for (auto&& column : result)
