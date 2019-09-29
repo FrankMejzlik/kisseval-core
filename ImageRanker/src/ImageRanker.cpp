@@ -473,7 +473,7 @@ bool ImageRanker::ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSou
     totalTotalHits += hitCount;
   }
 
-  size_t avgLabels{ totalTotalLabels / dbData.second .size() };
+  float avgLabels{ static_cast<float>(totalTotalLabels) / dbData.second .size() };
 
   size_t idxFirst{ dbData.second.size() / 2};
   bool numQueriesOdd{ dbData.second.size() % 2 == 1 ? true : false };
@@ -487,11 +487,11 @@ bool ImageRanker::ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSou
 
   if (numQueriesOdd)
   {
-    medianLabels = labelNums[idxFirst];
+    medianLabels = static_cast<float>(labelNums[idxFirst]);
   }
   else
   {
-    medianLabels = (labelNums[idxFirst - 1] + labelNums[idxFirst] ) / 2;
+    medianLabels = static_cast<float>((labelNums[idxFirst - 1] + labelNums[idxFirst] ) / 2);
   }
   
 

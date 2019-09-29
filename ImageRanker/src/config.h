@@ -98,7 +98,7 @@
 #define STAGING 0
 #define PRODUCTION 0
 
-#define DEFAULT_MODE ImageRanker::eMode::cCollector
+#define DEFAULT_MODE ImageRanker::eMode::cFullAnalytical
 
 //! Will throw exception on LOG_ERROR
 #define THROW_ON_ERROR 1
