@@ -69,11 +69,11 @@ int main()
   {
     std::cout << i.first << " => " << i.second << std::endl;
   } */
-  /*std::cout << "========================" << std::endl;
+  std::cout << "========================" << std::endl;
   auto result13{
   ranker.RunModelTestWrapper(
     std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
-    InputDataTransformId::cNoTransform, RankingModelId::cViretBase, (QueryOriginId)999,
+    InputDataTransformId::cNoTransform, RankingModelId::cViretBase, (DataSourceTypeId)999,
     std::vector<std::string>({ "0"s }),
     std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s })
   )
@@ -82,7 +82,7 @@ int main()
   for (auto&& i : result13)
   {
     std::cout << i.first << " => " << i.second << std::endl;
-  }*/
+  }
 
 /*
   auto r1 = ranker.GetRelevantImages(
@@ -109,7 +109,7 @@ int main()
  //auto result{ ranker.GetNearKeywords(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), "cart", 20, true) };
 
   //auto result2{ ranker.GetRandomImageSequence(2)};
-
+/*
   auto r{ranker.ExportDataFile(
     std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), 
     eExportFileTypeId::cUserAnnotatorQueries, R"(c:\Users\devwe\Downloads\annotator_q.txt)"s
@@ -126,7 +126,7 @@ int main()
   ) };
 
   auto rrr = ranker.GetGeneralStatistics(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), DataSourceTypeId::cAll);
-  
+  */
   return 0;
 
 }

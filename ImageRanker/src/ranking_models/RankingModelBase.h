@@ -13,6 +13,8 @@
 #include "Image.hpp"
 #include "TransformationFunctionBase.h"
 
+#include "KeywordsContainer.h"
+
 
 class RankingModelBase
 {
@@ -26,6 +28,7 @@ public:
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers,
     size_t numResults = SIZE_T_ERROR_VALUE,
     size_t targetImageId = SIZE_T_ERROR_VALUE
   ) const = 0;
@@ -35,6 +38,7 @@ public:
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::vector<std::vector<UserImgQuery>>& testQueries,
-    const std::vector<std::unique_ptr<Image>>& _imagesCont
+    const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
   ) const = 0;
 };

@@ -110,7 +110,7 @@
 
 
 #define LOG_DEBUG_HYPERNYMS_EXPANSION 0
-#define LOG_DEBUG_IMAGE_RANKING 0
+#define LOG_DEBUG_IMAGE_RANKING 1
 
 //! Standard logging macro
 #define LOG(x) std::cout << x << std::endl

@@ -1518,7 +1518,7 @@ ChartData ImageRanker::RunModelTestWrapper(
   pRankingModel->SetModelSettings(aggModelSettings);
 
   // Run test
-  return pRankingModel->RunModelTest(kwScDataId, pNetDataTransformFn, &_indexKwFrequency, testQueries, _images);
+  return pRankingModel->RunModelTest(kwScDataId, pNetDataTransformFn, &_indexKwFrequency, testQueries, _images, _keywordContainers);
 }
 
 
@@ -2197,7 +2197,7 @@ RelevantImagesResponse ImageRanker::GetRelevantImages(
   pRankingModel->SetModelSettings(modelSettings);
 
   // Rank it
-  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(formulae, kwScDataId, pAggFn, &_indexKwFrequency, _images, numResults, imageId)};
+  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(formulae, kwScDataId, pAggFn, &_indexKwFrequency, _images, _keywordContainers, numResults, imageId)};
 
 
   RelevantImagesResponse resultResponse;
@@ -2738,7 +2738,7 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
   pRankingModel->SetModelSettings(modelSettings);
 
   // Rank it
-  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(formulae, kwScDataId, pAggFn, &_indexKwFrequency, _images, 40000, imageId)};
+  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(formulae, kwScDataId, pAggFn, &_indexKwFrequency, _images, _keywordContainers, 40000, imageId)};
 
 
 

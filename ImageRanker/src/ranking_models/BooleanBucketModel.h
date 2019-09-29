@@ -79,6 +79,7 @@ public:
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers,
     size_t numResults = SIZE_T_ERROR_VALUE,
     size_t targetImageId = SIZE_T_ERROR_VALUE
   ) const override
@@ -257,7 +258,8 @@ public:
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::vector<std::vector<UserImgQuery>>& testQueries,
-    const std::vector<std::unique_ptr<Image>>& _imagesCont
+    const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
   ) const override
   {
     uint32_t maxRank = (uint32_t)_imagesCont.size();
@@ -286,7 +288,8 @@ public:
         formulae.push_back(queryFormula);
       }
 
-      auto resultImages = GetRankedImages(formulae, kwScDataId, pAggregation, pIndexKwFrequency, _imagesCont, 0ULL, imgId);
+      auto resultImages = GetRankedImages(formulae, kwScDataId, pAggregation, 
+        pIndexKwFrequency, _imagesCont, keywordContainers, 0ULL, imgId);
 
       size_t transformedRank = resultImages.second / scaleDownFactor;
 

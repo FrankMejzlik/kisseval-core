@@ -75,11 +75,16 @@ public:
     const std::vector<CnfFormula>& queryFormulae,
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
-    const std::vector<std::unique_ptr<Image>>& _imagesCont
+    const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
   ) const
   {
 #if LOG_DEBUG_IMAGE_RANKING 
-    std::cout << "IMAGE ID  " << std::to_string(imgId) << std::endl;
+
+    auto kwsId{ std::get<0>(kwScDataId) };
+    auto& kwCont{ keywordContainers.at(kwsId) };
+
+    std::cout << "Image ID: " << std::to_string(pImg->m_imageId) << ": " << pImg->m_filename << std::endl;
     std::cout << "======================" << std::endl;
 #endif
 
@@ -87,16 +92,25 @@ public:
     const std::vector<float>* pImgRankingVector{ pImg->GetAggregationVectorById(kwScDataId, pAggregation->GetGuidFromSettings()) };
 
 #if LOG_DEBUG_IMAGE_RANKING 
-    std::cout << "Precomputed vector: ";
+
+
+
+    std::cout << "Precomputed data: " << std::endl;
     {
       size_t i{ 0_z };
       for (auto&& bin : *pImgRankingVector)
       {
-        std::cout << "(" << std::to_string(i) << ", " << std::to_string(bin) << "),";
+        if (bin > GOOGLE_AI_NO_LABEL_SCORE)
+        {
+          auto pKw{ kwCont.GetKeywordConstPtrByVectorIndex(i) };
+
+          std::cout << pKw->m_wordnetId << ": " << pKw->m_word << " -> " << std::to_string(bin) << std::endl;
+        }
 
         ++i;
       }
     }
+    std::cout << "======================" << std::endl;
     std::cout << std::endl;
 #endif
 
@@ -129,7 +143,24 @@ public:
 
 
 #if LOG_DEBUG_IMAGE_RANKING 
-    std::cout << "\n\nSTART => imageRanking = " << imageRanking << std::endl;
+    std::cout << "queryFormula = " << std::endl ;
+    for (auto&& clause : queryFormulae[0])
+    {
+      std::cout << " ( ";
+      for (auto&& literal : clause)
+      {
+        auto currKwRanking{ (*pImgRankingVector)[literal.second] };
+        auto pKw{ kwCont.GetKeywordConstPtrByVectorIndex(literal.second) };
+
+        std::cout  << pKw->m_word << "<" << currKwRanking << ">" << " + ";
+      }
+      std::cout << " )  * " << std::endl;
+    }
+
+
+    std::cout << "====================================" << std::endl << std::endl;
+    std::cout << "=> => => START COMPUTE IMAGE SCORE" << std::endl;
+    std::cout << "imageRanking = " << imageRanking << std::endl;
 
     size_t clauseCounter{ 0_z };
 #endif
@@ -138,10 +169,6 @@ public:
     // Itarate through clauses connected with AND
     for (auto&& clause : queryFormulae[0])
     {
-#if LOG_DEBUG_IMAGE_RANKING 
-      std::cout << "==== new clause ====" << std::endl;
-      std::cout << "Processing clause " << std::to_string(clauseCounter) << std::endl;
-#endif
       float clauseRanking{ 0.0f };
 
       // Iterate through all variables in clause
@@ -150,11 +177,9 @@ public:
         auto currKwRanking{ (*pImgRankingVector)[literal.second] };
 
 #if LOG_DEBUG_IMAGE_RANKING 
-        std::cout << "\t==== new literal ====" << std::endl;
-        std::cout << "\tbinIndex = " << std::to_string(literal.second) << std::endl;
-        std::cout << "\tclauseRanking = " << std::to_string(clauseRanking) << std::endl;
-        std::cout << "\thisKeywordRanking = vector[binIndex] = " << std::to_string(currKwRanking) << std::endl;
-        std::cout << "\---" << std::endl;
+        auto pKw{ kwCont.GetKeywordConstPtrByVectorIndex(literal.second) };
+
+        std::cout << "\t => " << pKw->m_word <<  "< " << std::to_string(currKwRanking) << " >" << std::endl;
 #endif
 
         float factor{ 1.0f };
@@ -204,8 +229,16 @@ public:
         case eQueryOperations::cMultSum:
         case eQueryOperations::cSumSum:
         {
+#if LOG_DEBUG_IMAGE_RANKING 
+          std::cout << "\t < clauseRanking += currKwRanking >" << std::endl;
+          std::cout << "\t clauseRanking += " << currKwRanking << std::endl;
+#endif
           // just accumulate
           clauseRanking += currKwRanking;
+
+#if LOG_DEBUG_IMAGE_RANKING 
+          std::cout << "\t clauseRanking = " << clauseRanking << std::endl;
+#endif
         }
         break;
 
@@ -215,16 +248,15 @@ public:
         case eQueryOperations::cMaxMax:
         {
 #if LOG_DEBUG_IMAGE_RANKING 
-          std::cout << "\tclauseRanking = std::max(" << std::to_string(clauseRanking) << ", " << std::to_string(currKwRanking) << ")" << std::endl;
+          std::cout << "\t < clauseRanking = std::max(clauseRanking, currKwRanking) >" << std::endl;
+          std::cout << "\t clauseRanking = std::max(" << clauseRanking << ", " << currKwRanking  << ")" << std::endl;
 #endif
 
           // Get just maximum
           clauseRanking = std::max(clauseRanking, currKwRanking);
 
-
 #if LOG_DEBUG_IMAGE_RANKING 
-          std::cout << "\tclauseRanking = " << std::to_string(clauseRanking) << std::endl << std::endl;
-          std::cout << "\t==== literal ends ====" << std::endl;
+          std::cout << "\t clauseRanking = " << clauseRanking << std::endl;
 #endif
         }
         break;
@@ -245,8 +277,18 @@ public:
       case eQueryOperations::cMultSum:
       case eQueryOperations::cMultMax:
       {
+#if LOG_DEBUG_IMAGE_RANKING 
+        std::cout << "< imageRanking = imageRanking * clauseRanking; >" << std::endl;
+        std::cout << "imageRanking = " << std::to_string(imageRanking) << " * " << std::to_string(clauseRanking) << std::endl;
+#endif
         // Multiply all clause rankings
         imageRanking = imageRanking * clauseRanking;
+
+
+#if LOG_DEBUG_IMAGE_RANKING 
+        std::cout << "imageRanking = " << std::to_string(imageRanking) << std::endl;
+#endif
+
       }
       break;
 
@@ -256,6 +298,7 @@ public:
       {
 
 #if LOG_DEBUG_IMAGE_RANKING 
+        std::cout << "< imageRanking = imageRanking + clauseRanking; >" << std::endl;
         std::cout << "imageRanking = " << std::to_string(imageRanking) << " + " << std::to_string(clauseRanking) << std::endl;
 #endif
 
@@ -264,7 +307,6 @@ public:
 
 #if LOG_DEBUG_IMAGE_RANKING 
         std::cout << "imageRanking = " << std::to_string(imageRanking) << std::endl;
-        std::cout << "==== clause ends ====" << std::endl;
 #endif
       }
       break;
@@ -272,8 +314,17 @@ public:
       // Outter operatin Max
       case eQueryOperations::cMaxMax:
       {
+#if LOG_DEBUG_IMAGE_RANKING 
+        std::cout << "< imageRanking = std::max(imageRanking, clauseRanking); >" << std::endl;
+        std::cout << " imageRanking = std::max(" << std::to_string(imageRanking) << " + " << std::to_string(clauseRanking) << ")"<< std::endl;
+#endif
+
         // Get just maximum
         imageRanking = std::max(imageRanking, clauseRanking);
+
+#if LOG_DEBUG_IMAGE_RANKING 
+        std::cout << "imageRanking = " << std::to_string(imageRanking) << std::endl;
+#endif
       }
       break;
 
@@ -295,6 +346,10 @@ public:
       imageRanking /= ((negateFactor * queryFormulae[0].size()) + 1);
     }
 
+    std::cout << "imageRanking = " << imageRanking << std::endl;
+    std::cout << "<= <= <= END COMPUTE IMAGE SCORE" << std::endl;
+    std::cout << "====================================" << std::endl << std::endl;
+
     return imageRanking;
   }
 
@@ -304,7 +359,8 @@ public:
     const std::vector<CnfFormula>& queryFormulae,
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
-    const std::vector<std::unique_ptr<Image>>& _imagesCont
+    const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
   ) const
   {
     //
@@ -363,7 +419,7 @@ public:
       auto imageRanking{ GetImageQueryRanking(
         kwScDataId,
         imgIt->get(),
-        queryFormulae, pAggregation, pIndexKwFrequency, _imagesCont
+        queryFormulae, pAggregation, pIndexKwFrequency, _imagesCont,  keywordContainers
       )};
 
 
@@ -398,6 +454,7 @@ public:
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers,
     size_t numResults,
     size_t targetImageId
   ) const  override
@@ -439,7 +496,8 @@ public:
       auto imageRanking{ GetImageQueryRanking(
         kwScDataId,
         pImg.get(),
-        queryFormulae, pAggregation, pIndexKwFrequency, _imagesCont
+        queryFormulae, pAggregation, pIndexKwFrequency, _imagesCont,
+        keywordContainers
       )};
 
 
@@ -456,7 +514,8 @@ public:
         auto tempQueryRanking{ GetImageTemporalQueryRanking(
           kwScDataId,
           pImg.get(),
-          subFormulae, pAggregation, pIndexKwFrequency, _imagesCont
+          subFormulae, pAggregation, pIndexKwFrequency, _imagesCont,
+          keywordContainers
         )};
 
 
@@ -534,7 +593,8 @@ public:
     TransformationFunctionBase* pAggregation,
     const std::vector<float>* pIndexKwFrequency,
     const std::vector<std::vector<UserImgQuery>>& testQueries,
-    const std::vector<std::unique_ptr<Image>>& _imagesCont
+    const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
   ) const override
   {
 
@@ -564,7 +624,7 @@ public:
         formulae.push_back(queryFormula);
       }
 
-      auto resultImages = GetRankedImages(formulae, kwScDataId, pAggregation, pIndexKwFrequency, _imagesCont, 0ULL, imgId);
+      auto resultImages = GetRankedImages(formulae, kwScDataId, pAggregation, pIndexKwFrequency, _imagesCont, keywordContainers, 0ULL, imgId);
 
       size_t transformedRank = resultImages.second / scaleDownFactor;
 
