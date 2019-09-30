@@ -1088,6 +1088,31 @@ Keyword* ImageRanker::GetKeywordByVectorIndex(KwScoringDataId kwScDataId, size_t
   return GetCorrectKwContainerPtr(kwScDataId)->GetKeywordPtrByVectorIndex(index);
 }
 
+const Keyword* ImageRanker::GetKeywordConstPtr(eKeywordsDataType kwDataType, size_t keywordId) const
+{
+  const KeywordsContainer* kwContPtr{ GetCorrectKwContainerPtr(KwScoringDataId{kwDataType, eImageScoringDataType::cNasNet}) };
+
+  if (!kwContPtr)
+  {
+    return nullptr;
+  }
+
+  return kwContPtr->GetKeywordConstPtrByWordnetId(keywordId);
+}
+
+Keyword* ImageRanker::GetKeywordPtr(eKeywordsDataType kwDataType, size_t keywordId)
+{
+  auto kwContPtr{ GetCorrectKwContainerPtr(KwScoringDataId{kwDataType, eImageScoringDataType::cNasNet}) };
+
+  if (!kwContPtr)
+  {
+    return nullptr;
+  }
+  
+  return kwContPtr->GetKeywordPtrByWordnetId(keywordId);
+}
+
+
 std::vector<std::string> ImageRanker::GetImageFilenamesTrecvid() const
 {
   // If no map file provided, use directory layout

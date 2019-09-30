@@ -180,6 +180,8 @@ public:
   const Image* GetImageDataById(size_t imageId) const;
   Image* GetImageDataById(size_t imageId);
 
+  const Keyword* GetKeywordConstPtr(eKeywordsDataType kwDataType, size_t keywordId) const;
+  Keyword* GetKeywordPtr(eKeywordsDataType kwDataType, size_t keywordId);
 
   /*!
    * This processes input queries that come from users, generates results and sends them back
