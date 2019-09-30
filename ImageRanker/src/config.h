@@ -2,6 +2,22 @@
 
 #include <stdint.h>
 
+#if 1
+  #define DO_SUBSTRING_EXPANSION_1 1
+
+#else
+  #define DO_SUBSTRING_EXPANSION_2 0
+
+#endif
+
+#define PRECOMPUTE_GOOGLE_SUBWORDS 1
+#define LOG_DEBUG_SUBSTRING_EXPANSION_1 0
+#define LOG_DEBUG_SUBSTRING_EXPANSION_2 0
+
+#define TRY_SUBSTITUE_WORD_MISS_WITH_SUBWORD 1
+#define CONCATS_COEF 1.0f
+#define SUBSTRINGS_COEF 1.0f
+
 #define SOLUTION_DIR R"(c:\Users\devwe\source\repos\ImageRanker\)"s
 
 #define NUM_TOP_KEYWORDS 100_z

@@ -196,7 +196,7 @@ public:
   const Image* GetRandomImage() const;
   std::tuple<const Image*, bool, size_t> GetCouplingImage() const;
   std::vector<const Image*> GetRandomImageSequence(size_t seqLength) const;
-  
+
 
   NearKeywordsResponse GetNearKeywords(KwScoringDataId kwScDataId, const std::string& prefix, size_t numResults, bool withExampleImages);
   Keyword* GetKeywordByVectorIndex(KwScoringDataId kwScDataId, size_t index);
@@ -222,6 +222,7 @@ public:
   ) const;
 
 
+  std::vector<std::vector<UserImgQuery>> DoQueryExpansion(const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const;
   
 
   std::tuple<UserAccuracyChartData, UserAccuracyChartData> GetStatisticsUserKeywordAccuracy(DataSourceTypeId queriesSource = DataSourceTypeId::cAll) const;

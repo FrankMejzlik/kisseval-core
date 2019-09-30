@@ -51,6 +51,7 @@ public:
   bool IsInBinVector() const { return m_vectorIndex == SIZE_T_ERROR_VALUE; };
   bool IsLeafKeyword() const { return (IsHypernym() && IsInBinVector()); }
 
+ 
 
   size_t m_wordnetId;
   size_t m_vectorIndex;
@@ -64,6 +65,12 @@ public:
   std::unordered_set<size_t> m_hyponymBinIndices;
 
   std::vector<std::string> m_exampleImageFilenames;
+
+
+  std::vector<Keyword*> m_expanded1Concat;
+  std::vector<Keyword*> m_expanded1Substrings;
+  std::vector<Keyword*> m_expanded2Concat;
+  std::vector<Keyword*> m_expanded2Substrings;
 };
 
 class KeywordsContainer
@@ -73,6 +80,59 @@ public:
   KeywordsContainer(ImageRanker* pRanker, eKeywordsDataType type, const std::string& keywordClassesFilepath);
 
   bool Initialize();
+
+
+  void SubstringExpansionPrecompute()
+  {
+    SubstringExpansionPrecompute1();
+    SubstringExpansionPrecompute2();
+  }
+
+  void SubstringExpansionPrecompute1()
+  {
+    // For every keyword
+    for (auto&& pKwLeft : _keywords)
+    {
+      // Find all words that contain this word
+      for (auto&& pKwRight : _keywords)
+      {
+        // Do not match against itself
+        if (pKwLeft == pKwRight)
+        {
+          continue;
+        }
+
+
+        // If pKwLeft is subString of pKwRight
+        if (pKwRight->m_word.find(pKwLeft->m_word) != std::string::npos)
+        {
+          pKwLeft->m_expanded1Concat.emplace_back(pKwRight.get());
+        }
+      }
+
+
+      // Find all words that are contained in this word
+      for (auto&& pKwRight : _keywords)
+      {
+        // Do not match against itself
+        if (pKwLeft == pKwRight)
+        {
+          continue;
+        }
+
+        // If pKwLeft is subString of pKwRight
+        if (pKwLeft->m_word.find(pKwRight->m_word) != std::string::npos)
+        {
+          pKwLeft->m_expanded1Substrings.emplace_back(pKwRight.get());
+        }
+      }
+    }
+  }
+
+  void SubstringExpansionPrecompute2()
+  {
+
+  }
 
 
   [[deprecated]] 

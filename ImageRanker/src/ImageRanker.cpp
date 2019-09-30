@@ -82,7 +82,79 @@ bool ImageRanker::Initialize()
   for (auto&& [id, kwCont] : _keywordContainers)
   {
     res &= kwCont.Initialize();
+    
+    // \todo
+#if PRECOMPUTE_GOOGLE_SUBWORDS
+
+    if (id == eKeywordsDataType::cGoogleAI)
+    {
+      kwCont.SubstringExpansionPrecompute1();
+    }
+
+#if LOG_DEBUG_SUBSTRING_EXPANSION_1
+
+    for (auto&& pKw : kwCont._keywords)
+    {
+      std::cout << "===================================================" << std::endl;
+      std::cout << "===================================================" << std::endl;
+      std::cout << pKw->m_word << "<" << pKw->m_wordnetId << ">" << std::endl;
+      std::cout << "-------------------" << std::endl;
+
+      std::cout << "Concats:" << std::endl;
+      for (auto&& pSumKw : pKw->m_expanded1Concat)
+      {
+        std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
+      }
+
+      std::cout << "Substrings:" << std::endl;
+      for (auto&& pSumKw : pKw->m_expanded1Substrings)
+      {
+        std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
+      }
+    }
+
+#endif
+
+#endif
+
+#if DO_SUBSTRING_EXPANSION_2
+
+    if (id == eKeywordsDataType::cGoogleAI)
+    {
+      kwCont.SubstringExpansionPrecompute2();
+    }
+
+#if LOG_DEBUG_SUBSTRING_EXPANSION_2
+
+#endif
+
+    for (auto&& pKw : kwCont._keywords)
+    {
+      std::cout << "===================================================" << std::endl;
+      std::cout << "===================================================" << std::endl;
+      std::cout << pKw->m_word << "<" << pKw->m_wordnetId << ">" << std::endl;
+      std::cout << "-------------------" << std::endl;
+
+      std::cout << "Concats:" << std::endl;
+      for (auto&& pSumKw : pKw->m_expanded1Concat)
+      {
+        std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
+      }
+
+      std::cout << "Substrings:" << std::endl;
+      for (auto&& pSumKw : pKw->m_expanded1Substrings)
+      {
+        std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
+      }
+    }
+
+#endif
+
+    
   }
+
+  
+
 
   // Collector only mode
   if (_mode == eMode::cCollector)
@@ -1493,6 +1565,66 @@ std::vector<std::string> ImageRanker::StringenizeAndQuery(KwScoringDataId kwScDa
   return resultTokens;
 }
 
+std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryExpansion(const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const
+{
+  std::vector<std::vector<UserImgQuery>> result{origQuery};
+
+  // Augment result query
+  for (auto&& query : result)
+  {
+    auto& q{query[0]};
+
+    //std::vector<std::vector<std::pair<bool, size_t>>>
+    auto ccnf = std::get<1>(q);
+    auto& cnf = std::get<1>(q);
+
+    for (auto&& clause : ccnf)
+    {
+      auto kwId{ clause[0].second };
+
+      auto pKw{ _pGoogleKws->GetKeywordConstPtrByWordnetId(kwId) };
+
+      decltype(pKw->m_expanded1Concat) concats;
+      decltype(pKw->m_expanded1Concat) substrings;
+
+      if (setting == 1)
+      {
+        concats = pKw->m_expanded1Concat;
+        substrings = pKw->m_expanded1Substrings;
+      }
+      else if (setting == 2)
+      {
+        concats = pKw->m_expanded2Concat;
+        substrings = pKw->m_expanded2Substrings;
+      }
+
+
+      for (auto&& pKw1 : concats)
+      {
+        // Copyu clasuse
+        auto newClause = clause;
+
+        newClause[0].second = pKw1->m_wordnetId;
+
+        cnf.push_back(std::move(newClause));
+      }
+
+      for (auto&& pKw1 : substrings)
+      {
+        // Copyu clasuse
+        auto newClause = clause;
+
+        newClause[0].second = pKw1->m_wordnetId;
+
+        cnf.push_back(std::move(newClause));
+      }
+    }
+  }
+
+
+  return result;
+}
+
 ChartData ImageRanker::RunModelTestWrapper(
   KwScoringDataId kwScDataId,
   InputDataTransformId aggId, RankingModelId modelId, DataSourceTypeId dataSource,
@@ -1501,6 +1633,8 @@ ChartData ImageRanker::RunModelTestWrapper(
 ) const
 {
   std::vector<std::vector<UserImgQuery>> testQueries;
+
+  
 
   // If data source should be simulated
   if (static_cast<int>(dataSource) >= SIMULATED_QUERIES_ENUM_OFSET)
@@ -1531,7 +1665,20 @@ ChartData ImageRanker::RunModelTestWrapper(
     // Get queries
     testQueries = GetCachedQueries(kwScDataId, dataSource);
   }
+
+#if DO_SUBSTRING_EXPANSION_1
+
+  testQueries = DoQueryExpansion(testQueries, 1_z);
   
+#endif
+
+
+ #if DO_SUBSTRING_EXPANSION_2
+
+  testQueries = DoQueryExpansion(testQueries, 2_z);
+  
+#endif
+
   // Get desired transformation
   auto pNetDataTransformFn = GetAggregationById(aggId);
   // Setup transformation correctly
