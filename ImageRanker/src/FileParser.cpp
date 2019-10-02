@@ -215,6 +215,103 @@ std::vector<std::unique_ptr<Image>> FileParser::ParseImagesMetaData(
   return resultImages;
 }
 
+bool FileParser::ParseWordToVecFile(
+  eKeywordsDataType kwType,
+  std::vector<std::unique_ptr<Keyword>>& keywordsCont,
+  const std::string& filepath
+)
+{
+  if (filepath.empty())
+    return true;
+
+#if LOG_W2V_EXPANSION_KW_SETS
+
+  std::cout << "=================================================" << std::endl;
+  std::cout << "Parsing W2V file: " << filepath << std::endl;
+
+#endif
+
+  // Open file with list of files in images dir
+  std::ifstream inFile(filepath, std::ios::in);
+
+  // If failed to open file
+  if (!inFile)
+  {
+    LOG_ERROR(std::string("Error opening file :") + filepath);
+  }
+
+
+  std::string lineBuffer;
+  std::string lineBuffer2;
+
+  size_t ii{ 0_z };
+
+  // While there is something to read
+  while (std::getline(inFile, lineBuffer))
+  {
+    ++ii;
+    // Extract file name
+    std::stringstream lineBufferStream(lineBuffer);
+
+
+    std::string w;
+    lineBufferStream >> w;
+
+    if (ii == 5055)
+    {
+      ii += 300;
+    }
+
+    std::replace(w.begin(), w.end(), '_', ' ');
+
+    // Find this image
+    auto pKw = _pRanker->GetKeywordPtr(kwType, w);
+    if (!pKw)
+    {
+      LOG_ERROR("Keyword not present in our dictionary.");
+    }
+
+    size_t expCount{ 0_z };
+
+    // Parse inner lines until end of block
+    while (std::getline(inFile, lineBuffer2) && lineBuffer2 != "---"s && lineBuffer2 != "--- N/A ---"s)
+    {
+      std::stringstream innerSs(lineBuffer2);
+
+      std::string word;
+      innerSs >> word;
+      std::replace(word.begin(), word.end(), '_', ' ');
+
+      float dist;
+      innerSs >> dist;
+
+      // Try if this word is in our dictionary
+      auto pKwNew = _pRanker->GetKeywordPtr(kwType, word);
+      if (!pKwNew)
+        continue;
+
+
+      // Add it as new possible expansion
+      pKw->m_wordToVec.emplace_back(pKwNew, dist);
+      ++expCount;
+    }
+
+  #if LOG_W2V_EXPANSION_KW_SETS
+
+    std::cout << "---------------------------------------" << std::endl;
+    std::cout << pKw->m_word << "< " << pKw->m_wordnetId << " > =>"<< std::endl;
+
+    for (auto&& pWKw : pKw->m_wordToVec)
+    {
+      std::cout << "\t" << pWKw.first->m_word << "< " << pWKw.first->m_wordnetId << " > -> dist = "<< pWKw.second <<  std::endl;  
+    }
+
+  #endif
+  }
+
+  return true;
+}
+
 bool FileParser::LowMem_ParseRawScoringData_ViretFormat(
   std::vector<std::unique_ptr<Image>>& imagesCont,
   KwScoringDataId kwScDataId,

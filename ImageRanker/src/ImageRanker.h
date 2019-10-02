@@ -76,10 +76,13 @@ public:
     const std::vector<ScoringDataFileRef>& deepFeaturesFileRefs = std::vector<ScoringDataFileRef>(),
     const std::string& imageToIdMapFilepath = ""s,
     size_t idOffset = 1ULL,
-    eMode mode = DEFAULT_MODE
+    eMode mode = DEFAULT_MODE,
+    const std::vector<KeywordsFileRef>& imageToIdMapFilepaths = std::vector<KeywordsFileRef>()
   );
 
   ~ImageRanker() noexcept = default;
+  
+  Keyword* GetKeywordPtr(eKeywordsDataType kwType, const std::string& wordString);
 
   /*!
    * Initializes IR with current settings
@@ -107,6 +110,7 @@ public:
   void SetImageToIdMapFilepath(const std::string& path);
 
   const FileParser* GetFileParser() const;
+  FileParser* GetFileParser();
   
   void ClearData();
 
@@ -218,11 +222,13 @@ public:
     KwScoringDataId kwScDataId,
     InputDataTransformId aggId, RankingModelId modelId, DataSourceTypeId dataSource,
     const SimulatedUserSettings& simulatedUserSettings, const RankingModelSettings& aggModelSettings, 
-    const InputDataTransformSettings& netDataTransformSettings
+    const InputDataTransformSettings& netDataTransformSettings,
+    size_t expansionSettings
   ) const;
 
 
-  std::vector<std::vector<UserImgQuery>> DoQueryExpansion(const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const;
+  std::vector<std::vector<UserImgQuery>> DoQueryAndExpansion(KwScoringDataId kwScDataId, const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const;
+  std::vector<std::vector<UserImgQuery>> DoQueryOrExpansion(KwScoringDataId kwScDataId, const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const;
   
 
   std::tuple<UserAccuracyChartData, UserAccuracyChartData> GetStatisticsUserKeywordAccuracy(DataSourceTypeId queriesSource = DataSourceTypeId::cAll) const;

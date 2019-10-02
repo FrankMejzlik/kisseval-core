@@ -14,6 +14,7 @@ using namespace std::literals;
 #include "common.h"
 #include "utility.h"
 #include "data_format_config.h"
+#include "KeywordsContainer.h"
 
 class Image;
 class ImageRanker;
@@ -63,6 +64,12 @@ public:
   void ProcessVideoShotsStack(std::stack<Image*>& videoFrames) const;
 
   std::vector<ImageIdFilenameTuple> GetImageFilenames(const std::string& _imageToIdMapFilepath) const;
+
+  bool ParseWordToVecFile(
+    eKeywordsDataType kwType,
+    std::vector<std::unique_ptr<Keyword>>& keywordsCont,
+    const std::string& filename
+  );
 
   bool LowMem_ParseRawScoringData_ViretFormat(
     std::vector<std::unique_ptr<Image>>& imagesCont,

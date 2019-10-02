@@ -7,10 +7,14 @@
 
 #include "ImageRanker.h"
 
-KeywordsContainer::KeywordsContainer(ImageRanker* pRanker, eKeywordsDataType type, const std::string& keywordClassesFilepath) :
+KeywordsContainer::KeywordsContainer(
+  ImageRanker* pRanker, eKeywordsDataType type, const std::string& keywordClassesFilepath,
+  const std::string& wordToVecMapFilepath
+) :
   _pRanker(pRanker),
   _pDataType(type),
-  _keywordsFilepath(keywordClassesFilepath)
+  _keywordsFilepath(keywordClassesFilepath),
+  _wordToVecFilepath(wordToVecMapFilepath)
 {}
 
 bool KeywordsContainer::Initialize()
@@ -27,14 +31,12 @@ bool KeywordsContainer::Initialize()
   case eKeywordsDataType::cViret1:
 
     // Parse data
-    res = _pRanker->GetFileParser()->ParseKeywordClassesFile_ViretFormat(_keywordsFilepath);
-
+    res = _pRanker->GetFileParser()->ParseKeywordClassesFile_ViretFormat(_keywordsFilepath);    
     break;
 
   case eKeywordsDataType::cGoogleAI:
     // Parse data
     res = _pRanker->GetFileParser()->ParseKeywordClassesFile_GoogleAiVisionFormat(_keywordsFilepath);
-
     break;
 
   }
@@ -46,8 +48,26 @@ bool KeywordsContainer::Initialize()
   _descIndexToKeyword = std::move(std::get<3>(res));
   _keywords = std::move(std::get<4>(res));
 
+
   // Sort keywords
   std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
+
+  switch (_pDataType)
+  {
+  case eKeywordsDataType::cViret1:
+
+    // Parse data
+    _pRanker->GetFileParser()->ParseWordToVecFile(eKeywordsDataType::cViret1, _keywords, _wordToVecFilepath);
+
+    break;
+
+  case eKeywordsDataType::cGoogleAI:
+    _pRanker->GetFileParser()->ParseWordToVecFile(eKeywordsDataType::cGoogleAI, _keywords, _wordToVecFilepath);
+
+    break;
+
+  }
+
 
   // Iterate over all unique keywords 
   for (auto&&[wordnetId, pKw] : _wordnetIdToKeywords)

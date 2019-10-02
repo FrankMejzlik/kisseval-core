@@ -9,7 +9,8 @@ ImageRanker::ImageRanker(
   const std::vector<ScoringDataFileRef>& deepFeaturesFileRefs,
   const std::string& imageToIdMapFilepath,
   size_t idStride,
-  eMode mode
+  eMode mode,
+  const std::vector<KeywordsFileRef>& wordToVecMapFileRefs
 ) :
   _primaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
   _secondaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
@@ -21,22 +22,27 @@ ImageRanker::ImageRanker(
   _fileParser(this)
 {
   // Construct all desired keyword containers
-  for (auto&&[id, filepath] : keywordsFileRefs)
   {
-    auto result = _keywordContainers.insert(
-      std::pair(id, KeywordsContainer(this, eKeywordsDataType(id), filepath))
-    );
-
-    // Save shortcuts
-    switch (id)
+    size_t i{ 0_z };
+    for (auto&&[id, filepath] : keywordsFileRefs)
     {
-    case eKeywordsDataType::cViret1:
-      _pViretKws = &(result.first->second);
-      break;
+      auto result = _keywordContainers.insert(
+        std::pair(id, KeywordsContainer(this, eKeywordsDataType(id), filepath, std::get<1>(wordToVecMapFileRefs[i])))
+      );
 
-    case eKeywordsDataType::cGoogleAI:
-      _pGoogleKws = &(result.first->second);
-      break;
+      // Save shortcuts
+      switch (id)
+      {
+      case eKeywordsDataType::cViret1:
+        _pViretKws = &(result.first->second);
+        break;
+
+      case eKeywordsDataType::cGoogleAI:
+        _pGoogleKws = &(result.first->second);
+        break;
+      }
+
+      ++i;
     }
   }
 
@@ -74,6 +80,11 @@ ImageRanker::ImageRanker(
 
 }
 
+Keyword* ImageRanker::GetKeywordPtr(eKeywordsDataType kwType, const std::string& wordString)
+{
+  return _keywordContainers.at(kwType).GetKeywordPtr(wordString);
+}
+
 bool ImageRanker::Initialize()
 {
   bool res{ true };
@@ -84,14 +95,11 @@ bool ImageRanker::Initialize()
     res &= kwCont.Initialize();
     
     // \todo
-#if PRECOMPUTE_GOOGLE_SUBWORDS
-
-    if (id == eKeywordsDataType::cGoogleAI)
-    {
-      kwCont.SubstringExpansionPrecompute1();
-    }
-
-#if LOG_DEBUG_SUBSTRING_EXPANSION_1
+#if PRECOMPUTE_EXPANSION_SUBWORDS
+ 
+    kwCont.SubstringExpansionPrecompute1();
+    
+#if LOG_DEBUG_PRECOMPUTE_SUBSTRINGS_1
 
     for (auto&& pKw : kwCont._keywords)
     {
@@ -115,45 +123,35 @@ bool ImageRanker::Initialize()
 
 #endif
 
-#endif
+    kwCont.SubstringExpansionPrecompute2();
+    
+#if LOG_DEBUG_PRECOMPUTE_SUBSTRINGS_2
 
-#if DO_SUBSTRING_EXPANSION_2
-
-    if (id == eKeywordsDataType::cGoogleAI)
-    {
-      kwCont.SubstringExpansionPrecompute2();
-    }
-
-#if LOG_DEBUG_SUBSTRING_EXPANSION_2
-
-#endif
-
-    for (auto&& pKw : kwCont._keywords)
-    {
-      std::cout << "===================================================" << std::endl;
-      std::cout << "===================================================" << std::endl;
-      std::cout << pKw->m_word << "<" << pKw->m_wordnetId << ">" << std::endl;
-      std::cout << "-------------------" << std::endl;
-
-      std::cout << "Concats:" << std::endl;
-      for (auto&& pSumKw : pKw->m_expanded1Concat)
+      for (auto&& pKw : kwCont._keywords)
       {
-        std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
-      }
+        std::cout << "===================================================" << std::endl;
+        std::cout << "===================================================" << std::endl;
+        std::cout << pKw->m_word << "<" << pKw->m_wordnetId << ">" << std::endl;
+        std::cout << "-------------------" << std::endl;
 
-      std::cout << "Substrings:" << std::endl;
-      for (auto&& pSumKw : pKw->m_expanded1Substrings)
-      {
-        std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
-      }
+        std::cout << "Concats:" << std::endl;
+        for (auto&& pSumKw : pKw->m_expanded2Concat)
+        {
+          std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
+        }
+
+        std::cout << "Substrings:" << std::endl;
+        for (auto&& pSumKw : pKw->m_expanded2Substrings)
+        {
+          std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
+        }
     }
 
 #endif
 
+#endif
     
   }
-
-  
 
 
   // Collector only mode
@@ -606,6 +604,11 @@ void ImageRanker::SetMode(eMode value)
 }
 
 const FileParser* ImageRanker::GetFileParser() const
+{
+  return &_fileParser;
+}
+
+FileParser* ImageRanker::GetFileParser()
 {
   return &_fileParser;
 }
@@ -1565,24 +1568,32 @@ std::vector<std::string> ImageRanker::StringenizeAndQuery(KwScoringDataId kwScDa
   return resultTokens;
 }
 
-std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryExpansion(const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const
+std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryAndExpansion(KwScoringDataId kwScDataId, const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const
 {
   std::vector<std::vector<UserImgQuery>> result{origQuery};
 
   // Augment result query
   for (auto&& query : result)
   {
+  
+
     auto& q{query[0]};
 
     //std::vector<std::vector<std::pair<bool, size_t>>>
     auto ccnf = std::get<1>(q);
     auto& cnf = std::get<1>(q);
 
+  #if LOG_QUERY_EXPANSION
+    std::cout << "-----" << std::endl;
+    std::cout << "Original:" << std::endl;
+    std::cout << _pGoogleKws->cnfFormulaToString(ccnf) << std::endl;
+  #endif
+
     for (auto&& clause : ccnf)
     {
       auto kwId{ clause[0].second };
 
-      auto pKw{ _pGoogleKws->GetKeywordConstPtrByWordnetId(kwId) };
+      auto pKw{ GetCorrectKwContainerPtr(kwScDataId)->GetKeywordConstPtrByVectorIndex(kwId) };
 
       decltype(pKw->m_expanded1Concat) concats;
       decltype(pKw->m_expanded1Concat) substrings;
@@ -1604,7 +1615,7 @@ std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryExpansion(const std::
         // Copyu clasuse
         auto newClause = clause;
 
-        newClause[0].second = pKw1->m_wordnetId;
+        newClause[0].second = pKw1->m_vectorIndex;
 
         cnf.push_back(std::move(newClause));
       }
@@ -1614,22 +1625,133 @@ std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryExpansion(const std::
         // Copyu clasuse
         auto newClause = clause;
 
-        newClause[0].second = pKw1->m_wordnetId;
+        newClause[0].second = pKw1->m_vectorIndex;
 
         cnf.push_back(std::move(newClause));
       }
     }
+
+   #if LOG_QUERY_EXPANSION
+    std::cout << "New:" << std::endl;
+    std::cout << GetCorrectKwContainerPtr(kwScDataId)->cnfFormulaToString(cnf) << std::endl;
+  #endif
   }
 
 
   return result;
 }
 
+std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryOrExpansion(KwScoringDataId kwScDataId, const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const
+{
+  std::vector<std::vector<UserImgQuery>> result{origQuery};
+
+  if (setting == 0)
+  {
+    return result;
+  }
+
+  // Augment result query
+  for (auto&& query : result)
+  {
+    auto& q{query[0]};
+
+    //std::vector<std::vector<std::pair<bool, size_t>>>
+    auto ccnf = std::get<1>(q);
+    auto& cnf = std::get<1>(q);
+
+  #if LOG_QUERY_EXPANSION
+    std::cout << "-----" << std::endl;
+    std::cout << _pGoogleKws->cnfFormulaToString(ccnf) << std::endl;
+  #endif
+
+    for (auto&& clause : cnf)
+    {
+      std::set<size_t> ids;
+
+      for (auto&& [a,b] : clause)
+      {
+        ids.insert(b);
+      }
+
+      for (auto&&[a, b] : clause)
+      {
+        auto kwId{ b };
+
+        auto pKw{ GetCorrectKwContainerPtr(kwScDataId)->GetKeywordConstPtrByVectorIndex(kwId) };
+
+        if (setting == 1 || setting == 2 || setting == 23 || setting == 13)
+        {
+          decltype(pKw->m_expanded1Concat) concats;
+          decltype(pKw->m_expanded1Substrings) substrings;
+
+          if (setting == 1 || setting == 13)
+          {
+            concats = pKw->m_expanded1Concat;
+            substrings = pKw->m_expanded1Substrings;
+          }
+          else if (setting == 2 || setting == 23)
+          {
+            concats = pKw->m_expanded2Concat;
+            substrings = pKw->m_expanded2Substrings;
+          }
+
+          for (auto&& pKw1 : concats)
+          {
+            if (ids.insert(pKw1->m_vectorIndex).second)
+            {
+              clause.emplace_back(false, pKw1->m_vectorIndex);
+            }
+          }
+
+          for (auto&& pKw1 : substrings)
+          {
+            if (ids.insert(pKw1->m_vectorIndex).second)
+            {
+              clause.emplace_back(false, pKw1->m_vectorIndex);
+            }
+          }
+        }
+        else if (setting == 3 || setting == 23 || setting == 13)
+        {
+          // word2vec
+
+          auto expSet = pKw->m_wordToVec;
+
+          for (auto&&[pKw1, dist] : expSet)
+          {
+            if (dist >= W2V_DISTANCE_THRESHOLD)
+            {
+              if (ids.insert(pKw1->m_vectorIndex).second)
+              {
+                clause.emplace_back(false, pKw1->m_vectorIndex);
+              }
+            }
+          }
+
+        }
+        else
+        {
+          LOG_ERROR("Somthing went wrong");
+        }
+      }
+    }
+   #if LOG_QUERY_EXPANSION
+    std::cout << "=> "<< GetCorrectKwContainerPtr(kwScDataId)->cnfFormulaToString(cnf) << std::endl;
+    
+  #endif
+  }
+
+
+  return result;
+}
+
+
 ChartData ImageRanker::RunModelTestWrapper(
   KwScoringDataId kwScDataId,
   InputDataTransformId aggId, RankingModelId modelId, DataSourceTypeId dataSource,
   const SimulatedUserSettings& simulatedUserSettings, const RankingModelSettings& aggModelSettings, 
-  const InputDataTransformSettings& netDataTransformSettings
+  const InputDataTransformSettings& netDataTransformSettings,
+  size_t expansionSettings
 ) const
 {
   std::vector<std::vector<UserImgQuery>> testQueries;
@@ -1666,17 +1788,20 @@ ChartData ImageRanker::RunModelTestWrapper(
     testQueries = GetCachedQueries(kwScDataId, dataSource);
   }
 
-#if DO_SUBSTRING_EXPANSION_1
+#if DO_SUBSTRING_EXPANSION
 
-  testQueries = DoQueryExpansion(testQueries, 1_z);
-  
+
+
+#if SUBSTRING_EXPANSION_TYPE == 0
+
+  testQueries = DoQueryAndExpansion(kwScDataId, testQueries, expansionSettings);
+ 
+#elif SUBSTRING_EXPANSION_TYPE == 1
+
+  testQueries = DoQueryOrExpansion(kwScDataId, testQueries, expansionSettings);
+
 #endif
 
-
- #if DO_SUBSTRING_EXPANSION_2
-
-  testQueries = DoQueryExpansion(testQueries, 2_z);
-  
 #endif
 
   // Get desired transformation

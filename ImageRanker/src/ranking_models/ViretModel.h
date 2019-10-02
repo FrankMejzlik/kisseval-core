@@ -73,9 +73,9 @@ public:
     KwScoringDataId kwScDataId,
     Image* pImg,
     const std::vector<CnfFormula>& queryFormulae,
-    TransformationFunctionBase* pAggregation,
+    TransformationFunctionBase* pTransformFn,
     const std::vector<float>* pIndexKwFrequency,
-    const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::vector<std::unique_ptr<Image>>& images,
     const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
   ) const
   {
@@ -89,7 +89,7 @@ public:
 #endif
 
     // Prepare pointer for ranking vector aggregation data
-    const std::vector<float>* pImgRankingVector{ pImg->GetAggregationVectorById(kwScDataId, pAggregation->GetGuidFromSettings()) };
+    const std::vector<float>* pImgRankingVector{ pImg->GetAggregationVectorById(kwScDataId, pTransformFn->GetGuidFromSettings()) };
 
 #if LOG_DEBUG_IMAGE_RANKING 
 
@@ -359,9 +359,9 @@ public:
     KwScoringDataId kwScDataId,
     Image* pImg,
     const std::vector<CnfFormula>& queryFormulae,
-    TransformationFunctionBase* pAggregation,
+    TransformationFunctionBase* pTransformFn,
     const std::vector<float>* pIndexKwFrequency,
-    const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::vector<std::unique_ptr<Image>>& images,
     const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
   ) const
   {
@@ -388,10 +388,10 @@ public:
     }
 
     // Get iterator to this image
-    auto imgIt{ _imagesCont.begin() + pImg->m_index };
+    auto imgIt{ images.begin() + pImg->m_index };
 
     // If item not found
-    if (imgIt == _imagesCont.end())
+    if (imgIt == images.end())
     {
       LOG_ERROR("Image not found in map.");
     }
@@ -415,13 +415,13 @@ public:
       // Move iterator to successor
       ++imgIt;
 
-      assert(imgIt != _imagesCont.end());
+      assert(imgIt != images.end());
 
       // Get image ranking of image
       auto imageRanking{ GetImageQueryRanking(
         kwScDataId,
         imgIt->get(),
-        queryFormulae, pAggregation, pIndexKwFrequency, _imagesCont,  keywordContainers
+        queryFormulae, pTransformFn, pIndexKwFrequency, images,  keywordContainers
       )};
 
 
@@ -453,9 +453,9 @@ public:
   virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
     const std::vector<CnfFormula>& queryFormulae,
     KwScoringDataId kwScDataId,
-    TransformationFunctionBase* pAggregation,
+    TransformationFunctionBase* pTransformFn,
     const std::vector<float>* pIndexKwFrequency,
-    const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::vector<std::unique_ptr<Image>>& images,
     const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers,
     size_t numResults,
     size_t targetImageId
@@ -464,7 +464,7 @@ public:
     // If want all results
     if (numResults == SIZE_T_ERROR_VALUE)
     {
-      numResults = _imagesCont.size();
+      numResults = images.size();
     }
 
     // Comparator lambda for priority queue
@@ -475,7 +475,7 @@ public:
 
     // Reserve enough space in container
     std::vector<std::pair<float, size_t>> container;
-    container.reserve(_imagesCont.size());
+    container.reserve(images.size());
 
     std::priority_queue<
       std::pair<float, size_t>, 
@@ -488,7 +488,7 @@ public:
 
 
     // Check every image if satisfies query formula
-    for (auto&& pImg : _imagesCont)
+    for (auto&& pImg : images)
     {
       //
       // Get ranking of main frame
@@ -498,7 +498,7 @@ public:
       auto imageRanking{ GetImageQueryRanking(
         kwScDataId,
         pImg.get(),
-        queryFormulae, pAggregation, pIndexKwFrequency, _imagesCont,
+        queryFormulae, pTransformFn, pIndexKwFrequency, images,
         keywordContainers
       )};
 
@@ -516,7 +516,7 @@ public:
         auto tempQueryRanking{ GetImageTemporalQueryRanking(
           kwScDataId,
           pImg.get(),
-          subFormulae, pAggregation, pIndexKwFrequency, _imagesCont,
+          subFormulae, pTransformFn, pIndexKwFrequency, images,
           keywordContainers
         )};
 
@@ -592,10 +592,10 @@ public:
 
   virtual ChartData RunModelTest(
     KwScoringDataId kwScDataId,
-    TransformationFunctionBase* pAggregation,
+    TransformationFunctionBase* pTransformFn,
     const std::vector<float>* pIndexKwFrequency,
     const std::vector<std::vector<UserImgQuery>>& testQueries,
-    const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::vector<std::unique_ptr<Image>>& images,
     const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
   ) const override
   {
@@ -605,7 +605,7 @@ public:
     std::cout << "=====================================" << std::endl;
 #endif
 
-    uint32_t maxRank = (uint32_t)_imagesCont.size();
+    uint32_t maxRank = (uint32_t)images.size();
 
     // To have 100 samples
     uint32_t scaleDownFactor = maxRank / MODEL_TEST_CHART_NUM_X_POINTS;
@@ -631,7 +631,7 @@ public:
         formulae.push_back(queryFormula);
       }
 
-      auto resultImages = GetRankedImages(formulae, kwScDataId, pAggregation, pIndexKwFrequency, _imagesCont, keywordContainers, 0ULL, imgId);
+      auto resultImages = GetRankedImages(formulae, kwScDataId, pTransformFn, pIndexKwFrequency, images, keywordContainers, 0ULL, imgId);
 
 
       // Rank index is -1 from rank

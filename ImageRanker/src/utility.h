@@ -11,7 +11,6 @@ using namespace std::literals;
 
 #include "common.h"
 
-
 inline std::vector<std::string> SplitString(const std::string& s, char delimiter)
 {
   std::vector<std::string> tokens;

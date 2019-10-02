@@ -71,13 +71,19 @@ public:
   std::vector<Keyword*> m_expanded1Substrings;
   std::vector<Keyword*> m_expanded2Concat;
   std::vector<Keyword*> m_expanded2Substrings;
+
+
+  std::vector<std::pair<Keyword*, float>> m_wordToVec;
 };
 
 class KeywordsContainer
 {
 public:
   KeywordsContainer() = delete;
-  KeywordsContainer(ImageRanker* pRanker, eKeywordsDataType type, const std::string& keywordClassesFilepath);
+  KeywordsContainer(
+    ImageRanker* pRanker, eKeywordsDataType type, const std::string& keywordClassesFilepath,
+    const std::string& wordToVecMapFilepath
+  );
 
   bool Initialize();
 
@@ -86,6 +92,59 @@ public:
   {
     SubstringExpansionPrecompute1();
     SubstringExpansionPrecompute2();
+  }
+
+  Keyword* GetKeywordPtr(const std::string& wordString)
+  {
+    auto pKw{ GetNearKeywordsPtrs(wordString, 1)[0] };
+
+    if (!pKw)
+    {
+      return nullptr;
+    }
+
+    // Force lowercase
+    std::locale loc;
+    std::string lower1;
+    std::string lower2;
+
+    // Convert to lowercase
+    for (auto elem : pKw->m_word)
+    {
+      lower1.push_back(std::tolower(elem, loc));
+    }
+
+    // Convert to lowercase
+    for (auto elem : wordString)
+    {
+      lower2.push_back(std::tolower(elem, loc));
+    }
+
+    // The nearest kw must be the exact match
+    if (lower1 != lower2)
+    {
+      return nullptr;
+    }
+
+    return pKw;
+  }
+
+  std::string cnfFormulaToString(const CnfFormula& fml)
+  {
+    std::string result;
+
+    for (auto&& clause : fml)
+    {
+      result += "( ";
+      for (auto&& [isNegated, id] : clause)
+      {
+        result += GetKeywordConstPtrByVectorIndex(id)->m_word + "|";
+      }
+      result += " )&";
+    }
+
+    return result;
+
   }
 
   void SubstringExpansionPrecompute1()
@@ -131,7 +190,52 @@ public:
 
   void SubstringExpansionPrecompute2()
   {
+    // For every keyword
+    for (auto&& pKwLeft : _keywords)
+    {
+      // Find all words that contain this word
+      for (auto&& pKwRight : _keywords)
+      {
+        // Do not match against itself
+        if (pKwLeft == pKwRight)
+        {
+          continue;
+        }
 
+        auto subwords{ SplitString(pKwRight->m_word, ' ') };
+
+        for (auto && w : subwords)
+        {
+          // If pKwLeft is subString of pKwRight
+          if (pKwLeft->m_word  == w)
+          {
+            pKwLeft->m_expanded2Concat.emplace_back(pKwRight.get());
+          }
+        }
+      }
+
+      auto subwordsL{ SplitString(pKwLeft->m_word, ' ') };
+      // Find all words that are contained in this word
+      for (auto&& pKwRight : _keywords)
+      {
+        // Do not match against itself
+        if (pKwLeft == pKwRight)
+        {
+          continue;
+        }
+
+        
+
+        for (auto && w : subwordsL)
+        {
+          // If pKwLeft is subString of pKwRight
+          if (w == pKwRight->m_word)
+          {
+            pKwLeft->m_expanded2Substrings.emplace_back(pKwRight.get());
+          }
+        }
+      }
+    }
   }
 
 
@@ -293,6 +397,7 @@ private:
   eKeywordsDataType _pDataType;
 
   std::string _keywordsFilepath;
+  std::string _wordToVecFilepath;
 
   //! One huge string of all descriptions for fast keyword search
   std::string _allDescriptions;

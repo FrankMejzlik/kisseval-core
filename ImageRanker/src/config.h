@@ -2,21 +2,30 @@
 
 #include <stdint.h>
 
-#if 1
-  #define DO_SUBSTRING_EXPANSION_1 1
+#define PRECOMPUTE_EXPANSION_SUBWORDS 1
+#define LOG_DEBUG_PRECOMPUTE_SUBSTRINGS_1 0
+#define LOG_DEBUG_PRECOMPUTE_SUBSTRINGS_2 0
 
-#else
-  #define DO_SUBSTRING_EXPANSION_2 0
 
-#endif
+// 1-> all substrings, 2 -> substring matching whole word, 3 -> w2v, 23 -> 2&3
+#define SUBSTRING_EXPANSION_SET 23
 
-#define PRECOMPUTE_GOOGLE_SUBWORDS 1
-#define LOG_DEBUG_SUBSTRING_EXPANSION_1 0
-#define LOG_DEBUG_SUBSTRING_EXPANSION_2 0
-
-#define TRY_SUBSTITUE_WORD_MISS_WITH_SUBWORD 1
+#define DO_QUERY_DYNAMIC_EXPANSION 1
 #define CONCATS_COEF 1.0f
 #define SUBSTRINGS_COEF 1.0f
+
+#define DO_SUBSTRING_EXPANSION 1
+
+// 0 AND, 1 OR
+#define SUBSTRING_EXPANSION_TYPE 1
+#define LOG_QUERY_EXPANSION 0
+
+
+#define LOG_W2V_EXPANSION_KW_SETS 0
+#define W2V_DISTANCE_THRESHOLD 0.5f
+
+
+
 
 #define SOLUTION_DIR R"(c:\Users\devwe\source\repos\ImageRanker\)"s
 
@@ -138,7 +147,9 @@
 //! Basic log error macro
 #if THROW_ON_ERROR
 
-  #define LOG_ERROR(x) std::cout << "ERROR: " << x << std::endl; throw std::runtime_error(std::string(x));
+  #define LOG_ERROR(x) \
+    std::cout << "ERROR: " << x << "(" << __LINE__ << ", " << __FILE__ << ")" << std::endl; \
+    throw std::runtime_error(std::string(x));
 
 #elif
 

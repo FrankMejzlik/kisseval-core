@@ -23,7 +23,11 @@ int main()
     std::vector<ScoringDataFileRef>{},
     SOLUTION_DIR + R"(data/imageset0/viret_keywords/dataset0/files.txt)",
     1ULL,
-    ImageRanker::eMode::cFullAnalytical
+    ImageRanker::eMode::cFullAnalytical,
+    std::vector<KeywordsFileRef>{
+      std::tuple(eKeywordsDataType::cViret1, SOLUTION_DIR + R"(data/imageset0/viret_keywords/LSC2018-NASNet.all_must_match.word2vec.label)"s),
+      std::tuple(eKeywordsDataType::cGoogleAI, SOLUTION_DIR + R"(data/imageset0/google_keywords/keyword_classes.100.100.joined_words.word2vec.txt)"s)
+    }
   };
 
   ranker.Initialize();
@@ -69,20 +73,54 @@ int main()
   {
     std::cout << i.first << " => " << i.second << std::endl;
   } */
-  std::cout << "========================" << std::endl;
+  std::cout << "<<1>>========================" << std::endl;
+  auto result11{
+  ranker.RunModelTestWrapper(
+    std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
+    InputDataTransformId::cNoTransform, RankingModelId::cViretBase, (DataSourceTypeId)999,
+    std::vector<std::string>({ "0"s }),
+    std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
+    1
+  )
+  };
+
+  std::cout << "<<2>>========================" << std::endl;
+  auto result12{
+  ranker.RunModelTestWrapper(
+    std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
+    InputDataTransformId::cNoTransform, RankingModelId::cViretBase, (DataSourceTypeId)999,
+    std::vector<std::string>({ "0"s }),
+    std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
+    2
+  )
+  };
+
+  std::cout << "<<3>>========================" << std::endl;
   auto result13{
   ranker.RunModelTestWrapper(
     std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
     InputDataTransformId::cNoTransform, RankingModelId::cViretBase, (DataSourceTypeId)999,
     std::vector<std::string>({ "0"s }),
-    std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s })
+    std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
+    3
   )
   };
 
-  for (auto&& i : result13)
+  std::cout << "<<4>>========================" << std::endl;
+  auto result14{
+  ranker.RunModelTestWrapper(
+    std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
+    InputDataTransformId::cNoTransform, RankingModelId::cViretBase, (DataSourceTypeId)999,
+    std::vector<std::string>({ "0"s }),
+    std::vector<std::string>({ "0"s, "0.0"s, "2"s }), std::vector<std::string>({ "1"s, "0"s }),
+    23
+  )
+  };
+  
+  /*for (auto&& i : result13)
   {
     std::cout << i.first << " => " << i.second << std::endl;
-  }
+  }*/
 
 /*
   auto r1 = ranker.GetRelevantImages(
