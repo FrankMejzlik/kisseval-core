@@ -502,6 +502,10 @@ public:
         keywordContainers
       )};
 
+      if (imageRanking <= 0.0f)
+      {
+        //std::cout << "zero ranking!" << std::endl;
+      }
 
       //
       // Count in temporal query if present
@@ -520,6 +524,11 @@ public:
           keywordContainers
         )};
 
+
+        if (tempQueryRanking <= 0.0f)
+        {
+          //std::cout << "zero ranking!" << std::endl;
+        }
 
         // Use correct outter temporal query operation
         switch (_settings.m_tempQueryOutterOperation)
@@ -589,6 +598,162 @@ public:
 
     return result;
   }
+
+    virtual ChartData RunModelTestWithOrigQueries(
+    KwScoringDataId kwScDataId,
+    TransformationFunctionBase* pTransformFn,
+    const std::vector<float>* pIndexKwFrequency,
+    const std::vector<std::vector<UserImgQuery>>& testQueries,
+    const std::vector<std::vector<UserImgQuery>>& testQueriesOrig,
+    const std::vector<std::unique_ptr<Image>>& images,
+    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
+  ) const override
+  {
+#if LOG_DEBUG_RUN_TESTS
+    std::cout << "Running model test ... " << std::endl;
+    std::cout << "Result chart will have " << MODEL_TEST_CHART_NUM_X_POINTS << " discrete points on X axis" << std::endl;
+    std::cout << "=====================================" << std::endl;
+#endif
+
+
+  #if LOG_PRE_AND_PPOST_EXP_RANKS
+    long long int totalRankMove{ 0 };
+    long long int currDelta{ 0 };
+
+    size_t origRank{0_z};
+    size_t expRank{0_z};
+  #endif
+
+    uint32_t maxRank = (uint32_t)images.size();
+
+    // To have 100 samples
+    uint32_t scaleDownFactor = maxRank / MODEL_TEST_CHART_NUM_X_POINTS;
+
+    std::vector<std::pair<uint32_t, uint32_t>> result;
+    result.resize(MODEL_TEST_CHART_NUM_X_POINTS + 1);
+
+    uint32_t label{ 0ULL };
+    for (auto&& column : result)
+    {
+      column.first = label;
+      label += scaleDownFactor;
+    }
+
+    size_t iii{ 0_z };
+
+    // Iterate over test queries
+    for (auto&& singleQuery : testQueries)
+    {
+      {
+        auto singleQueryOrig{testQueriesOrig[iii]};
+        auto imgId = std::get<0>(singleQueryOrig[0]);
+
+      std::vector<CnfFormula> formulae;
+      for (auto&&[imgId, queryFormula, withExamples] : singleQueryOrig)
+      {
+        formulae.push_back(queryFormula);
+      }
+
+      auto resultImages = GetRankedImages(formulae, kwScDataId, pTransformFn, pIndexKwFrequency, images, keywordContainers, 0ULL, imgId);
+      #if LOG_PRE_AND_PPOST_EXP_RANKS
+
+        origRank = resultImages.second;
+
+        std::cout << "-----" << std::endl;
+        std::cout << origRank << " => ";
+
+      #endif
+      }
+
+      auto imgId = std::get<0>(singleQuery[0]);
+
+      std::vector<CnfFormula> formulae;
+      for (auto&&[imgId, queryFormula, withExamples] : singleQuery)
+      {
+        formulae.push_back(queryFormula);
+      }
+
+      auto resultImages = GetRankedImages(formulae, kwScDataId, pTransformFn, pIndexKwFrequency, images, keywordContainers, 0ULL, imgId);
+
+
+      // Rank index is -1 from rank
+      size_t transformedRank = (resultImages.second - 1) / scaleDownFactor;
+      // Increment this hit
+      ++result[transformedRank].second;
+
+    #if LOG_PRE_AND_PPOST_EXP_RANKS
+      expRank = resultImages.second;
+      currDelta = expRank - origRank;
+
+      totalRankMove += currDelta;
+
+      std::cout << expRank << " delta = " << currDelta << ", totalRankDelta = " << totalRankMove <<std::endl;
+
+    #endif
+
+#if LOG_DEBUG_RUN_TESTS
+      std::cout << "----------------------------" << std::endl;
+      std::cout << "Image ID " << imgId << "=> " << (resultImages.second - 1) << "/" << maxRank << std::endl;
+
+      size_t from{ transformedRank * scaleDownFactor };
+      size_t to{ (transformedRank + 1) * scaleDownFactor - 1 };
+
+      std::cout << "Add hit to interval [" << from << ", " << to << "] => " << result[transformedRank].second << " found" << std::endl;
+
+#endif
+
+      ++iii;
+    }
+
+
+    uint32_t currCount{ 0ULL };
+
+
+#if LOG_DEBUG_RUN_TESTS
+    std::cout << "=====================================" << std::endl;
+    std::cout << "Final hit counts:" << std::endl;
+
+    {
+      size_t ii{ 0_z };
+      for (auto&& r : result)
+      {
+        size_t from{ ii * scaleDownFactor };
+        size_t to{ (ii + 1) * scaleDownFactor - 1 };
+
+        std::cout << "[" << from << ", " << to << "] => " << r.second << " found" << std::endl;
+
+        ++ii;
+      }
+    }
+
+    std::cout << "=====================================" << std::endl;
+    std::cout << "Cumulative number of hits (as rank starting with 1):" << std::endl;
+#endif
+
+    {
+      size_t ii{ 0_z };
+      // Compute final chart values
+      for (auto&& r : result)
+      {
+        uint32_t tmp{ r.second };
+        r.second = currCount;
+        currCount += tmp;
+
+#if LOG_DEBUG_RUN_TESTS
+        size_t to{ (ii) * scaleDownFactor };
+
+        std::cout << "[0, " << to << "] => " << r.second << " images found" << std::endl;
+#endif
+
+        ++ii;
+      }
+
+      
+    }
+
+    return result;
+  }
+
 
   virtual ChartData RunModelTest(
     KwScoringDataId kwScDataId,

@@ -4,6 +4,8 @@
 #include <string>
 using namespace std::literals::string_literals;
 
+
+#include <set>
 #include <algorithm>
 #include <cctype>
 #include <vector>
@@ -73,7 +75,7 @@ public:
   std::vector<Keyword*> m_expanded2Substrings;
 
 
-  std::vector<std::pair<Keyword*, float>> m_wordToVec;
+  std::set<std::pair<Keyword*, float>> m_wordToVec;
 };
 
 class KeywordsContainer

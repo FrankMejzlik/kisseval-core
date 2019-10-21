@@ -41,4 +41,15 @@ public:
     const std::vector<std::unique_ptr<Image>>& _imagesCont,
     const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
   ) const = 0;
+
+  virtual ChartData RunModelTestWithOrigQueries(
+  KwScoringDataId kwScDataId,
+  TransformationFunctionBase* pTransformFn,
+  const std::vector<float>* pIndexKwFrequency,
+  const std::vector<std::vector<UserImgQuery>>& testQueries,
+  const std::vector<std::vector<UserImgQuery>>& testQueriesOrig,
+  const std::vector<std::unique_ptr<Image>>& images,
+  const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
+) const = 0;
 };
+

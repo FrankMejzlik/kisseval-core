@@ -252,6 +252,65 @@ public:
     return result;
   }
 
+   virtual ChartData RunModelTestWithOrigQueries(
+    KwScoringDataId kwScDataId,
+    TransformationFunctionBase* pAggregation,
+    const std::vector<float>* pIndexKwFrequency,
+    const std::vector<std::vector<UserImgQuery>>& testQueries,
+    const std::vector<std::vector<UserImgQuery>>& testQueriesOrig,
+    const std::vector<std::unique_ptr<Image>>& _imagesCont,
+    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
+  ) const override
+  {
+    uint32_t maxRank = (uint32_t)_imagesCont.size();
+
+    // To have 100 samples
+    uint32_t scaleDownFactor = maxRank / MODEL_TEST_CHART_NUM_X_POINTS;
+
+    std::vector<std::pair<uint32_t, uint32_t>> result;
+    result.resize(MODEL_TEST_CHART_NUM_X_POINTS + 1);
+
+    uint32_t label{ 0ULL };
+    for (auto&& column : result)
+    {
+      column.first = label;
+      label += scaleDownFactor;
+    }
+
+    // Iterate over test queries
+    for (auto&& singleQuery : testQueries)
+    {
+      auto imgId = std::get<0>(singleQuery[0]);
+
+      std::vector<CnfFormula> formulae;
+      for (auto&&[imgId, queryFormula, withExamples] : singleQuery)
+      {
+        formulae.push_back(queryFormula);
+      }
+
+      auto resultImages = GetRankedImages(formulae, kwScDataId, pAggregation, 
+        pIndexKwFrequency, _imagesCont, keywordContainers, 0ULL, imgId);
+
+      size_t transformedRank = resultImages.second / scaleDownFactor;
+
+      // Increment this hit
+      ++result[transformedRank].second;
+    }
+
+
+    uint32_t currCount{ 0ULL };
+
+    // Compute final chart values
+    for (auto&& r : result)
+    {
+      uint32_t tmp{ r.second };
+      r.second = currCount;
+      currCount += tmp;
+    }
+
+    return result;
+  }
+
 
   virtual ChartData RunModelTest(
     KwScoringDataId kwScDataId,

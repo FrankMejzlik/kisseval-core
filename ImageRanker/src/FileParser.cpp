@@ -249,7 +249,7 @@ bool FileParser::ParseWordToVecFile(
   // While there is something to read
   while (std::getline(inFile, lineBuffer))
   {
-    ++ii;
+    
     // Extract file name
     std::stringstream lineBufferStream(lineBuffer);
 
@@ -257,15 +257,21 @@ bool FileParser::ParseWordToVecFile(
     std::string w;
     lineBufferStream >> w;
 
-    if (ii == 5055)
-    {
-      ii += 300;
-    }
-
     std::replace(w.begin(), w.end(), '_', ' ');
 
     // Find this image
-    auto pKw = _pRanker->GetKeywordPtr(kwType, w);
+    Keyword* pKw{ nullptr };
+
+    if (kwType == eKeywordsDataType::cGoogleAI)
+    {
+      pKw = _pRanker->GetKeywordPtr(kwType, w);
+    }
+    else
+    {
+      pKw = _pRanker->GetKeywordByVectorIndex(std::tuple(kwType, eImageScoringDataType::cNasNet), ii);
+    }
+
+
     if (!pKw)
     {
       LOG_ERROR("Keyword not present in our dictionary.");
@@ -290,9 +296,11 @@ bool FileParser::ParseWordToVecFile(
       if (!pKwNew)
         continue;
 
+      if (pKwNew == pKw)
+        continue;
 
       // Add it as new possible expansion
-      pKw->m_wordToVec.emplace_back(pKwNew, dist);
+      pKw->m_wordToVec.emplace(pKwNew, dist);
       ++expCount;
     }
 
@@ -307,6 +315,8 @@ bool FileParser::ParseWordToVecFile(
     }
 
   #endif
+
+    ++ii;
   }
 
   return true;

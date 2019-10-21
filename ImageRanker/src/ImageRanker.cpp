@@ -690,8 +690,8 @@ bool ImageRanker::InitializeFullMode()
   //
   {
     // Insert all desired transformations
-    _transformations.emplace(InputDataTransformId::cNoTransform, std::make_unique<TransformationNoTransform>());
-    _transformations.emplace(InputDataTransformId::cSoftmax, std::make_unique<TransformationSoftmax>());
+    //_transformations.emplace(InputDataTransformId::cNoTransform, std::make_unique<TransformationNoTransform>());
+    //_transformations.emplace(InputDataTransformId::cSoftmax, std::make_unique<TransformationSoftmax>());
     _transformations.emplace(InputDataTransformId::cXToTheP, std::make_unique<TransformationLinearXToTheP>());
 
     // Insert all desired ranking models
@@ -776,6 +776,47 @@ bool ImageRanker::InitializeFullMode()
       }
     }
   }
+
+      auto result = GetImageDataById(11711);
+
+  // Comparator lambda for priority queue
+  auto cmp = [](const std::pair<float, size_t>& left, const std::pair<float, size_t>& right)
+  {
+    return left.first < right.first;
+  };
+
+  // Reserve enough space in container
+  std::vector<std::pair<float, size_t>> container;
+
+  std::priority_queue<
+    std::pair<float, size_t>, 
+    std::vector<std::pair<float, size_t>>, 
+    decltype(cmp)> maxHeap(cmp, std::move(container));
+
+  size_t i = 0;
+  float sum = 0.0f;
+
+  auto vec = result->GetScoringVectorsPtr(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet));
+
+  for (auto&& scor : vec->at(200))
+  {
+    maxHeap.emplace(scor, i);
+    sum += scor;
+    ++i;
+  }
+
+  for (size_t i = 0; i < 10; ++i)
+  {
+    auto [sc, idx] {maxHeap.top()};
+    maxHeap.pop();
+
+    auto word = GetKeywordByVectorIndex(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), idx);
+
+    std::cout << word->m_word << "=> " << sc << std::endl;
+    
+  }
+  std::cout << sum << std::endl;
+
 
   // Calculate approx document frequency
   //ComputeApproxDocFrequency(200, TRUE_TRESHOLD_FOR_KW_FREQUENCY);
@@ -1661,7 +1702,7 @@ std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryOrExpansion(KwScoring
 
   #if LOG_QUERY_EXPANSION
     std::cout << "-----" << std::endl;
-    std::cout << _pGoogleKws->cnfFormulaToString(ccnf) << std::endl;
+    std::cout << GetCorrectKwContainerPtr(kwScDataId)->cnfFormulaToString(ccnf) << std::endl;
   #endif
 
     for (auto&& clause : cnf)
@@ -1678,6 +1719,11 @@ std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryOrExpansion(KwScoring
         auto kwId{ b };
 
         auto pKw{ GetCorrectKwContainerPtr(kwScDataId)->GetKeywordConstPtrByVectorIndex(kwId) };
+
+        if (!pKw)
+        {
+          continue;
+        }
 
         if (setting == 1 || setting == 2 || setting == 23 || setting == 13)
         {
@@ -1794,11 +1840,11 @@ ChartData ImageRanker::RunModelTestWrapper(
 
 #if SUBSTRING_EXPANSION_TYPE == 0
 
-  testQueries = DoQueryAndExpansion(kwScDataId, testQueries, expansionSettings);
+  auto testQueriesExpanded{ DoQueryAndExpansion(kwScDataId, testQueries, expansionSettings) };
  
 #elif SUBSTRING_EXPANSION_TYPE == 1
 
-  testQueries = DoQueryOrExpansion(kwScDataId, testQueries, expansionSettings);
+  auto testQueriesExpanded{ DoQueryOrExpansion(kwScDataId, testQueries, expansionSettings) };
 
 #endif
 
@@ -1815,7 +1861,7 @@ ChartData ImageRanker::RunModelTestWrapper(
   pRankingModel->SetModelSettings(aggModelSettings);
 
   // Run test
-  return pRankingModel->RunModelTest(kwScDataId, pNetDataTransformFn, &_indexKwFrequency, testQueries, _images, _keywordContainers);
+  return pRankingModel->RunModelTestWithOrigQueries(kwScDataId, pNetDataTransformFn, &_indexKwFrequency, testQueriesExpanded, testQueries, _images, _keywordContainers);
 }
 
 
