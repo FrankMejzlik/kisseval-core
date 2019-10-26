@@ -196,9 +196,15 @@ public:
     DataSourceTypeId origin = DataSourceTypeId::cPublic
   );
 
+  void SubmitUserDataNativeQueries(
+    std::vector<
+      std::tuple<size_t, std::string, std::string>>& queries);
+
 
   const Image* GetRandomImage() const;
   std::tuple<const Image*, bool, size_t> GetCouplingImage() const;
+  std::tuple<const Image*, bool, size_t> GetCoupledImagesNative() const;
+  
   std::vector<const Image*> GetRandomImageSequence(size_t seqLength) const;
 
 
@@ -318,6 +324,7 @@ private:
   void InitializeGridTests();
 
   std::vector<UserImgQueryRaw>& GetCachedQueriesRaw(DataSourceTypeId dataSource) const;
+  std::vector<UserDataNativeQuery>& GetUserAnnotationNativeQueriesCached() const;
   
   std::vector< std::vector<UserImgQuery>>& GetCachedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource) const;
 

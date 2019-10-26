@@ -52,6 +52,7 @@ bool KeywordsContainer::Initialize()
   // Sort keywords
   std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
 
+#if PARSE_W2V_FILES
   switch (_pDataType)
   {
   case eKeywordsDataType::cViret1:
@@ -67,7 +68,7 @@ bool KeywordsContainer::Initialize()
     break;
 
   }
-
+#endif
 
   // Iterate over all unique keywords 
   for (auto&&[wordnetId, pKw] : _wordnetIdToKeywords)

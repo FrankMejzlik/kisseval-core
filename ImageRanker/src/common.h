@@ -359,6 +359,9 @@ using ChartData = std::vector <std::pair<uint32_t, uint32_t>>;
 using UserImgQuery = std::tuple<size_t, CnfFormula, bool>;
 using UserImgQueryRaw = std::tuple<size_t, std::vector<size_t>>;
 
+//! FORMAT: (imageId, userNativeQuery, timestamp, sessionId, isManuallyValidated)
+using UserDataNativeQuery = std::tuple<size_t, std::string, size_t, std::string, bool>;
+
 
 //! (datasourceID, percentageofAll)
 using UserAccuracyChartDataMisc = std::tuple<size_t, float>;

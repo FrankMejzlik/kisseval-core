@@ -33,6 +33,11 @@ int main()
 
   ranker.Initialize();
 
+  std::vector<std::tuple<size_t, std::string, std::string>> queries;
+  queries.emplace_back(11,"Ahoj Sonicko!", "fajfiefii3");
+
+  auto r = ranker.GetCoupledImagesNative();
+
   std::cout << "<<1>>AnySubstringExp========================" << std::endl;
   auto result11{
   ranker.RunModelTestWrapper(

@@ -690,8 +690,8 @@ bool ImageRanker::InitializeFullMode()
   //
   {
     // Insert all desired transformations
-    //_transformations.emplace(InputDataTransformId::cNoTransform, std::make_unique<TransformationNoTransform>());
-    //_transformations.emplace(InputDataTransformId::cSoftmax, std::make_unique<TransformationSoftmax>());
+    _transformations.emplace(InputDataTransformId::cNoTransform, std::make_unique<TransformationNoTransform>());
+    _transformations.emplace(InputDataTransformId::cSoftmax, std::make_unique<TransformationSoftmax>());
     _transformations.emplace(InputDataTransformId::cXToTheP, std::make_unique<TransformationLinearXToTheP>());
 
     // Insert all desired ranking models
@@ -777,45 +777,45 @@ bool ImageRanker::InitializeFullMode()
     }
   }
 
-      auto result = GetImageDataById(11711);
+  //    auto result = GetImageDataById(11711);
 
-  // Comparator lambda for priority queue
-  auto cmp = [](const std::pair<float, size_t>& left, const std::pair<float, size_t>& right)
-  {
-    return left.first < right.first;
-  };
+  //// Comparator lambda for priority queue
+  //auto cmp = [](const std::pair<float, size_t>& left, const std::pair<float, size_t>& right)
+  //{
+  //  return left.first < right.first;
+  //};
 
-  // Reserve enough space in container
-  std::vector<std::pair<float, size_t>> container;
+  //// Reserve enough space in container
+  //std::vector<std::pair<float, size_t>> container;
 
-  std::priority_queue<
-    std::pair<float, size_t>, 
-    std::vector<std::pair<float, size_t>>, 
-    decltype(cmp)> maxHeap(cmp, std::move(container));
+  //std::priority_queue<
+  //  std::pair<float, size_t>, 
+  //  std::vector<std::pair<float, size_t>>, 
+  //  decltype(cmp)> maxHeap(cmp, std::move(container));
 
-  size_t i = 0;
-  float sum = 0.0f;
+  //size_t i = 0;
+  //float sum = 0.0f;
 
-  auto vec = result->GetScoringVectorsPtr(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet));
+  //auto vec = result->GetScoringVectorsPtr(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet));
 
-  for (auto&& scor : vec->at(200))
-  {
-    maxHeap.emplace(scor, i);
-    sum += scor;
-    ++i;
-  }
+  //for (auto&& scor : vec->at(200))
+  //{
+  //  maxHeap.emplace(scor, i);
+  //  sum += scor;
+  //  ++i;
+  //}
 
-  for (size_t i = 0; i < 10; ++i)
-  {
-    auto [sc, idx] {maxHeap.top()};
-    maxHeap.pop();
+  //for (size_t i = 0; i < 10; ++i)
+  //{
+  //  auto [sc, idx] {maxHeap.top()};
+  //  maxHeap.pop();
 
-    auto word = GetKeywordByVectorIndex(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), idx);
+  //  auto word = GetKeywordByVectorIndex(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), idx);
 
-    std::cout << word->m_word << "=> " << sc << std::endl;
-    
-  }
-  std::cout << sum << std::endl;
+  //  std::cout << word->m_word << "=> " << sc << std::endl;
+  //  
+  //}
+  //std::cout << sum << std::endl;
 
 
   // Calculate approx document frequency
@@ -997,6 +997,96 @@ const Image* ImageRanker::GetRandomImage() const
   size_t imageId{ GetRandomImageId() };
 
   return GetImageDataById(imageId);
+}
+
+std::tuple<const Image*, bool, size_t> 
+ImageRanker::GetCoupledImagesNative() const
+{
+    // Get Viret KW data
+  auto queriesViret{ GetCachedQueries(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), DataSourceTypeId::cAll) };
+
+  std::vector<
+    std::tuple<size_t, std::string, size_t, std::string, bool>> 
+    queriesNative{ GetUserAnnotationNativeQueriesCached() };
+
+  // image ID -> (Number of annotations left for this ID, Number of them without examples)
+  std::map<size_t, std::pair<size_t, size_t>> imageIdOccuranceMap;
+  
+  size_t totalCounter{ 0_z };
+
+  // Add pluses there first
+  for (auto&& v : queriesViret)
+  {
+    auto&&[imageId, fml, withExamples] = v[0];
+
+    auto countRes{ imageIdOccuranceMap.count(imageId) };
+
+    // If not existent Image ID add it
+    if (countRes <= 0)
+    {
+      imageIdOccuranceMap.emplace(imageId, std::pair{ 0_z, 0_z });
+    }
+
+    // Increment count
+    ++imageIdOccuranceMap[imageId].first;
+    ++totalCounter;
+
+    // If should be without examples
+    if (!withExamples)
+    {
+      ++imageIdOccuranceMap[imageId].second;
+    }
+  }
+
+
+  // Subtract already created Google mathing ones
+  for (auto&& 
+    [imageId, query, timestamp, sessionId, isManuallyValidated] 
+    : queriesNative)
+  {
+    auto countRes{ imageIdOccuranceMap.count(imageId) };
+
+    // Skip Google ones that are not created for viret
+    if (countRes <= 0)
+    {
+      continue;
+    }
+
+    // Increment count
+    auto& i{ imageIdOccuranceMap[imageId].first };
+    auto& ii{ imageIdOccuranceMap[imageId].second };
+
+    if (i > 0)
+    {
+      --i;
+      --totalCounter;
+    }
+    
+
+    // If this record paired
+    if (i <= 0)
+    {
+      imageIdOccuranceMap.erase(imageId);
+    }
+  }
+
+  // Get random item from map
+  auto it = imageIdOccuranceMap.begin();
+
+  if (totalCounter <= 0)
+  {
+    return std::tuple(GetRandomImage(), true, 0_z);
+  }
+
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<size_t> dis(0_z, totalCounter - 1_z);
+
+  std::advance(it, dis(gen));
+
+  auto pImg{GetImageDataById(it->first)};
+
+  return std::tuple(pImg, true, totalCounter);
 }
 
 std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
@@ -1522,6 +1612,31 @@ std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(Kw
   return userResult;
 }
 
+void ImageRanker::SubmitUserDataNativeQueries(                        
+  std::vector<
+    std::tuple<size_t, std::string, std::string>>& queries) {
+  
+  // Store it into database
+  std::string sqlQuery{ 
+    "INSERT INTO `user_data_native_queries` \
+      (image_id, query, session_id) \
+    VALUES " };
+
+  for (auto&& [imageId, query, sessionId] : queries) {
+    sqlQuery += "("s + std::to_string(imageId) + ", '"s + query +
+      "', '"s + sessionId + "'),"s;
+  }
+
+  sqlQuery.pop_back();
+  sqlQuery += ";";
+
+  auto result = _primaryDb.NoResultQuery(sqlQuery);
+  if (result != 0)
+  {
+    LOG_ERROR("Inserting queries into DB failed");
+  }
+}
+
 size_t ImageRanker::MapIdToVectorIndex(size_t id) const
 {
   return id / _imageIdStride;
@@ -1848,6 +1963,10 @@ ChartData ImageRanker::RunModelTestWrapper(
 
 #endif
 
+#else
+
+  auto testQueriesExpanded{ std::move(testQueries) };
+
 #endif
 
   // Get desired transformation
@@ -2110,6 +2229,57 @@ std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(DataSourceTypeId 
   }
 
   return cachedData0;
+}
+
+std::vector<UserDataNativeQuery>&
+ImageRanker::GetUserAnnotationNativeQueriesCached() const {
+  
+  static std::vector<UserDataNativeQuery> cachedData0;
+  static std::chrono::steady_clock::time_point cachedData0Ts = 
+    std::chrono::steady_clock::now();
+
+  auto currentTime = std::chrono::steady_clock::now();
+
+  if (cachedData0.empty() || cachedData0Ts < currentTime)
+  {
+    cachedData0.clear();
+      
+    std::string sqlQuery(
+      "SELECT image_id, query, created,\
+        session_id, manually_validated\
+      FROM `" + _primaryDb.GetDbName() + 
+        "`.user_data_native_queries;");
+
+    auto dbData = _primaryDb.ResultQuery(sqlQuery);
+
+    if (dbData.first != 0)
+    {
+      LOG_ERROR("Error getting queries from database."s);
+    }
+
+    // Parse DB results
+    for (auto&& idQueryRow : dbData.second)
+    {
+      size_t imageId{ 
+        static_cast<size_t>(strToInt(idQueryRow[0].data())) };
+      std::string userQuery{ idQueryRow[1] };
+      size_t timestamp{
+        static_cast<size_t>(strToInt(idQueryRow[2].data()))};
+      std::string sessionId{idQueryRow[3]};
+      bool isManuallyValidated{
+        static_cast<bool>(strToInt(idQueryRow[2].data()))};
+
+      cachedData0.emplace_back(
+        imageId, std::move(userQuery), 
+        timestamp, std::move(sessionId), isManuallyValidated);
+    }
+
+    cachedData0Ts = std::chrono::steady_clock::now();
+    cachedData0Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
+  }
+
+
+  return cachedData0; 
 }
 
 
