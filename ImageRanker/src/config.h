@@ -8,7 +8,7 @@
 #define LOG_DEBUG_PRECOMPUTE_SUBSTRINGS_1 0
 #define LOG_DEBUG_PRECOMPUTE_SUBSTRINGS_2 0
 
-
+#define PARSE_W2V_FILE 0
 // 1-> all substrings, 2 -> substring matching whole word, 3 -> w2v, 23 -> 2&3
 #define SUBSTRING_EXPANSION_SET 23
 

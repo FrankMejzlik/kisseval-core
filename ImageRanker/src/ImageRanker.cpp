@@ -1922,8 +1922,6 @@ ChartData ImageRanker::RunModelTestWrapper(
   // If data source should be simulated
   if (static_cast<int>(dataSource) >= SIMULATED_QUERIES_ENUM_OFSET)
   {
-    LOG_ERROR("RunModelTestWrapper() - NOT IMPLEMENTED");
-
     // Parse simulated user settings
     auto simUser{ GetSimUserSettings(simulatedUserSettings) };
 
