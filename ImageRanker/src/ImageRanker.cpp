@@ -1,45 +1,42 @@
 
 #include "ImageRanker.h"
 
-ImageRanker::ImageRanker(
-  const std::string& imagesPath,
-  const std::vector<KeywordsFileRef>& keywordsFileRefs,
-  const std::vector<ScoringDataFileRef>& imageScoringFileRefs,
-  const std::vector<ScoringDataFileRef>& imageSoftmaxScoringFileRefs,
-  const std::vector<ScoringDataFileRef>& deepFeaturesFileRefs,
-  const std::string& imageToIdMapFilepath,
-  size_t idStride,
-  eMode mode,
-  const std::vector<KeywordsFileRef>& wordToVecMapFileRefs
-) :
-  _primaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
-  _secondaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
+#include "json.hpp"
+using json = nlohmann::json;
 
-  _mode(mode),
-  _imageIdStride(idStride),
-  _imagesPath(imagesPath),
-  _imageToIdMapFilepath(imageToIdMapFilepath),
-  _fileParser(this)
-{
+ImageRanker::ImageRanker(
+    const std::string& imagesPath,
+    const std::vector<KeywordsFileRef>& keywordsFileRefs,
+    const std::vector<ScoringDataFileRef>& imageScoringFileRefs,
+    const std::vector<ScoringDataFileRef>& imageSoftmaxScoringFileRefs,
+    const std::vector<ScoringDataFileRef>& deepFeaturesFileRefs,
+    const std::string& imageToIdMapFilepath,
+    size_t idStride,
+    eMode mode,
+    const std::vector<KeywordsFileRef>& wordToVecMapFileRefs) : _primaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
+                                                                _secondaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
+
+                                                                _mode(mode),
+                                                                _imageIdStride(idStride),
+                                                                _imagesPath(imagesPath),
+                                                                _imageToIdMapFilepath(imageToIdMapFilepath),
+                                                                _fileParser(this) {
   // Construct all desired keyword containers
   {
-    size_t i{ 0_z };
-    for (auto&&[id, filepath] : keywordsFileRefs)
-    {
+    size_t i{0_z};
+    for (auto&& [id, filepath] : keywordsFileRefs) {
       auto result = _keywordContainers.insert(
-        std::pair(id, KeywordsContainer(this, eKeywordsDataType(id), filepath, std::get<1>(wordToVecMapFileRefs[i])))
-      );
+          std::pair(id, KeywordsContainer(this, eKeywordsDataType(id), filepath, std::get<1>(wordToVecMapFileRefs[i]))));
 
       // Save shortcuts
-      switch (id)
-      {
-      case eKeywordsDataType::cViret1:
-        _pViretKws = &(result.first->second);
-        break;
+      switch (id) {
+        case eKeywordsDataType::cViret1:
+          _pViretKws = &(result.first->second);
+          break;
 
-      case eKeywordsDataType::cGoogleAI:
-        _pGoogleKws = &(result.first->second);
-        break;
+        case eKeywordsDataType::cGoogleAI:
+          _pGoogleKws = &(result.first->second);
+          break;
       }
 
       ++i;
@@ -49,74 +46,62 @@ ImageRanker::ImageRanker(
   //
   // Store initial scoring filepaths
   //
-  for (auto&&[kwId, netId, filepath] : imageScoringFileRefs)
-  {
+  for (auto&& [kwId, netId, filepath] : imageScoringFileRefs) {
     _imageScoringFileRefs.emplace(std::pair(kwId, netId), filepath);
   }
 
   //
   // Store initial Softmax scoring filepaths
   //
-  for (auto&&[kwId, netId, filepath] : imageSoftmaxScoringFileRefs)
-  {
+  for (auto&& [kwId, netId, filepath] : imageSoftmaxScoringFileRefs) {
     _imageSoftmaxScoringFileRefs.emplace(std::pair(kwId, netId), filepath);
   }
 
   //
   // Store initial deep features filepaths
   //
-  for (auto&&[kwId, netId, filepath] : deepFeaturesFileRefs)
-  {
+  for (auto&& [kwId, netId, filepath] : deepFeaturesFileRefs) {
     _deepFeaturesFileRefs.emplace(std::pair(kwId, netId), filepath);
   }
 
-
   // Connect to the database
-  auto result{ _primaryDb.EstablishConnection() };
-  if (result != 0ULL)
-  {
+  auto result{_primaryDb.EstablishConnection()};
+  if (result != 0ULL) {
     LOG_ERROR("Connecting to primary DB failed.");
   }
-
 }
 
-Keyword* ImageRanker::GetKeywordPtr(eKeywordsDataType kwType, const std::string& wordString)
-{
+Keyword* ImageRanker::GetKeywordPtr(eKeywordsDataType kwType, const std::string& wordString) {
   return _keywordContainers.at(kwType).GetKeywordPtr(wordString);
 }
 
-bool ImageRanker::Initialize()
-{
-  bool res{ true };
+bool ImageRanker::Initialize() {
+  bool res{true};
 
   // Initialize keyword containers
-  for (auto&& [id, kwCont] : _keywordContainers)
-  {
+  for (auto&& [id, kwCont] : _keywordContainers) {
     res &= kwCont.Initialize();
-    
+
     // \todo
 #if PRECOMPUTE_EXPANSION_SUBWORDS
- 
+
     kwCont.SubstringExpansionPrecompute1();
-    
+
 #if LOG_DEBUG_PRECOMPUTE_SUBSTRINGS_1
 
-    for (auto&& pKw : kwCont._keywords)
-    {
+    for (auto&& pKw : kwCont._keywords) {
       std::cout << "===================================================" << std::endl;
       std::cout << "===================================================" << std::endl;
       std::cout << pKw->m_word << "<" << pKw->m_wordnetId << ">" << std::endl;
       std::cout << "-------------------" << std::endl;
 
       std::cout << "Concats:" << std::endl;
-      for (auto&& pSumKw : pKw->m_expanded1Concat)
-      {
+      for (auto&& pSumKw : pKw->m_expanded1Concat) {
         std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
       }
 
       std::cout << "Substrings:" << std::endl;
-      for (auto&& pSumKw : pKw->m_expanded1Substrings)
-      {
+      for (auto&& pSumKw : pKw->m_expanded1Substrings) {
         std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
       }
     }
@@ -124,57 +109,48 @@ bool ImageRanker::Initialize()
 #endif
 
     kwCont.SubstringExpansionPrecompute2();
-    
+
 #if LOG_DEBUG_PRECOMPUTE_SUBSTRINGS_2
 
-      for (auto&& pKw : kwCont._keywords)
-      {
-        std::cout << "===================================================" << std::endl;
-        std::cout << "===================================================" << std::endl;
-        std::cout << pKw->m_word << "<" << pKw->m_wordnetId << ">" << std::endl;
-        std::cout << "-------------------" << std::endl;
+    for (auto&& pKw : kwCont._keywords) {
+      std::cout << "===================================================" << std::endl;
+      std::cout << "===================================================" << std::endl;
+      std::cout << pKw->m_word << "<" << pKw->m_wordnetId << ">" << std::endl;
+      std::cout << "-------------------" << std::endl;
 
-        std::cout << "Concats:" << std::endl;
-        for (auto&& pSumKw : pKw->m_expanded2Concat)
-        {
-          std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
-        }
+      std::cout << "Concats:" << std::endl;
+      for (auto&& pSumKw : pKw->m_expanded2Concat) {
+        std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
+      }
 
-        std::cout << "Substrings:" << std::endl;
-        for (auto&& pSumKw : pKw->m_expanded2Substrings)
-        {
-          std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
-        }
+      std::cout << "Substrings:" << std::endl;
+      for (auto&& pSumKw : pKw->m_expanded2Substrings) {
+        std::cout << "\t" << pSumKw->m_word << "<" << pSumKw->m_wordnetId << ">" << std::endl;
+      }
     }
 
 #endif
 
 #endif
-    
   }
 
-
   // Collector only mode
-  if (_mode == eMode::cCollector)
-  {
+  if (_mode == eMode::cCollector) {
     res &= InitializeCollectorMode();
   }
   // Search tool mode
-  else if (_mode == eMode::cSearchTool)
-  {
+  else if (_mode == eMode::cSearchTool) {
     res &= InitializeSearchToolMode();
   }
   // Full analytical mode
-  else
-  {
+  else {
     res &= InitializeFullMode();
   }
 
   return res;
 }
 
-void ImageRanker::ClearData()
-{
+void ImageRanker::ClearData() {
   _imageScoringFileRefs.clear();
   _imageSoftmaxScoringFileRefs.clear();
   _deepFeaturesFileRefs.clear();
@@ -183,62 +159,51 @@ void ImageRanker::ClearData()
   _pGoogleKws = nullptr;
 
   _indexKwFrequency.clear();
-  
+
   _transformations.clear();
   _models.clear();
-  
+
   _images.clear();
 }
 
-
 std::tuple<
-  KeywordsGeneralStatsTuple,
-  ScoringsGeneralStatsTuple,
-  AnnotatorDataGeneralStatsTuple,
-  RankerDataGeneralStatsTuple
->
-ImageRanker::GetGeneralStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const
-{
+    KeywordsGeneralStatsTuple,
+    ScoringsGeneralStatsTuple,
+    AnnotatorDataGeneralStatsTuple,
+    RankerDataGeneralStatsTuple>
+ImageRanker::GetGeneralStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const {
   // Goes first
-  AnnotatorDataGeneralStatsTuple annotatorStatsTuple{ GetGeneralAnnotatorDataStatistics(kwScDataId, dataSourceType) };
+  AnnotatorDataGeneralStatsTuple annotatorStatsTuple{GetGeneralAnnotatorDataStatistics(kwScDataId, dataSourceType)};
 
-  KeywordsGeneralStatsTuple keywordsStatsTuple{ GetGeneralKeywordsStatistics(kwScDataId, dataSourceType) };
-  ScoringsGeneralStatsTuple scoringStatsTuple{ GetGeneralScoringStatistics(kwScDataId, dataSourceType) };
-  RankerDataGeneralStatsTuple rankerStatsTuple{ GetGeneralRankerDataStatistics(kwScDataId, dataSourceType) };
+  KeywordsGeneralStatsTuple keywordsStatsTuple{GetGeneralKeywordsStatistics(kwScDataId, dataSourceType)};
+  ScoringsGeneralStatsTuple scoringStatsTuple{GetGeneralScoringStatistics(kwScDataId, dataSourceType)};
+  RankerDataGeneralStatsTuple rankerStatsTuple{GetGeneralRankerDataStatistics(kwScDataId, dataSourceType)};
 
   return std::tuple(std::move(keywordsStatsTuple), std::move(scoringStatsTuple), std::move(annotatorStatsTuple), std::move(rankerStatsTuple));
 }
 
-
-KeywordsGeneralStatsTuple ImageRanker::GetGeneralKeywordsStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const
-{
+KeywordsGeneralStatsTuple ImageRanker::GetGeneralKeywordsStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const {
   KeywordsGeneralStatsTuple resultTuple;
 
-  if (std::get<0>(kwScDataId) == eKeywordsDataType::cViret1)
-  {
+  if (std::get<0>(kwScDataId) == eKeywordsDataType::cViret1) {
     std::get<0>(resultTuple) = 2008;
-  }
-  else
-  {
+  } else {
     // Get number of distincts keywords
     std::get<0>(resultTuple) = GetCorrectKwContainerPtr(kwScDataId)->_keywords.size();
   }
 
   return resultTuple;
 }
-ScoringsGeneralStatsTuple ImageRanker::GetGeneralScoringStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const
-{
+ScoringsGeneralStatsTuple ImageRanker::GetGeneralScoringStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const {
   ScoringsGeneralStatsTuple resultTuple;
 
   return resultTuple;
 }
-AnnotatorDataGeneralStatsTuple ImageRanker::GetGeneralAnnotatorDataStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const
-{
+AnnotatorDataGeneralStatsTuple ImageRanker::GetGeneralAnnotatorDataStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const {
   AnnotatorDataGeneralStatsTuple resultTuple;
 
   // If not computed, do so
-  if (_stat_labelHit.count(kwScDataId) <= 0_z)
-  {
+  if (_stat_labelHit.count(kwScDataId) <= 0_z) {
     ExportUserAnnotatorNumHits(kwScDataId, DataSourceTypeId::cAll, "./a.tmp");
   }
 
@@ -250,101 +215,90 @@ AnnotatorDataGeneralStatsTuple ImageRanker::GetGeneralAnnotatorDataStatistics(Kw
 
   return resultTuple;
 }
-RankerDataGeneralStatsTuple ImageRanker::GetGeneralRankerDataStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const
-{
+RankerDataGeneralStatsTuple ImageRanker::GetGeneralRankerDataStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const {
   RankerDataGeneralStatsTuple resultTuple;
 
   return resultTuple;
 }
 
-std::string ImageRanker::ExportDataFile(KwScoringDataId kwScDataId, eExportFileTypeId fileType, const std::string& outputFilepath) const
-{
-  bool succ{ true };
+std::string ImageRanker::ExportDataFile(KwScoringDataId kwScDataId, eExportFileTypeId fileType, const std::string& outputFilepath) const {
+  bool succ{true};
 
-  try
-  {
-    switch (fileType)
-    {
-    case eExportFileTypeId::cUserAnnotatorQueries:
-      succ = ExportUserAnnotatorData(kwScDataId, DataSourceTypeId::cAll, outputFilepath);
-      break;
+  try {
+    switch (fileType) {
+      case eExportFileTypeId::cUserAnnotatorQueries:
+        succ = ExportUserAnnotatorData(kwScDataId, DataSourceTypeId::cAll, outputFilepath);
+        break;
 
-    case eExportFileTypeId::cNetNormalizedScores:
-      succ = ExportNormalizedScores(kwScDataId, outputFilepath);
-      break;
+      case eExportFileTypeId::cNetNormalizedScores:
+        succ = ExportNormalizedScores(kwScDataId, outputFilepath);
+        break;
 
-    case eExportFileTypeId::cQueryNumHits:
-      succ = ExportUserAnnotatorNumHits(kwScDataId, DataSourceTypeId::cAll, outputFilepath);
-      break;
+      case eExportFileTypeId::cQueryNumHits:
+        succ = ExportUserAnnotatorNumHits(kwScDataId, DataSourceTypeId::cAll, outputFilepath);
+        break;
 
-    default:
-      LOG_ERROR("Unknown export data type! (ImageRanker::ExportDataFile())");
+      default:
+        LOG_ERROR("Unknown export data type! (ImageRanker::ExportDataFile())");
     }
-  } 
-  catch (const UnableToCreateFileExcept& e)
-  {
+  } catch (const UnableToCreateFileExcept& e) {
     succ = false;
   }
 
-  if (!succ)
-  {
+  if (!succ) {
     return ""s;
   }
-  
+
   return outputFilepath;
 }
 
-
-bool ImageRanker::ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath) const
-{
+bool ImageRanker::ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath) const {
   std::string strType = "";
-  if (dataSource == DataSourceTypeId::cAll)
-  {
+  if (dataSource == DataSourceTypeId::cAll) {
     strType = "( type=0 OR type=1 OR type=10 OR type=11 )";
-  }
-  else if (dataSource == DataSourceTypeId::cDeveloper)
-  {
+  } else if (dataSource == DataSourceTypeId::cDeveloper) {
     strType = "( type=0 OR type=10 )";
-  }
-  else {
+  } else {
     strType = "( type=1 OR type=11 )";
   }
 
-
   // Fetch pairs of <Q, Img>
-  std::string query("\
-        SELECT image_id, type, query  FROM `" + _primaryDb.GetDbName() + "`.queries \
-          WHERE " + strType + " AND \
-            keyword_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + " AND \
-            scoring_data_type = " + std::to_string((int)std::get<1>(kwScDataId)) + ";");
+  std::string query(
+      "\
+        SELECT image_id, type, query  FROM `" +
+      _primaryDb.GetDbName() +
+      "`.queries \
+          WHERE " +
+      strType +
+      " AND \
+            keyword_data_type = " +
+      std::to_string((int)std::get<0>(kwScDataId)) +
+      " AND \
+            scoring_data_type = " +
+      std::to_string((int)std::get<1>(kwScDataId)) + ";");
 
   auto dbData = _primaryDb.ResultQuery(query);
 
-  if (dbData.first != 0)
-  {
+  if (dbData.first != 0) {
     LOG_ERROR("Error getting queries from database."s);
   }
-     
+
   std::ofstream outFileStream(outputFilepath);
-  if (!outFileStream.is_open())
-  {
+  if (!outFileStream.is_open()) {
     LOG_WARN("Unable to create file: " + outputFilepath);
     throw UnableToCreateFileExcept("Unable to create file: "s + outputFilepath);
   }
-  
 
-  for (auto&& idQueryRow : dbData.second)
-  {
+  for (auto&& idQueryRow : dbData.second) {
     // Image ID
     outFileStream << std::to_string(static_cast<size_t>(strToInt(idQueryRow[0].data())) * TEST_QUERIES_ID_MULTIPLIER) << ",";
 
     // Source type
     outFileStream << idQueryRow[1];
 
-    auto ids{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQueryNoRecur(idQueryRow[2]) };
+    auto ids{GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQueryNoRecur(idQueryRow[2])};
 
-    for (auto&& id : ids)
-    {
+    for (auto&& id : ids) {
       outFileStream << "," << std::to_string(id);
     }
 
@@ -356,49 +310,42 @@ bool ImageRanker::ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSource
   return true;
 }
 
-bool ImageRanker::ExportNormalizedScores(KwScoringDataId kwScDataId, const std::string& outputFilepath) const
-{
+bool ImageRanker::ExportNormalizedScores(KwScoringDataId kwScDataId, const std::string& outputFilepath) const {
   std::ofstream outFileStream(outputFilepath);
-  if (!outFileStream.is_open())
-  {
+  if (!outFileStream.is_open()) {
     LOG_WARN("Unable to create file: " + outputFilepath);
     throw UnableToCreateFileExcept("Unable to create file: "s + outputFilepath);
   }
 
   bool isGoogle{std::get<0>(kwScDataId) == eKeywordsDataType::cGoogleAI ? true : false};
 
-  for (auto&& img : _images)
-  {
+  for (auto&& img : _images) {
     outFileStream << img->m_imageId;
 
-    auto rawVec{ img->_rawImageScoringData.at(kwScDataId) };
+    auto rawVec{img->_rawImageScoringData.at(kwScDataId)};
 
     // Normalize vector
     float totalSum{0.0f};
-    for (auto&& score : rawVec)
-    {
+    for (auto&& score : rawVec) {
       // If google ignore zero values
-      if (isGoogle && score <= GOOGLE_AI_NO_LABEL_SCORE)
-      {
+      if (isGoogle && score <= GOOGLE_AI_NO_LABEL_SCORE) {
         continue;
       }
 
       totalSum += score;
     }
 
-    size_t i{ 0_z };
-    for (auto&& score : rawVec)
-    {
+    size_t i{0_z};
+    for (auto&& score : rawVec) {
       // If google ignore zero values
-      if (isGoogle && score <= GOOGLE_AI_NO_LABEL_SCORE)
-      {
+      if (isGoogle && score <= GOOGLE_AI_NO_LABEL_SCORE) {
         ++i;
         continue;
       }
 
       float scoreNorm{score / totalSum};
 
-      auto kwPtr{ GetCorrectKwContainerPtr(kwScDataId)->GetKeywordPtrByVectorIndex(i) };
+      auto kwPtr{GetCorrectKwContainerPtr(kwScDataId)->GetKeywordPtrByVectorIndex(i)};
 
       outFileStream << "," << kwPtr->m_wordnetId << "," << scoreNorm;
 
@@ -412,59 +359,58 @@ bool ImageRanker::ExportNormalizedScores(KwScoringDataId kwScDataId, const std::
   return true;
 }
 
-bool ImageRanker::ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath) const
-{
+bool ImageRanker::ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath) const {
   std::string strType = "";
-  if (dataSource == DataSourceTypeId::cAll)
-  {
+  if (dataSource == DataSourceTypeId::cAll) {
     strType = "( type=0 OR type=1 OR type=10 OR type=11 )";
-  }
-  else if (dataSource == DataSourceTypeId::cDeveloper)
-  {
+  } else if (dataSource == DataSourceTypeId::cDeveloper) {
     strType = "( type=0 OR type=10 )";
-  }
-  else {
+  } else {
     strType = "( type=1 OR type=11 )";
   }
 
-  bool isGoogle{ std::get<0>(kwScDataId) == eKeywordsDataType::cGoogleAI ? true : false };
+  bool isGoogle{std::get<0>(kwScDataId) == eKeywordsDataType::cGoogleAI ? true : false};
 
   // Fetch pairs of <Q, Img>
-  std::string query("\
-        SELECT id, image_id, type, query  FROM `" + _primaryDb.GetDbName() + "`.queries \
-          WHERE " + strType + " AND \
-            keyword_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + " AND \
-            scoring_data_type = " + std::to_string((int)std::get<1>(kwScDataId)) + ";");
+  std::string query(
+      "\
+        SELECT id, image_id, type, query  FROM `" +
+      _primaryDb.GetDbName() +
+      "`.queries \
+          WHERE " +
+      strType +
+      " AND \
+            keyword_data_type = " +
+      std::to_string((int)std::get<0>(kwScDataId)) +
+      " AND \
+            scoring_data_type = " +
+      std::to_string((int)std::get<1>(kwScDataId)) + ";");
 
   auto dbData = _primaryDb.ResultQuery(query);
 
-  if (dbData.first != 0)
-  {
+  if (dbData.first != 0) {
     LOG_ERROR("Error getting queries from database."s);
   }
 
   std::ofstream outFileStream(outputFilepath);
-  if (!outFileStream.is_open())
-  {
+  if (!outFileStream.is_open()) {
     LOG_WARN("Unable to create file: " + outputFilepath);
     throw UnableToCreateFileExcept("Unable to create file: "s + outputFilepath);
   }
 
-  size_t totalTotalLabels{ 0_z };
-  size_t totalTotalHits{ 0_z };
-  size_t minLabels{ 0_z };
-  size_t maxLabels{ 0_z };
+  size_t totalTotalLabels{0_z};
+  size_t totalTotalHits{0_z};
+  size_t minLabels{0_z};
+  size_t maxLabels{0_z};
   std::vector<size_t> labelNums;
-  
 
-  for (auto&& idQueryRow : dbData.second)
-  {
-    size_t numNetLabels{ 0_z };
+  for (auto&& idQueryRow : dbData.second) {
+    size_t numNetLabels{0_z};
 
     // Query ID
     outFileStream << idQueryRow[0].data() << ",";
 
-    size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[1].data())) * TEST_QUERIES_ID_MULTIPLIER };
+    size_t imageId{static_cast<size_t>(strToInt(idQueryRow[1].data())) * TEST_QUERIES_ID_MULTIPLIER};
 
     // Image ID
     outFileStream << std::to_string(imageId) << ",";
@@ -472,64 +418,46 @@ bool ImageRanker::ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSou
     // Source type
     outFileStream << idQueryRow[2] << ",";
 
-    auto ids{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQueryNoRecur(idQueryRow[3]) };
+    auto ids{GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQueryNoRecur(idQueryRow[3])};
 
-    size_t hitCount{ 0_z };
+    size_t hitCount{0_z};
 
-    auto imgPtr{ GetImageDataById(imageId) };
+    auto imgPtr{GetImageDataById(imageId)};
     const std::vector<float>* scoreVector{nullptr};
 
-    if (std::get<0>(kwScDataId) == eKeywordsDataType::cViret1)
-    {
-      scoreVector =  &imgPtr->_transformedImageScoringData.at(kwScDataId).at(200);
-    }
-    else
-    {
+    if (std::get<0>(kwScDataId) == eKeywordsDataType::cViret1) {
+      scoreVector = &imgPtr->_transformedImageScoringData.at(kwScDataId).at(200);
+    } else {
       scoreVector = &imgPtr->_rawImageScoringData.at(kwScDataId);
     }
 
     // Count number of label given by net
-    for (auto&& score : *scoreVector)
-    {
+    for (auto&& score : *scoreVector) {
       //  If hit
-      if (isGoogle)
-      {
-        if (score > GOOGLE_AI_NO_LABEL_SCORE)
-        {
+      if (isGoogle) {
+        if (score > GOOGLE_AI_NO_LABEL_SCORE) {
           ++numNetLabels;
         }
-      }
-      else
-      {
+      } else {
         ++numNetLabels;
       }
     }
 
+    for (auto&& id : ids) {
+      auto ptrKw{GetCorrectKwContainerPtr(kwScDataId)->GetKeywordConstPtrByWordnetId(id)};
 
-    
-
-    for (auto&& id : ids)
-    {
-      auto ptrKw{ GetCorrectKwContainerPtr(kwScDataId)->GetKeywordConstPtrByWordnetId(id) };
-
-      auto score{ (*scoreVector)[ptrKw->m_vectorIndex] };
+      auto score{(*scoreVector)[ptrKw->m_vectorIndex]};
 
       //  If hit
-      if (isGoogle)
-      {
-        if (score > GOOGLE_AI_NO_LABEL_SCORE)
-        {
+      if (isGoogle) {
+        if (score > GOOGLE_AI_NO_LABEL_SCORE) {
           ++hitCount;
         }
-      } 
-      else 
-      {
-        if (score > VIRET_TRESHOLD_LINEAR_01)
-        {
+      } else {
+        if (score > VIRET_TRESHOLD_LINEAR_01) {
           ++hitCount;
         }
       }
-
     }
 
     outFileStream << hitCount << "," << ids.size() << "," << numNetLabels << std::endl;
@@ -543,27 +471,21 @@ bool ImageRanker::ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSou
     totalTotalHits += hitCount;
   }
 
-  float avgLabels{ static_cast<float>(totalTotalLabels) / dbData.second .size() };
+  float avgLabels{static_cast<float>(totalTotalLabels) / dbData.second.size()};
 
-  size_t idxFirst{ dbData.second.size() / 2};
-  bool numQueriesOdd{ dbData.second.size() % 2 == 1 ? true : false };
-  float medianLabels{ 0.0f };
+  size_t idxFirst{dbData.second.size() / 2};
+  bool numQueriesOdd{dbData.second.size() % 2 == 1 ? true : false};
+  float medianLabels{0.0f};
 
-  if (idxFirst == 0)
-  {
+  if (idxFirst == 0) {
     LOG_ERROR("WROOOONG! Will go out of bounds! (ImageRanker::ExportUserAnnotatorNumHits())");
   }
 
-
-  if (numQueriesOdd)
-  {
+  if (numQueriesOdd) {
     medianLabels = static_cast<float>(labelNums[idxFirst]);
+  } else {
+    medianLabels = static_cast<float>((labelNums[idxFirst - 1] + labelNums[idxFirst]) / 2);
   }
-  else
-  {
-    medianLabels = static_cast<float>((labelNums[idxFirst - 1] + labelNums[idxFirst] ) / 2);
-  }
-  
 
   // Save prob hit
   _stat_minLabels.erase(kwScDataId);
@@ -579,13 +501,12 @@ bool ImageRanker::ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSou
   _stat_medianLabels.emplace(kwScDataId, medianLabels);
 
   _stat_labelHit.erase(kwScDataId);
-  _stat_labelHit.emplace(kwScDataId,(float)totalTotalHits / totalTotalLabels);
+  _stat_labelHit.emplace(kwScDataId, (float)totalTotalHits / totalTotalLabels);
 
   return true;
 }
 
-bool ImageRanker::Reinitialize()
-{ 
+bool ImageRanker::Reinitialize() {
   // Clear all current working data
   ClearData();
 
@@ -593,36 +514,30 @@ bool ImageRanker::Reinitialize()
   return Initialize();
 }
 
-ImageRanker::eMode ImageRanker::GetMode() const
-{
+ImageRanker::eMode ImageRanker::GetMode() const {
   return _mode;
 }
 
-void ImageRanker::SetMode(eMode value)
-{ 
-  _mode = value; 
+void ImageRanker::SetMode(eMode value) {
+  _mode = value;
 }
 
-const FileParser* ImageRanker::GetFileParser() const
-{
+const FileParser* ImageRanker::GetFileParser() const {
   return &_fileParser;
 }
 
-FileParser* ImageRanker::GetFileParser()
-{
+FileParser* ImageRanker::GetFileParser() {
   return &_fileParser;
 }
 
-bool ImageRanker::InitializeCollectorMode()
-{
+bool ImageRanker::InitializeCollectorMode() {
   // \todo Implement this if needed
   LOG_ERROR("Not implemented")
 
   return false;
 }
 
-bool ImageRanker::InitializeSearchToolMode()
-{
+bool ImageRanker::InitializeSearchToolMode() {
   LOG_ERROR("Not implemented!"s);
   return false;
   /*
@@ -683,8 +598,7 @@ bool ImageRanker::InitializeSearchToolMode()
   */
 }
 
-bool ImageRanker::InitializeFullMode()
-{
+bool ImageRanker::InitializeFullMode() {
   //
   // Setup supported transformations and models
   //
@@ -703,76 +617,63 @@ bool ImageRanker::InitializeFullMode()
   _images = _fileParser.ParseImagesMetaData(_imageToIdMapFilepath, _imageIdStride);
 
   // Fill in scoring data to images
-  for (auto&&[kwScDataId, filepath] : _imageScoringFileRefs)
-  {
+  for (auto&& [kwScDataId, filepath] : _imageScoringFileRefs) {
     // Choose correct parsing method
-    switch (std::get<0>(kwScDataId))
-    {
-    case eKeywordsDataType::cViret1:
-      _fileParser.ParseRawScoringData_ViretFormat(_images, kwScDataId, filepath);
-      break;
+    switch (std::get<0>(kwScDataId)) {
+      case eKeywordsDataType::cViret1:
+        _fileParser.ParseRawScoringData_ViretFormat(_images, kwScDataId, filepath);
+        break;
 
-    case eKeywordsDataType::cGoogleAI:
-      _fileParser.ParseRawScoringData_GoogleAiVisionFormat(_images, kwScDataId, filepath);
-      break;
+      case eKeywordsDataType::cGoogleAI:
+        _fileParser.ParseRawScoringData_GoogleAiVisionFormat(_images, kwScDataId, filepath);
+        break;
 
-    default:
-      LOG_ERROR("Invalid keyword data type.");
+      default:
+        LOG_ERROR("Invalid keyword data type.");
     }
   }
 
   // Fill in Softmax data
-  for (auto&&[kwScDataId, filepath] : _imageSoftmaxScoringFileRefs)
-  {
+  for (auto&& [kwScDataId, filepath] : _imageSoftmaxScoringFileRefs) {
     // Choose correct parsing method
-    switch (std::get<0>(kwScDataId))
-    {
-    case eKeywordsDataType::cViret1:
-      _fileParser.ParseSoftmaxBinFile_ViretFormat(_images, kwScDataId, filepath);
-      break;
+    switch (std::get<0>(kwScDataId)) {
+      case eKeywordsDataType::cViret1:
+        _fileParser.ParseSoftmaxBinFile_ViretFormat(_images, kwScDataId, filepath);
+        break;
 
-    case eKeywordsDataType::cGoogleAI:
-      _fileParser.ParseSoftmaxBinFile_GoogleAiVisionFormat(_images, kwScDataId, filepath);
-      break;
+      case eKeywordsDataType::cGoogleAI:
+        _fileParser.ParseSoftmaxBinFile_GoogleAiVisionFormat(_images, kwScDataId, filepath);
+        break;
 
-    default:
-      LOG_ERROR("Invalid scoring data type.");
+      default:
+        LOG_ERROR("Invalid scoring data type.");
     }
   }
 
   // Load and process all supported transformations
-  for (auto&& transFn : _transformations)
-  {
+  for (auto&& transFn : _transformations) {
     transFn.second->CalculateTransformedVectors(_images);
   }
-  
+
   // Apply hypernym recalculation on all transformed vectors
-  for (auto&& pImg : _images)
-  {
-    for (auto&&[ksScDataId, transformedData] : pImg->_transformedImageScoringData)
-    {
+  for (auto&& pImg : _images) {
+    for (auto&& [ksScDataId, transformedData] : pImg->_transformedImageScoringData) {
       // \todo implement propperly
 
       // Copy untouched vector for simulating user from [0, 1] linear scale transformation
       pImg->_rawSimUserData.emplace(ksScDataId, pImg->GetScoringVectorsConstPtr(ksScDataId)->at(200));
 
-      if (std::get<0>(ksScDataId) == eKeywordsDataType::cGoogleAI)
-      {
+      if (std::get<0>(ksScDataId) == eKeywordsDataType::cGoogleAI) {
         continue;
       }
 
-      for (auto&&[transformId, binVec] : transformedData)
-      {
+      for (auto&& [transformId, binVec] : transformedData) {
         // If is summ based aggregation precalculation
-        if (((transformId / 10) % 10) == 0)
-        {
+        if (((transformId / 10) % 10) == 0) {
           RecalculateHypernymsInVectorUsingSum(binVec);
-        }
-        else
-        {
+        } else {
           RecalculateHypernymsInVectorUsingMax(binVec);
         }
-
       }
     }
   }
@@ -789,8 +690,8 @@ bool ImageRanker::InitializeFullMode()
   //std::vector<std::pair<float, size_t>> container;
 
   //std::priority_queue<
-  //  std::pair<float, size_t>, 
-  //  std::vector<std::pair<float, size_t>>, 
+  //  std::pair<float, size_t>,
+  //  std::vector<std::pair<float, size_t>>,
   //  decltype(cmp)> maxHeap(cmp, std::move(container));
 
   //size_t i = 0;
@@ -813,10 +714,9 @@ bool ImageRanker::InitializeFullMode()
   //  auto word = GetKeywordByVectorIndex(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), idx);
 
   //  std::cout << word->m_word << "=> " << sc << std::endl;
-  //  
+  //
   //}
   //std::cout << sum << std::endl;
-
 
   // Calculate approx document frequency
   //ComputeApproxDocFrequency(200, TRUE_TRESHOLD_FOR_KW_FREQUENCY);
@@ -828,40 +728,32 @@ bool ImageRanker::InitializeFullMode()
   return true;
 }
 
-TransformationFunctionBase* ImageRanker::GetAggregationById(InputDataTransformId id) const
-{
+TransformationFunctionBase* ImageRanker::GetAggregationById(InputDataTransformId id) const {
   // Try to get this aggregation
   if (
-    auto result{ _transformations.find(static_cast<InputDataTransformId>(id)) };
-    result != _transformations.end()
-    ) {
+      auto result{_transformations.find(static_cast<InputDataTransformId>(id))};
+      result != _transformations.end()) {
     return result->second.get();
-  }
-  else {
+  } else {
     LOG_ERROR("Aggregation not found!");
     return nullptr;
   }
 }
 
-RankingModelBase* ImageRanker::GetRankingModelById(RankingModelId id) const
-{
+RankingModelBase* ImageRanker::GetRankingModelById(RankingModelId id) const {
   // Try to get this aggregation
   if (
-    auto result{ _models.find(static_cast<RankingModelId>(id)) };
-    result != _models.end()
-    ) {
+      auto result{_models.find(static_cast<RankingModelId>(id))};
+      result != _models.end()) {
     return result->second.get();
-  }
-  else {
+  } else {
     LOG_ERROR("Ranking model not found!");
     return nullptr;
   }
 }
 
 std::vector<std::pair<TestSettings, ChartData>> ImageRanker::RunGridTest(
-  const std::vector<TestSettings>& userTestsSettings
-)
-{
+    const std::vector<TestSettings>& userTestsSettings) {
   LOG_ERROR("ImageRanker::RunGridTest() NOT IMPLEMENTED");
   return std::vector<std::pair<TestSettings, ChartData>>();
   //// Final result set
@@ -953,15 +845,13 @@ std::vector<std::pair<TestSettings, ChartData>> ImageRanker::RunGridTest(
 }
 
 void ImageRanker::RunGridTestsFromTo(
-  std::vector<std::pair<TestSettings, ChartData>>* pDest, 
-  size_t fromIndex, size_t toIndex
-)
-{
+    std::vector<std::pair<TestSettings, ChartData>>* pDest,
+    size_t fromIndex, size_t toIndex) {
   LOG_ERROR("Not implemented : RunGridTestsFromTo()!");
   return;
 
   //// If to index out of bounds
-  //if (toIndex > GridTest::m_testSettings.size()) 
+  //if (toIndex > GridTest::m_testSettings.size())
   //{
   //  toIndex = GridTest::m_testSettings.size();
   //}
@@ -983,48 +873,42 @@ void ImageRanker::RunGridTestsFromTo(
 
   //  ++i;
   //}
-  
 }
 
-size_t ImageRanker::GetRandomImageId() const
-{
+size_t ImageRanker::GetRandomImageId() const {
   // Get random index
   return static_cast<size_t>(GetRandomInteger(0, (int)GetNumImages()) * _imageIdStride);
 }
 
-const Image* ImageRanker::GetRandomImage() const
-{
-  size_t imageId{ GetRandomImageId() };
+const Image* ImageRanker::GetRandomImage() const {
+  size_t imageId{GetRandomImageId()};
 
   return GetImageDataById(imageId);
 }
 
-std::tuple<const Image*, bool, size_t> 
-ImageRanker::GetCoupledImagesNative() const
-{
-    // Get Viret KW data
-  auto queriesViret{ GetCachedQueries(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), DataSourceTypeId::cAll) };
+std::tuple<const Image*, bool, size_t>
+ImageRanker::GetCoupledImagesNative() const {
+  // Get Viret KW data
+  auto queriesViret{GetCachedQueries(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), DataSourceTypeId::cAll)};
 
   std::vector<
-    std::tuple<size_t, std::string, size_t, std::string, bool>> 
-    queriesNative{ GetUserAnnotationNativeQueriesCached() };
+      std::tuple<size_t, std::string, size_t, std::string, bool>>
+      queriesNative{GetUserAnnotationNativeQueriesCached()};
 
   // image ID -> (Number of annotations left for this ID, Number of them without examples)
   std::map<size_t, std::pair<size_t, size_t>> imageIdOccuranceMap;
-  
-  size_t totalCounter{ 0_z };
+
+  size_t totalCounter{0_z};
 
   // Add pluses there first
-  for (auto&& v : queriesViret)
-  {
-    auto&&[imageId, fml, withExamples] = v[0];
+  for (auto&& v : queriesViret) {
+    auto&& [imageId, fml, withExamples] = v[0];
 
-    auto countRes{ imageIdOccuranceMap.count(imageId) };
+    auto countRes{imageIdOccuranceMap.count(imageId)};
 
     // If not existent Image ID add it
-    if (countRes <= 0)
-    {
-      imageIdOccuranceMap.emplace(imageId, std::pair{ 0_z, 0_z });
+    if (countRes <= 0) {
+      imageIdOccuranceMap.emplace(imageId, std::pair{0_z, 0_z});
     }
 
     // Increment count
@@ -1032,40 +916,32 @@ ImageRanker::GetCoupledImagesNative() const
     ++totalCounter;
 
     // If should be without examples
-    if (!withExamples)
-    {
+    if (!withExamples) {
       ++imageIdOccuranceMap[imageId].second;
     }
   }
 
-
   // Subtract already created Google mathing ones
-  for (auto&& 
-    [imageId, query, timestamp, sessionId, isManuallyValidated] 
-    : queriesNative)
-  {
-    auto countRes{ imageIdOccuranceMap.count(imageId) };
+  for (auto&&
+           [imageId, query, timestamp, sessionId, isManuallyValidated] : queriesNative) {
+    auto countRes{imageIdOccuranceMap.count(imageId)};
 
     // Skip Google ones that are not created for viret
-    if (countRes <= 0)
-    {
+    if (countRes <= 0) {
       continue;
     }
 
     // Increment count
-    auto& i{ imageIdOccuranceMap[imageId].first };
-    auto& ii{ imageIdOccuranceMap[imageId].second };
+    auto& i{imageIdOccuranceMap[imageId].first};
+    auto& ii{imageIdOccuranceMap[imageId].second};
 
-    if (i > 0)
-    {
+    if (i > 0) {
       --i;
       --totalCounter;
     }
-    
 
     // If this record paired
-    if (i <= 0)
-    {
+    if (i <= 0) {
       imageIdOccuranceMap.erase(imageId);
     }
   }
@@ -1073,8 +949,7 @@ ImageRanker::GetCoupledImagesNative() const
   // Get random item from map
   auto it = imageIdOccuranceMap.begin();
 
-  if (totalCounter <= 0)
-  {
+  if (totalCounter <= 0) {
     return std::tuple(GetRandomImage(), true, 0_z);
   }
 
@@ -1089,29 +964,26 @@ ImageRanker::GetCoupledImagesNative() const
   return std::tuple(pImg, true, totalCounter);
 }
 
-std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
-{
+std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const {
   // Get Viret KW data
-  auto queriesViret{ GetCachedQueries(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), DataSourceTypeId::cAll) };
+  auto queriesViret{GetCachedQueries(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet), DataSourceTypeId::cAll)};
 
-  auto queriesGoogle{ GetCachedQueries(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), DataSourceTypeId::cAll) };
+  auto queriesGoogle{GetCachedQueries(std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI), DataSourceTypeId::cAll)};
 
   // image ID -> (Number of annotations left for this ID, Number of them without examples)
   std::map<size_t, std::pair<size_t, size_t>> imageIdOccuranceMap;
-  
-  size_t totalCounter{ 0_z };
+
+  size_t totalCounter{0_z};
 
   // Add pluses there first
-  for (auto&& v : queriesViret)
-  {
-    auto&&[imageId, fml, withExamples] = v[0];
+  for (auto&& v : queriesViret) {
+    auto&& [imageId, fml, withExamples] = v[0];
 
-    auto countRes{ imageIdOccuranceMap.count(imageId) };
+    auto countRes{imageIdOccuranceMap.count(imageId)};
 
     // If not existent Image ID add it
-    if (countRes <= 0)
-    {
-      imageIdOccuranceMap.emplace(imageId, std::pair{ 0_z, 0_z });
+    if (countRes <= 0) {
+      imageIdOccuranceMap.emplace(imageId, std::pair{0_z, 0_z});
     }
 
     // Increment count
@@ -1119,59 +991,46 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
     ++totalCounter;
 
     // If should be without examples
-    if (!withExamples)
-    {
+    if (!withExamples) {
       ++imageIdOccuranceMap[imageId].second;
     }
   }
 
-
   // Subtract already created Google mathing ones
-  for (auto&& v : queriesGoogle)
-  {
-    auto&&[imageId, fml, withExamples] = v[0];
+  for (auto&& v : queriesGoogle) {
+    auto&& [imageId, fml, withExamples] = v[0];
 
-    auto countRes{ imageIdOccuranceMap.count(imageId) };
+    auto countRes{imageIdOccuranceMap.count(imageId)};
 
     // Skip Google ones that are not created for viret
-    if (countRes <= 0)
-    {
+    if (countRes <= 0) {
       continue;
     }
 
     // Increment count
-    auto& i{ imageIdOccuranceMap[imageId].first };
-    auto& ii{ imageIdOccuranceMap[imageId].second };
+    auto& i{imageIdOccuranceMap[imageId].first};
+    auto& ii{imageIdOccuranceMap[imageId].second};
 
     // If without examples
-    if (!withExamples)
-    {
-      if (i > 0)
-      {
-        if (ii > 0)
-        {
+    if (!withExamples) {
+      if (i > 0) {
+        if (ii > 0) {
           --i;
           --ii;
           --totalCounter;
-        }
-        else
-        {
+        } else {
           continue;
         }
       }
-    }
-    else 
-    {
-      if (i > 0)
-      {
+    } else {
+      if (i > 0) {
         --i;
         --totalCounter;
       }
     }
 
     // If this record paired
-    if (i <= 0)
-    {
+    if (i <= 0) {
       imageIdOccuranceMap.erase(imageId);
     }
   }
@@ -1179,8 +1038,7 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
   // Get random item from map
   auto it = imageIdOccuranceMap.begin();
 
-  if (totalCounter <= 0)
-  {
+  if (totalCounter <= 0) {
     return std::tuple(GetRandomImage(), true, 0_z);
   }
 
@@ -1195,22 +1053,18 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
   return std::tuple(pImg, !((bool)it->second.second), totalCounter);
 }
 
-std::vector<const Image*> ImageRanker::GetRandomImageSequence(size_t seqLength) const
-{
+std::vector<const Image*> ImageRanker::GetRandomImageSequence(size_t seqLength) const {
   std::vector<const Image*> resultImagePtrs;
 
   const Image* firstImgPtr{nullptr};
 
-  do 
-  {
+  do {
     firstImgPtr = GetRandomImage();
-  } 
-  while (firstImgPtr->m_numSuccessorFrames <= (seqLength - 1));
+  } while (firstImgPtr->m_numSuccessorFrames <= (seqLength - 1));
 
   resultImagePtrs.emplace_back(firstImgPtr);
 
-  for (size_t i{ 1_z }; i <= (seqLength - 1); ++i)
-  {
+  for (size_t i{1_z}; i <= (seqLength - 1); ++i) {
     auto ptr = GetImageDataById(firstImgPtr->m_imageId + (i * _imageIdStride));
     resultImagePtrs.emplace_back(ptr);
   }
@@ -1219,40 +1073,34 @@ std::vector<const Image*> ImageRanker::GetRandomImageSequence(size_t seqLength) 
 }
 
 NearKeywordsResponse ImageRanker::GetNearKeywords(
-  KwScoringDataId kwScDataId, const std::string& prefix, size_t numResults, bool withExampleImages
-)
-{
+    KwScoringDataId kwScDataId, const std::string& prefix, size_t numResults, bool withExampleImages) {
   // Force lowercase
   std::locale loc;
   std::string lower;
 
   // Convert to lowercase
-  for (auto elem : prefix)
-  {
+  for (auto elem : prefix) {
     lower.push_back(std::tolower(elem, loc));
   }
 
   KeywordsContainer* pkws{nullptr};
 
   // Save shortcuts
-  switch (std::get<0>(kwScDataId))
-  {
-  case eKeywordsDataType::cViret1:
-    pkws = _pViretKws;
-    break;
+  switch (std::get<0>(kwScDataId)) {
+    case eKeywordsDataType::cViret1:
+      pkws = _pViretKws;
+      break;
 
-  case eKeywordsDataType::cGoogleAI:
-    pkws = _pGoogleKws;
-    break;
+    case eKeywordsDataType::cGoogleAI:
+      pkws = _pGoogleKws;
+      break;
   }
 
-  auto suggestedKeywordsPtrs{ pkws->GetNearKeywordsPtrs(lower, numResults) };
+  auto suggestedKeywordsPtrs{pkws->GetNearKeywordsPtrs(lower, numResults)};
 
-  if (withExampleImages)
-  {
+  if (withExampleImages) {
     // Load representative images for keywords
-    for (auto&& pKw : suggestedKeywordsPtrs)
-    {
+    for (auto&& pKw : suggestedKeywordsPtrs) {
       LoadRepresentativeImages(kwScDataId, pKw);
     }
   }
@@ -1260,11 +1108,9 @@ NearKeywordsResponse ImageRanker::GetNearKeywords(
   return suggestedKeywordsPtrs;
 }
 
-bool ImageRanker::LoadRepresentativeImages(KwScoringDataId kwScDataId, Keyword* pKw)
-{
+bool ImageRanker::LoadRepresentativeImages(KwScoringDataId kwScDataId, Keyword* pKw) {
   // If examples already loaded
-  if (!pKw->m_exampleImageFilenames.empty())
-  {
+  if (!pKw->m_exampleImageFilenames.empty()) {
     return true;
   }
 
@@ -1272,58 +1118,47 @@ bool ImageRanker::LoadRepresentativeImages(KwScoringDataId kwScDataId, Keyword* 
   queries.push_back(std::to_string(pKw->m_wordnetId));
 
   // Get first results for this keyword
-  std::vector<const Image*> relevantImages{ std::get<0>(GetRelevantImages(
-    kwScDataId,
-    queries, 10,
-    DEFAULT_AGG_FUNCTION, DEFAULT_RANKING_MODEL,
-    DEFAULT_MODEL_SETTINGS, DEFAULT_TRANSFORM_SETTINGS
-  )) };
-
+  std::vector<const Image*> relevantImages{std::get<0>(GetRelevantImages(
+      kwScDataId,
+      queries, 10,
+      DEFAULT_AGG_FUNCTION, DEFAULT_RANKING_MODEL,
+      DEFAULT_MODEL_SETTINGS, DEFAULT_TRANSFORM_SETTINGS))};
 
   // Push those into examples
-  for (auto pImg : relevantImages)
-  {
+  for (auto pImg : relevantImages) {
     pKw->m_exampleImageFilenames.emplace_back(pImg->m_filename);
   }
 
   return true;
 }
 
-Keyword* ImageRanker::GetKeywordByVectorIndex(KwScoringDataId kwScDataId, size_t index)
-{
+Keyword* ImageRanker::GetKeywordByVectorIndex(KwScoringDataId kwScDataId, size_t index) {
   return GetCorrectKwContainerPtr(kwScDataId)->GetKeywordPtrByVectorIndex(index);
 }
 
-const Keyword* ImageRanker::GetKeywordConstPtr(eKeywordsDataType kwDataType, size_t keywordId) const
-{
-  const KeywordsContainer* kwContPtr{ GetCorrectKwContainerPtr(KwScoringDataId{kwDataType, eImageScoringDataType::cNasNet}) };
+const Keyword* ImageRanker::GetKeywordConstPtr(eKeywordsDataType kwDataType, size_t keywordId) const {
+  const KeywordsContainer* kwContPtr{GetCorrectKwContainerPtr(KwScoringDataId{kwDataType, eImageScoringDataType::cNasNet})};
 
-  if (!kwContPtr)
-  {
+  if (!kwContPtr) {
     return nullptr;
   }
 
   return kwContPtr->GetKeywordConstPtrByWordnetId(keywordId);
 }
 
-Keyword* ImageRanker::GetKeywordPtr(eKeywordsDataType kwDataType, size_t keywordId)
-{
-  auto kwContPtr{ GetCorrectKwContainerPtr(KwScoringDataId{kwDataType, eImageScoringDataType::cNasNet}) };
+Keyword* ImageRanker::GetKeywordPtr(eKeywordsDataType kwDataType, size_t keywordId) {
+  auto kwContPtr{GetCorrectKwContainerPtr(KwScoringDataId{kwDataType, eImageScoringDataType::cNasNet})};
 
-  if (!kwContPtr)
-  {
+  if (!kwContPtr) {
     return nullptr;
   }
-  
+
   return kwContPtr->GetKeywordPtrByWordnetId(keywordId);
 }
 
-
-std::vector<std::string> ImageRanker::GetImageFilenamesTrecvid() const
-{
+std::vector<std::string> ImageRanker::GetImageFilenamesTrecvid() const {
   // If no map file provided, use directory layout
-  if (_imageToIdMapFilepath.empty())
-  {
+  if (_imageToIdMapFilepath.empty()) {
     LOG_ERROR("Image filename file not provided.");
     return std::vector<std::string>();
   }
@@ -1332,8 +1167,7 @@ std::vector<std::string> ImageRanker::GetImageFilenamesTrecvid() const
   std::ifstream inFile(_imageToIdMapFilepath, std::ios::in);
 
   // If failed to open file
-  if (!inFile)
-  {
+  if (!inFile) {
     LOG_ERROR(std::string("Error opening file :") + _imageToIdMapFilepath);
   }
 
@@ -1341,11 +1175,10 @@ std::vector<std::string> ImageRanker::GetImageFilenamesTrecvid() const
 
   std::string line;
 
-  size_t i{ 0_z };
+  size_t i{0_z};
 
   // While there are lines in file
-  while (std::getline(inFile, line))
-  {
+  while (std::getline(inFile, line)) {
     //auto [videoId, shotId, frameNumber] { ParseVideoFilename(line) };
 
     line = line.substr(6, line.length() - 6);
@@ -1359,43 +1192,36 @@ std::vector<std::string> ImageRanker::GetImageFilenamesTrecvid() const
 }
 
 std::tuple<
-  std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
-  std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
-  std::vector<std::pair<size_t, std::string>>
-> 
+    std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
+    std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
+    std::vector<std::pair<size_t, std::string>>>
 ImageRanker::GetImageKeywordsForInteractiveSearch(
-  size_t imageId, size_t numResults, KwScoringDataId kwScDataId, bool withExampleImages)
-{
-  std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>  hypernyms;
-  std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>  nonHypernyms;
+    size_t imageId, size_t numResults, KwScoringDataId kwScDataId, bool withExampleImages) {
+  std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>> hypernyms;
+  std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>> nonHypernyms;
   nonHypernyms.reserve(numResults);
 
-  auto img{ GetImageDataById(imageId) };
-  if (img == nullptr)
-  {
+  auto img{GetImageDataById(imageId)};
+  if (img == nullptr) {
     LOG_ERROR("Image not found.");
     return std::tuple<
-      std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
-      std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
-      std::vector<std::pair<size_t, std::string>>
-    >();
+        std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
+        std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
+        std::vector<std::pair<size_t, std::string>>>();
   }
 
   // Get kws
-  size_t i{ 0ULL };
-  for (auto&& [kwPtr, kwScore] : img->_topKeywords[kwScDataId])
-  {
-    if (!(i < numResults))
-    {
+  size_t i{0ULL};
+  for (auto&& [kwPtr, kwScore] : img->_topKeywords[kwScDataId]) {
+    if (!(i < numResults)) {
       break;
     }
 
-    std::string word{ kwPtr->m_word };
+    std::string word{kwPtr->m_word};
     std::vector<std::string> exampleImagesFilepaths;
 
     // Get example images
-    if (withExampleImages)
-    {
+    if (withExampleImages) {
       LoadRepresentativeImages(kwScDataId, kwPtr);
 
       exampleImagesFilepaths = kwPtr->m_exampleImageFilenames;
@@ -1409,12 +1235,11 @@ ImageRanker::GetImageKeywordsForInteractiveSearch(
   // Get video/shot images
   std::vector<std::pair<size_t, std::string>> succs;
 
-  size_t numSucc{ img->m_numSuccessorFrames };
-  for (size_t i{ 0_z }; i <= numSucc; ++i)
-  {
-    size_t nextId{img->m_imageId + (i * _imageIdStride) };
+  size_t numSucc{img->m_numSuccessorFrames};
+  for (size_t i{0_z}; i <= numSucc; ++i) {
+    size_t nextId{img->m_imageId + (i * _imageIdStride)};
 
-    auto pImg{ GetImageDataById(nextId) };
+    auto pImg{GetImageDataById(nextId)};
 
     succs.emplace_back(nextId, pImg->m_filename);
   }
@@ -1422,23 +1247,20 @@ ImageRanker::GetImageKeywordsForInteractiveSearch(
   return std::tuple(std::move(hypernyms), std::move(nonHypernyms), std::move(succs));
 }
 
-void ImageRanker::RecalculateHypernymsInVectorUsingSum(std::vector<float>& binVectorRef)
-{
+void ImageRanker::RecalculateHypernymsInVectorUsingSum(std::vector<float>& binVectorRef) {
   std::vector<float> newBinVector;
   newBinVector.reserve(binVectorRef.size());
 
   // Iterate over all bins in this vector
-  for (auto&& [it, i] { std::tuple(binVectorRef.begin(), size_t{ 0 }) }; it != binVectorRef.end(); ++it, ++i)
-  {
+  for (auto&& [it, i]{std::tuple(binVectorRef.begin(), size_t{0})}; it != binVectorRef.end(); ++it, ++i) {
     auto&& bin{*it};
 
-    auto pKw{ _pViretKws->GetKeywordConstPtrByVectorIndex(i) };
+    auto pKw{_pViretKws->GetKeywordConstPtrByVectorIndex(i)};
 
     float binValue{0.0f};
 
     // Iterate over all indices this keyword interjoins
-    for (auto&& kwIndex : pKw->m_hyponymBinIndices)
-    {
+    for (auto&& kwIndex : pKw->m_hyponymBinIndices) {
       binValue += binVectorRef[kwIndex];
     }
 
@@ -1458,23 +1280,20 @@ void ImageRanker::RecalculateHypernymsInVectorUsingSum(std::vector<float>& binVe
   binVectorRef = std::move(newBinVector);
 }
 
-void ImageRanker::RecalculateHypernymsInVectorUsingMax(std::vector<float>& binVectorRef)
-{
+void ImageRanker::RecalculateHypernymsInVectorUsingMax(std::vector<float>& binVectorRef) {
   std::vector<float> newBinVector;
   newBinVector.reserve(binVectorRef.size());
 
   // Iterate over all bins in this vector
-  for (auto&& [it, i] { std::tuple(binVectorRef.begin(), size_t{ 0 }) }; it != binVectorRef.end(); ++it, ++i)
-  {
-    auto&& bin{ *it };
+  for (auto&& [it, i]{std::tuple(binVectorRef.begin(), size_t{0})}; it != binVectorRef.end(); ++it, ++i) {
+    auto&& bin{*it};
 
-    auto pKw{ _pViretKws->GetKeywordConstPtrByVectorIndex(i) };
+    auto pKw{_pViretKws->GetKeywordConstPtrByVectorIndex(i)};
 
-    float binValue{ 0.0f };
+    float binValue{0.0f};
 
     // Iterate over all indices this keyword interjoins
-    for (auto&& kwIndex : pKw->m_hyponymBinIndices)
-    {
+    for (auto&& kwIndex : pKw->m_hyponymBinIndices) {
       binValue = std::max(binValue, binVectorRef[kwIndex]);
     }
 
@@ -1494,19 +1313,16 @@ void ImageRanker::RecalculateHypernymsInVectorUsingMax(std::vector<float>& binVe
   binVectorRef = std::move(newBinVector);
 }
 
-void ImageRanker::LowMem_RecalculateHypernymsInVectorUsingSum(std::vector<float>& binVectorRef)
-{
+void ImageRanker::LowMem_RecalculateHypernymsInVectorUsingSum(std::vector<float>& binVectorRef) {
   // Iterate over all bins in this vector
-  for (auto&& [it, i] { std::tuple(binVectorRef.begin(), size_t{ 0 }) }; it != binVectorRef.end(); ++it, ++i)
-  {
-    auto& bin{ *it };
-    auto pKw{ _pViretKws->GetKeywordConstPtrByVectorIndex(i) };
+  for (auto&& [it, i]{std::tuple(binVectorRef.begin(), size_t{0})}; it != binVectorRef.end(); ++it, ++i) {
+    auto& bin{*it};
+    auto pKw{_pViretKws->GetKeywordConstPtrByVectorIndex(i)};
 
-    float binValue{ 0.0f };
+    float binValue{0.0f};
 
     // Iterate over all indices this keyword interjoins
-    for (auto&& kwIndex : pKw->m_hyponymBinIndices)
-    {
+    for (auto&& kwIndex : pKw->m_hyponymBinIndices) {
       binValue += binVectorRef[kwIndex];
     }
 
@@ -1515,20 +1331,17 @@ void ImageRanker::LowMem_RecalculateHypernymsInVectorUsingSum(std::vector<float>
   }
 }
 
-void ImageRanker::LowMem_RecalculateHypernymsInVectorUsingMax(std::vector<float>& binVectorRef)
-{
+void ImageRanker::LowMem_RecalculateHypernymsInVectorUsingMax(std::vector<float>& binVectorRef) {
   // Iterate over all bins in this vector
-  for (auto&& [it, i] { std::tuple(binVectorRef.begin(), size_t{ 0 }) }; it != binVectorRef.end(); ++it, ++i)
-  {
-    auto&& bin{ *it };
+  for (auto&& [it, i]{std::tuple(binVectorRef.begin(), size_t{0})}; it != binVectorRef.end(); ++it, ++i) {
+    auto&& bin{*it};
 
-    auto pKw{ _pViretKws->GetKeywordConstPtrByVectorIndex(i) };
+    auto pKw{_pViretKws->GetKeywordConstPtrByVectorIndex(i)};
 
-    float binValue{ 0.0f };
+    float binValue{0.0f};
 
     // Iterate over all indices this keyword interjoins
-    for (auto&& kwIndex : pKw->m_hyponymBinIndices)
-    {
+    for (auto&& kwIndex : pKw->m_hyponymBinIndices) {
       binValue = std::max(binValue, binVectorRef[kwIndex]);
     }
 
@@ -1536,22 +1349,19 @@ void ImageRanker::LowMem_RecalculateHypernymsInVectorUsingMax(std::vector<float>
   }
 }
 
-std::string ImageRanker::EncodeAndQuery(const std::string& query) const
-{
-  auto wordIds{ TokenizeAndQuery(query) };
+std::string ImageRanker::EncodeAndQuery(const std::string& query) const {
+  auto wordIds{TokenizeAndQuery(query)};
 
-  std::string resultEncodedGraph{ "&"s };
+  std::string resultEncodedGraph{"&"s};
 
-  for (auto&& wordId : wordIds)
-  {
+  for (auto&& wordId : wordIds) {
     resultEncodedGraph += "-"s + wordId + "+"s;
   }
 
   return resultEncodedGraph;
 }
 
-std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(KwScoringDataId kwScDataId, std::vector<GameSessionInputQuery> inputQueries, DataSourceTypeId origin)
-{
+std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(KwScoringDataId kwScDataId, std::vector<GameSessionInputQuery> inputQueries, DataSourceTypeId origin) {
   /******************************
     Save query to database
   *******************************/
@@ -1559,28 +1369,24 @@ std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(Kw
   // <SessionID, ImageID, User query - "wID1&wID1& ... &wIDn">
 
   // Resolve query origin
-  size_t originNumber{ static_cast<size_t>(origin) };
+  size_t originNumber{static_cast<size_t>(origin)};
 
   // Store it into database
-  std::string sqlQuery{ "INSERT INTO `queries` (query, keyword_data_type, scoring_data_type, image_id, type, sessionId) VALUES " };
+  std::string sqlQuery{"INSERT INTO `queries` (query, keyword_data_type, scoring_data_type, image_id, type, sessionId) VALUES "};
 
-  for (auto&& query : inputQueries)
-  {
+  for (auto&& query : inputQueries) {
     // Get image ID
     size_t imageId = std::get<1>(query);
     std::string queryString = std::get<2>(query);
 
-    sqlQuery += "('"s + EncodeAndQuery(queryString) + "', "s + std::to_string((size_t)std::get<0>(kwScDataId)) + ", "s 
-      + std::to_string((size_t)std::get<1>(kwScDataId)) + ", " + std::to_string(imageId) + ", "s 
-      + std::to_string(originNumber) + ", '"s + std::get<0>(query) + "'),"s;
+    sqlQuery += "('"s + EncodeAndQuery(queryString) + "', "s + std::to_string((size_t)std::get<0>(kwScDataId)) + ", "s + std::to_string((size_t)std::get<1>(kwScDataId)) + ", " + std::to_string(imageId) + ", "s + std::to_string(originNumber) + ", '"s + std::get<0>(query) + "'),"s;
   }
 
   sqlQuery.pop_back();
   sqlQuery += ";";
 
   auto result = _primaryDb.NoResultQuery(sqlQuery);
-  if (result != 0)
-  {
+  if (result != 0) {
     LOG_ERROR("Inserting queries into DB failed");
   }
 
@@ -1590,66 +1396,59 @@ std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(Kw
   std::vector<GameSessionQueryResult> userResult;
   userResult.reserve(inputQueries.size());
 
-  for (auto&& query : inputQueries)
-  {
+  for (auto&& query : inputQueries) {
     // Get user keywords tokens
-    std::vector<std::string> userKeywords{ StringenizeAndQuery(kwScDataId, std::get<2>(query)) };
+    std::vector<std::string> userKeywords{StringenizeAndQuery(kwScDataId, std::get<2>(query))};
 
     // Get image ID
     size_t imageId = std::get<1>(query);
 
     // Get image filename
-    std::string imageFilename{ GetImageFilenameById(imageId) };
+    std::string imageFilename{GetImageFilenameById(imageId)};
 
     std::vector<std::pair<std::string, float>> netKeywordsProbs{};
 
     userResult.emplace_back(
-      std::get<0>(query), std::move(imageFilename), std::move(userKeywords), 
-      GetHighestProbKeywords(kwScDataId, imageId, 10ULL)
-    );
+        std::get<0>(query), std::move(imageFilename), std::move(userKeywords),
+        GetHighestProbKeywords(kwScDataId, imageId, 10ULL));
   }
 
   return userResult;
 }
 
-void ImageRanker::SubmitUserDataNativeQueries(                        
-  std::vector<
-    std::tuple<size_t, std::string, std::string>>& queries) {
-  
+void ImageRanker::SubmitUserDataNativeQueries(
+    std::vector<
+        std::tuple<size_t, std::string, std::string>>& queries) {
   // Store it into database
-  std::string sqlQuery{ 
-    "INSERT INTO `user_data_native_queries` \
+  std::string sqlQuery{
+      "INSERT INTO `user_data_native_queries` \
       (image_id, query, session_id) \
-    VALUES " };
+    VALUES "};
 
   for (auto&& [imageId, query, sessionId] : queries) {
     sqlQuery += "("s + std::to_string(imageId) + ", '"s + query +
-      "', '"s + sessionId + "'),"s;
+                "', '"s + sessionId + "'),"s;
   }
 
   sqlQuery.pop_back();
   sqlQuery += ";";
 
   auto result = _primaryDb.NoResultQuery(sqlQuery);
-  if (result != 0)
-  {
+  if (result != 0) {
     LOG_ERROR("Inserting queries into DB failed");
   }
 }
 
-size_t ImageRanker::MapIdToVectorIndex(size_t id) const
-{
+size_t ImageRanker::MapIdToVectorIndex(size_t id) const {
   return id / _imageIdStride;
 }
 
-std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(KwScoringDataId kwScDataId, size_t imageId, size_t N) const
-{
+std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(KwScoringDataId kwScDataId, size_t imageId, size_t N) const {
   N = std::min(N, NUM_TOP_KEYWORDS);
 
   // Find image in map
   Image* pImg = _images[MapIdToVectorIndex(imageId)].get();
 
-  
   // Construct new subvector
   std::vector<std::pair<std::string, float>> result;
   result.reserve(N);
@@ -1657,15 +1456,15 @@ std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(K
   auto kwScorePairs = pImg->_topKeywords.at(kwScDataId);
 
   // Get first N highest probabilites
-  for (size_t i = 0ULL; i < N; ++i)
-  {
+  for (size_t i = 0ULL; i < N; ++i) {
     if (i >= kwScorePairs.size())
       break;
 
-    float kwScore{ std::get<1>(kwScorePairs[i]) };
+    float kwScore{std::get<1>(kwScorePairs[i])};
 
     // Get keyword string
-    std::string keyword{ std::get<0>(kwScorePairs[i])->m_word }; ;
+    std::string keyword{std::get<0>(kwScorePairs[i])->m_word};
+    ;
 
     // Place it into result vector
     result.emplace_back(std::pair(keyword, kwScore));
@@ -1674,19 +1473,16 @@ std::vector<std::pair<std::string, float>> ImageRanker::GetHighestProbKeywords(K
   return result;
 }
 
-std::vector<std::string> ImageRanker::TokenizeAndQuery(std::string_view query) const
-{
+std::vector<std::string> ImageRanker::TokenizeAndQuery(std::string_view query) const {
   // Create sstram from query
-  std::stringstream querySs{ query.data() };
+  std::stringstream querySs{query.data()};
 
   std::vector<std::string> resultTokens;
   std::string tokenString;
 
-  while (std::getline(querySs, tokenString, '&'))
-  {
+  while (std::getline(querySs, tokenString, '&')) {
     // If empty string
-    if (tokenString.empty())
-    {
+    if (tokenString.empty()) {
       continue;
     }
 
@@ -1697,23 +1493,20 @@ std::vector<std::string> ImageRanker::TokenizeAndQuery(std::string_view query) c
   return resultTokens;
 }
 
-std::vector<std::string> ImageRanker::StringenizeAndQuery(KwScoringDataId kwScDataId, const std::string& query) const
-{
+std::vector<std::string> ImageRanker::StringenizeAndQuery(KwScoringDataId kwScDataId, const std::string& query) const {
   // Create sstram from query
-  std::stringstream querySs{ query.data() };
+  std::stringstream querySs{query.data()};
 
   std::vector<std::string> resultTokens;
   std::string tokenString;
 
-  while (std::getline(querySs, tokenString, '&'))
-  {
+  while (std::getline(querySs, tokenString, '&')) {
     // If empty string
-    if (tokenString.empty())
-    {
+    if (tokenString.empty()) {
       continue;
     }
 
-    std::stringstream tokenSs{ tokenString };
+    std::stringstream tokenSs{tokenString};
     size_t wordnetId;
     tokenSs >> wordnetId;
 
@@ -1724,50 +1517,40 @@ std::vector<std::string> ImageRanker::StringenizeAndQuery(KwScoringDataId kwScDa
   return resultTokens;
 }
 
-std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryAndExpansion(KwScoringDataId kwScDataId, const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const
-{
+std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryAndExpansion(KwScoringDataId kwScDataId, const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const {
   std::vector<std::vector<UserImgQuery>> result{origQuery};
 
   // Augment result query
-  for (auto&& query : result)
-  {
-  
-
+  for (auto&& query : result) {
     auto& q{query[0]};
 
     //std::vector<std::vector<std::pair<bool, size_t>>>
     auto ccnf = std::get<1>(q);
     auto& cnf = std::get<1>(q);
 
-  #if LOG_QUERY_EXPANSION
+#if LOG_QUERY_EXPANSION
     std::cout << "-----" << std::endl;
     std::cout << "Original:" << std::endl;
     std::cout << _pGoogleKws->cnfFormulaToString(ccnf) << std::endl;
-  #endif
+#endif
 
-    for (auto&& clause : ccnf)
-    {
-      auto kwId{ clause[0].second };
+    for (auto&& clause : ccnf) {
+      auto kwId{clause[0].second};
 
-      auto pKw{ GetCorrectKwContainerPtr(kwScDataId)->GetKeywordConstPtrByVectorIndex(kwId) };
+      auto pKw{GetCorrectKwContainerPtr(kwScDataId)->GetKeywordConstPtrByVectorIndex(kwId)};
 
       decltype(pKw->m_expanded1Concat) concats;
       decltype(pKw->m_expanded1Concat) substrings;
 
-      if (setting == 1)
-      {
+      if (setting == 1) {
         concats = pKw->m_expanded1Concat;
         substrings = pKw->m_expanded1Substrings;
-      }
-      else if (setting == 2)
-      {
+      } else if (setting == 2) {
         concats = pKw->m_expanded2Concat;
         substrings = pKw->m_expanded2Substrings;
       }
 
-
-      for (auto&& pKw1 : concats)
-      {
+      for (auto&& pKw1 : concats) {
         // Copyu clasuse
         auto newClause = clause;
 
@@ -1776,8 +1559,7 @@ std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryAndExpansion(KwScorin
         cnf.push_back(std::move(newClause));
       }
 
-      for (auto&& pKw1 : substrings)
-      {
+      for (auto&& pKw1 : substrings) {
         // Copyu clasuse
         auto newClause = clause;
 
@@ -1787,146 +1569,115 @@ std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryAndExpansion(KwScorin
       }
     }
 
-   #if LOG_QUERY_EXPANSION
+#if LOG_QUERY_EXPANSION
     std::cout << "New:" << std::endl;
     std::cout << GetCorrectKwContainerPtr(kwScDataId)->cnfFormulaToString(cnf) << std::endl;
-  #endif
+#endif
   }
-
 
   return result;
 }
 
-std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryOrExpansion(KwScoringDataId kwScDataId, const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const
-{
+std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryOrExpansion(KwScoringDataId kwScDataId, const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const {
   std::vector<std::vector<UserImgQuery>> result{origQuery};
 
-  if (setting == 0)
-  {
+  if (setting == 0) {
     return result;
   }
 
   // Augment result query
-  for (auto&& query : result)
-  {
+  for (auto&& query : result) {
     auto& q{query[0]};
 
     //std::vector<std::vector<std::pair<bool, size_t>>>
     auto ccnf = std::get<1>(q);
     auto& cnf = std::get<1>(q);
 
-  #if LOG_QUERY_EXPANSION
+#if LOG_QUERY_EXPANSION
     std::cout << "-----" << std::endl;
     std::cout << GetCorrectKwContainerPtr(kwScDataId)->cnfFormulaToString(ccnf) << std::endl;
-  #endif
+#endif
 
-    for (auto&& clause : cnf)
-    {
+    for (auto&& clause : cnf) {
       std::set<size_t> ids;
 
-      for (auto&& [a,b] : clause)
-      {
+      for (auto&& [a, b] : clause) {
         ids.insert(b);
       }
 
-      for (auto&&[a, b] : clause)
-      {
-        auto kwId{ b };
+      for (auto&& [a, b] : clause) {
+        auto kwId{b};
 
-        auto pKw{ GetCorrectKwContainerPtr(kwScDataId)->GetKeywordConstPtrByVectorIndex(kwId) };
+        auto pKw{GetCorrectKwContainerPtr(kwScDataId)->GetKeywordConstPtrByVectorIndex(kwId)};
 
-        if (!pKw)
-        {
+        if (!pKw) {
           continue;
         }
 
-        if (setting == 1 || setting == 2 || setting == 23 || setting == 13)
-        {
+        if (setting == 1 || setting == 2 || setting == 23 || setting == 13) {
           decltype(pKw->m_expanded1Concat) concats;
           decltype(pKw->m_expanded1Substrings) substrings;
 
-          if (setting == 1 || setting == 13)
-          {
+          if (setting == 1 || setting == 13) {
             concats = pKw->m_expanded1Concat;
             substrings = pKw->m_expanded1Substrings;
-          }
-          else if (setting == 2 || setting == 23)
-          {
+          } else if (setting == 2 || setting == 23) {
             concats = pKw->m_expanded2Concat;
             substrings = pKw->m_expanded2Substrings;
           }
 
-          for (auto&& pKw1 : concats)
-          {
-            if (ids.insert(pKw1->m_vectorIndex).second)
-            {
+          for (auto&& pKw1 : concats) {
+            if (ids.insert(pKw1->m_vectorIndex).second) {
               clause.emplace_back(false, pKw1->m_vectorIndex);
             }
           }
 
-          for (auto&& pKw1 : substrings)
-          {
-            if (ids.insert(pKw1->m_vectorIndex).second)
-            {
+          for (auto&& pKw1 : substrings) {
+            if (ids.insert(pKw1->m_vectorIndex).second) {
               clause.emplace_back(false, pKw1->m_vectorIndex);
             }
           }
-        }
-        else if (setting == 3 || setting == 23 || setting == 13)
-        {
+        } else if (setting == 3 || setting == 23 || setting == 13) {
           // word2vec
 
           auto expSet = pKw->m_wordToVec;
 
-          for (auto&&[pKw1, dist] : expSet)
-          {
-            if (dist >= W2V_DISTANCE_THRESHOLD)
-            {
-              if (ids.insert(pKw1->m_vectorIndex).second)
-              {
+          for (auto&& [pKw1, dist] : expSet) {
+            if (dist >= W2V_DISTANCE_THRESHOLD) {
+              if (ids.insert(pKw1->m_vectorIndex).second) {
                 clause.emplace_back(false, pKw1->m_vectorIndex);
               }
             }
           }
 
-        }
-        else
-        {
+        } else {
           LOG_ERROR("Somthing went wrong");
         }
       }
     }
-   #if LOG_QUERY_EXPANSION
-    std::cout << "=> "<< GetCorrectKwContainerPtr(kwScDataId)->cnfFormulaToString(cnf) << std::endl;
-    
-  #endif
-  }
+#if LOG_QUERY_EXPANSION
+    std::cout << "=> " << GetCorrectKwContainerPtr(kwScDataId)->cnfFormulaToString(cnf) << std::endl;
 
+#endif
+  }
 
   return result;
 }
 
-
 ChartData ImageRanker::RunModelTestWrapper(
-  KwScoringDataId kwScDataId,
-  InputDataTransformId aggId, RankingModelId modelId, DataSourceTypeId dataSource,
-  const SimulatedUserSettings& simulatedUserSettings, const RankingModelSettings& aggModelSettings, 
-  const InputDataTransformSettings& netDataTransformSettings,
-  size_t expansionSettings
-) const
-{
+    KwScoringDataId kwScDataId,
+    InputDataTransformId aggId, RankingModelId modelId, DataSourceTypeId dataSource,
+    const SimulatedUserSettings& simulatedUserSettings, const RankingModelSettings& aggModelSettings,
+    const InputDataTransformSettings& netDataTransformSettings,
+    size_t expansionSettings) const {
   std::vector<std::vector<UserImgQuery>> testQueries;
 
-  
-
   // If data source should be simulated
-  if (static_cast<int>(dataSource) >= SIMULATED_QUERIES_ENUM_OFSET)
-  {
+  if (static_cast<int>(dataSource) >= SIMULATED_QUERIES_ENUM_OFSET) {
     // Parse simulated user settings
-    auto simUser{ GetSimUserSettings(simulatedUserSettings) };
+    auto simUser{GetSimUserSettings(simulatedUserSettings)};
 
-    if (static_cast<int>(dataSource) >= USER_PLUS_SIMULATED_QUERIES_ENUM_OFSET)
-    {
+    if (static_cast<int>(dataSource) >= USER_PLUS_SIMULATED_QUERIES_ENUM_OFSET) {
       // xoxo
       //
       // Generate temporal queries for real user queries
@@ -1934,36 +1685,58 @@ ChartData ImageRanker::RunModelTestWrapper(
 
       // Get real user queries with simulated queries added
       testQueries = GetExtendedRealQueries(kwScDataId, dataSource, simUser);
-    }
-    else 
-    {
+    } else {
       // Get simulated queries
       testQueries = GetSimulatedQueries(kwScDataId, dataSource, simUser);
+
+#if GENERATE_SIMULATED_USER_QUERIES_JSON
+
+      json j;
+      j.array();
+      //std::tuple<size_t, CnfFormula, bool>
+      for (auto&& [imageId, cnfFormula, y] : testQueries[0]) {
+        json item;
+        json itemArr;
+        itemArr.array();
+
+        item["ImageId"] = imageId;
+        // std::vector<std::pair<bool, size_t>>
+        for (auto&& clauses : cnfFormula) {
+          for (auto&& [x, id] : clauses) {
+            itemArr += id;
+          }
+        }
+          item["KwIds"] = itemArr;
+
+        j += item;
+      }
+
+
+      std::string s = j.dump(4);
+
+      std::cout << s << std::endl;
+#endif
     }
-  }
-  else
-  {
+  } else {
     // Get queries
     testQueries = GetCachedQueries(kwScDataId, dataSource);
   }
 
 #if DO_SUBSTRING_EXPANSION
 
-
-
 #if SUBSTRING_EXPANSION_TYPE == 0
 
-  auto testQueriesExpanded{ DoQueryAndExpansion(kwScDataId, testQueries, expansionSettings) };
- 
+  auto testQueriesExpanded{DoQueryAndExpansion(kwScDataId, testQueries, expansionSettings)};
+
 #elif SUBSTRING_EXPANSION_TYPE == 1
 
-  auto testQueriesExpanded{ DoQueryOrExpansion(kwScDataId, testQueries, expansionSettings) };
+  auto testQueriesExpanded{DoQueryOrExpansion(kwScDataId, testQueries, expansionSettings)};
 
 #endif
 
 #else
 
-  auto testQueriesExpanded{ std::move(testQueries) };
+  auto testQueriesExpanded{std::move(testQueries)};
 
 #endif
 
@@ -1981,37 +1754,33 @@ ChartData ImageRanker::RunModelTestWrapper(
   return pRankingModel->RunModelTestWithOrigQueries(kwScDataId, pNetDataTransformFn, &_indexKwFrequency, testQueriesExpanded, testQueries, _images, _keywordContainers);
 }
 
+UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const SimulatedUser& simUser) const {
+  constexpr size_t from{2_z};
+  constexpr size_t to{6_z};
 
-UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const SimulatedUser& simUser) const
-{
-  constexpr size_t from{ 2_z };
-  constexpr size_t to{ 6_z };
+  auto pImgData{GetImageDataById(imageId)};
 
-  auto pImgData{ GetImageDataById(imageId) };
-
-  const auto& linBinVector{ pImgData->_rawSimUserData.at(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet)) };
+  const auto& linBinVector{pImgData->_rawSimUserData.at(std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet))};
 
   // Calculate transformed vector
-  float totalSum{ 0.0f };
+  float totalSum{0.0f};
   std::vector<float> transformedData;
-  for (auto&& value : linBinVector)
-  {
-    float newValue{ pow(value, simUser.m_exponent) };
+  for (auto&& value : linBinVector) {
+    float newValue{pow(value, simUser.m_exponent)};
     transformedData.push_back(newValue);
 
     totalSum += newValue;
   }
 
   // Get scaling coef
-  float scaleCoef{ 1 / totalSum };
+  float scaleCoef{1 / totalSum};
 
   // Normalize
-  size_t i{ 0_z };
-  float cummulSum{ 0.0f };
-  for (auto&& value : transformedData)
-  {
+  size_t i{0_z};
+  float cummulSum{0.0f};
+  for (auto&& value : transformedData) {
     cummulSum += value * scaleCoef;
-    
+
     transformedData[i] = cummulSum;
 
     ++i;
@@ -2021,19 +1790,17 @@ UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const Simula
   std::mt19937 generator(randDev());
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
-  auto randLabel{ static_cast<float>(distribution(generator)) };
+  auto randLabel{static_cast<float>(distribution(generator))};
 
-  size_t numLabels{ static_cast<size_t>((randLabel * (to - from)) + from) };
+  size_t numLabels{static_cast<size_t>((randLabel * (to - from)) + from)};
   std::vector<size_t> queryLabels;
-  for (size_t i{ 0_z }; i < numLabels; ++i)
-  {
+  for (size_t i{0_z}; i < numLabels; ++i) {
     // Get random number between [0, 1] from uniform distribution
-    float rand{static_cast<float>(distribution(generator)) };
-    size_t labelIndex{ 0 };
+    float rand{static_cast<float>(distribution(generator))};
+    size_t labelIndex{0};
 
     // Iterate through discrete points while we haven't found correct point
-    while (transformedData[labelIndex] < rand)
-    {
+    while (transformedData[labelIndex] < rand) {
       ++labelIndex;
     }
 
@@ -2044,8 +1811,7 @@ UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const Simula
   queryFormula.reserve(numLabels);
 
   // Create final formula with wordnet IDs
-  for (auto&& index : queryLabels)
-  {
+  for (auto&& index : queryLabels) {
     auto a = _pViretKws->GetKeywordPtrByVectorIndex(index);
     Clause meta;
     meta.emplace_back(false, a->m_vectorIndex);
@@ -2056,96 +1822,85 @@ UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const Simula
   return std::tuple(imageId, queryFormula, true);
 }
 
-std::vector< std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const
-{
+std::vector<std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const {
   // Determine what id would that be if not simulated user
-  DataSourceTypeId dataSourceNotSimulated{ static_cast<DataSourceTypeId>(static_cast<int>(dataSource) - SIMULATED_QUERIES_ENUM_OFSET) };
+  DataSourceTypeId dataSourceNotSimulated{static_cast<DataSourceTypeId>(static_cast<int>(dataSource) - SIMULATED_QUERIES_ENUM_OFSET)};
 
   // Fetch real user queries to immitate them
-  std::vector< std::vector<UserImgQuery>> realUsersQueries{ GetCachedQueries(kwScDataId, dataSourceNotSimulated) };
+  std::vector<std::vector<UserImgQuery>> realUsersQueries{GetCachedQueries(kwScDataId, dataSourceNotSimulated)};
 
   // Prepare result structure
-  std::vector< std::vector<UserImgQuery>> resultSimulatedQueries;
+  std::vector<std::vector<UserImgQuery>> resultSimulatedQueries;
   // Reserve space properly
   resultSimulatedQueries.reserve(realUsersQueries.size());
 
-  for (auto&& queries : realUsersQueries)
-  {
+  for (auto&& queries : realUsersQueries) {
     std::vector<UserImgQuery> singleQuery;
 
-    for (auto&&[imageId, formula, withExamples] : queries)
-    {
-      auto simulatedQuery{ GetSimulatedQueryForImage(imageId, simUser) };
+    for (auto&& [imageId, formula, withExamples] : queries) {
+      auto simulatedQuery{GetSimulatedQueryForImage(imageId, simUser)};
 
       singleQuery.push_back(std::move(simulatedQuery));
     }
     resultSimulatedQueries.push_back(std::move(singleQuery));
   }
 
-
   return resultSimulatedQueries;
 }
 
-std::vector< std::vector<UserImgQuery>> ImageRanker::GetExtendedRealQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const
-{
+std::vector<std::vector<UserImgQuery>> ImageRanker::GetExtendedRealQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const {
   // Determine what id would that be if not simulated user
-  DataSourceTypeId dataSourceNotSimulated{ static_cast<DataSourceTypeId>(static_cast<int>(dataSource) - USER_PLUS_SIMULATED_QUERIES_ENUM_OFSET) };
+  DataSourceTypeId dataSourceNotSimulated{static_cast<DataSourceTypeId>(static_cast<int>(dataSource) - USER_PLUS_SIMULATED_QUERIES_ENUM_OFSET)};
 
   // Fetch real user queries to immitate them
-  std::vector< std::vector<UserImgQuery>> realUsersQueries{ GetCachedQueries(kwScDataId, dataSourceNotSimulated) };
+  std::vector<std::vector<UserImgQuery>> realUsersQueries{GetCachedQueries(kwScDataId, dataSourceNotSimulated)};
 
   // Prepare result structure - copy of real user queries
-  std::vector< std::vector<UserImgQuery>> resultSimulatedQueries{ realUsersQueries };
+  std::vector<std::vector<UserImgQuery>> resultSimulatedQueries{realUsersQueries};
 
-  std::random_device rd;     // only used once to initialise (seed) engine
-  std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
-  
-  size_t iterator{ 0_z };
-  for (auto&& queries : realUsersQueries)
-  {
-    for (auto&&[imageId, formula, withExamples] : queries)
-    {
-      auto imgIt{ _images.begin() + MapIdToVectorIndex(imageId) };
+  std::random_device rd;   // only used once to initialise (seed) engine
+  std::mt19937 rng(rd());  // random-number engine used (Mersenne-Twister in this case)
 
-      if (imgIt == _images.end())
-      {
+  size_t iterator{0_z};
+  for (auto&& queries : realUsersQueries) {
+    for (auto&& [imageId, formula, withExamples] : queries) {
+      auto imgIt{_images.begin() + MapIdToVectorIndex(imageId)};
+
+      if (imgIt == _images.end()) {
         LOG_ERROR("aaa");
       }
 
       // Get image ptr
-      Image* pImg{ imgIt->get() };
+      Image* pImg{imgIt->get()};
 
-      size_t numSuccs{ pImg->m_numSuccessorFrames };
-      if (numSuccs <= 0)
-      {
+      size_t numSuccs{pImg->m_numSuccessorFrames};
+      if (numSuccs <= 0) {
         break;
       }
       // Get how much we will offset from this image
       std::uniform_int_distribution<size_t> uni(1, std::min((size_t)MAX_TEMP_QUERY_OFFSET, numSuccs));
-      size_t offset{ uni(rng) };
+      size_t offset{uni(rng)};
 
       // Offset iterator
-      for (size_t i{ 0_z }; i < offset; ++i)
-      {
+      for (size_t i{0_z}; i < offset; ++i) {
         ++imgIt;
       }
 
-      auto simulatedQuery{ GetSimulatedQueryForImage(pImg->m_imageId, simUser) };
+      auto simulatedQuery{GetSimulatedQueryForImage(pImg->m_imageId, simUser)};
 
       resultSimulatedQueries[iterator].push_back(std::move(simulatedQuery));
 
       // Only the first one
       break;
     }
-    
+
     ++iterator;
   }
 
   return resultSimulatedQueries;
 }
 
-std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(DataSourceTypeId dataSource) const
-{
+std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(DataSourceTypeId dataSource) const {
   static std::vector<UserImgQueryRaw> cachedData0;
   static std::vector<UserImgQueryRaw> cachedData1;
   static std::vector<UserImgQueryRaw> cachedData2;
@@ -2156,74 +1911,65 @@ std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(DataSourceTypeId 
 
   auto currentTime = std::chrono::steady_clock::now();
 
-  switch (dataSource)
-  {
-  case DataSourceTypeId::cDeveloper:
+  switch (dataSource) {
+    case DataSourceTypeId::cDeveloper:
 
-    if (cachedData0.empty() || cachedData0Ts < currentTime)
-    {
-      cachedData0.clear();
+      if (cachedData0.empty() || cachedData0Ts < currentTime) {
+        cachedData0.clear();
 
-      // Fetch pairs of <Q, Img>
-      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
+        // Fetch pairs of <Q, Img>
+        std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
 
-      auto dbData = _primaryDb.ResultQuery(query);
+        auto dbData = _primaryDb.ResultQuery(query);
 
-      if (dbData.first != 0)
-      {
-        LOG_ERROR("Error getting queries from database."s);
+        if (dbData.first != 0) {
+          LOG_ERROR("Error getting queries from database."s);
+        }
+
+        // Parse DB results
+        for (auto&& idQueryRow : dbData.second) {
+          size_t imageId{static_cast<size_t>(strToInt(idQueryRow[0].data()))};
+          std::vector<size_t> queryWordnetIds{_pViretKws->GetCanonicalQueryNoRecur(idQueryRow[1])};
+
+          cachedData0.emplace_back(std::move(imageId), std::move(queryWordnetIds));
+        }
+
+        cachedData0Ts = std::chrono::steady_clock::now();
+        cachedData0Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
       }
 
-      // Parse DB results
-      for (auto&& idQueryRow : dbData.second)
-      {
+      return cachedData0;
 
-        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
-        std::vector<size_t> queryWordnetIds{ _pViretKws->GetCanonicalQueryNoRecur(idQueryRow[1]) };
+      break;
 
-        cachedData0.emplace_back(std::move(imageId), std::move(queryWordnetIds));
+    case DataSourceTypeId::cPublic:
+
+      if (cachedData1.empty() || cachedData1Ts < currentTime) {
+        cachedData1.clear();
+
+        // Fetch pairs of <Q, Img>
+        std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
+        auto dbData = _primaryDb.ResultQuery(query);
+
+        if (dbData.first != 0) {
+          LOG_ERROR("Error getting queries from database."s);
+        }
+
+        // Parse DB results
+        for (auto&& idQueryRow : dbData.second) {
+          size_t imageId{static_cast<size_t>(strToInt(idQueryRow[0].data()))};
+          std::vector<size_t> queryWordnetIds{_pViretKws->GetCanonicalQueryNoRecur(idQueryRow[1])};
+
+          cachedData1.emplace_back(std::move(imageId), std::move(queryWordnetIds));
+        }
+
+        cachedData1Ts = std::chrono::steady_clock::now();
+        cachedData1Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
       }
 
-      cachedData0Ts = std::chrono::steady_clock::now();
-      cachedData0Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
+      return cachedData1;
 
-    }
-
-    return cachedData0;
-
-    break;
-
-  case DataSourceTypeId::cPublic:
-
-    if (cachedData1.empty() || cachedData1Ts < currentTime)
-    {
-      cachedData1.clear();
-
-      // Fetch pairs of <Q, Img>
-      std::string query("SELECT image_id, query FROM `image-ranker-collector-data2`.queries WHERE type = " + std::to_string((int)dataSource) + ";");
-      auto dbData = _primaryDb.ResultQuery(query);
-
-      if (dbData.first != 0)
-      {
-        LOG_ERROR("Error getting queries from database."s);
-      }
-
-      // Parse DB results
-      for (auto&& idQueryRow : dbData.second)
-      {
-        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) };
-        std::vector<size_t> queryWordnetIds{ _pViretKws->GetCanonicalQueryNoRecur(idQueryRow[1]) };
-
-        cachedData1.emplace_back(std::move(imageId), std::move(queryWordnetIds));
-      }
-
-      cachedData1Ts = std::chrono::steady_clock::now();
-      cachedData1Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
-    }
-
-    return cachedData1;
-
-    break;
+      break;
   }
 
   return cachedData0;
@@ -2231,62 +1977,56 @@ std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(DataSourceTypeId 
 
 std::vector<UserDataNativeQuery>&
 ImageRanker::GetUserAnnotationNativeQueriesCached() const {
-  
   static std::vector<UserDataNativeQuery> cachedData0;
-  static std::chrono::steady_clock::time_point cachedData0Ts = 
-    std::chrono::steady_clock::now();
+  static std::chrono::steady_clock::time_point cachedData0Ts =
+      std::chrono::steady_clock::now();
 
   auto currentTime = std::chrono::steady_clock::now();
 
-  if (cachedData0.empty() || cachedData0Ts < currentTime)
-  {
+  if (cachedData0.empty() || cachedData0Ts < currentTime) {
     cachedData0.clear();
-      
+
     std::string sqlQuery(
-      "SELECT image_id, query, created,\
+        "SELECT image_id, query, created,\
         session_id, manually_validated\
-      FROM `" + _primaryDb.GetDbName() + 
+      FROM `" +
+        _primaryDb.GetDbName() +
         "`.user_data_native_queries;");
 
     auto dbData = _primaryDb.ResultQuery(sqlQuery);
 
-    if (dbData.first != 0)
-    {
+    if (dbData.first != 0) {
       LOG_ERROR("Error getting queries from database."s);
     }
 
     // Parse DB results
-    for (auto&& idQueryRow : dbData.second)
-    {
-      size_t imageId{ 
-        static_cast<size_t>(strToInt(idQueryRow[0].data())) };
-      std::string userQuery{ idQueryRow[1] };
+    for (auto&& idQueryRow : dbData.second) {
+      size_t imageId{
+          static_cast<size_t>(strToInt(idQueryRow[0].data()))};
+      std::string userQuery{idQueryRow[1]};
       size_t timestamp{
-        static_cast<size_t>(strToInt(idQueryRow[2].data()))};
+          static_cast<size_t>(strToInt(idQueryRow[2].data()))};
       std::string sessionId{idQueryRow[3]};
       bool isManuallyValidated{
-        static_cast<bool>(strToInt(idQueryRow[2].data()))};
+          static_cast<bool>(strToInt(idQueryRow[2].data()))};
 
       cachedData0.emplace_back(
-        imageId, std::move(userQuery), 
-        timestamp, std::move(sessionId), isManuallyValidated);
+          imageId, std::move(userQuery),
+          timestamp, std::move(sessionId), isManuallyValidated);
     }
 
     cachedData0Ts = std::chrono::steady_clock::now();
     cachedData0Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
   }
 
-
-  return cachedData0; 
+  return cachedData0;
 }
 
-
-std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource) const
-{
-  static std::vector < std::vector<UserImgQuery>> cachedAllData;
-  static std::vector < std::vector<UserImgQuery>> cachedData0;
-  static std::vector < std::vector<UserImgQuery>> cachedData1;
-  static std::vector < std::vector<UserImgQuery>> cachedData2;
+std::vector<std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource) const {
+  static std::vector<std::vector<UserImgQuery>> cachedAllData;
+  static std::vector<std::vector<UserImgQuery>> cachedData0;
+  static std::vector<std::vector<UserImgQuery>> cachedData1;
+  static std::vector<std::vector<UserImgQuery>> cachedData2;
 
   static std::chrono::steady_clock::time_point cachedAllDataTs = std::chrono::steady_clock::now();
   static std::chrono::steady_clock::time_point cachedData0Ts = std::chrono::steady_clock::now();
@@ -2295,10 +2035,8 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
 
   auto currentTime = std::chrono::steady_clock::now();
 
-  if (dataSource == DataSourceTypeId::cAll)
-  {
-    if (cachedAllData.empty() || cachedAllDataTs < currentTime)
-    {
+  if (dataSource == DataSourceTypeId::cAll) {
+    if (cachedAllData.empty() || cachedAllDataTs < currentTime) {
       cachedAllData.clear();
 
       const auto& queries1 = GetCachedQueries(kwScDataId, DataSourceTypeId::cDeveloper);
@@ -2315,207 +2053,196 @@ std::vector< std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(KwScoring
     return cachedAllData;
   }
 
-  switch (dataSource) 
-  {
-  case DataSourceTypeId::cDeveloper:
+  switch (dataSource) {
+    case DataSourceTypeId::cDeveloper:
 
-    if (cachedData0.empty() || cachedData0Ts < currentTime)
-    {
-      cachedData0.clear();
+      if (cachedData0.empty() || cachedData0Ts < currentTime) {
+        cachedData0.clear();
 
-      // Fetch pairs of <Q, Img>
-      std::string query("\
-        SELECT image_id, query, type FROM `" + _primaryDb.GetDbName() +"`.queries \
-          WHERE ( type = " + std::to_string((int)dataSource) + " OR type =  " + std::to_string(((int)dataSource + 10)) + ") AND \
-            keyword_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + " AND \
-            scoring_data_type = " + std::to_string((int)std::get<1>(kwScDataId)) + ";");
-      
-      auto dbData = _primaryDb.ResultQuery(query);
+        // Fetch pairs of <Q, Img>
+        std::string query(
+            "\
+        SELECT image_id, query, type FROM `" +
+            _primaryDb.GetDbName() +
+            "`.queries \
+          WHERE ( type = " +
+            std::to_string((int)dataSource) + " OR type =  " + std::to_string(((int)dataSource + 10)) +
+            ") AND \
+            keyword_data_type = " +
+            std::to_string((int)std::get<0>(kwScDataId)) +
+            " AND \
+            scoring_data_type = " +
+            std::to_string((int)std::get<1>(kwScDataId)) + ";");
 
-      if (dbData.first != 0)
-      {
-        LOG_ERROR("Error getting queries from database."s);
-      }
+        auto dbData = _primaryDb.ResultQuery(query);
 
-      // Parse DB results
-      for (auto&& idQueryRow : dbData.second)
-      {
-        
-        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) * TEST_QUERIES_ID_MULTIPLIER };
+        if (dbData.first != 0) {
+          LOG_ERROR("Error getting queries from database."s);
+        }
 
-        CnfFormula queryFormula{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS) };
-        bool wasWithExamples{ (bool)((strToInt(idQueryRow[2]) / 10) % 2 ) };
+        // Parse DB results
+        for (auto&& idQueryRow : dbData.second) {
+          size_t imageId{static_cast<size_t>(strToInt(idQueryRow[0].data())) * TEST_QUERIES_ID_MULTIPLIER};
+
+          CnfFormula queryFormula{GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS)};
+          bool wasWithExamples{(bool)((strToInt(idQueryRow[2]) / 10) % 2)};
 
 #if RUN_TESTS_ONLY_ON_NON_EMPTY_POSTREMOVE_HYPERNYM
 
-        CnfFormula queryFormulaTest{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), true) };
-        if (!queryFormulaTest.empty())
+          CnfFormula queryFormulaTest{GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), true)};
+          if (!queryFormulaTest.empty())
+#else
 
-#else 
-
-        if (!queryFormula.empty())
+          if (!queryFormula.empty())
 
 #endif
-        {
-          std::vector<UserImgQuery> tmp;
-          tmp.emplace_back(std::move(imageId), std::move(queryFormula), wasWithExamples);
+          {
+            std::vector<UserImgQuery> tmp;
+            tmp.emplace_back(std::move(imageId), std::move(queryFormula), wasWithExamples);
 
-          cachedData0.emplace_back(std::move(tmp));
+            cachedData0.emplace_back(std::move(tmp));
+          }
         }
+
+        cachedData0Ts = std::chrono::steady_clock::now();
+        cachedData0Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
       }
 
-      cachedData0Ts = std::chrono::steady_clock::now();
-      cachedData0Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
+      return cachedData0;
 
-    }
+      break;
 
-    return cachedData0;
+    case DataSourceTypeId::cPublic:
 
-    break;
+      if (cachedData1.empty() || cachedData1Ts < currentTime) {
+        cachedData1.clear();
 
-  case DataSourceTypeId::cPublic:
+        // Fetch pairs of <Q, Img>
+        std::string query(
+            "\
+        SELECT image_id, query, type FROM `" +
+            _primaryDb.GetDbName() +
+            "`.queries \
+          WHERE (type = " +
+            std::to_string((int)dataSource) + " OR type = " + std::to_string(((int)dataSource + 10)) +
+            ") AND \
+            keyword_data_type = " +
+            std::to_string((int)std::get<0>(kwScDataId)) +
+            " AND \
+            scoring_data_type = " +
+            std::to_string((int)std::get<1>(kwScDataId)) + ";");
 
-    if (cachedData1.empty() || cachedData1Ts < currentTime)
-    {
-      cachedData1.clear();
+        auto dbData = _primaryDb.ResultQuery(query);
 
-      // Fetch pairs of <Q, Img>
-      std::string query("\
-        SELECT image_id, query, type FROM `" + _primaryDb.GetDbName() + "`.queries \
-          WHERE (type = " + std::to_string((int)dataSource) + " OR type = " + std::to_string(((int)dataSource + 10)) + ") AND \
-            keyword_data_type = " + std::to_string((int)std::get<0>(kwScDataId)) + " AND \
-            scoring_data_type = " + std::to_string((int)std::get<1>(kwScDataId)) + ";");
+        if (dbData.first != 0) {
+          LOG_ERROR("Error getting queries from database."s);
+        }
 
-      auto dbData = _primaryDb.ResultQuery(query);
+        // Parse DB results
+        for (auto&& idQueryRow : dbData.second) {
+          size_t imageId{static_cast<size_t>(strToInt(idQueryRow[0].data())) * TEST_QUERIES_ID_MULTIPLIER};
 
-      if (dbData.first != 0)
-      {
-        LOG_ERROR("Error getting queries from database."s);
-      }
-
-      // Parse DB results
-      for (auto&& idQueryRow : dbData.second)
-      {
-        size_t imageId{ static_cast<size_t>(strToInt(idQueryRow[0].data())) * TEST_QUERIES_ID_MULTIPLIER };
-
-        CnfFormula queryFormula{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS) };
-        bool wasWithExamples{ (bool)((strToInt(idQueryRow[2]) / 10) % 2) };
+          CnfFormula queryFormula{GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS)};
+          bool wasWithExamples{(bool)((strToInt(idQueryRow[2]) / 10) % 2)};
 
 #if RUN_TESTS_ONLY_ON_NON_EMPTY_POSTREMOVE_HYPERNYM
 
-        CnfFormula queryFormulaTest{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), true) };
-        if (!queryFormulaTest.empty())
-
-#else 
-        if (!queryFormula.empty())
+          CnfFormula queryFormulaTest{GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), true)};
+          if (!queryFormulaTest.empty())
+#else
+          if (!queryFormula.empty())
 #endif
-        {
-          std::vector<UserImgQuery> tmp;
-          tmp.emplace_back(std::move(imageId), std::move(queryFormula), wasWithExamples);
+          {
+            std::vector<UserImgQuery> tmp;
+            tmp.emplace_back(std::move(imageId), std::move(queryFormula), wasWithExamples);
 
-          cachedData1.emplace_back(std::move(tmp));
+            cachedData1.emplace_back(std::move(tmp));
+          }
         }
+
+        cachedData1Ts = std::chrono::steady_clock::now();
+        cachedData1Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
       }
 
-      cachedData1Ts = std::chrono::steady_clock::now();
-      cachedData1Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
-    }
+      return cachedData1;
 
-    return cachedData1;
-
-    break;
+      break;
   }
 
   return cachedData0;
 }
 
 void ImageRanker::SubmitInteractiveSearchSubmit(
-  KwScoringDataId kwScDataId,
-  InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, InputDataTransformId transformId,
-  std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
-  std::string sessionId, size_t searchSessionIndex, int endStatus, size_t sessionDuration,
-  std::vector<InteractiveSearchAction> actions,
-  size_t userId
-)
-{
-  size_t isEmpty{ 0_z };
+    KwScoringDataId kwScDataId,
+    InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, InputDataTransformId transformId,
+    std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
+    std::string sessionId, size_t searchSessionIndex, int endStatus, size_t sessionDuration,
+    std::vector<InteractiveSearchAction> actions,
+    size_t userId) {
+  size_t isEmpty{0_z};
 
-  size_t countIn{ 0_z };
-  size_t countOut{ 0_z };
+  size_t countIn{0_z};
+  size_t countOut{0_z};
 
-  for (auto&& a : actions)
-  {
-    if (std::get<0>(a) == 0)
-    {
+  for (auto&& a : actions) {
+    if (std::get<0>(a) == 0) {
       ++countOut;
-    }
-    else if (std::get<0>(a) == 1 || std::get<0>(a) == 2)
-    {
+    } else if (std::get<0>(a) == 1 || std::get<0>(a) == 2) {
       ++countIn;
     }
   }
 
-  if (countIn == countOut)
-  {
+  if (countIn == countOut) {
     isEmpty = 1_z;
   }
 
   std::stringstream query1Ss;
   query1Ss << "INSERT INTO `interactive_searches`(`keyword_data_type`, `scoring_data_type`, `type`, `target_image_id`, `model_id`, `transformation_id`, `model_settings`, `transformation_settings`, `session_id`, `user_id`, `search_session_index`, `end_status`, `session_duration`,`is_empty`)";
-  query1Ss << "VALUES(" << std::to_string((int)std::get<0>(kwScDataId)) << ", " << std::to_string((int)std::get<1>(kwScDataId)) << "," <<  (int)originType << "," << imageId << "," << (int)modelId << "," << (int)transformId << ",";
+  query1Ss << "VALUES(" << std::to_string((int)std::get<0>(kwScDataId)) << ", " << std::to_string((int)std::get<1>(kwScDataId)) << "," << (int)originType << "," << imageId << "," << (int)modelId << "," << (int)transformId << ",";
 
   query1Ss << "\"";
-  for (auto&& s : modelSettings)
-  {
+  for (auto&& s : modelSettings) {
     query1Ss << s << ";";
   }
   query1Ss << "\"";
   query1Ss << ",";
   query1Ss << "\"";
-  for (auto&& s : transformSettings)
-  {
+  for (auto&& s : transformSettings) {
     query1Ss << s << ";";
   }
   query1Ss << "\"";
-  query1Ss << ",\"" << sessionId << "\"," << userId << "," << searchSessionIndex << "," << endStatus << "," << sessionDuration << "," << isEmpty << ");";  
+  query1Ss << ",\"" << sessionId << "\"," << userId << "," << searchSessionIndex << "," << endStatus << "," << sessionDuration << "," << isEmpty << ");";
 
   std::string query1{query1Ss.str()};
-  size_t result1{ _primaryDb.NoResultQuery(query1) };
+  size_t result1{_primaryDb.NoResultQuery(query1)};
 
-  size_t id{ _primaryDb.GetLastId() };
-
+  size_t id{_primaryDb.GetLastId()};
 
   std::stringstream query2Ss;
   query2Ss << "INSERT INTO `interactive_searches_actions`(`interactive_search_id`, `index`, `action`, `score`, `operand`)";
   query2Ss << "VALUES";
   {
-    size_t i{ 0_z };
-    for (auto&& action : actions)
-    {
+    size_t i{0_z};
+    for (auto&& action : actions) {
       query2Ss << "(" << id << "," << i << "," << std::get<0>(action) << "," << std::get<1>(action) << "," << std::get<2>(action) << ")";
 
-      if (i < actions.size() - 1)
-      {
+      if (i < actions.size() - 1) {
         query2Ss << ",";
       }
       ++i;
     }
     query2Ss << ";";
   }
-  
 
- 
-  std::string query2{ query2Ss.str() };
-  size_t result2{ _primaryDb.NoResultQuery(query2) };
+  std::string query2{query2Ss.str()};
+  size_t result2{_primaryDb.NoResultQuery(query2)};
 
-  if (result1 != 0 || result2 != 0)
-  {
+  if (result1 != 0 || result2 != 0) {
     LOG_ERROR("Failed to insert search session result.");
   }
 }
 
-std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatisticsUserKeywordAccuracy(DataSourceTypeId queriesSource) const
-{
+std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatisticsUserKeywordAccuracy(DataSourceTypeId queriesSource) const {
   LOG_ERROR("Not implemented: GetStatisticsUserKeywordAccuracy()");
   return std::tuple<UserAccuracyChartData, UserAccuracyChartData>();
   /*
@@ -2651,48 +2378,41 @@ std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatist
 
   return std::tuple(std::move(nonHyperData), std::move(hyperData));
   */
-
 }
 
-
-KeywordsContainer* ImageRanker::GetCorrectKwContainerPtr(KwScoringDataId kwScDataId) const
-{
+KeywordsContainer* ImageRanker::GetCorrectKwContainerPtr(KwScoringDataId kwScDataId) const {
   KeywordsContainer* ptr{nullptr};
 
-  switch (std::get<0>(kwScDataId))
-  {
-  case eKeywordsDataType::cViret1:
-    ptr = _pViretKws;
-    break;
+  switch (std::get<0>(kwScDataId)) {
+    case eKeywordsDataType::cViret1:
+      ptr = _pViretKws;
+      break;
 
-  case eKeywordsDataType::cGoogleAI:
-    ptr = _pGoogleKws;
-    break;
+    case eKeywordsDataType::cGoogleAI:
+      ptr = _pGoogleKws;
+      break;
 
-  default:
-    LOG_ERROR("ImageRanker::GetCorrectKwContainerPtr(): Incorrect KW type!");
+    default:
+      LOG_ERROR("ImageRanker::GetCorrectKwContainerPtr(): Incorrect KW type!");
   }
 
   return ptr;
 }
 
 RelevantImagesResponse ImageRanker::GetRelevantImages(
-  KwScoringDataId kwScDataId,
-  const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
-  InputDataTransformId aggId, RankingModelId modelId,
-  const RankingModelSettings& modelSettings, const InputDataTransformSettings& aggSettings,
-  size_t imageId, 
-  bool withOccuranceValue
-) const
-{
+    KwScoringDataId kwScDataId,
+    const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
+    InputDataTransformId aggId, RankingModelId modelId,
+    const RankingModelSettings& modelSettings, const InputDataTransformSettings& aggSettings,
+    size_t imageId,
+    bool withOccuranceValue) const {
   std::vector<CnfFormula> formulae;
 
-  KeywordsContainer* pKws{ GetCorrectKwContainerPtr(kwScDataId)};
-  
-  for (auto&& queryString : queriesEncodedPlaintext)
-  {
+  KeywordsContainer* pKws{GetCorrectKwContainerPtr(kwScDataId)};
+
+  for (auto&& queryString : queriesEncodedPlaintext) {
     // Decode query to logical CNF formula
-    CnfFormula queryFormula{ pKws->GetCanonicalQuery(EncodeAndQuery(queryString)) };
+    CnfFormula queryFormula{pKws->GetCanonicalQuery(EncodeAndQuery(queryString))};
 
     formulae.push_back(queryFormula);
   }
@@ -2708,17 +2428,14 @@ RelevantImagesResponse ImageRanker::GetRelevantImages(
   pRankingModel->SetModelSettings(modelSettings);
 
   // Rank it
-  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(formulae, kwScDataId, pAggFn, &_indexKwFrequency, _images, _keywordContainers, numResults, imageId)};
-
+  auto [imgOrder, targetImgRank]{pRankingModel->GetRankedImages(formulae, kwScDataId, pAggFn, &_indexKwFrequency, _images, _keywordContainers, numResults, imageId)};
 
   RelevantImagesResponse resultResponse;
 
   std::vector<std::tuple<size_t, std::string, float>> occuranceHistogram;
   occuranceHistogram.reserve(pKws->GetNetVectorSize());
 
-
-  if (withOccuranceValue)
-  {
+  if (withOccuranceValue) {
     //// Prefil keyword wordnetIDs
     //for (size_t i{ 0ULL }; i < _pViretKws->GetNetVectorSize(); ++i)
     //{
@@ -2752,8 +2469,7 @@ RelevantImagesResponse ImageRanker::GetRelevantImages(
   // Prepare final result to return
   {
     size_t i{0ULL};
-    for (auto&& imgId : imgOrder)
-    {
+    for (auto&& imgId : imgOrder) {
       std::get<0>(resultResponse).emplace_back(GetImageDataById(imgId));
       //std::get<1>(resultResponse).emplace_back(std::move(occuranceHistogram[i]));
 
@@ -2767,13 +2483,11 @@ RelevantImagesResponse ImageRanker::GetRelevantImages(
   return resultResponse;
 }
 
-const Image* ImageRanker::GetImageDataById(size_t imageId) const
-{
+const Image* ImageRanker::GetImageDataById(size_t imageId) const {
   // Get correct image index
   size_t index{imageId / _imageIdStride};
 
-  if (index >= _images.size())
-  {
+  if (index >= _images.size()) {
     LOG_ERROR("Out of bounds image index."s);
     return nullptr;
   }
@@ -2781,13 +2495,11 @@ const Image* ImageRanker::GetImageDataById(size_t imageId) const
   return _images[index].get();
 }
 
-Image* ImageRanker::GetImageDataById(size_t imageId)
-{
+Image* ImageRanker::GetImageDataById(size_t imageId) {
   // Get correct image index
-  size_t index{ imageId / _imageIdStride };
+  size_t index{imageId / _imageIdStride};
 
-  if (index >= _images.size())
-  {
+  if (index >= _images.size()) {
     LOG_ERROR("Out of bounds image index."s);
     return nullptr;
   }
@@ -2795,12 +2507,10 @@ Image* ImageRanker::GetImageDataById(size_t imageId)
   return _images[index].get();
 }
 
-std::string ImageRanker::GetImageFilenameById(size_t imageId) const
-{
-  auto imgPtr{ GetImageDataById(imageId) };
+std::string ImageRanker::GetImageFilenameById(size_t imageId) const {
+  auto imgPtr{GetImageDataById(imageId)};
 
-  if (imgPtr == nullptr)
-  {
+  if (imgPtr == nullptr) {
     LOG_ERROR("Incorrect image ID."s);
     return ""s;
   }
@@ -2808,9 +2518,6 @@ std::string ImageRanker::GetImageFilenameById(size_t imageId) const
   return imgPtr->m_filename;
 }
 
-
-
-
 // =======================================================================================
 // =======================================================================================
 // =======================================================================================
@@ -2818,23 +2525,18 @@ std::string ImageRanker::GetImageFilenameById(size_t imageId) const
 // =======================================================================================
 // =======================================================================================
 
-
-
-SimulatedUser ImageRanker::GetSimUserSettings(const SimulatedUserSettings& stringSettings) const
-{
+SimulatedUser ImageRanker::GetSimUserSettings(const SimulatedUserSettings& stringSettings) const {
   SimulatedUser newSimUser;
 
   // If setting 0 (Simulated user exponent) is set
-  if (stringSettings.size() >= 1 && stringSettings[0].size() >= 0)
-  {
+  if (stringSettings.size() >= 1 && stringSettings[0].size() >= 0) {
     newSimUser.m_exponent = strToInt(stringSettings[0]);
   }
 
   return newSimUser;
 }
 
-void ImageRanker::ComputeApproxDocFrequency(size_t aggregationGuid, float treshold)
-{
+void ImageRanker::ComputeApproxDocFrequency(size_t aggregationGuid, float treshold) {
   LOG("Not implemented: omputeApproxDocFrequency()!");
 
   /*
@@ -2894,8 +2596,7 @@ void ImageRanker::ComputeApproxDocFrequency(size_t aggregationGuid, float tresho
   */
 }
 
-void ImageRanker::GenerateBestHypernymsForImages()
-{
+void ImageRanker::GenerateBestHypernymsForImages() {
   /*
   auto cmp = [](const std::pair<size_t, float>& left, const std::pair<size_t, float>& right)
   {
@@ -2934,8 +2635,7 @@ void ImageRanker::GenerateBestHypernymsForImages()
   */
 }
 
-void ImageRanker::InitializeGridTests()
-{
+void ImageRanker::InitializeGridTests() {
   LOG("Not implemented: ImageRanker::InitializeGridTests()!");
 
   // ==========================================
@@ -2952,12 +2652,11 @@ void ImageRanker::InitializeGridTests()
   //    for (auto&& model : GridTest::m_rankingModels)
   //    {
 
-
   //      switch (model)
   //      {
   //        // BooleanBucketModel
   //      case RankingModelId::cBooleanBucket:
-  //        
+  //
   //        // True treshold probability values
   //        for (float fi{ BooleanBucketModel::m_trueTresholdFrom }; fi <= BooleanBucketModel::m_trueTresholdTo; fi += BooleanBucketModel::m_trueTresholdStep)
   //        {
@@ -2977,7 +2676,7 @@ void ImageRanker::InitializeGridTests()
   //        for (float fi{ ViretModel::m_trueTresholdFrom }; fi <= ViretModel::m_trueTresholdTo; fi += ViretModel::m_trueTresholdStep)
   //        {
   //          // Query operation options
-  //          for (auto&& qo : ViretModel::m_queryOperations) 
+  //          for (auto&& qo : ViretModel::m_queryOperations)
   //          {
   //            std::vector<std::string> modSettings{std::to_string(fi), std::to_string((uint8_t)qo)};
 
@@ -2987,103 +2686,81 @@ void ImageRanker::InitializeGridTests()
   //        break;
   //      }
 
-
   //    }
   //  }
   //}
   LOG("GridTests initialized.");
 }
 
-std::pair<uint8_t, uint8_t> ImageRanker::GetGridTestProgress() const
-{ 
-  return GridTest::GetGridTestProgress(); 
+std::pair<uint8_t, uint8_t> ImageRanker::GetGridTestProgress() const {
+  return GridTest::GetGridTestProgress();
 }
 
 // \todo Export to new class Exporter
-void ImageRanker::PrintIntActionsCsv() const
-{
-  std::string query1{ "SELECT id, session_duration, end_status FROM `image-ranker-collector-data2`.interactive_searches;" };
-  std::string query2{ "SELECT `interactive_search_id`, `index`, `action`, `score`, `operand` FROM `image-ranker-collector-data2`.interactive_searches_actions;" };
-  auto result1{ _primaryDb.ResultQuery(query1) };
-  auto result2{ _primaryDb.ResultQuery(query2) };
+void ImageRanker::PrintIntActionsCsv() const {
+  std::string query1{"SELECT id, session_duration, end_status FROM `image-ranker-collector-data2`.interactive_searches;"};
+  std::string query2{"SELECT `interactive_search_id`, `index`, `action`, `score`, `operand` FROM `image-ranker-collector-data2`.interactive_searches_actions;"};
+  auto result1{_primaryDb.ResultQuery(query1)};
+  auto result2{_primaryDb.ResultQuery(query2)};
 
-  auto actionIt{ result2.second.begin() };
-
+  auto actionIt{result2.second.begin()};
 
   std::vector<std::vector<size_t>> sessProgresses;
 
-  for (auto&& actionSess : result1.second)
-  {
+  for (auto&& actionSess : result1.second) {
     std::vector<size_t> oneSess;
 
-    size_t sessId{ (size_t)strToInt(actionSess[0]) };
-    size_t sessDuration{ (size_t)strToInt(actionSess[1]) };
-    size_t endStatus{ (size_t)strToInt(actionSess[2]) };
+    size_t sessId{(size_t)strToInt(actionSess[0])};
+    size_t sessDuration{(size_t)strToInt(actionSess[1])};
+    size_t endStatus{(size_t)strToInt(actionSess[2])};
 
-    bool isInitial{ true };
+    bool isInitial{true};
     std::vector<std::string> initialQuery;
     std::vector<std::string> fullQuery;
 
-    size_t actionInitialCount{ 0_z };
-    size_t actionFinalCount{ 0_z };
-    std::string initialRank{ "" };
-    std::string finalRank{ "" };
+    size_t actionInitialCount{0_z};
+    size_t actionFinalCount{0_z};
+    std::string initialRank{""};
+    std::string finalRank{""};
 
-    for (; (result2.second.end() != actionIt && strToInt((*actionIt)[0]) == sessId); ++actionIt)
-    {
-
-
+    for (; (result2.second.end() != actionIt && strToInt((*actionIt)[0]) == sessId); ++actionIt) {
       auto&& actionRow = (*actionIt);
 
-      if (actionRow[2] == "2")
-      {
+      if (actionRow[2] == "2") {
         isInitial = false;
-
 
         // Push rank before start of interactive refining
         oneSess.push_back(strToInt(initialRank));
       }
 
-
-      if (isInitial)
-      {
+      if (isInitial) {
         ++actionInitialCount;
         initialRank = actionRow[3];
         finalRank = actionRow[3];
-      }
-      else
-      {
+      } else {
         ++actionFinalCount;
         ++actionInitialCount;
         finalRank = actionRow[3];
 
-        // Push rank 
+        // Push rank
         oneSess.push_back(strToInt(finalRank));
       }
 
-      if (actionRow[2] == "1" || actionRow[2] == "2")
-      {
-        if (isInitial)
-        {
+      if (actionRow[2] == "1" || actionRow[2] == "2") {
+        if (isInitial) {
           initialQuery.push_back(actionRow[4]);
         }
         fullQuery.push_back(actionRow[4]);
-      }
-      else
-      {
-        for (auto it = initialQuery.begin(); it != initialQuery.end(); ++it)
-        {
-          if (*it == actionRow[4])
-          {
+      } else {
+        for (auto it = initialQuery.begin(); it != initialQuery.end(); ++it) {
+          if (*it == actionRow[4]) {
             initialQuery.erase(it);
             break;
           }
         }
 
-        for (auto it = fullQuery.begin(); it != fullQuery.end(); ++it)
-        {
-          if (*it == actionRow[4])
-          {
+        for (auto it = fullQuery.begin(); it != fullQuery.end(); ++it) {
+          if (*it == actionRow[4]) {
             fullQuery.erase(it);
             break;
           }
@@ -3091,11 +2768,7 @@ void ImageRanker::PrintIntActionsCsv() const
       }
     }
 
-
-
-
-    if (initialQuery.empty() || fullQuery.empty())
-    {
+    if (initialQuery.empty() || fullQuery.empty()) {
       continue;
     }
 
@@ -3103,13 +2776,11 @@ void ImageRanker::PrintIntActionsCsv() const
 
     {
       size_t initSize = initialQuery.size();
-      size_t i{ 0_z };
-      for (auto&& kwId : initialQuery)
-      {
+      size_t i{0_z};
+      for (auto&& kwId : initialQuery) {
         std::cout << kwId;
 
-        if (i < initSize - 1)
-        {
+        if (i < initSize - 1) {
           std::cout << "&";
         }
         ++i;
@@ -3121,104 +2792,82 @@ void ImageRanker::PrintIntActionsCsv() const
 
     {
       size_t initSize = fullQuery.size();
-      size_t i{ 0_z };
-      for (auto&& kwId : fullQuery)
-      {
+      size_t i{0_z};
+      for (auto&& kwId : fullQuery) {
         std::cout << kwId;
 
-        if (i < initSize - 1)
-        {
+        if (i < initSize - 1) {
           std::cout << "&";
         }
         ++i;
         std::cout << ",";
       }
     }
-    if (!oneSess.empty())
-    {
+    if (!oneSess.empty()) {
       sessProgresses.emplace_back(std::move(oneSess));
     }
-
-
 
     std::cout << finalRank << ",";
     std::cout << std::to_string(actionFinalCount) << std::endl;
   }
 
-
   std::set<size_t> m;
 
-  for (auto&& vec : sessProgresses)
-  {
-    auto s{ vec.size() };
+  for (auto&& vec : sessProgresses) {
+    auto s{vec.size()};
     m.insert(s);
   }
 
   std::vector<std::vector<size_t>> ddata;
 
-  for (auto&& size : m)
-  {
+  for (auto&& size : m) {
     std::vector<size_t> data;
     data.resize(size, 0_z);
 
-    size_t i{ 0_z };
+    size_t i{0_z};
 
-
-    for (auto&& vec : sessProgresses)
-    {
-      if (vec.size() == size)
-      {
-        size_t ii{ 0_z };
-        for (auto&& d : vec)
-        {
+    for (auto&& vec : sessProgresses) {
+      if (vec.size() == size) {
+        size_t ii{0_z};
+        for (auto&& d : vec) {
           data[ii] += d;
           ++ii;
         }
 
         ++i;
       }
-
     }
 
     // Divide
-    for (auto&& d : data)
-    {
+    for (auto&& d : data) {
       d = d / i;
     }
 
     ddata.push_back(data);
   }
-
 }
 
 #if TRECVID_MAPPING
 
 std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGetRelevantShots(
-  KwScoringDataId kwScDataId,
-  const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
-  InputDataTransformId aggId, RankingModelId modelId,
-  const RankingModelSettings& modelSettings, const InputDataTransformSettings& aggSettings,
-  float elapsedTime,
-  size_t imageId
-)
-{
-
+    KwScoringDataId kwScDataId,
+    const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
+    InputDataTransformId aggId, RankingModelId modelId,
+    const RankingModelSettings& modelSettings, const InputDataTransformSettings& aggSettings,
+    float elapsedTime,
+    size_t imageId) {
 #if DEBUG_SHOW_OUR_FRAME_IDS
 
   std::cout << "===============================" << std::endl;
   std::cout << "transformation ID = " << std::to_string((size_t)aggId) << std::endl;
   std::cout << "model ID = " << std::to_string((size_t)modelId) << std::endl;
   std::cout << "model settings: " << std::endl;
-  for (auto&& q : modelSettings)
-  {
-
+  for (auto&& q : modelSettings) {
     std::cout << q << std::endl;
   }
 
   std::cout << "transform settings:" << std::endl;
-  for (auto&& q : aggSettings)
-  {
-
+  for (auto&& q : aggSettings) {
     std::cout << q << std::endl;
   }
   std::cout << "elapsed time  = " << elapsedTime << std::endl;
@@ -3230,10 +2879,9 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
 
   std::vector<CnfFormula> formulae;
 
-  for (auto&& queryString : queriesEncodedPlaintext)
-  {
+  for (auto&& queryString : queriesEncodedPlaintext) {
     // Decode query to logical CNF formula
-    CnfFormula queryFormula{ _pViretKws->GetCanonicalQuery(EncodeAndQuery(queryString)) };
+    CnfFormula queryFormula{_pViretKws->GetCanonicalQuery(EncodeAndQuery(queryString))};
 
     formulae.push_back(queryFormula);
   }
@@ -3249,9 +2897,7 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
   pRankingModel->SetModelSettings(modelSettings);
 
   // Rank it
-  auto [imgOrder, targetImgRank] {pRankingModel->GetRankedImages(formulae, kwScDataId, pAggFn, &_indexKwFrequency, _images, _keywordContainers, 40000, imageId)};
-
-
+  auto [imgOrder, targetImgRank]{pRankingModel->GetRankedImages(formulae, kwScDataId, pAggFn, &_indexKwFrequency, _images, _keywordContainers, 40000, imageId)};
 
   std::vector<std::pair<size_t, size_t>> resultTrecvidShotIds;
   resultTrecvidShotIds.reserve(numResults);
@@ -3259,20 +2905,16 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
 #if DEBUG_SHOW_OUR_FRAME_IDS
 
   std::cout << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << std::endl;
-  for (auto&& q : queriesEncodedPlaintext)
-  {
-
+  for (auto&& q : queriesEncodedPlaintext) {
     std::cout << "Q:" << q << std::endl;
   }
   std::cout << "--------------------" << std::endl;
 
 #endif
 
-  for (auto&& ourFrameId : imgOrder)
-  {
+  for (auto&& ourFrameId : imgOrder) {
     // If we have enough shots already
-    if (resultTrecvidShotIds.size() >= numResults)
-    {
+    if (resultTrecvidShotIds.size() >= numResults) {
       // Stop
       break;
     }
@@ -3283,20 +2925,17 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
 
 #endif
 
-    std::pair<size_t, size_t> trecvidVideoIdShotIdPair{ ConvertToTrecvidShotId(ourFrameId) };
+    std::pair<size_t, size_t> trecvidVideoIdShotIdPair{ConvertToTrecvidShotId(ourFrameId)};
 
     // If this shot is already picked
-    if (trecvidVideoIdShotIdPair.first == SIZE_T_ERROR_VALUE || trecvidVideoIdShotIdPair.second == SIZE_T_ERROR_VALUE)
-    {
+    if (trecvidVideoIdShotIdPair.first == SIZE_T_ERROR_VALUE || trecvidVideoIdShotIdPair.second == SIZE_T_ERROR_VALUE) {
       // Go on to next our frame
       continue;
     }
 
     // Check if it is dropped shot
-    for (auto&&[dVideoId, dShotId] : _tvDroppedShots)
-    {
-      if (trecvidVideoIdShotIdPair.first == dVideoId && trecvidVideoIdShotIdPair.second == dShotId)
-      {
+    for (auto&& [dVideoId, dShotId] : _tvDroppedShots) {
+      if (trecvidVideoIdShotIdPair.first == dVideoId && trecvidVideoIdShotIdPair.second == dShotId) {
         continue;
       }
     }
@@ -3308,10 +2947,10 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
   // Stop timer
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
 
-  size_t calculationElapsedInMs{ static_cast<size_t>(duration.count()) };
-  float totalElapsed{ elapsedTime + ((float)calculationElapsedInMs / 1000) };
+  size_t calculationElapsedInMs{static_cast<size_t>(duration.count())};
+  float totalElapsed{elapsedTime + ((float)calculationElapsedInMs / 1000)};
 
-  float totalElapsedRounded{ ((float)((int)(totalElapsed * 10))) / 10 };
+  float totalElapsedRounded{((float)((int)(totalElapsed * 10))) / 10};
 
   // Reset trecvid shot reference map
   ResetTrecvidShotMap();
@@ -3335,20 +2974,17 @@ std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGe
 }
 
 std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>>
-ImageRanker::ParseTrecvidShotReferencesFromDirectory(const std::string& path) const
-{
+ImageRanker::ParseTrecvidShotReferencesFromDirectory(const std::string& path) const {
   std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> resultMap;
 
-  for (auto&& file : std::filesystem::directory_iterator(path))
-  {
+  for (auto&& file : std::filesystem::directory_iterator(path)) {
     std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>> metaResult;
 
     // Open file for reading as binary from the end side
     std::ifstream ifs(file.path().string(), std::ios::ate);
 
     // If failed to open file
-    if (!ifs)
-    {
+    if (!ifs) {
       LOG_ERROR("Error opening file: "s + file.path().string());
     }
 
@@ -3362,23 +2998,19 @@ ImageRanker::ParseTrecvidShotReferencesFromDirectory(const std::string& path) co
     auto size = std::size_t(end - ifs.tellg());
 
     // If emtpy file
-    if (size == 0)
-    {
+    if (size == 0) {
       LOG_ERROR("Empty file opened!");
     }
 
-
-    size_t lineNr{ 0_z };
+    size_t lineNr{0_z};
     std::string line;
 
     // Iterate until there is something to read from file
-    while (std::getline(ifs, line))
-    {
+    while (std::getline(ifs, line)) {
       ++lineNr;
 
       // Skip first line - there are only column headers
-      if (lineNr == 1)
-      {
+      if (lineNr == 1) {
         continue;
       }
 
@@ -3392,7 +3024,7 @@ ImageRanker::ParseTrecvidShotReferencesFromDirectory(const std::string& path) co
       std::stringstream lineStream(line);
 
       lineStream >> frameFrom;
-      lineStream >> byteBin; // Throw this away
+      lineStream >> byteBin;  // Throw this away
       lineStream >> frameTo;
 
       // Contains std::pair<std::pair<unsigned int, unsigned int>, bool>
@@ -3406,16 +3038,14 @@ ImageRanker::ParseTrecvidShotReferencesFromDirectory(const std::string& path) co
   return resultMap;
 }
 
-std::vector<std::pair<size_t, size_t>> ImageRanker::ParseTrecvidDroppedShotsFile(const std::string& filepath) const
-{
+std::vector<std::pair<size_t, size_t>> ImageRanker::ParseTrecvidDroppedShotsFile(const std::string& filepath) const {
   std::vector<std::pair<size_t, size_t>> metaResult;
 
   // Open file for reading as binary from the end side
   std::ifstream ifs(filepath, std::ios::ate);
 
   // If failed to open file
-  if (!ifs)
-  {
+  if (!ifs) {
     LOG_ERROR("Error opening file: "s + filepath);
   }
 
@@ -3429,28 +3059,25 @@ std::vector<std::pair<size_t, size_t>> ImageRanker::ParseTrecvidDroppedShotsFile
   auto size = std::size_t(end - ifs.tellg());
 
   // If emtpy file
-  if (size == 0)
-  {
+  if (size == 0) {
     LOG_ERROR("Empty file opened!");
   }
 
-
-  size_t lineNr{ 0_z };
+  size_t lineNr{0_z};
   std::string line;
 
   // Iterate until there is something to read from file
-  while (std::getline(ifs, line))
-  {
+  while (std::getline(ifs, line)) {
     ++lineNr;
 
     // cut "shot" prefix
     line = line.substr(4);
 
-    std::string videoIdStr{ line.substr(0, 5) };
-    size_t videoId{ (size_t)strToInt(videoIdStr) };
+    std::string videoIdStr{line.substr(0, 5)};
+    size_t videoId{(size_t)strToInt(videoIdStr)};
 
     line = line.substr(6);
-    size_t shotId{ (size_t)strToInt(line) };
+    size_t shotId{(size_t)strToInt(line)};
 
     metaResult.emplace_back(videoId, shotId);
   }
@@ -3458,32 +3085,27 @@ std::vector<std::pair<size_t, size_t>> ImageRanker::ParseTrecvidDroppedShotsFile
   return metaResult;
 }
 
-
-void ImageRanker::ResetTrecvidShotMap()
-{
+void ImageRanker::ResetTrecvidShotMap() {
   // Just reset all trues to falses
-  for (auto&& submap : _trecvidShotReferenceMap)
-  {
-    for (auto&&[pair, isTaken] : submap)
-    {
+  for (auto&& submap : _trecvidShotReferenceMap) {
+    for (auto&& [pair, isTaken] : submap) {
       isTaken = false;
     }
   }
 }
 
-std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
-{
-  auto ourFrameIdDowncasted{ static_cast<unsigned int>(ourFrameId) };
+std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId) {
+  auto ourFrameIdDowncasted{static_cast<unsigned int>(ourFrameId)};
 
   // Get image pointer
-  const Image* pImg{ GetImageDataById(ourFrameId) };
-  auto ourFrameNumber{ pImg->m_frameNumber };
+  const Image* pImg{GetImageDataById(ourFrameId)};
+  auto ourFrameNumber{pImg->m_frameNumber};
 
   // Get video ID, this is idx in trecvid map vector
-  auto videoId{ static_cast<size_t>(pImg->m_videoId) };
+  auto videoId{static_cast<size_t>(pImg->m_videoId)};
 
   // Get correct submap for this video
-  auto& videoMap{ _trecvidShotReferenceMap[videoId] };
+  auto& videoMap{_trecvidShotReferenceMap[videoId]};
 
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // Return ID PLUS 1, because TRECVID vids start at 1 and our source file starts at 0
@@ -3491,8 +3113,7 @@ std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
   videoId = videoId + 1;
 
   size_t ourFrameNumberA;
-  if (ourFrameNumber > 1)
-  {
+  if (ourFrameNumber > 1) {
     ourFrameNumberA = ourFrameNumber - 1;
   }
 
@@ -3500,23 +3121,19 @@ std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
   // Binary search frame interval, that this frame belongs to
   //
   auto shotIntervalIt = std::lower_bound(videoMap.begin(), videoMap.end(), std::pair(std::pair(ourFrameNumber, ourFrameNumber), false),
-    [](const std::pair<std::pair<size_t, size_t>, bool>& l, const std::pair<std::pair<size_t, size_t>, bool>& r)
-    {
-      auto lVal{ l.first };
-      auto rVal{ r.first };
+                                         [](const std::pair<std::pair<size_t, size_t>, bool>& l, const std::pair<std::pair<size_t, size_t>, bool>& r) {
+                                           auto lVal{l.first};
+                                           auto rVal{r.first};
 
-      return lVal.first < rVal.first && lVal.second < rVal.second;
-    }
-  );
+                                           return lVal.first < rVal.first && lVal.second < rVal.second;
+                                         });
 
-  if (shotIntervalIt == videoMap.end())
-  {
+  if (shotIntervalIt == videoMap.end()) {
     std::cout << "videoId = " << videoId << std::endl;
     std::cout << "ourFrameNumber = " << ourFrameNumber << std::endl;
     std::cout << "shot ref intervals:" << std::endl;
 
-    for (auto&&[pair, t] : videoMap)
-    {
+    for (auto&& [pair, t] : videoMap) {
       std::cout << "[" << pair.first << ", " << pair.second << "]" << std::endl;
     }
     LOG("This frame not present in shot reference.");
@@ -3525,27 +3142,24 @@ std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
   }
 
   // If this shot is already picked
-  if (shotIntervalIt->second == true)
-  {
+  if (shotIntervalIt->second == true) {
     // Return "Fail value"
     return std::pair(SIZE_T_ERROR_VALUE, SIZE_T_ERROR_VALUE);
   }
   // Otherwise mark this shot as picked
-  else
-  {
+  else {
     shotIntervalIt->second = true;
   }
 
   // Get idx of this iterator
-  auto shotIdx{ shotIntervalIt - videoMap.begin() };
+  auto shotIdx{shotIntervalIt - videoMap.begin()};
   assert(shotIdx >= 0);
 
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // Return index PLUS 1, because TRECVID vids start at 1
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  size_t shotId{ static_cast<size_t>(shotIdx + 1) };
+  size_t shotId{static_cast<size_t>(shotIdx + 1)};
 
   return std::pair(videoId, shotId);
 }
 #endif
-

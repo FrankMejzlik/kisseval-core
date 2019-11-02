@@ -27,7 +27,7 @@
 #define W2V_DISTANCE_THRESHOLD 0.5f
 
 
-
+#define GENERATE_SIMULATED_USER_QUERIES_JSON 1
 
 #define SOLUTION_DIR R"(c:\Users\devwe\source\repos\ImageRanker\)"s
 
