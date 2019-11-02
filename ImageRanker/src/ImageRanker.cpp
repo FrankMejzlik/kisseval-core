@@ -1694,23 +1694,24 @@ ChartData ImageRanker::RunModelTestWrapper(
       json j;
       j.array();
       //std::tuple<size_t, CnfFormula, bool>
-      for (auto&& [imageId, cnfFormula, y] : testQueries[0]) {
+      for (auto&& aaa : testQueries) {
+        auto [imageId, cnfFormula, y]{aaa[0]};
+
         json item;
         json itemArr;
         itemArr.array();
 
-        item["ImageId"] = imageId;
+        item["ImageId"] = imageId * 50;
         // std::vector<std::pair<bool, size_t>>
         for (auto&& clauses : cnfFormula) {
           for (auto&& [x, id] : clauses) {
             itemArr += id;
           }
         }
-          item["KwIds"] = itemArr;
+        item["KwIds"] = itemArr;
 
         j += item;
       }
-
 
       std::string s = j.dump(4);
 
@@ -1736,7 +1737,7 @@ ChartData ImageRanker::RunModelTestWrapper(
 
 #else
 
-  auto testQueriesExpanded{std::move(testQueries)};
+  auto testQueriesExpanded{testQueries};
 
 #endif
 
