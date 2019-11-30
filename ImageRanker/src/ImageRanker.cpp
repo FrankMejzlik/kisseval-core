@@ -257,7 +257,7 @@ RankerDataGeneralStatsTuple ImageRanker::GetGeneralRankerDataStatistics(KwScorin
   return resultTuple;
 }
 
-std::string ImageRanker::ExportDataFile(KwScoringDataId kwScDataId, eExportFileTypeId fileType, const std::string& outputFilepath) const
+std::string ImageRanker::ExportDataFile(KwScoringDataId kwScDataId, eExportFileTypeId fileType, const std::string& outputFilepath, bool native) const
 {
   bool succ{ true };
 
@@ -266,7 +266,7 @@ std::string ImageRanker::ExportDataFile(KwScoringDataId kwScDataId, eExportFileT
     switch (fileType)
     {
     case eExportFileTypeId::cUserAnnotatorQueries:
-      succ = ExportUserAnnotatorData(kwScDataId, DataSourceTypeId::cAll, outputFilepath);
+      succ = ExportUserAnnotatorData(kwScDataId, DataSourceTypeId::cAll, outputFilepath, native);
       break;
 
     case eExportFileTypeId::cNetNormalizedScores:
@@ -295,7 +295,7 @@ std::string ImageRanker::ExportDataFile(KwScoringDataId kwScDataId, eExportFileT
 }
 
 
-bool ImageRanker::ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath) const
+bool ImageRanker::ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath, bool native) const
 {
   std::string strType = "";
   if (dataSource == DataSourceTypeId::cAll)
@@ -343,9 +343,29 @@ bool ImageRanker::ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSource
 
     auto ids{ GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQueryNoRecur(idQueryRow[2]) };
 
-    for (auto&& id : ids)
+    if (native)
     {
-      outFileStream << "," << std::to_string(id);
+      size_t cnt = ids.size();
+      size_t i =0;
+      outFileStream << ",\"";
+      for (auto&& id : ids)
+      {
+        std::string str_kw = GetKeywordByWordnetId(kwScDataId, id);
+        outFileStream << str_kw;
+        if (i < cnt - 1)
+        {
+          outFileStream << " ";
+        }
+        ++i;
+      } 
+      outFileStream << "\"";
+    }
+    else 
+    {
+      for (auto&& id : ids)
+      {
+        outFileStream << "," << std::to_string(id);
+      } 
     }
 
     outFileStream << std::endl;
@@ -1581,7 +1601,7 @@ std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(Kw
   auto result = _primaryDb.NoResultQuery(sqlQuery);
   if (result != 0)
   {
-    LOG_ERROR("Inserting queries into DB failed");
+    LOG_ERROR(std::string("query: ") + sqlQuery + std::string("\n\nInserting queries into DB failed with error code: ") + std::to_string(result));
   }
 
   /******************************
@@ -1633,7 +1653,7 @@ void ImageRanker::SubmitUserDataNativeQueries(
   auto result = _primaryDb.NoResultQuery(sqlQuery);
   if (result != 0)
   {
-    LOG_ERROR("Inserting queries into DB failed");
+    LOG_ERROR(std::string("query: ") + sqlQuery + std::string("\n\nInserting queries into DB failed with error code: ") + std::to_string(result));
   }
 }
 

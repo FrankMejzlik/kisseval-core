@@ -178,7 +178,8 @@ using RankerDataGeneralStatsTuple = std::tuple<size_t>;
 enum class eExportFileTypeId {
   cUserAnnotatorQueries = 0,
   cNetNormalizedScores = 1,
-  cQueryNumHits = 2
+  cQueryNumHits = 2,
+  cNativeQueries = 2
 };
 
 

@@ -128,9 +128,9 @@ public:
   RankerDataGeneralStatsTuple GetGeneralRankerDataStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const;
 
 
-  std::string ExportDataFile(KwScoringDataId kwScDataId, eExportFileTypeId fileType, const std::string& outputFilepath) const;
+  std::string ExportDataFile(KwScoringDataId kwScDataId, eExportFileTypeId fileType, const std::string& outputFilepath, bool native) const;
 
-  bool ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath) const;
+  bool ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath, bool native) const;
   bool ExportNormalizedScores(KwScoringDataId kwScDataId, const std::string& outputFilepath) const;
   bool ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath) const;
 
