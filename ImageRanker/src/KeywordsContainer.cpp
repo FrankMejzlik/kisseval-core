@@ -52,7 +52,8 @@ bool KeywordsContainer::Initialize()
   // Sort keywords
   std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
 
-#if PARSE_W2V_FILES
+#if PARSE_W2V_FILE
+
   switch (_pDataType)
   {
   case eKeywordsDataType::cViret1:

@@ -644,6 +644,7 @@ public:
     // Iterate over test queries
     for (auto&& singleQuery : testQueries)
     {
+#if LOG_PRE_AND_PPOST_EXP_RANKS
       {
         auto singleQueryOrig{testQueriesOrig[iii]};
         auto imgId = std::get<0>(singleQueryOrig[0]);
@@ -655,16 +656,16 @@ public:
       }
 
       auto resultImages = GetRankedImages(formulae, kwScDataId, pTransformFn, pIndexKwFrequency, images, keywordContainers, 0ULL, imgId);
-      #if LOG_PRE_AND_PPOST_EXP_RANKS
+      
 
         origRank = resultImages.second;
 
         std::cout << "-----" << std::endl;
         std::cout << origRank << " => ";
 
-      #endif
+      
       }
-
+#endif
       auto imgId = std::get<0>(singleQuery[0]);
 
       std::vector<CnfFormula> formulae;

@@ -2,32 +2,39 @@
 
 #include <stdint.h>
 
+/*! 
+ * If set to 1 queries will be evaluated on original query first
+ * Then on the new ones and printed to stdout
+ */
 #define LOG_PRE_AND_PPOST_EXP_RANKS 0
 
+/*! 
+ * If 1, in initialization it will precompute all 
+ * subword sets for query expansions any substring and whole word substring
+ */
 #define PRECOMPUTE_EXPANSION_SUBWORDS 0
+// Wanna log those? ^^
 #define LOG_DEBUG_PRECOMPUTE_SUBSTRINGS_1 0
+// Wanna log those for ? ^^
 #define LOG_DEBUG_PRECOMPUTE_SUBSTRINGS_2 0
 
-
+//! Toggles parsing WOrd2Vec file on initialization
+#define PARSE_W2V_FILE 0
 // 1-> all substrings, 2 -> substring matching whole word, 3 -> w2v, 23 -> 2&3
 #define SUBSTRING_EXPANSION_SET 23
 
-#define DO_QUERY_DYNAMIC_EXPANSION 0
-#define CONCATS_COEF 1.0f
-#define SUBSTRINGS_COEF 1.0f
-
+//! Toggles if substring expansion will be done on testing queries
 #define DO_SUBSTRING_EXPANSION 0
 
 // 0 AND, 1 OR
 #define SUBSTRING_EXPANSION_TYPE 1
 #define LOG_QUERY_EXPANSION 0
 
-#define PARSE_W2V_FILES 0
 #define LOG_W2V_EXPANSION_KW_SETS 0
 #define W2V_DISTANCE_THRESHOLD 0.5f
 
 
-
+#define GENERATE_SIMULATED_USER_QUERIES_JSON 1
 
 #define SOLUTION_DIR R"(c:\Users\devwe\source\repos\ImageRanker\)"s
 
@@ -175,5 +182,5 @@
  * 3: Herkules --
  * 4: Herkules "image-ranker-collector-data2"
  */
-#define PRIMARY_DB_ID 0
+#define PRIMARY_DB_ID 4
 #include "credentials.h"
