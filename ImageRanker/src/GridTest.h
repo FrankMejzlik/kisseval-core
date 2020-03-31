@@ -1,36 +1,30 @@
 #pragma once
 
 #include <atomic>
-#include <vector>
 #include <chrono>
-#include <thread>
 #include <string>
+#include <thread>
+#include <vector>
 using namespace std::string_literals;
 
 #include "common.h"
 #include "utility.h"
 
-class GridTest
-{
-public:
+class GridTest {
+ public:
   static std::atomic<size_t> numCompletedTests;
 
-  static void ProgressCallback()
-  {
+  static void ProgressCallback() {
     GridTest::numCompletedTests.operator++();
   }
 
-  static std::pair<uint8_t, uint8_t> GetGridTestProgress()
-  {
+  static std::pair<uint8_t, uint8_t> GetGridTestProgress() {
     return std::pair((uint8_t)GridTest::numCompletedTests, (uint8_t)m_testSettings.size());
   }
 
-  static void ReportTestProgress()
-  {
-    while (true)
-    {
-      if (numCompletedTests >= m_testSettings.size())
-      {
+  static void ReportTestProgress() {
+    while (true) {
+      if (numCompletedTests >= m_testSettings.size()) {
         break;
       }
 
@@ -38,10 +32,7 @@ public:
 
       std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     }
-
   }
-
-
 
   static std::vector<InputDataTransformId> m_aggregations;
   static std::vector<DataSourceTypeId> m_queryOrigins;

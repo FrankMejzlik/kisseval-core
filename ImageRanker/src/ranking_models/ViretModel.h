@@ -4,6 +4,7 @@
 
 #include <queue>
 
+extern std::vector<std::vector<size_t> > vec_of_ranks;
 class ViretModel :
   public RankingModelBase
 {
@@ -609,6 +610,8 @@ public:
     const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
   ) const override
   {
+
+      std::vector<size_t> ranks;
 #if LOG_DEBUG_RUN_TESTS
     std::cout << "Running model test ... " << std::endl;
     std::cout << "Result chart will have " << MODEL_TEST_CHART_NUM_X_POINTS << " discrete points on X axis" << std::endl;
@@ -679,6 +682,9 @@ public:
 
       // Rank index is -1 from rank
       size_t transformedRank = (resultImages.second - 1) / scaleDownFactor;
+
+      ranks.emplace_back(resultImages.second);
+
       // Increment this hit
       ++result[transformedRank].second;
 
@@ -752,6 +758,8 @@ public:
       
     }
 
+
+    vec_of_ranks.emplace_back(std::move(ranks));
     return result;
   }
 

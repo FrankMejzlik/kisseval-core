@@ -1,125 +1,98 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <algorithm>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "common.h"
 
-class Image
-{
-public:
-  struct ScoringDataInfo
-  {
+class Image {
+ public:
+  struct ScoringDataInfo {
     float m_min;
     float m_max;
     float m_mean;
     float m_variance;
   };
 
-public:
+ public:
   Image() = default;
 
   Image(
-    size_t id,
-    size_t index,
-    const std::string& filename,
-    size_t videoId, size_t shotId, size_t frameNumber
-  ) :
-    m_imageId(id),
-    m_index(index),
-    m_numSuccessorFrames(0_z),
-    m_filename(std::move(filename)),
-    m_videoId(videoId),
-    m_shotId(shotId),
-    m_frameNumber(frameNumber)
-  {}
+      size_t id,
+      size_t index,
+      const std::string& filename,
+      size_t videoId, size_t shotId, size_t frameNumber) : m_imageId(id),
+                                                           m_index(index),
+                                                           m_numSuccessorFrames(0_z),
+                                                           m_filename(std::move(filename)),
+                                                           m_videoId(videoId),
+                                                           m_shotId(shotId),
+                                                           m_frameNumber(frameNumber) {}
 
-  std::unordered_map<TransformFullId, std::vector<float>>* GetScoringVectorsPtr(KwScoringDataId kwScDataId)
-  {
+  std::unordered_map<TransformFullId, std::vector<float>>* GetScoringVectorsPtr(KwScoringDataId kwScDataId) {
     // If this kwsc ID found
     if (
-      auto&& transformMapIt{ _transformedImageScoringData.find(kwScDataId) };
-      transformMapIt != _transformedImageScoringData.end())
-    {
+        auto&& transformMapIt{_transformedImageScoringData.find(kwScDataId)};
+        transformMapIt != _transformedImageScoringData.end()) {
       return &(transformMapIt->second);
-    }
-    else
-    {
+    } else {
       return nullptr;
     }
   }
 
-  const std::unordered_map<TransformFullId, std::vector<float>>* GetScoringVectorsConstPtr(KwScoringDataId kwScDataId) const
-  {
+  const std::unordered_map<TransformFullId, std::vector<float>>* GetScoringVectorsConstPtr(KwScoringDataId kwScDataId) const {
     // If this kwsc ID found
     if (
-      auto&& transformMapIt{ _transformedImageScoringData.find(kwScDataId) };
-      transformMapIt != _transformedImageScoringData.end())
-    {
+        auto&& transformMapIt{_transformedImageScoringData.find(kwScDataId)};
+        transformMapIt != _transformedImageScoringData.end()) {
       return &(transformMapIt->second);
-    }
-    else
-    {
+    } else {
       return nullptr;
     }
   }
 
-  size_t GetNumBins(KwScoringDataId kwScDataId) const 
-  { 
+  size_t GetNumBins(KwScoringDataId kwScDataId) const {
     // If this kwsc ID found
     if (
-      auto ptr{ GetScoringVectorsConstPtr(kwScDataId) };
-      ptr != nullptr)
-    {
+        auto ptr{GetScoringVectorsConstPtr(kwScDataId)};
+        ptr != nullptr) {
       return ptr->size();
     }
-    
-    return SIZE_T_ERROR_VALUE;    
+
+    return SIZE_T_ERROR_VALUE;
   }
 
-  const std::vector<float>* GetAggregationVectorById(KwScoringDataId kwScDataId, size_t transformId) const
-  {
+  const std::vector<float>* GetAggregationVectorById(KwScoringDataId kwScDataId, size_t transformId) const {
     // If no transform
-    if (transformId == NO_TRANSFORM_ID)
-    {
+    if (transformId == NO_TRANSFORM_ID) {
       auto i = _rawImageScoringData.find(kwScDataId);
 
-      if (i == _rawImageScoringData.end())
-      {
+      if (i == _rawImageScoringData.end()) {
         LOG_ERROR("KsSc ID not found!");
       }
 
       return &(i->second);
     }
 
-
     // If found
     if (
-      auto ptr{ GetScoringVectorsConstPtr(kwScDataId) };
-      ptr != nullptr)
-    {
+        auto ptr{GetScoringVectorsConstPtr(kwScDataId)};
+        ptr != nullptr) {
       if (
-        auto&& it{ ptr->find(transformId) };
-        it != ptr->end())
-      {
+          auto&& it{ptr->find(transformId)};
+          it != ptr->end()) {
         return &(it->second);
-      }
-      else
-      {
+      } else {
         LOG_ERROR("Transformation not found!");
         return nullptr;
       }
-    }
-    else 
-    {
+    } else {
       LOG_ERROR("KwScoringData ID not found!");
       return nullptr;
     }
   }
- 
-
 
   size_t m_imageId;
   size_t m_index;
@@ -130,9 +103,8 @@ public:
   size_t m_shotId;
   size_t m_frameNumber;
 
-
   //! Data clone for user simulation
-  std::map <KwScoringDataId, std::vector<float>> _rawSimUserData;
+  std::map<KwScoringDataId, std::vector<float>> _rawSimUserData;
 
   //! Top ranked keywords for this image
   std::map<KwScoringDataId, KeywordPtrScoringPair> _topKeywords;

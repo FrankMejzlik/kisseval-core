@@ -4,6 +4,8 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
+std::vector<std::vector<size_t>> vec_of_ranks;
+
 ImageRanker::ImageRanker(
     const std::string& imagesPath,
     const std::vector<KeywordsFileRef>& keywordsFileRefs,
@@ -221,17 +223,14 @@ RankerDataGeneralStatsTuple ImageRanker::GetGeneralRankerDataStatistics(KwScorin
   return resultTuple;
 }
 
-std::string ImageRanker::ExportDataFile(KwScoringDataId kwScDataId, eExportFileTypeId fileType, const std::string& outputFilepath, bool native) const
-{
-  bool succ{ true };
+std::string ImageRanker::ExportDataFile(KwScoringDataId kwScDataId, eExportFileTypeId fileType, const std::string& outputFilepath, bool native) const {
+  bool succ{true};
 
-  try
-  {
-    switch (fileType)
-    {
-    case eExportFileTypeId::cUserAnnotatorQueries:
-      succ = ExportUserAnnotatorData(kwScDataId, DataSourceTypeId::cAll, outputFilepath, native);
-      break;
+  try {
+    switch (fileType) {
+      case eExportFileTypeId::cUserAnnotatorQueries:
+        succ = ExportUserAnnotatorData(kwScDataId, DataSourceTypeId::cAll, outputFilepath, native);
+        break;
 
       case eExportFileTypeId::cNetNormalizedScores:
         succ = ExportNormalizedScores(kwScDataId, outputFilepath);
@@ -255,9 +254,7 @@ std::string ImageRanker::ExportDataFile(KwScoringDataId kwScDataId, eExportFileT
   return outputFilepath;
 }
 
-
-bool ImageRanker::ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath, bool native) const
-{
+bool ImageRanker::ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath, bool native) const {
   std::string strType = "";
   if (dataSource == DataSourceTypeId::cAll) {
     strType = "( type=0 OR type=1 OR type=10 OR type=11 )";
@@ -303,29 +300,23 @@ bool ImageRanker::ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSource
 
     auto ids{GetCorrectKwContainerPtr(kwScDataId)->GetCanonicalQueryNoRecur(idQueryRow[2])};
 
-    if (native)
-    {
+    if (native) {
       size_t cnt = ids.size();
-      size_t i =0;
+      size_t i = 0;
       outFileStream << ",\"";
-      for (auto&& id : ids)
-      {
+      for (auto&& id : ids) {
         std::string str_kw = GetKeywordByWordnetId(kwScDataId, id);
         outFileStream << str_kw;
-        if (i < cnt - 1)
-        {
+        if (i < cnt - 1) {
           outFileStream << " ";
         }
         ++i;
-      } 
+      }
       outFileStream << "\"";
-    }
-    else 
-    {
-      for (auto&& id : ids)
-      {
+    } else {
+      for (auto&& id : ids) {
         outFileStream << "," << std::to_string(id);
-      } 
+      }
     }
 
     outFileStream << std::endl;
@@ -1412,8 +1403,7 @@ std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(Kw
   sqlQuery += ";";
 
   auto result = _primaryDb.NoResultQuery(sqlQuery);
-  if (result != 0)
-  {
+  if (result != 0) {
     LOG_ERROR(std::string("query: ") + sqlQuery + std::string("\n\nInserting queries into DB failed with error code: ") + std::to_string(result));
   }
 
@@ -1461,8 +1451,7 @@ void ImageRanker::SubmitUserDataNativeQueries(
   sqlQuery += ";";
 
   auto result = _primaryDb.NoResultQuery(sqlQuery);
-  if (result != 0)
-  {
+  if (result != 0) {
     LOG_ERROR(std::string("query: ") + sqlQuery + std::string("\n\nInserting queries into DB failed with error code: ") + std::to_string(result));
   }
 }
@@ -1715,7 +1704,8 @@ ChartData ImageRanker::RunModelTestWrapper(
       testQueries = GetExtendedRealQueries(kwScDataId, dataSource, simUser);
     } else {
       // Get simulated queries
-      testQueries = GetSimulatedQueries(kwScDataId, dataSource, simUser);
+      //testQueries = GetSimulatedQueries(kwScDataId, dataSource, simUser);
+      testQueries = GetSimulatedQueries(kwScDataId, 20000_z, false, simUser);
 
 #if GENERATE_SIMULATED_USER_QUERIES_JSON
 
@@ -1781,6 +1771,94 @@ ChartData ImageRanker::RunModelTestWrapper(
 
   // Run test
   return pRankingModel->RunModelTestWithOrigQueries(kwScDataId, pNetDataTransformFn, &_indexKwFrequency, testQueriesExpanded, testQueries, _images, _keywordContainers);
+}
+
+std::vector<ChartData> ImageRanker::RunModelSimulatedQueries(
+    std::string run_name,
+    KwScoringDataId kwScDataId,
+    InputDataTransformId aggId, RankingModelId modelId, DataSourceTypeId dataSource,
+    const SimulatedUserSettings& simulatedUserSettings, const RankingModelSettings& aggModelSettings,
+    const InputDataTransformSettings& netDataTransformSettings,
+    size_t expansionSettings) const {
+  std::vector<std::vector<std::vector<UserImgQuery>>> testQueriesVecs;
+  std::vector<ChartData> chartsData;
+
+  for (size_t i = 1; i < 7; ++i) {
+    std::vector<std::vector<UserImgQuery>> testQueries;
+
+    SimulatedUser simUser;
+    simUser.m_exponent = i;
+
+    // Get simulated queries
+    testQueries = GetSimulatedQueries(kwScDataId, 20000_z, false, simUser);
+    testQueriesVecs.emplace_back(std::move(testQueries));
+  }
+
+  for (auto&& testQueries : testQueriesVecs) {
+#if 0
+
+  json j;
+  j.array();
+  //std::tuple<size_t, CnfFormula, bool>
+  for (auto&& aaa : testQueries) {
+    auto [imageId, cnfFormula, y]{aaa[0]};
+
+    json item;
+    json itemArr;
+    itemArr.array();
+
+    item["ImageId"] = imageId * 50;
+    // std::vector<std::pair<bool, size_t>>
+    for (auto&& clauses : cnfFormula) {
+      for (auto&& [x, id] : clauses) {
+        itemArr += id;
+      }
+    }
+    item["KwIds"] = itemArr;
+
+    j += item;
+  }
+
+  std::string s = j.dump(4);
+
+  std::cout << s << std::endl;
+#endif
+
+    auto testQueriesExpanded{testQueries};
+
+    // Get desired transformation
+    auto pNetDataTransformFn = GetAggregationById(aggId);
+    // Setup transformation correctly
+    pNetDataTransformFn->SetTransformationSettings(netDataTransformSettings);
+
+    // Get disired model
+    auto pRankingModel = GetRankingModelById(modelId);
+    // Setup model correctly
+    pRankingModel->SetModelSettings(aggModelSettings);
+
+    // Run test
+    auto charts = pRankingModel->RunModelTestWithOrigQueries(kwScDataId, pNetDataTransformFn, &_indexKwFrequency, testQueriesExpanded, testQueries, _images, _keywordContainers);
+    chartsData.emplace_back(std::move(charts));
+    std::cout << "+++" << std::endl;
+  }
+
+  // now let's put that into the file
+  std::ofstream fs_out_file(run_name + ".csv");
+
+  if (!fs_out_file.is_open())
+    throw std::runtime_error("AAAA");
+
+  for (size_t jj = 0; jj < vec_of_ranks[0].size(); ++jj) {
+    for (size_t i = 0; i < 6; ++i) {
+      fs_out_file << vec_of_ranks[i][jj] << ";";
+    }
+    fs_out_file << std::endl;
+  }
+  fs_out_file.close();
+
+  vec_of_ranks.clear();
+
+  return chartsData;
 }
 
 UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const SimulatedUser& simUser) const {
@@ -1851,7 +1929,8 @@ UserImgQuery ImageRanker::GetSimulatedQueryForImage(size_t imageId, const Simula
   return std::tuple(imageId, queryFormula, true);
 }
 
-std::vector<std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const {
+std::vector<std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(
+    KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const {
   // Determine what id would that be if not simulated user
   DataSourceTypeId dataSourceNotSimulated{static_cast<DataSourceTypeId>(static_cast<int>(dataSource) - SIMULATED_QUERIES_ENUM_OFSET)};
 
@@ -1875,6 +1954,34 @@ std::vector<std::vector<UserImgQuery>> ImageRanker::GetSimulatedQueries(KwScorin
   }
 
   return resultSimulatedQueries;
+}
+
+std::vector<std::vector<UserImgQuery>>
+ImageRanker::GetSimulatedQueries(
+    KwScoringDataId kwScDataId, size_t num_quries,
+    bool sample_targets, const SimulatedUser& simUser) const {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<size_t> dis(0_z, _images.size());
+
+  std::vector<std::vector<UserImgQuery>> result_queries;
+  // Reserve space properly
+  result_queries.reserve(num_quries);
+  for (size_t i = 0_z; i < num_quries; ++i) {
+    size_t img_ID = i;
+
+    if (sample_targets) {
+      img_ID = dis(gen);
+    }
+    auto simulatedQuery{GetSimulatedQueryForImage(img_ID, simUser)};
+
+    std::vector<UserImgQuery> n;
+    n.emplace_back(std::move(simulatedQuery));
+
+    result_queries.push_back(std::move(n));
+  }
+
+  return result_queries;
 }
 
 std::vector<std::vector<UserImgQuery>> ImageRanker::GetExtendedRealQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const {

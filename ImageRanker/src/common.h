@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <cstddef>
+#include <vector>
 
 #include "config.h"
 #include "custom_exceptions.h"
@@ -15,25 +15,22 @@ class Image;
 /*!
  * Enum assigning IDs to types
  */
-enum class eKeywordsDataType
-{
+enum class eKeywordsDataType {
   cViret1 = 0,
   cGoogleAI = 100
 };
 
-inline std::string ToString(eKeywordsDataType id)
-{
+inline std::string ToString(eKeywordsDataType id) {
   std::string resultString;
 
-  switch (id)
-  {
-  case eKeywordsDataType::cViret1:
-    resultString += "eKeywordsDataType::cViret1";
-    break;
+  switch (id) {
+    case eKeywordsDataType::cViret1:
+      resultString += "eKeywordsDataType::cViret1";
+      break;
 
-  case eKeywordsDataType::cGoogleAI:
-    resultString += "eKeywordsDataType::cGoogleAI";
-    break;
+    case eKeywordsDataType::cGoogleAI:
+      resultString += "eKeywordsDataType::cGoogleAI";
+      break;
   }
 
   return resultString;
@@ -53,35 +50,30 @@ inline std::string ToString(eKeywordsDataType id)
  */
 using KeywordsFileRef = std::tuple<eKeywordsDataType, std::string>;
 
-
-
 /*!
  * Enum assigning IDs to scoring data types
  */
-enum class eImageScoringDataType
-{
+enum class eImageScoringDataType {
   cNasNet = 0,
   cGoogLeNet = 1,
   cGoogleAI = 100
 };
 
-inline std::string ToString(eImageScoringDataType id)
-{
+inline std::string ToString(eImageScoringDataType id) {
   std::string resultString;
 
-  switch (id)
-  {
-  case eImageScoringDataType::cNasNet:
-    resultString += "cNasNet";
-    break;
+  switch (id) {
+    case eImageScoringDataType::cNasNet:
+      resultString += "cNasNet";
+      break;
 
-  case eImageScoringDataType::cGoogLeNet:
-    resultString += "cGoogLeNet";
-    break;
+    case eImageScoringDataType::cGoogLeNet:
+      resultString += "cGoogLeNet";
+      break;
 
-  case eImageScoringDataType::cGoogleAI:
-    resultString += "cGoogleAI";
-    break;
+    case eImageScoringDataType::cGoogleAI:
+      resultString += "cGoogleAI";
+      break;
   }
 
   return resultString;
@@ -101,7 +93,6 @@ inline std::string ToString(eImageScoringDataType id)
  *
  */
 using ScoringDataFileRef = std::tuple<eKeywordsDataType, eImageScoringDataType, std::string>;
-
 
 /*!
  * Structure holding data about occurance rate of one keyword
@@ -139,7 +130,7 @@ using TransformFullId = size_t;
  * 
  * FORMAT:
  *  [ ( keywordPtr, keywordScore ), (...)  ]
- */ 
+ */
 using KeywordPtrScoringPair = std::vector<std::tuple<Keyword*, float>>;
 
 using ImageIdFilenameTuple = std::tuple<size_t, std::string>;
@@ -168,7 +159,6 @@ using AnnotatorDataGeneralStatsTuple = std::tuple<size_t, size_t, float, float, 
  */
 using RankerDataGeneralStatsTuple = std::tuple<size_t>;
 
-
 /*!
  *      0 - eUserAnnotatorQueries
  *      1 -  eNetNormalizedScores
@@ -182,16 +172,13 @@ enum class eExportFileTypeId {
   cNativeQueries = 2
 };
 
-
 // ------------------------------------------------
-enum class eTempQueryOpOutter
-{
+enum class eTempQueryOpOutter {
   cSum,
   cProduct
 };
 
-enum class eTempQueryOpInner
-{
+enum class eTempQueryOpInner {
   cSum,
   cProduct,
   cMax
@@ -200,8 +187,7 @@ enum class eTempQueryOpInner
 /*
  * User defined literals
  */
-constexpr size_t operator ""_z(unsigned long long int x)
-{
+constexpr size_t operator""_z(unsigned long long int x) {
   return static_cast<size_t>(x);
 }
 //std::vector<std::vector<std::pair<bool, size_t>>>
@@ -209,37 +195,30 @@ using Clause = std::vector<std::pair<bool, size_t>>;
 using CnfFormula = std::vector<Clause>;
 using InteractiveSearchAction = std::tuple<size_t, size_t, size_t>;
 
-struct StatPerKwSc
-{
-  StatPerKwSc() :
-    m_labelHitProb{0.0f}
-  {}
+struct StatPerKwSc {
+  StatPerKwSc() : m_labelHitProb{0.0f} {}
   float m_labelHitProb;
 };
 
-enum class InteractiveSearchOrigin
-{
+enum class InteractiveSearchOrigin {
   cDeveloper,
   cPublic
 };
 
-enum class RankingModelId
-{
+enum class RankingModelId {
   cBooleanBucket = 1,
   cBooleanExtended = 2,
   cViretBase = 3
 };
 
-enum class InputDataTransformId
-{
+enum class InputDataTransformId {
   cSoftmax = 100,
   cXToTheP = 200,
   cSine = 300,
   cNoTransform = NO_TRANSFORM_ID
 };
 
-enum class DataSourceTypeId
-{
+enum class DataSourceTypeId {
   cDeveloper = 0,
   cPublic = 1,
   cManaged = 2,
@@ -259,8 +238,6 @@ enum class DataSourceTypeId
   cAllExtended = 20999
 
 };
-
-
 
 /*!
 *  FORMAT:
@@ -304,7 +281,6 @@ enum class DataSourceTypeId
 */
 using RankingModelSettings = std::vector<std::string>;
 
-
 /*!
 * FORMAT:
 *  1: cSoftmax
@@ -316,17 +292,11 @@ using RankingModelSettings = std::vector<std::string>;
 */
 using InputDataTransformSettings = std::vector<std::string>;
 
-
 /*!
 * FORMAT:
 *  0 => Simulated user exponent
 */
 using SimulatedUserSettings = std::vector<std::string>;
-
-
-
-
-
 
 using TestSettings = std::tuple<InputDataTransformId, RankingModelId, DataSourceTypeId, RankingModelSettings, InputDataTransformSettings>;
 
@@ -348,14 +318,13 @@ using GameSessionInputQuery = std::tuple<std::string, size_t, std::string>;
  */
 using NearKeywordsResponse = std::vector<Keyword*>;
 
-
 /*! <wordnetID, keyword, description> */
 using KeywordData = std::tuple<size_t, std::string, std::string>;
 
 /*!
  * Output data for drawing chart
  */
-using ChartData = std::vector <std::pair<uint32_t, uint32_t>>;
+using ChartData = std::vector<std::pair<uint32_t, uint32_t>>;
 
 using UserImgQuery = std::tuple<size_t, CnfFormula, bool>;
 using UserImgQueryRaw = std::tuple<size_t, std::vector<size_t>>;
@@ -363,22 +332,15 @@ using UserImgQueryRaw = std::tuple<size_t, std::vector<size_t>>;
 //! FORMAT: (imageId, userNativeQuery, timestamp, sessionId, isManuallyValidated)
 using UserDataNativeQuery = std::tuple<size_t, std::string, size_t, std::string, bool>;
 
-
 //! (datasourceID, percentageofAll)
 using UserAccuracyChartDataMisc = std::tuple<size_t, float>;
 
 using UserAccuracyChartData = std::pair<UserAccuracyChartDataMisc, ChartData>;
 
+class SimulatedUser {
+ public:
+  SimulatedUser() : m_exponent(1) {}
 
-class SimulatedUser
-{
-public:
-  SimulatedUser():
-    m_exponent(1)
-  { }
-
-public:
+ public:
   int m_exponent;
 };
-
-

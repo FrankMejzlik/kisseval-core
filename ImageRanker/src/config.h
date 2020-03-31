@@ -33,7 +33,6 @@
 #define LOG_W2V_EXPANSION_KW_SETS 0
 #define W2V_DISTANCE_THRESHOLD 0.5f
 
-
 #define GENERATE_SIMULATED_USER_QUERIES_JSON 1
 
 #define SOLUTION_DIR R"(c:\Users\devwe\source\repos\ImageRanker\)"s
@@ -53,12 +52,10 @@
 #define DEFAULT_KEYWORD_DATA_TYPE eKeywordsDataType::cViret1
 #define DEFAULT_SCORING_DATA_TYPE eImageScoringDataType::cNasNet
 
-
 //
 // Query tests settings
 //
 #define TEST_QUERIES_ID_MULTIPLIER 1
-
 
 //
 // TRECVID SPECIFIC
@@ -69,13 +66,12 @@
 #define DROPPED_SHOTS_FILEPATH R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\dropped_shots.txt)"
 #define DEBUG_SHOW_OUR_FRAME_IDS 1
 
-
 //
 // Frame filename format
 //
 #define MAX_SUCC_CHECK_COUNT 10
 
-#define FILENAME_START_INDEX 6 // Trecvid one
+#define FILENAME_START_INDEX 6  // Trecvid one
 //#define FILENAME_START_INDEX 0
 
 #define FILENAME_VIDEO_ID_FROM 1
@@ -101,7 +97,6 @@
 #define USER_PLUS_SIMULATED_QUERIES_ENUM_OFSET 20000
 #define MAX_TEMP_QUERY_OFFSET 5
 
-
 //! In seconds
 #define QUERIES_CACHE_LIFETIME 0
 
@@ -112,13 +107,11 @@
 */
 #define KW_FREQUENCY_BASE_DATA 200
 
-
 //! Default settings for main evaluation
 #define DEFAULT_RANKING_MODEL RankingModelId::cViretBase
 #define DEFAULT_AGG_FUNCTION InputDataTransformId::cXToTheP
 #define DEFAULT_MODEL_SETTINGS std::vector<std::string>({"0"s, "0.0f"s, "1"s})
 #define DEFAULT_TRANSFORM_SETTINGS std::vector<std::string>({"0"s, "0"s})
-
 
 #define MODEL_TEST_CHART_NUM_X_POINTS 100
 
@@ -141,7 +134,6 @@
 //! How many suggestions will be returned when called \ref ImageRanker::GetNearKeywords
 #define NUM_SUGESTIONS 5ULL
 
-
 #define LOG_DEBUG_HYPERNYMS_EXPANSION 0
 #define LOG_DEBUG_IMAGE_RANKING 0
 #define LOG_DEBUG_RUN_TESTS 0
@@ -156,19 +148,18 @@
 //! Basic log error macro
 #if THROW_ON_ERROR
 
-  #define LOG_ERROR(x) \
-    std::cout << "ERROR: " << x << "(" << __LINE__ << ", " << __FILE__ << ")" << std::endl; \
-    throw std::runtime_error(std::string(x));
+#define LOG_ERROR(x)                                                                      \
+  std::cout << "ERROR: " << x << "(" << __LINE__ << ", " << __FILE__ << ")" << std::endl; \
+  throw std::runtime_error(std::string(x));
 
 #elif
 
-  #define LOG_ERROR(x) std::cout << "ERROR: " << x << std::endl;
+#define LOG_ERROR(x) std::cout << "ERROR: " << x << std::endl;
 
 #endif
 
- //! Error value for size_t types
-#define SIZE_T_ERROR_VALUE   SIZE_MAX
-
+//! Error value for size_t types
+#define SIZE_T_ERROR_VALUE SIZE_MAX
 
 #define LOG_CALLS 1
 

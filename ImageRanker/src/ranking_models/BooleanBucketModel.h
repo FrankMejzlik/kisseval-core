@@ -293,6 +293,8 @@ public:
 
       size_t transformedRank = resultImages.second / scaleDownFactor;
 
+
+
       // Increment this hit
       ++result[transformedRank].second;
     }

@@ -4,36 +4,31 @@
 #include <iostream>
 #include <vector>
 
-#include "config.h"
 #include <mysql.h>
+#include "config.h"
 
-
-class Database
-{
+class Database {
   // Structs
-public:
-  enum Type
-  {
+ public:
+  enum Type {
     cPrimary,
     cSecondary
   };
 
-public:
+ public:
   Database() = delete;
   Database(
-    std::string_view host,
-    size_t port,
-    std::string_view username,
-    std::string_view password,
-    std::string_view dbName
-  );
+      std::string_view host,
+      size_t port,
+      std::string_view username,
+      std::string_view password,
+      std::string_view dbName);
   ~Database() noexcept;
 
   size_t GetLastId() const;
   std::string GetErrorDescription() const;
   size_t GetErrorCode() const;
-  const std::string& GetDbName() const
-  {
+  const std::string& GetDbName() const {
     return _dbName;
   };
 
@@ -44,19 +39,15 @@ public:
   size_t NoResultQuery(std::string_view query) const;
   std::pair<size_t, std::vector<std::vector<std::string>>> ResultQuery(std::string_view query) const;
 
-  private:
-    MYSQL* _mysqlConnection;
+ private:
+  MYSQL* _mysqlConnection;
 
-    std::string_view _host;
-    size_t _port;
-    std::string _username;
-    std::string _password;
-    std::string _dbName;
-
+  std::string_view _host;
+  size_t _port;
+  std::string _username;
+  std::string _password;
+  std::string _dbName;
 };
-
-
-
 
 /*query = "DROP TABLE IF EXISTS affected_rows";
 if (mysql_real_query(mysql, query, strlen(query)))
@@ -70,7 +61,6 @@ if (mysql_real_query(mysql, query, strlen(query)))
 {
 show_error(mysql);
 }*/
-
 
 ///* Affected rows with INSERT statement */
 //query= "INSERT INTO affected_rows VALUES (1, \"First value\"),"

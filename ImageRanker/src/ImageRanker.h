@@ -6,82 +6,75 @@
 #include <string>
 using namespace std::string_literals;
 
-#include <stack>
-#include <fstream>
 #include <cmath>
-#include <stdexcept>
+#include <fstream>
 #include <iostream>
+#include <stack>
+#include <stdexcept>
 
+#include <array>
+#include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <vector>
-#include <cstdint>
-#include <array>
-#include <filesystem>
 
 #include <chrono>
-#include <unordered_map>
-#include <sstream>
-#include <random>
-#include <queue>
 #include <functional>
+#include <queue>
+#include <random>
+#include <sstream>
+#include <unordered_map>
 
-#include <map>
-#include <set>
-#include <locale>
-#include <thread>
 #include <atomic>
 #include <chrono>
 #include <iomanip>
+#include <locale>
+#include <map>
+#include <set>
+#include <thread>
 
 #include "config.h"
 
-#include "common.h"
-#include "utility.h"
 #include "Database.h"
 #include "FileParser.h"
 #include "Image.hpp"
 #include "KeywordsContainer.h"
+#include "common.h"
+#include "utility.h"
 
 #include "GridTest.h"
 
-#include "transformations.h"
 #include "ranking_models.h"
+#include "transformations.h"
 
-
-
-
-class ImageRanker
-{
+class ImageRanker {
   // Structures
-public:
+ public:
   //! ImageRanker modes
-  enum class eMode
-  {
+  enum class eMode {
     cFullAnalytical = 0,
     cCollector = 1,
     cSearchTool = 2
   };
 
-  
   // Methods
-public:
+ public:
   ImageRanker() = delete;
 
   //! Constructor with data from files with presoftmax file
   ImageRanker(
-    const std::string& imagesPath,
-    const std::vector<KeywordsFileRef>& keywordsFileRefs,
-    const std::vector<ScoringDataFileRef>& imageScoringFileRefs,
-    const std::vector<ScoringDataFileRef>& imageSoftmaxScoringFileRefs = std::vector<ScoringDataFileRef>(),
-    const std::vector<ScoringDataFileRef>& deepFeaturesFileRefs = std::vector<ScoringDataFileRef>(),
-    const std::string& imageToIdMapFilepath = ""s,
-    size_t idOffset = 1ULL,
-    eMode mode = DEFAULT_MODE,
-    const std::vector<KeywordsFileRef>& imageToIdMapFilepaths = std::vector<KeywordsFileRef>()
-  );
+      const std::string& imagesPath,
+      const std::vector<KeywordsFileRef>& keywordsFileRefs,
+      const std::vector<ScoringDataFileRef>& imageScoringFileRefs,
+      const std::vector<ScoringDataFileRef>& imageSoftmaxScoringFileRefs = std::vector<ScoringDataFileRef>(),
+      const std::vector<ScoringDataFileRef>& deepFeaturesFileRefs = std::vector<ScoringDataFileRef>(),
+      const std::string& imageToIdMapFilepath = ""s,
+      size_t idOffset = 1ULL,
+      eMode mode = DEFAULT_MODE,
+      const std::vector<KeywordsFileRef>& imageToIdMapFilepaths = std::vector<KeywordsFileRef>());
 
   ~ImageRanker() noexcept = default;
-  
+
   Keyword* GetKeywordPtr(eKeywordsDataType kwType, const std::string& wordString);
 
   /*!
@@ -91,7 +84,7 @@ public:
    */
   bool Initialize();
   bool Reinitialize();
-  
+
   eMode GetMode() const;
   void SetMode(eMode value);
   size_t GetIdOffset() const;
@@ -111,15 +104,14 @@ public:
 
   const FileParser* GetFileParser() const;
   FileParser* GetFileParser();
-  
+
   void ClearData();
 
   std::tuple<
-    KeywordsGeneralStatsTuple, 
-    ScoringsGeneralStatsTuple, 
-    AnnotatorDataGeneralStatsTuple,
-    RankerDataGeneralStatsTuple
-  >
+      KeywordsGeneralStatsTuple,
+      ScoringsGeneralStatsTuple,
+      AnnotatorDataGeneralStatsTuple,
+      RankerDataGeneralStatsTuple>
   GetGeneralStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const;
 
   KeywordsGeneralStatsTuple GetGeneralKeywordsStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const;
@@ -127,36 +119,30 @@ public:
   AnnotatorDataGeneralStatsTuple GetGeneralAnnotatorDataStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const;
   RankerDataGeneralStatsTuple GetGeneralRankerDataStatistics(KwScoringDataId kwScDataId, DataSourceTypeId dataSourceType) const;
 
-
   std::string ExportDataFile(KwScoringDataId kwScDataId, eExportFileTypeId fileType, const std::string& outputFilepath, bool native) const;
 
   bool ExportUserAnnotatorData(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath, bool native) const;
   bool ExportNormalizedScores(KwScoringDataId kwScDataId, const std::string& outputFilepath) const;
   bool ExportUserAnnotatorNumHits(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const std::string& outputFilepath) const;
 
-
   size_t MapIdToVectorIndex(size_t id) const;
   KeywordsContainer* GetCorrectKwContainerPtr(KwScoringDataId kwScDataId) const;
 
   std::tuple<
-    std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
-    std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
-    std::vector<std::pair<size_t, std::string>>
-  >
+      std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
+      std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
+      std::vector<std::pair<size_t, std::string>>>
   GetImageKeywordsForInteractiveSearch(
-    size_t imageId, size_t numResults, KwScoringDataId kwScDataId,
-    bool withExampleImages
-  );
+      size_t imageId, size_t numResults, KwScoringDataId kwScDataId,
+      bool withExampleImages);
 
   void SubmitInteractiveSearchSubmit(
-    KwScoringDataId kwScDataId,
-    InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, InputDataTransformId transformId,
-    std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
-    std::string sessionId, size_t searchSessionIndex, int endStatus, size_t sessionDuration,
-    std::vector<InteractiveSearchAction> actions,
-    size_t userId = 0_z
-  );
-
+      KwScoringDataId kwScDataId,
+      InteractiveSearchOrigin originType, size_t imageId, RankingModelId modelId, InputDataTransformId transformId,
+      std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
+      std::string sessionId, size_t searchSessionIndex, int endStatus, size_t sessionDuration,
+      std::vector<InteractiveSearchAction> actions,
+      size_t userId = 0_z);
 
   /*!
    * Set how ranker will rank by default
@@ -169,7 +155,6 @@ public:
   void SetMainSettings(InputDataTransformId agg, RankingModelId rankingModel, RankingModelSettings settings);
 
   std::vector<std::pair<TestSettings, ChartData>> RunGridTest(const std::vector<TestSettings>& testSettings);
-
 
   void RecalculateHypernymsInVectorUsingSum(std::vector<float>& binVectorRef);
   void RecalculateHypernymsInVectorUsingMax(std::vector<float>& binVectorRef);
@@ -191,71 +176,67 @@ public:
    * This processes input queries that come from users, generates results and sends them back
    */
   std::vector<GameSessionQueryResult> SubmitUserQueriesWithResults(
-    KwScoringDataId kwScDataId,
-    std::vector<GameSessionInputQuery> inputQueries, 
-    DataSourceTypeId origin = DataSourceTypeId::cPublic
-  );
+      KwScoringDataId kwScDataId,
+      std::vector<GameSessionInputQuery> inputQueries,
+      DataSourceTypeId origin = DataSourceTypeId::cPublic);
 
   void SubmitUserDataNativeQueries(
-    std::vector<
-      std::tuple<size_t, std::string, std::string>>& queries);
-
+      std::vector<
+          std::tuple<size_t, std::string, std::string>>& queries);
 
   const Image* GetRandomImage() const;
   std::tuple<const Image*, bool, size_t> GetCouplingImage() const;
   std::tuple<const Image*, bool, size_t> GetCoupledImagesNative() const;
-  
-  std::vector<const Image*> GetRandomImageSequence(size_t seqLength) const;
 
+  std::vector<const Image*> GetRandomImageSequence(size_t seqLength) const;
 
   NearKeywordsResponse GetNearKeywords(KwScoringDataId kwScDataId, const std::string& prefix, size_t numResults, bool withExampleImages);
   Keyword* GetKeywordByVectorIndex(KwScoringDataId kwScDataId, size_t index);
 
   RelevantImagesResponse GetRelevantImages(
-    KwScoringDataId kwScDataId,
-    const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
-    InputDataTransformId aggId, RankingModelId modelId,
-    const RankingModelSettings& modelSettings, const InputDataTransformSettings& aggSettings,
-    size_t imageId = SIZE_T_ERROR_VALUE,
-    bool withOccuranceValue = false
-  ) const;
+      KwScoringDataId kwScDataId,
+      const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
+      InputDataTransformId aggId, RankingModelId modelId,
+      const RankingModelSettings& modelSettings, const InputDataTransformSettings& aggSettings,
+      size_t imageId = SIZE_T_ERROR_VALUE,
+      bool withOccuranceValue = false) const;
 
   std::pair<uint8_t, uint8_t> GetGridTestProgress() const;
 
-
+  std::vector<ChartData> RunModelSimulatedQueries(
+      std::string run_name,
+      KwScoringDataId kwScDataId,
+      InputDataTransformId aggId, RankingModelId modelId, DataSourceTypeId dataSource,
+      const SimulatedUserSettings& simulatedUserSettings, const RankingModelSettings& aggModelSettings,
+      const InputDataTransformSettings& netDataTransformSettings,
+      size_t expansionSettings) const;
 
   ChartData RunModelTestWrapper(
-    KwScoringDataId kwScDataId,
-    InputDataTransformId aggId, RankingModelId modelId, DataSourceTypeId dataSource,
-    const SimulatedUserSettings& simulatedUserSettings, const RankingModelSettings& aggModelSettings, 
-    const InputDataTransformSettings& netDataTransformSettings,
-    size_t expansionSettings
-  ) const;
-
+      KwScoringDataId kwScDataId,
+      InputDataTransformId aggId, RankingModelId modelId, DataSourceTypeId dataSource,
+      const SimulatedUserSettings& simulatedUserSettings, const RankingModelSettings& aggModelSettings,
+      const InputDataTransformSettings& netDataTransformSettings,
+      size_t expansionSettings) const;
 
   std::vector<std::vector<UserImgQuery>> DoQueryAndExpansion(KwScoringDataId kwScDataId, const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const;
   std::vector<std::vector<UserImgQuery>> DoQueryOrExpansion(KwScoringDataId kwScDataId, const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const;
-  
 
   std::tuple<UserAccuracyChartData, UserAccuracyChartData> GetStatisticsUserKeywordAccuracy(DataSourceTypeId queriesSource = DataSourceTypeId::cAll) const;
 
+  std::string GetKeywordDescriptionByWordnetId(KwScoringDataId kwScDataId, size_t wordnetId) {
+    KeywordsContainer* pkws{nullptr};
 
-  std::string GetKeywordDescriptionByWordnetId(KwScoringDataId kwScDataId, size_t wordnetId)
-  {
-    KeywordsContainer* pkws{ nullptr };
+    switch (std::get<0>(kwScDataId)) {
+      case eKeywordsDataType::cViret1:
+        pkws = _pViretKws;
+        break;
 
-    switch (std::get<0>(kwScDataId))
-    {
-    case eKeywordsDataType::cViret1:
-      pkws = _pViretKws;
-      break;
+      case eKeywordsDataType::cGoogleAI:
+        pkws = _pGoogleKws;
+        break;
 
-    case eKeywordsDataType::cGoogleAI:
-      pkws = _pGoogleKws;
-      break;
-
-    default:
-      LOG_ERROR("Invalid keyword data type.");
+      default:
+        LOG_ERROR("Invalid keyword data type.");
     }
 
     return pkws->GetKeywordDescriptionByWordnetId(wordnetId);
@@ -265,52 +246,53 @@ public:
 
   //! return: <elapsed time, [<video ID, shot ID>]>
   std::tuple<float, std::vector<std::pair<size_t, size_t>>> TrecvidGetRelevantShots(
-    KwScoringDataId kwScDataId,
-    const std::vector < std::string>& queriesEncodedPlaintext, size_t numResults,
-    InputDataTransformId aggId, RankingModelId modelId,
-    const RankingModelSettings& modelSettings, const InputDataTransformSettings& aggSettings,
-    float elapsedTime,
-    size_t imageId = SIZE_T_ERROR_VALUE
-  );
+      KwScoringDataId kwScDataId,
+      const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
+      InputDataTransformId aggId, RankingModelId modelId,
+      const RankingModelSettings& modelSettings, const InputDataTransformSettings& aggSettings,
+      float elapsedTime,
+      size_t imageId = SIZE_T_ERROR_VALUE);
 
 #endif
+  std::vector<std::vector<UserImgQuery>> GetSimulatedQueries(
+      KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const;
 
+  std::vector<std::vector<UserImgQuery>>
+  GetSimulatedQueries(
+      KwScoringDataId kwScDataId, size_t num_quries,
+      bool sample_targets, const SimulatedUser& simUser) const;
   // ^^^^^^^^^^^^^^^^^^^^^^^
   //////////////////////////
   //    API Methods
   //////////////////////////
-  
-private:
 
+ private:
   SimulatedUser GetSimUserSettings(const SimulatedUserSettings& settings) const;
 
   void ComputeApproxDocFrequency(size_t aggregationGuid, float treshold);
 
   size_t GetRandomImageId() const;
- 
 
-  std::string GetKeywordByWordnetId(KwScoringDataId kwScDataId, size_t wordnetId) const
-  {
-    KeywordsContainer* pkws{ nullptr };
+  std::string GetKeywordByWordnetId(KwScoringDataId kwScDataId, size_t wordnetId) const {
+    KeywordsContainer* pkws{nullptr};
 
     // Save shortcuts
-    switch (std::get<0>(kwScDataId))
-    {
-    case eKeywordsDataType::cViret1:
-      pkws = _pViretKws;
-      break;
+    switch (std::get<0>(kwScDataId)) {
+      case eKeywordsDataType::cViret1:
+        pkws = _pViretKws;
+        break;
 
-    case eKeywordsDataType::cGoogleAI:
-      pkws = _pGoogleKws;
-      break;
+      case eKeywordsDataType::cGoogleAI:
+        pkws = _pGoogleKws;
+        break;
     }
     return pkws->GetKeywordByWordnetId(wordnetId);
   }
 
   std::string GetImageFilenameById(size_t imageId) const;
-  
+
   void RunGridTestsFromTo(std::vector<std::pair<TestSettings, ChartData>>* pDest, size_t fromIndex, size_t toIndex);
-  
+
   bool LoadKeywordsFromDatabase(Database::Type type);
   bool LoadImagesFromDatabase(Database::Type type);
   std::vector<std::pair<std::string, float>> GetHighestProbKeywords(KwScoringDataId kwScDataId, size_t imageId, size_t N) const;
@@ -320,18 +302,14 @@ private:
 
   size_t GetNumImages() const { return _images.size(); };
 
-
   void InitializeGridTests();
 
   std::vector<UserImgQueryRaw>& GetCachedQueriesRaw(DataSourceTypeId dataSource) const;
   std::vector<UserDataNativeQuery>& GetUserAnnotationNativeQueriesCached() const;
-  
-  std::vector< std::vector<UserImgQuery>>& GetCachedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource) const;
 
+  std::vector<std::vector<UserImgQuery>>& GetCachedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource) const;
 
-  std::vector< std::vector<UserImgQuery>> GetSimulatedQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& pSimUser) const;
-  std::vector< std::vector<UserImgQuery>> GetSimulatedQueries(size_t count, const SimulatedUser& pSimUser) const;
-  std::vector< std::vector<UserImgQuery>> GetExtendedRealQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const;
+  std::vector<std::vector<UserImgQuery>> GetExtendedRealQueries(KwScoringDataId kwScDataId, DataSourceTypeId dataSource, const SimulatedUser& simUser) const;
 
   UserImgQuery GetSimulatedQueryForImage(size_t imageId, const SimulatedUser& simUser) const;
 
@@ -357,7 +335,7 @@ private:
    * \return True on success
    */
   bool InitializeFullMode();
-  
+
   /*!
    *  Parses binary file containing raw ranking data
    * 
@@ -366,15 +344,12 @@ private:
   std::map<size_t, std::unique_ptr<Image>> ParseRawNetRankingBinFile();
   std::map<size_t, std::unique_ptr<Image>> LowMem_ParseRawNetRankingBinFile();
 
-
-
   /*!
    * Parses Softmax binary file into all \ref Image instances we're now holding
    * 
    * \return 
    */
   bool ParseSoftmaxBinFile();
-  
 
   /*!
   * Parses Little Endian integer from provided buffer starting at specified index
@@ -389,7 +364,7 @@ private:
   * \return  Correct float representation.
   */
   float ParseFloatLE(const std::byte* pFirstByte) const;
-  
+
   /*!
    * Returns true if no specific image filename mapping file provided
    * 
@@ -404,7 +379,7 @@ private:
    * \return 
    */
   TransformationFunctionBase* GetAggregationById(InputDataTransformId id) const;
-  
+
   /*!
    * Gets ranking model instance if found
    * 
@@ -426,9 +401,8 @@ private:
   void GenerateBestHypernymsForImages();
   void PrintIntActionsCsv() const;
 
-
 #if TRECVID_MAPPING
-  
+
   std::pair<size_t, size_t> ConvertToTrecvidShotId(size_t ourFrameId);
   std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> ParseTrecvidShotReferencesFromDirectory(const std::string& path) const;
   std::vector<std::pair<size_t, size_t>> ParseTrecvidDroppedShotsFile(const std::string& filepath) const;
@@ -436,9 +410,8 @@ private:
 
 #endif
 
-
   // Attributes
-private:
+ private:
   FileParser _fileParser;
   Database _primaryDb;
   Database _secondaryDb;
@@ -450,7 +423,7 @@ private:
   std::map<KwScoringDataId, std::string> _imageScoringFileRefs;
   std::map<KwScoringDataId, std::string> _imageSoftmaxScoringFileRefs;
   std::map<KwScoringDataId, std::string> _deepFeaturesFileRefs;
-    
+
   std::map<eKeywordsDataType, KeywordsContainer> _keywordContainers;
   KeywordsContainer* _pViretKws;
   KeywordsContainer* _pGoogleKws;
@@ -467,12 +440,9 @@ private:
   mutable std::map<KwScoringDataId, float> _stat_avgLabels;
   mutable std::map<KwScoringDataId, float> _stat_medianLabels;
   mutable std::map<KwScoringDataId, float> _stat_labelHit;
-  
-
 
 #if TRECVID_MAPPING
   std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> _trecvidShotReferenceMap;
   std::vector<std::pair<size_t, size_t>> _tvDroppedShots;
 #endif
-
 };
