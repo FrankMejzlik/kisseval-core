@@ -31,10 +31,10 @@ class Image {
                                                            m_shotId(shotId),
                                                            m_frameNumber(frameNumber) {}
 
-  std::unordered_map<TransformFullId, std::vector<float>>* GetScoringVectorsPtr(KwScoringDataId kwScDataId) {
+  std::unordered_map<TransformFullId, std::vector<float>>* GetScoringVectorsPtr(DataId data_ID) {
     // If this kwsc ID found
     if (
-        auto&& transformMapIt{_transformedImageScoringData.find(kwScDataId)};
+        auto&& transformMapIt{_transformedImageScoringData.find(data_ID)};
         transformMapIt != _transformedImageScoringData.end()) {
       return &(transformMapIt->second);
     } else {
@@ -42,10 +42,10 @@ class Image {
     }
   }
 
-  const std::unordered_map<TransformFullId, std::vector<float>>* GetScoringVectorsConstPtr(KwScoringDataId kwScDataId) const {
+  const std::unordered_map<TransformFullId, std::vector<float>>* GetScoringVectorsConstPtr(DataId data_ID) const {
     // If this kwsc ID found
     if (
-        auto&& transformMapIt{_transformedImageScoringData.find(kwScDataId)};
+        auto&& transformMapIt{_transformedImageScoringData.find(data_ID)};
         transformMapIt != _transformedImageScoringData.end()) {
       return &(transformMapIt->second);
     } else {
@@ -53,10 +53,10 @@ class Image {
     }
   }
 
-  size_t GetNumBins(KwScoringDataId kwScDataId) const {
+  size_t GetNumBins(DataId data_ID) const {
     // If this kwsc ID found
     if (
-        auto ptr{GetScoringVectorsConstPtr(kwScDataId)};
+        auto ptr{GetScoringVectorsConstPtr(data_ID)};
         ptr != nullptr) {
       return ptr->size();
     }
@@ -64,10 +64,10 @@ class Image {
     return SIZE_T_ERROR_VALUE;
   }
 
-  const std::vector<float>* GetAggregationVectorById(KwScoringDataId kwScDataId, size_t transformId) const {
+  const std::vector<float>* GetAggregationVectorById(DataId data_ID, size_t transformId) const {
     // If no transform
     if (transformId == NO_TRANSFORM_ID) {
-      auto i = _rawImageScoringData.find(kwScDataId);
+      auto i = _rawImageScoringData.find(data_ID);
 
       if (i == _rawImageScoringData.end()) {
         LOG_ERROR("KsSc ID not found!");
@@ -78,7 +78,7 @@ class Image {
 
     // If found
     if (
-        auto ptr{GetScoringVectorsConstPtr(kwScDataId)};
+        auto ptr{GetScoringVectorsConstPtr(data_ID)};
         ptr != nullptr) {
       if (
           auto&& it{ptr->find(transformId)};
@@ -104,15 +104,15 @@ class Image {
   size_t m_frameNumber;
 
   //! Data clone for user simulation
-  std::map<KwScoringDataId, std::vector<float>> _rawSimUserData;
+  std::map<DataId, std::vector<float>> _rawSimUserData;
 
   //! Top ranked keywords for this image
-  std::map<KwScoringDataId, KeywordPtrScoringPair> _topKeywords;
+  std::map<DataId, KeywordPtrScoringPair> _topKeywords;
 
   //! Raw input data
-  std::map<KwScoringDataId, std::vector<float>> _rawImageScoringData;
-  std::map<KwScoringDataId, ScoringDataInfo> _rawImageScoringDataInfo;
+  std::map<DataId, std::vector<float>> _rawImageScoringData;
+  std::map<DataId, ScoringDataInfo> _rawImageScoringDataInfo;
 
   //! Aggregation vectors calculated by provided aggregations
-  std::map<KwScoringDataId, std::unordered_map<TransformFullId, std::vector<float>>> _transformedImageScoringData;
+  std::map<DataId, std::unordered_map<TransformFullId, std::vector<float>>> _transformedImageScoringData;
 };

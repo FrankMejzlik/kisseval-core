@@ -1,9 +1,6 @@
 #pragma once
 
-
 #include "TransformationFunctionBase.h"
-
-
 
 /*!
  * Softmax aggregation
@@ -11,26 +8,18 @@
  * WARNING:
  *    Calling CalculateTransformedVectors() will load values from file.
  */
-class TransformationSoftmax :
-  public TransformationFunctionBase
+class TransformationSoftmax : public TransformationFunctionBase
 {
-public:
+ public:
   struct Settings
   {
-    
   };
 
   // Methods
-public:
-  TransformationSoftmax() :
-    TransformationFunctionBase(InputDataTransformId::cSoftmax)
-  {
-  }
+ public:
+  TransformationSoftmax() : TransformationFunctionBase(InputDataTransformId::cSoftmax) {}
 
-  virtual void SetTransformationSettings(InputDataTransformSettings settingsString) override
-  {
-
-  }
+  virtual void SetTransformationSettings(InputDataTransformSettings settingsString) override {}
 
   virtual bool CalculateTransformedVectors(const std::vector<std::unique_ptr<Image>>& images) const
   {
@@ -38,21 +27,16 @@ public:
     return true;
   }
 
-  virtual bool LowMem_CalculateTransformedVectors(const std::vector<std::unique_ptr<Image>>& images, size_t settings) const
+  virtual bool LowMem_CalculateTransformedVectors(const std::vector<std::unique_ptr<Image>>& images,
+                                                  size_t settings) const
   {
     // Softmax file is loaded by default
     return true;
   }
 
-
-  virtual size_t GetGuidFromSettings() const override
-  {
-    return GetGuid(0ULL);
-  }
-
+  virtual size_t GetGuidFromSettings() const override { return GetGuid(0ULL); }
 
   // Attributes
-private:
+ private:
   Settings _settings;
-
 };

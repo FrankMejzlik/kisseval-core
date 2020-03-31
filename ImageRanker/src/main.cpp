@@ -5,25 +5,26 @@
 #include <thread>
 #include "ImageRanker.h"
 
-int main() {
+int main()
+{
   ImageRanker ranker{
       R"(c:\Users\devwe\data\imageset1_V3C1\media\images\)",
       std::vector<KeywordsFileRef>{
-          std::tuple(eKeywordsDataType::cViret1,
+          std::tuple(eVocabularyId::VIRET_1200_WORDNET_2019,
                      R"(c:\Users\devwe\data\imageset0_V3C1_20k\viret_keywords\keyword_classes.txt)"s)},
-      std::vector<ScoringDataFileRef>{std::tuple(std::tuple(
-          eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet,
+      std::vector<DataFileSrc>{std::tuple(std::tuple(
+          eVocabularyId::VIRET_1200_WORDNET_2019, eScoringsId::NASNET_2019,
           R"(c:\Users\devwe\data\imageset0_V3C1_20k\viret_keywords\dataset0\Studenti_NasNetLarge.pre-softmax)"))},
-      std::vector<ScoringDataFileRef>{std::tuple(std::tuple(
-          eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet,
+      std::vector<DataFileSrc>{std::tuple(std::tuple(
+          eVocabularyId::VIRET_1200_WORDNET_2019, eScoringsId::NASNET_2019,
           R"(c:\Users\devwe\data\imageset0_V3C1_20k\viret_keywords\dataset0\Studenti_NasNetLarge.softmax)"))},
-      std::vector<ScoringDataFileRef>{},
+      std::vector<DataFileSrc>{},
       R"(c:\Users\devwe\data\imageset0_V3C1_20k\viret_keywords\dataset0\files.txt)",
       1ULL,
       ImageRanker::eMode::cFullAnalytical,
       std::vector<KeywordsFileRef>{
           std::tuple(
-              eKeywordsDataType::cViret1,
+              eVocabularyId::VIRET_1200_WORDNET_2019,
               SOLUTION_DIR +
                   R"(c:\Users\devwe\data\imageset0_V3C1_20k\viret_keywords\LSC2018-NASNet.all_must_match.word2vec.label)"s),
       }};
@@ -34,13 +35,15 @@ int main() {
   su.m_exponent = 4;
 
   auto charts = ranker.RunModelSimulatedQueries(
-      "MULT-SUM", KwScoringDataId(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet),
-      InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (DataSourceTypeId)999,
+      "MULT-SUM", DataId(eVocabularyId::VIRET_1200_WORDNET_2019, eScoringsId::NASNET_2019),
+      InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (UserDataSourceId)999,
       std::vector<std::string>({"0"s}), std::vector<std::string>({"0"s, "0.0"s, "0"s}),
       std::vector<std::string>({"1"s, "0"s}), 0);
 
-  for (auto&& chart : charts) {
-    for (auto&& [i, num] : chart) {
+  for (auto&& chart : charts)
+  {
+    for (auto&& [i, num] : chart)
+    {
       std::cout << i << "=>" << num << std::endl;
     }
     std::cout << "==========================================" << std::endl;
@@ -52,13 +55,15 @@ int main() {
   std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
 
   charts = ranker.RunModelSimulatedQueries(
-      "MULT-MAX", KwScoringDataId(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet),
-      InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (DataSourceTypeId)999,
+      "MULT-MAX", DataId(eVocabularyId::VIRET_1200_WORDNET_2019, eScoringsId::NASNET_2019),
+      InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (UserDataSourceId)999,
       std::vector<std::string>({"0"s}), std::vector<std::string>({"0"s, "0.0"s, "1"s}),
       std::vector<std::string>({"1"s, "1"s}), 0);
 
-  for (auto&& chart : charts) {
-    for (auto&& [i, num] : chart) {
+  for (auto&& chart : charts)
+  {
+    for (auto&& [i, num] : chart)
+    {
       std::cout << i << "=>" << num << std::endl;
     }
     std::cout << "==========================================" << std::endl;
@@ -70,13 +75,15 @@ int main() {
   std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
 
   charts = ranker.RunModelSimulatedQueries(
-      "SUM-MAX", KwScoringDataId(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet),
-      InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (DataSourceTypeId)999,
+      "SUM-MAX", DataId(eVocabularyId::VIRET_1200_WORDNET_2019, eScoringsId::NASNET_2019),
+      InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (UserDataSourceId)999,
       std::vector<std::string>({"0"s}), std::vector<std::string>({"0"s, "0.0"s, "2"s}),
       std::vector<std::string>({"1"s, "1"s}), 0);
 
-  for (auto&& chart : charts) {
-    for (auto&& [i, num] : chart) {
+  for (auto&& chart : charts)
+  {
+    for (auto&& [i, num] : chart)
+    {
       std::cout << i << "=>" << num << std::endl;
     }
     std::cout << "==========================================" << std::endl;
@@ -88,13 +95,15 @@ int main() {
   std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
 
   charts = ranker.RunModelSimulatedQueries(
-      "SUM-SUM", KwScoringDataId(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet),
-      InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (DataSourceTypeId)999,
+      "SUM-SUM", DataId(eVocabularyId::VIRET_1200_WORDNET_2019, eScoringsId::NASNET_2019),
+      InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (UserDataSourceId)999,
       std::vector<std::string>({"0"s}), std::vector<std::string>({"0"s, "0.0"s, "3"s}),
       std::vector<std::string>({"1"s, "0"s}), 0);
 
-  for (auto&& chart : charts) {
-    for (auto&& [i, num] : chart) {
+  for (auto&& chart : charts)
+  {
+    for (auto&& [i, num] : chart)
+    {
       std::cout << i << "=>" << num << std::endl;
     }
     std::cout << "==========================================" << std::endl;

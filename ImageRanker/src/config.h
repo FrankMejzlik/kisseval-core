@@ -49,8 +49,8 @@
 //
 // Keyword types
 //
-#define DEFAULT_KEYWORD_DATA_TYPE eKeywordsDataType::cViret1
-#define DEFAULT_SCORING_DATA_TYPE eImageScoringDataType::cNasNet
+#define DEFAULT_KEYWORD_DATA_TYPE eVocabularyId::VIRET_1200_WORDNET_2019
+#define DEFAULT_SCORING_DATA_TYPE eScoringsId::NASNET_2019
 
 //
 // Query tests settings

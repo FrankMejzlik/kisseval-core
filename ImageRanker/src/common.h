@@ -5,38 +5,174 @@
 #ifndef _IR_COMMON_H_
 #define _IR_COMMON_H_
 
-#include <cstddef>
-#include <vector>
-
 #include "config.h"
 #include "custom_exceptions.h"
 
-using size_t = std::size_t;
+/**
+ * Unique IDs of all possible frames datasets used.
+ *
+ * EXAMPLES: V3C1 20k subset, V3C1
+ */
+enum class eDatasetId
+{
+  V3C1_20K_SUBSET_2019,
+  V3C1_2019,
+  V3C1_VBS2020
+};
+
+/**
+ * Unique IDs of all possible vocabularies used.
+ *
+ * EXAMPLES: Viret synsets, Google AI set, BoW vocabulary
+ */
+enum class eVocabularyId
+{
+  VIRET_1200_WORDNET_2019 = 0,
+  GOOGLE_AI_20K_2019 = 100,
+  BOW_2020 = 1000
+};
+
+/**
+ * Unique IDs of all possible vocabularies used.
+ *
+ * EXAMPLES: NasNet 2019 by TS, GoogLeNet 2019 by TS, Google AI from 2019, BoW variant by Xirong
+ */
+enum class eScoringsId
+{
+  NASNET_2019 = 0,
+  GOOG_LE_NET_2019 = 1,
+  GOOGLE_AI_2019 = 100,
+  RESNEXT_RESNET_BOW_2020 = 1000
+};
+
+/**
+ * Type representing reference to file containing input image scoring data.
+ *
+ * FORMAT: ( <vocabulary_type>, <scoring_type>, <filepath> )
+ *
+ *  <vocabulary_type>:
+      Unique ID determining what format file is in (e.g. Viret, Google AI Vision).
+ *    - \see enum class eKeywordsDataType
+ *
+ *  <scoring_type>:
+ *    Unique ID determining what how scoring data has been generated.
+ *    - \see enum class eImageScoringDataType
+ *
+ *  <filepath>:
+*     String containing filepath (relative of absolute) to the data file.
+ *
+ */
+using DataFileSrc = std::tuple<eVocabularyId, eScoringsId, std::string>;
+
+/**
+ * Base class for all usable data packs.
+ */
+struct BaseDataPack
+{
+  eDatasetId target_dataset;
+};
+
+/**
+ * Represents one input dataset containg selected frames we have scorings for.
+ */
+struct DatasetDataPack : public BaseDataPack
+{
+  std::string images_dir;
+  std::string imgage_to_ID_fpth;
+};
+
+/**
+ * Represents input data for 'Viret' based models.
+ */
+struct ViretDataPack : public BaseDataPack
+{
+  /*
+   * Substructures
+   */
+  struct VocabData
+  {
+    DataFileSrc keyword_synsets_fpth;
+  };
+
+  struct ScoreData
+  {
+    DataFileSrc presoftmax_scorings_fpth;
+    DataFileSrc softmax_scorings_fpth;
+    DataFileSrc deep_features_fpth;
+  };
+
+  /*
+   * Member variables
+   */
+  VocabData vocabulary_data;
+  ScoreData score_data;
+};
+
+/**
+ * Represents input data for 'Google AI' based models.
+ */
+struct GoogleDataPack : public BaseDataPack
+{
+  struct VocabData
+  {
+    DataFileSrc keyword_synsets_fpth;
+  };
+
+  struct ScoreData
+  {
+    DataFileSrc presoftmax_scorings_fpth;
+    DataFileSrc softmax_scorings_fpth;
+    DataFileSrc deep_features_fpth;
+  };
+
+  VocabData vocabulary_data;
+  ScoreData score_data;
+};
+
+/**
+ * Represents input data for 'BoW/W2V++' based models.
+ */
+struct BowDataPack : public BaseDataPack
+{
+  struct VocabData
+  {
+    DataFileSrc word_to_idx_fpth;
+    DataFileSrc kw_features_fpth;
+    DataFileSrc kw_bias_vec_fpth;
+    DataFileSrc kw_PCA_mat_fpth;
+  };
+
+  struct ScoreData
+  {
+    DataFileSrc img_features_fpth;
+  };
+
+  VocabData vocabulary_data;
+  ScoreData score_data;
+};
+
+// =====================================
+//  NOT REFACTORED CODE BELOW
+// =====================================
+
+#include <cstddef>
+#include <vector>
 
 // Forward decls
 class Keyword;
 class Image;
 
-/*!
- * Enum assigning IDs to types
- */
-enum class eKeywordsDataType
-{
-  cViret1 = 0,
-  cGoogleAI = 100
-};
-
-inline std::string ToString(eKeywordsDataType id)
+inline std::string ToString(eVocabularyId id)
 {
   std::string resultString;
 
   switch (id)
   {
-    case eKeywordsDataType::cViret1:
+    case eVocabularyId::VIRET_1200_WORDNET_2019:
       resultString += "eKeywordsDataType::cViret1";
       break;
 
-    case eKeywordsDataType::cGoogleAI:
+    case eVocabularyId::GOOGLE_AI_20K_2019:
       resultString += "eKeywordsDataType::cGoogleAI";
       break;
   }
@@ -56,54 +192,29 @@ inline std::string ToString(eKeywordsDataType id)
  *  filepath - String containing filepath (relative of absolute) to file
  *
  */
-using KeywordsFileRef = std::tuple<eKeywordsDataType, std::string>;
+using KeywordsFileRef = std::tuple<eVocabularyId, std::string>;
 
-/*!
- * Enum assigning IDs to scoring data types
- */
-enum class eImageScoringDataType
-{
-  cNasNet = 0,
-  cGoogLeNet = 1,
-  cGoogleAI = 100
-};
-
-inline std::string ToString(eImageScoringDataType id)
+inline std::string ToString(eScoringsId id)
 {
   std::string resultString;
 
   switch (id)
   {
-    case eImageScoringDataType::cNasNet:
+    case eScoringsId::NASNET_2019:
       resultString += "cNasNet";
       break;
 
-    case eImageScoringDataType::cGoogLeNet:
+    case eScoringsId::GOOG_LE_NET_2019:
       resultString += "cGoogLeNet";
       break;
 
-    case eImageScoringDataType::cGoogleAI:
+    case eScoringsId::GOOGLE_AI_2019:
       resultString += "cGoogleAI";
       break;
   }
 
   return resultString;
 }
-
-/*!
- * Type representing reference to file containing input image scoring data
- *
- * FORMAT:
- *  (KW type ID, scoring type ID, filepath)
- *
- *  KW type ID - unique ID determining what format file is in (e.g. Viret, Google AI Vision)
- *    \see enum class eKeywordsDataType
- *  scoring type ID - unique ID determining what how scoring data has been generated
- *    \see enum class eImageScoringDataType
- *  filepath - String containing filepath (relative of absolute) to file
- *
- */
-using ScoringDataFileRef = std::tuple<eKeywordsDataType, eImageScoringDataType, std::string>;
 
 /*!
  * Structure holding data about occurance rate of one keyword
@@ -131,7 +242,7 @@ using KeywordOccurance = std::tuple<size_t, std::string, float>;
 using RelevantImagesResponse = std::tuple<std::vector<const Image*>, std::vector<KeywordOccurance>, size_t>;
 
 //! Identifier for ( kwTypeId, scoringTypeId )
-using KwScoringDataId = std::tuple<eKeywordsDataType, eImageScoringDataType>;
+using DataId = std::tuple<eVocabularyId, eScoringsId>;
 
 //! Unique ID for type of final data transformation
 using TransformFullId = size_t;
@@ -234,7 +345,7 @@ enum class InputDataTransformId
   cNoTransform = NO_TRANSFORM_ID
 };
 
-enum class DataSourceTypeId
+enum class UserDataSourceId
 {
   cDeveloper = 0,
   cPublic = 1,
@@ -315,7 +426,7 @@ using InputDataTransformSettings = std::vector<std::string>;
  */
 using SimulatedUserSettings = std::vector<std::string>;
 
-using TestSettings = std::tuple<InputDataTransformId, RankingModelId, DataSourceTypeId, RankingModelSettings,
+using TestSettings = std::tuple<InputDataTransformId, RankingModelId, UserDataSourceId, RankingModelSettings,
                                 InputDataTransformSettings>;
 
 using Buffer = std::vector<std::byte>;

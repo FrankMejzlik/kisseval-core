@@ -4,10 +4,9 @@
 
 #include <queue>
 
-class BooleanBucketModel :
-  public RankingModelBase
+class BooleanBucketModel : public RankingModelBase
 {
-public:
+ public:
   enum class eInBucketSorting
   {
     eNone,
@@ -25,24 +24,21 @@ public:
     eTempQueryOpInner m_tempQueryInnerOperation;
   };
 
-
   // Methods
-public:
+ public:
   Settings GetDefaultSettings() const
   {
     // Return default settings instance
-    return Settings{ 
-      0U, 
-      0.01f, 
-      eInBucketSorting::eNone,
-      eTempQueryOpOutter::cProduct, // Temporal query OUTTER operation
-      eTempQueryOpInner::cMax // Temporal query INNER operation 
+    return Settings{
+        0U, 0.01f, eInBucketSorting::eNone,
+        eTempQueryOpOutter::cProduct,  // Temporal query OUTTER operation
+        eTempQueryOpInner::cMax        // Temporal query INNER operation
     };
   }
 
   virtual void SetModelSettings(RankingModelSettings settingsString) override
   {
-    _settings =  GetDefaultSettings();
+    _settings = GetDefaultSettings();
 
     // If setting 0 set
     if (settingsString.size() >= 1 && settingsString[0].size() >= 0)
@@ -70,19 +66,14 @@ public:
     {
       _settings.m_tempQueryInnerOperation = static_cast<eTempQueryOpInner>(strToInt(settingsString[4]));
     }
-
   }
 
   virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
-    const std::vector<CnfFormula>& queryFormulae,
-    KwScoringDataId kwScDataId,
-    TransformationFunctionBase* pAggregation,
-    const std::vector<float>* pIndexKwFrequency,
-    const std::vector<std::unique_ptr<Image>>& _imagesCont,
-    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers,
-    size_t numResults = SIZE_T_ERROR_VALUE,
-    size_t targetImageId = SIZE_T_ERROR_VALUE
-  ) const override
+      const std::vector<CnfFormula>& queryFormulae, DataId data_ID,
+      TransformationFunctionBase* pAggregation, const std::vector<float>* pIndexKwFrequency,
+      const std::vector<std::unique_ptr<Image>>& _imagesCont,
+      const std::map<eVocabularyId, KeywordsContainer>& keywordContainers, size_t numResults = SIZE_T_ERROR_VALUE,
+      size_t targetImageId = SIZE_T_ERROR_VALUE) const override
   {
     // If want all results
     if (numResults == SIZE_T_ERROR_VALUE)
@@ -90,8 +81,8 @@ public:
       numResults = _imagesCont.size();
     }
 
-    auto cmp = [](const std::pair<std::pair<size_t, float>, size_t>& left, const std::pair<std::pair<size_t, float>, size_t>& right)
-    {
+    auto cmp = [](const std::pair<std::pair<size_t, float>, size_t>& left,
+                  const std::pair<std::pair<size_t, float>, size_t>& right) {
       if (left.first.first > right.first.first)
       {
         // First is greater
@@ -118,55 +109,52 @@ public:
     std::vector<std::pair<std::pair<size_t, float>, size_t>> container;
     container.reserve(_imagesCont.size());
 
-    std::priority_queue<
-      std::pair<std::pair<size_t, float>, size_t>, 
-      std::vector<std::pair<std::pair<size_t, float>, size_t>>, 
-      decltype(cmp)
-    > minHeap(cmp, std::move(container));
+    std::priority_queue<std::pair<std::pair<size_t, float>, size_t>,
+                        std::vector<std::pair<std::pair<size_t, float>, size_t>>, decltype(cmp)>
+        minHeap(cmp, std::move(container));
 
     // Extract desired number of images out of min heap
     std::pair<std::vector<size_t>, size_t> result;
     result.first.reserve(numResults);
 
-
     // Check every image if satisfies query formula
     for (auto&& pImg : _imagesCont)
     {
       // Prepare pointer for ranking vector aggregation data
-      const std::vector<float>* pImgRankingVector{ pImg->GetAggregationVectorById(kwScDataId, pAggregation->GetGuidFromSettings()) };
+      const std::vector<float>* pImgRankingVector{
+          pImg->GetAggregationVectorById(data_ID, pAggregation->GetGuidFromSettings())};
 
-      size_t imageSucc{ 0ULL };
-      float imageSubRank{ 0.0f };
+      size_t imageSucc{0ULL};
+      float imageSubRank{0.0f};
 
       // Itarate through clauses connected with AND
       for (auto&& clause : queryFormulae[0])
       {
-        bool clauseSucc{ false };
+        bool clauseSucc{false};
         size_t negatePenalty{0ULL};
 
         // Iterate through predicates
         for (auto&& var : clause)
         {
-          float factor{ 1.0f };
-          auto binRankVal{ (*pImgRankingVector)[var.second] };
+          float factor{1.0f};
+          auto binRankVal{(*pImgRankingVector)[var.second]};
 
           switch (_settings.m_keywordFrequencyHandling)
           {
-            // No care about TFIDF
-          case 0:
+              // No care about TFIDF
+            case 0:
 
-            break;
+              break;
 
-            // Multiply with TFIDF
-          case 1:
-            factor = (*pIndexKwFrequency)[var.second];
-            binRankVal = binRankVal * factor;
-            break;
+              // Multiply with TFIDF
+            case 1:
+              factor = (*pIndexKwFrequency)[var.second];
+              binRankVal = binRankVal * factor;
+              break;
 
-          default:
-            LOG_ERROR("Unknown keyword freq operation.");
+            default:
+              LOG_ERROR("Unknown keyword freq operation.");
           }
-
 
           // If this variable satisfies this clause
           if (binRankVal >= _settings.m_trueTreshold)
@@ -190,31 +178,31 @@ public:
 
             switch (_settings.m_inBucketSorting)
             {
-            case eInBucketSorting::eNone:
-            {
-              // No sorting within bucket
-            }
-            break;
-
-            case eInBucketSorting::eSum:
-            {
-              // Summ sort
-              imageSubRank += binRankVal;
-            }
-            break;
-
-            case eInBucketSorting::eMax:
-            {
-              // Get max
-              if (imageSubRank < binRankVal)
+              case eInBucketSorting::eNone:
               {
-                imageSubRank = binRankVal;
+                // No sorting within bucket
               }
-            }
-            break;
+              break;
 
-            default:
-              LOG_ERROR("Unknown query operation.");
+              case eInBucketSorting::eSum:
+              {
+                // Summ sort
+                imageSubRank += binRankVal;
+              }
+              break;
+
+              case eInBucketSorting::eMax:
+              {
+                // Get max
+                if (imageSubRank < binRankVal)
+                {
+                  imageSubRank = binRankVal;
+                }
+              }
+              break;
+
+              default:
+                LOG_ERROR("Unknown query operation.");
             }
           }
         }
@@ -230,7 +218,7 @@ public:
       minHeap.push(std::pair(std::pair(imageSucc, imageSubRank), pImg->m_imageId));
     }
 
-    size_t sizeHeap{ minHeap.size() };
+    size_t sizeHeap{minHeap.size()};
     for (size_t i = 0ULL; i < sizeHeap; ++i)
     {
       auto pair = minHeap.top();
@@ -246,21 +234,17 @@ public:
       {
         result.first.emplace_back(pair.second);
       }
-
     }
 
     return result;
   }
 
-   virtual ChartData RunModelTestWithOrigQueries(
-    KwScoringDataId kwScDataId,
-    TransformationFunctionBase* pAggregation,
-    const std::vector<float>* pIndexKwFrequency,
-    const std::vector<std::vector<UserImgQuery>>& testQueries,
-    const std::vector<std::vector<UserImgQuery>>& testQueriesOrig,
-    const std::vector<std::unique_ptr<Image>>& _imagesCont,
-    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
-  ) const override
+  virtual ChartData RunModelTestWithOrigQueries(
+      DataId data_ID, TransformationFunctionBase* pAggregation, const std::vector<float>* pIndexKwFrequency,
+      const std::vector<std::vector<UserImgQuery>>& testQueries,
+      const std::vector<std::vector<UserImgQuery>>& testQueriesOrig,
+      const std::vector<std::unique_ptr<Image>>& _imagesCont,
+      const std::map<eVocabularyId, KeywordsContainer>& keywordContainers) const override
   {
     uint32_t maxRank = (uint32_t)_imagesCont.size();
 
@@ -270,7 +254,7 @@ public:
     std::vector<std::pair<uint32_t, uint32_t>> result;
     result.resize(MODEL_TEST_CHART_NUM_X_POINTS + 1);
 
-    uint32_t label{ 0ULL };
+    uint32_t label{0ULL};
     for (auto&& column : result)
     {
       column.first = label;
@@ -283,29 +267,26 @@ public:
       auto imgId = std::get<0>(singleQuery[0]);
 
       std::vector<CnfFormula> formulae;
-      for (auto&&[imgId, queryFormula, withExamples] : singleQuery)
+      for (auto&& [imgId, queryFormula, withExamples] : singleQuery)
       {
         formulae.push_back(queryFormula);
       }
 
-      auto resultImages = GetRankedImages(formulae, kwScDataId, pAggregation, 
-        pIndexKwFrequency, _imagesCont, keywordContainers, 0ULL, imgId);
+      auto resultImages = GetRankedImages(formulae, data_ID, pAggregation, pIndexKwFrequency, _imagesCont,
+                                          keywordContainers, 0ULL, imgId);
 
       size_t transformedRank = resultImages.second / scaleDownFactor;
-
-
 
       // Increment this hit
       ++result[transformedRank].second;
     }
 
-
-    uint32_t currCount{ 0ULL };
+    uint32_t currCount{0ULL};
 
     // Compute final chart values
     for (auto&& r : result)
     {
-      uint32_t tmp{ r.second };
+      uint32_t tmp{r.second};
       r.second = currCount;
       currCount += tmp;
     }
@@ -313,15 +294,11 @@ public:
     return result;
   }
 
-
-  virtual ChartData RunModelTest(
-    KwScoringDataId kwScDataId,
-    TransformationFunctionBase* pAggregation,
-    const std::vector<float>* pIndexKwFrequency,
-    const std::vector<std::vector<UserImgQuery>>& testQueries,
-    const std::vector<std::unique_ptr<Image>>& _imagesCont,
-    const std::map<eKeywordsDataType, KeywordsContainer>& keywordContainers
-  ) const override
+  virtual ChartData RunModelTest(DataId data_ID, TransformationFunctionBase* pAggregation,
+                                 const std::vector<float>* pIndexKwFrequency,
+                                 const std::vector<std::vector<UserImgQuery>>& testQueries,
+                                 const std::vector<std::unique_ptr<Image>>& _imagesCont,
+                                 const std::map<eVocabularyId, KeywordsContainer>& keywordContainers) const override
   {
     uint32_t maxRank = (uint32_t)_imagesCont.size();
 
@@ -331,7 +308,7 @@ public:
     std::vector<std::pair<uint32_t, uint32_t>> result;
     result.resize(MODEL_TEST_CHART_NUM_X_POINTS + 1);
 
-    uint32_t label{ 0ULL };
+    uint32_t label{0ULL};
     for (auto&& column : result)
     {
       column.first = label;
@@ -344,13 +321,13 @@ public:
       auto imgId = std::get<0>(singleQuery[0]);
 
       std::vector<CnfFormula> formulae;
-      for (auto&&[imgId, queryFormula, withExamples] : singleQuery)
+      for (auto&& [imgId, queryFormula, withExamples] : singleQuery)
       {
         formulae.push_back(queryFormula);
       }
 
-      auto resultImages = GetRankedImages(formulae, kwScDataId, pAggregation, 
-        pIndexKwFrequency, _imagesCont, keywordContainers, 0ULL, imgId);
+      auto resultImages = GetRankedImages(formulae, data_ID, pAggregation, pIndexKwFrequency, _imagesCont,
+                                          keywordContainers, 0ULL, imgId);
 
       size_t transformedRank = resultImages.second / scaleDownFactor;
 
@@ -358,13 +335,12 @@ public:
       ++result[transformedRank].second;
     }
 
-
-    uint32_t currCount{ 0ULL };
+    uint32_t currCount{0ULL};
 
     // Compute final chart values
     for (auto&& r : result)
     {
-      uint32_t tmp{ r.second };
+      uint32_t tmp{r.second};
       r.second = currCount;
       currCount += tmp;
     }
@@ -372,10 +348,10 @@ public:
     return result;
   }
 
-private:
+ private:
   Settings _settings;
 
-public:
+ public:
   static float m_trueTresholdFrom;
   static float m_trueTresholdTo;
   static float m_trueTresholdStep;

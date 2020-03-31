@@ -4,22 +4,21 @@
 #include <string>
 using namespace std::literals::string_literals;
 
-
-#include <set>
 #include <algorithm>
 #include <cctype>
-#include <vector>
-#include <sstream>
 #include <fstream>
-#include <map>
 #include <locale>
+#include <map>
+#include <set>
+#include <sstream>
+#include <vector>
 
 #include <unordered_set>
 
 #include "config.h"
 
-#include "utility.h"
 #include "Database.h"
+#include "utility.h"
 
 class ImageRanker;
 
@@ -28,32 +27,24 @@ using CnfFormula = std::vector<Clause>;
 
 class Keyword
 {
-public:
+ public:
   Keyword() = default;
-  Keyword(
-    size_t wordnetId, 
-    size_t vectorIndex, 
-    std::string&& word,
-    size_t descStartIndex,
-    size_t descEndIndex,
-    std::vector<size_t>&& hypernyms,
-    std::vector<size_t>&& hyponyms
-  ):
-    m_wordnetId(wordnetId),
-    m_vectorIndex(vectorIndex),
-    m_word(std::move(word)),
-    m_descStartIndex(descStartIndex),
-    m_descEndIndex(descEndIndex),
-    m_hypernyms(hypernyms),
-    m_hyponyms(hyponyms)
+  Keyword(size_t wordnetId, size_t vectorIndex, std::string&& word, size_t descStartIndex, size_t descEndIndex,
+          std::vector<size_t>&& hypernyms, std::vector<size_t>&& hyponyms)
+      : m_wordnetId(wordnetId),
+        m_vectorIndex(vectorIndex),
+        m_word(std::move(word)),
+        m_descStartIndex(descStartIndex),
+        m_descEndIndex(descEndIndex),
+        m_hypernyms(hypernyms),
+        m_hyponyms(hyponyms)
 
-  {}
+  {
+  }
 
   bool IsHypernym() const { return !m_hyponyms.empty(); };
   bool IsInBinVector() const { return m_vectorIndex == SIZE_T_ERROR_VALUE; };
   bool IsLeafKeyword() const { return (IsHypernym() && IsInBinVector()); }
-
- 
 
   size_t m_wordnetId;
   size_t m_vectorIndex;
@@ -68,27 +59,22 @@ public:
 
   std::vector<std::string> m_exampleImageFilenames;
 
-
   std::vector<Keyword*> m_expanded1Concat;
   std::vector<Keyword*> m_expanded1Substrings;
   std::vector<Keyword*> m_expanded2Concat;
   std::vector<Keyword*> m_expanded2Substrings;
-
 
   std::set<std::pair<Keyword*, float>> m_wordToVec;
 };
 
 class KeywordsContainer
 {
-public:
+ public:
   KeywordsContainer() = delete;
-  KeywordsContainer(
-    ImageRanker* pRanker, eKeywordsDataType type, const std::string& keywordClassesFilepath,
-    const std::string& wordToVecMapFilepath
-  );
+  KeywordsContainer(ImageRanker* pRanker, eVocabularyId type, const std::string& keywordClassesFilepath,
+                    const std::string& wordToVecMapFilepath);
 
   bool Initialize();
-
 
   void SubstringExpansionPrecompute()
   {
@@ -98,7 +84,7 @@ public:
 
   Keyword* GetKeywordPtr(const std::string& wordString)
   {
-    auto pKw{ GetNearKeywordsPtrs(wordString, 1)[0] };
+    auto pKw{GetNearKeywordsPtrs(wordString, 1)[0]};
 
     if (!pKw)
     {
@@ -146,7 +132,6 @@ public:
     }
 
     return result;
-
   }
 
   void SubstringExpansionPrecompute1()
@@ -163,14 +148,12 @@ public:
           continue;
         }
 
-
         // If pKwLeft is subString of pKwRight
         if (pKwRight->m_word.find(pKwLeft->m_word) != std::string::npos)
         {
           pKwLeft->m_expanded1Concat.emplace_back(pKwRight.get());
         }
       }
-
 
       // Find all words that are contained in this word
       for (auto&& pKwRight : _keywords)
@@ -204,19 +187,19 @@ public:
           continue;
         }
 
-        auto subwords{ SplitString(pKwRight->m_word, ' ') };
+        auto subwords{SplitString(pKwRight->m_word, ' ')};
 
-        for (auto && w : subwords)
+        for (auto&& w : subwords)
         {
           // If pKwLeft is subString of pKwRight
-          if (pKwLeft->m_word  == w)
+          if (pKwLeft->m_word == w)
           {
             pKwLeft->m_expanded2Concat.emplace_back(pKwRight.get());
           }
         }
       }
 
-      auto subwordsL{ SplitString(pKwLeft->m_word, ' ') };
+      auto subwordsL{SplitString(pKwLeft->m_word, ' ')};
       // Find all words that are contained in this word
       for (auto&& pKwRight : _keywords)
       {
@@ -226,9 +209,7 @@ public:
           continue;
         }
 
-        
-
-        for (auto && w : subwordsL)
+        for (auto&& w : subwordsL)
         {
           // If pKwLeft is subString of pKwRight
           if (w == pKwRight->m_word)
@@ -240,9 +221,7 @@ public:
     }
   }
 
-
-  [[deprecated]] 
-  std::vector<std::tuple<size_t, std::string, std::string>> GetNearKeywords(const std::string& prefix);
+  [[deprecated]] std::vector<std::tuple<size_t, std::string, std::string>> GetNearKeywords(const std::string& prefix);
 
   std::vector<const Keyword*> GetNearKeywordsConstPtrs(const std::string& prefix) const;
   std::vector<Keyword*> GetNearKeywordsPtrs(const std::string& prefix, size_t numResults);
@@ -256,40 +235,29 @@ public:
 #if PUSH_DATA_TO_DB
   bool PushKeywordsToDatabase(Database& db);
 #endif
-  [[deprecated]]
-  Keyword* GetWholeKeywordByWordnetId(size_t wordnetId) const;
+  [[deprecated]] Keyword* GetWholeKeywordByWordnetId(size_t wordnetId) const;
 
-  [[deprecated]]
-  std::string GetKeywordByWordnetId(size_t wordnetId)const ;
+  [[deprecated]] std::string GetKeywordByWordnetId(size_t wordnetId) const;
 
-  [[deprecated]]
-  KeywordData GetKeywordByVectorIndex(size_t index) const;
-
+  [[deprecated]] KeywordData GetKeywordByVectorIndex(size_t index) const;
 
   Keyword* GetKeywordPtrByVectorIndex(size_t index) const;
   const Keyword* GetKeywordConstPtrByVectorIndex(size_t index) const;
 
   std::string GetKeywordDescriptionByWordnetId(size_t wordnetId) const;
-  
-  CnfFormula GetCanonicalQuery(
-    const std::string& query,
-    bool skipConstructedHypernyms = false
-  ) const;
 
-
+  CnfFormula GetCanonicalQuery(const std::string& query, bool skipConstructedHypernyms = false) const;
 
   Keyword* GetKeywordByWord(const std::string& keyword) const
   {
     auto item = std::lower_bound(_keywords.begin(), _keywords.end(), keyword,
-      [](const std::unique_ptr<Keyword>& pWord, const std::string& str) 
-      {
-        // Compare strings
-        auto result = pWord->m_word.compare(str);
+                                 [](const std::unique_ptr<Keyword>& pWord, const std::string& str) {
+                                   // Compare strings
+                                   auto result = pWord->m_word.compare(str);
 
-        return result <= -1;
-      }
-    );
-    if (item == _keywords.cend()) 
+                                   return result <= -1;
+                                 });
+    if (item == _keywords.cend())
     {
       LOG_ERROR("This keyword not found.");
     }
@@ -306,11 +274,8 @@ public:
 
   std::vector<size_t> GetVectorKeywordsIndices(size_t wordnetId) const;
   void GetVectorKeywordsIndicesSet(std::unordered_set<size_t>& destSetRef, size_t wordnetId) const;
-  void GetVectorKeywordsIndicesSetShallow(
-    std::unordered_set<size_t>& destIndicesSetRef, size_t wordnetId,
-    bool skipConstructedHypernyms = false
-  ) const;
-
+  void GetVectorKeywordsIndicesSetShallow(std::unordered_set<size_t>& destIndicesSetRef, size_t wordnetId,
+                                          bool skipConstructedHypernyms = false) const;
 
   std::string StringifyCnfFormula(const CnfFormula& formula)
   {
@@ -336,19 +301,18 @@ public:
   }
 
   size_t GetNetVectorSize() const { return _vecIndexToKeyword.size(); }
-  
+
   std::vector<size_t> GetCanonicalQueryNoRecur(const std::string& query) const;
 
-private:
- 
-
+ private:
   /*!
-  * Functor for comparing our string=>wordnetId structure
-  * 
-  */
-  struct KeywordLessThanComparator {
+   * Functor for comparing our string=>wordnetId structure
+   *
+   */
+  struct KeywordLessThanComparator
+  {
     bool operator()(const std::unique_ptr<Keyword>& a, const std::unique_ptr<Keyword>& b) const
-    {   
+    {
       // Force lowercase
       std::locale loc;
       std::string left;
@@ -367,36 +331,37 @@ private:
       auto result = left.compare(right);
 
       return result <= -1;
-    }   
+    }
   } keywordLessThan;
 
-
-  struct KeywordLessThanStringComparator {
+  struct KeywordLessThanStringComparator
+  {
     bool operator()(const std::string& a, const std::string& b) const
-    {   
+    {
       // Compare strings
 
       std::string aa{a};
-      std::string bb{ b };
+      std::string bb{b};
       std::transform(aa.begin(), aa.end(), aa.begin(), ::tolower);
       std::transform(bb.begin(), bb.end(), bb.begin(), ::tolower);
 
       auto result = aa.compare(bb);
 
       return result <= -1;
-    }   
+    }
   };
 
-  public:
+ public:
   std::vector<size_t> FindAllNeedles(std::string_view hey, std::string_view needle) const;
   //! Keywords
   std::vector<std::unique_ptr<Keyword>> _keywords;
 
   //! Maps wordnetID to Keyword
   std::map<size_t, Keyword*> _wordnetIdToKeywords;
-private:
+
+ private:
   ImageRanker* _pRanker;
-  eKeywordsDataType _pDataType;
+  eVocabularyId _pDataType;
 
   std::string _keywordsFilepath;
   std::string _wordToVecFilepath;
@@ -408,12 +373,10 @@ private:
   std::map<size_t, Keyword*> _vecIndexToKeyword;
 
   std::vector<std::pair<size_t, Keyword*>> _descIndexToKeyword;
-  
 
 #if PUSH_DATA_TO_DB
-  
+
   std::vector<std::pair<size_t, std::string>> _keywordToWord;
   std::set<std::string> _words;
 #endif
-
 };

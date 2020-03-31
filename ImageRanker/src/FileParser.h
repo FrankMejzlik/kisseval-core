@@ -19,7 +19,8 @@ using namespace std::literals;
 class Image;
 class ImageRanker;
 
-class FileParser {
+class FileParser
+{
  public:
   FileParser(ImageRanker* pRanker);
   ~FileParser() noexcept;
@@ -31,7 +32,8 @@ class FileParser {
   int32_t ParseIntegerLE(const std::byte* pFirstByte) const;
   float ParseFloatLE(const std::byte* pFirstByte) const;
 
-  std::array<char, 4> floatToBytesLE(float number) {
+  std::array<char, 4> floatToBytesLE(float number)
+  {
     std::array<char, 4> byteArray;
 
     char* bitNumber{reinterpret_cast<char*>(&number)};
@@ -44,7 +46,8 @@ class FileParser {
     return byteArray;
   }
 
-  std::array<char, 4> uint32ToBytesLE(uint32_t number) {
+  std::array<char, 4> uint32ToBytesLE(uint32_t number)
+  {
     std::array<char, 4> byteArray;
 
     char* bitNumber{reinterpret_cast<char*>(&number)};
@@ -61,53 +64,32 @@ class FileParser {
 
   std::vector<ImageIdFilenameTuple> GetImageFilenames(const std::string& _imageToIdMapFilepath) const;
 
-  bool ParseWordToVecFile(
-      eKeywordsDataType kwType,
-      std::vector<std::unique_ptr<Keyword>>& keywordsCont,
-      const std::string& filename);
+  bool ParseWordToVecFile(eVocabularyId kwType, std::vector<std::unique_ptr<Keyword>>& keywordsCont,
+                          const std::string& filename);
 
-  bool LowMem_ParseRawScoringData_ViretFormat(
-      std::vector<std::unique_ptr<Image>>& imagesCont,
-      KwScoringDataId kwScDataId,
-      const std::string& inputFilepath) const;
+  bool LowMem_ParseRawScoringData_ViretFormat(std::vector<std::unique_ptr<Image>>& imagesCont,
+                                              DataId data_ID, const std::string& inputFilepath) const;
 
-  std::vector<std::unique_ptr<Image>> ParseImagesMetaData(
-      const std::string& idToFilename, size_t imageIdStride) const;
+  std::vector<std::unique_ptr<Image>> ParseImagesMetaData(const std::string& idToFilename, size_t imageIdStride) const;
 
-  bool ParseRawScoringData_ViretFormat(
-      std::vector<std::unique_ptr<Image>>& imagesCont,
-      KwScoringDataId kwScDataId,
-      const std::string& inputFilepath) const;
+  bool ParseRawScoringData_ViretFormat(std::vector<std::unique_ptr<Image>>& imagesCont, DataId data_ID,
+                                       const std::string& inputFilepath) const;
 
-  bool ParseSoftmaxBinFile_ViretFormat(
-      std::vector<std::unique_ptr<Image>>& imagesCont,
-      KwScoringDataId kwScDataId,
-      const std::string& inputFilepath) const;
+  bool ParseSoftmaxBinFile_ViretFormat(std::vector<std::unique_ptr<Image>>& imagesCont, DataId data_ID,
+                                       const std::string& inputFilepath) const;
 
-  bool ParseSoftmaxBinFile_GoogleAiVisionFormat(
-      std::vector<std::unique_ptr<Image>>& imagesCont,
-      KwScoringDataId kwScDataId,
-      const std::string& inputFilepath) const;
+  bool ParseSoftmaxBinFile_GoogleAiVisionFormat(std::vector<std::unique_ptr<Image>>& imagesCont,
+                                                DataId data_ID, const std::string& inputFilepath) const;
 
-  bool ParseRawScoringData_GoogleAiVisionFormat(
-      std::vector<std::unique_ptr<Image>>& imagesCont,
-      KwScoringDataId kwScDataId,
-      const std::string& inputFilepath) const;
+  bool ParseRawScoringData_GoogleAiVisionFormat(std::vector<std::unique_ptr<Image>>& imagesCont,
+                                                DataId data_ID, const std::string& inputFilepath) const;
 
-  std::tuple<
-      std::string,
-      std::map<size_t, Keyword*>,
-      std::map<size_t, Keyword*>,
-      std::vector<std::pair<size_t, Keyword*>>,
-      std::vector<std::unique_ptr<Keyword>>>
+  std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
+             std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>
   ParseKeywordClassesFile_ViretFormat(const std::string& filepath) const;
 
-  std::tuple<
-      std::string,
-      std::map<size_t, Keyword*>,
-      std::map<size_t, Keyword*>,
-      std::vector<std::pair<size_t, Keyword*>>,
-      std::vector<std::unique_ptr<Keyword>>>
+  std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
+             std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>
   ParseKeywordClassesFile_GoogleAiVisionFormat(const std::string& filepath) const;
 
  private:
