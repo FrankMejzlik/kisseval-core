@@ -145,6 +145,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories);$(ProjectDir)external/JSON/</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <AdditionalOptions>/experimental:external /external:anglebrackets /external:W0 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -196,7 +197,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -208,6 +209,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories);$(ProjectDir)external/JSON/</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <AdditionalOptions>/experimental:external /external:anglebrackets /external:W0 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -233,6 +235,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories);$(ProjectDir)external/JSON/</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <AdditionalOptions>/experimental:external /external:anglebrackets /external:W0 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

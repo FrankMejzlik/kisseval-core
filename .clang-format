@@ -5,4 +5,5 @@ BreakBeforeBraces: Allman
 IndentWidth: 2
 ColumnLimit: 120
 IndentPPDirectives: None
+IncludeBlocks: Preserve
 ...

@@ -2,14 +2,14 @@
 
 #include <stdint.h>
 
-/*! 
+/*!
  * If set to 1 queries will be evaluated on original query first
  * Then on the new ones and printed to stdout
  */
 #define LOG_PRE_AND_PPOST_EXP_RANKS 0
 
-/*! 
- * If 1, in initialization it will precompute all 
+/*!
+ * If 1, in initialization it will precompute all
  * subword sets for query expansions any substring and whole word substring
  */
 #define PRECOMPUTE_EXPANSION_SUBWORDS 0
@@ -116,8 +116,8 @@
 #define MODEL_TEST_CHART_NUM_X_POINTS 100
 
 /*!
-  * Boolean model settings
-  */
+ * Boolean model settings
+ */
 #define NUM_IMAGES_PER_PAGE 200
 
 #define DEVELOPMENT 1
@@ -174,4 +174,5 @@
  * 4: Herkules "image-ranker-collector-data2"
  */
 #define PRIMARY_DB_ID 4
+
 #include "credentials.h"

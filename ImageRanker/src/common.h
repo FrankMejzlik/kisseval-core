@@ -1,4 +1,9 @@
-#pragma once
+/**
+ * Common defines, typedefs and types.
+ */
+
+#ifndef _IR_COMMON_H_
+#define _IR_COMMON_H_
 
 #include <cstddef>
 #include <vector>
@@ -15,15 +20,18 @@ class Image;
 /*!
  * Enum assigning IDs to types
  */
-enum class eKeywordsDataType {
+enum class eKeywordsDataType
+{
   cViret1 = 0,
   cGoogleAI = 100
 };
 
-inline std::string ToString(eKeywordsDataType id) {
+inline std::string ToString(eKeywordsDataType id)
+{
   std::string resultString;
 
-  switch (id) {
+  switch (id)
+  {
     case eKeywordsDataType::cViret1:
       resultString += "eKeywordsDataType::cViret1";
       break;
@@ -38,31 +46,34 @@ inline std::string ToString(eKeywordsDataType id) {
 
 /*!
  * Type representing reference to file containing keyword descriptions
- * 
+ *
  * FORMAT:
  *  (type ID, filepath)
- * 
+ *
  *  Type ID - unique ID determining what format file is in (e.g. Viret, Google AI Vision)
  *    \see enum class eKeywordsDataType
- * 
+ *
  *  filepath - String containing filepath (relative of absolute) to file
- * 
+ *
  */
 using KeywordsFileRef = std::tuple<eKeywordsDataType, std::string>;
 
 /*!
  * Enum assigning IDs to scoring data types
  */
-enum class eImageScoringDataType {
+enum class eImageScoringDataType
+{
   cNasNet = 0,
   cGoogLeNet = 1,
   cGoogleAI = 100
 };
 
-inline std::string ToString(eImageScoringDataType id) {
+inline std::string ToString(eImageScoringDataType id)
+{
   std::string resultString;
 
-  switch (id) {
+  switch (id)
+  {
     case eImageScoringDataType::cNasNet:
       resultString += "cNasNet";
       break;
@@ -96,10 +107,10 @@ using ScoringDataFileRef = std::tuple<eKeywordsDataType, eImageScoringDataType, 
 
 /*!
  * Structure holding data about occurance rate of one keyword
- * 
+ *
  * FORMAT:
  *  ( synsetId, synsetWord, totalValue )
- * 
+ *
  * synsetId - ID of this synset
  * synsetWord - string representing this synset
  * totalValue - accumulated total value of this synset in given resultset
@@ -108,10 +119,10 @@ using KeywordOccurance = std::tuple<size_t, std::string, float>;
 
 /*!
  * Structure for returnig relevant images based on input query
- * 
+ *
  * FORMAT:
  *  ( sortedRelevantImages,  kwOccurances, targetImagePosition )
- * 
+ *
  * sortedRelevantImages - images sorted based on ranking for given query
  * kwOccurances - keyword occurances for given number of results
  *  \see KeywordOccurance
@@ -127,7 +138,7 @@ using TransformFullId = size_t;
 
 /*!
  * Structure representing ptr to keyword and its scores
- * 
+ *
  * FORMAT:
  *  [ ( keywordPtr, keywordScore ), (...)  ]
  */
@@ -136,7 +147,7 @@ using KeywordPtrScoringPair = std::vector<std::tuple<Keyword*, float>>;
 using ImageIdFilenameTuple = std::tuple<size_t, std::string>;
 
 /*!
- * 
+ *
  * (num of distincts keywords)
  */
 using KeywordsGeneralStatsTuple = std::tuple<size_t>;
@@ -163,9 +174,10 @@ using RankerDataGeneralStatsTuple = std::tuple<size_t>;
  *      0 - eUserAnnotatorQueries
  *      1 -  eNetNormalizedScores
  *      2 - eQueryNumHits
- * 
+ *
  */
-enum class eExportFileTypeId {
+enum class eExportFileTypeId
+{
   cUserAnnotatorQueries = 0,
   cNetNormalizedScores = 1,
   cQueryNumHits = 2,
@@ -173,12 +185,14 @@ enum class eExportFileTypeId {
 };
 
 // ------------------------------------------------
-enum class eTempQueryOpOutter {
+enum class eTempQueryOpOutter
+{
   cSum,
   cProduct
 };
 
-enum class eTempQueryOpInner {
+enum class eTempQueryOpInner
+{
   cSum,
   cProduct,
   cMax
@@ -187,38 +201,41 @@ enum class eTempQueryOpInner {
 /*
  * User defined literals
  */
-constexpr size_t operator""_z(unsigned long long int x) {
-  return static_cast<size_t>(x);
-}
-//std::vector<std::vector<std::pair<bool, size_t>>>
+constexpr size_t operator""_z(unsigned long long int x) { return static_cast<size_t>(x); }
+// std::vector<std::vector<std::pair<bool, size_t>>>
 using Clause = std::vector<std::pair<bool, size_t>>;
 using CnfFormula = std::vector<Clause>;
 using InteractiveSearchAction = std::tuple<size_t, size_t, size_t>;
 
-struct StatPerKwSc {
+struct StatPerKwSc
+{
   StatPerKwSc() : m_labelHitProb{0.0f} {}
   float m_labelHitProb;
 };
 
-enum class InteractiveSearchOrigin {
+enum class InteractiveSearchOrigin
+{
   cDeveloper,
   cPublic
 };
 
-enum class RankingModelId {
+enum class RankingModelId
+{
   cBooleanBucket = 1,
   cBooleanExtended = 2,
   cViretBase = 3
 };
 
-enum class InputDataTransformId {
+enum class InputDataTransformId
+{
   cSoftmax = 100,
   cXToTheP = 200,
   cSine = 300,
   cNoTransform = NO_TRANSFORM_ID
 };
 
-enum class DataSourceTypeId {
+enum class DataSourceTypeId
+{
   cDeveloper = 0,
   cPublic = 1,
   cManaged = 2,
@@ -240,81 +257,83 @@ enum class DataSourceTypeId {
 };
 
 /*!
-*  FORMAT:
-*  ========================================================
-* (x) cBooleanBucket
-* --- 
-* 
-*    0 => keyword frequency handling
-*    1 => trueTreshold
-*    2 => inBucketSorting
-*    3 => outter temporal query operation (\ref eTempQueryOpOutter)
-*       0: sum
-*       1: product
-*    4 => inner temporal query operation  (\ref eTempQueryOpInner)
-*       0: sum
-*       1: product
-*       2: max
-* 
-*  ========================================================
-*  (x) cBooleanExtended:
-*  ---
-* 
-*  ========================================================
-*  (x) cViretBase
-*  ----
-*    0 => keyword frequency handling
-*    1 => ignoreTreshold
-*    2 => rankCalcMethod
-*       cMultSum = 0,
-*       cMultMax = 1,
-*       cSumSum = 2,
-*       cSumMax = 3,
-*       cMaxMax= 4
-*    3 => outter temporal query operation (\ref eTempQueryOpOutter)
-*       0: sum
-*       1: product
-*    4 => inner temporal query operation (\ref eTempQueryOpInner)
-*       0: sum
-*       1: product
-*       2: max
-*/
+ *  FORMAT:
+ *  ========================================================
+ * (x) cBooleanBucket
+ * ---
+ *
+ *    0 => keyword frequency handling
+ *    1 => trueTreshold
+ *    2 => inBucketSorting
+ *    3 => outter temporal query operation (\ref eTempQueryOpOutter)
+ *       0: sum
+ *       1: product
+ *    4 => inner temporal query operation  (\ref eTempQueryOpInner)
+ *       0: sum
+ *       1: product
+ *       2: max
+ *
+ *  ========================================================
+ *  (x) cBooleanExtended:
+ *  ---
+ *
+ *  ========================================================
+ *  (x) cViretBase
+ *  ----
+ *    0 => keyword frequency handling
+ *    1 => ignoreTreshold
+ *    2 => rankCalcMethod
+ *       cMultSum = 0,
+ *       cMultMax = 1,
+ *       cSumSum = 2,
+ *       cSumMax = 3,
+ *       cMaxMax= 4
+ *    3 => outter temporal query operation (\ref eTempQueryOpOutter)
+ *       0: sum
+ *       1: product
+ *    4 => inner temporal query operation (\ref eTempQueryOpInner)
+ *       0: sum
+ *       1: product
+ *       2: max
+ */
 using RankingModelSettings = std::vector<std::string>;
 
 /*!
-* FORMAT:
-*  1: cSoftmax
-*  2: cXToTheP:
-*    0 => Exponent fot x^p postscale transformation
-*    1 => 
-*       0: SUM accumulated precoputed hypernyms
-*       1: MAX accumulated precoputed hypernyms
-*/
+ * FORMAT:
+ *  1: cSoftmax
+ *  2: cXToTheP:
+ *    0 => Exponent fot x^p postscale transformation
+ *    1 =>
+ *       0: SUM accumulated precoputed hypernyms
+ *       1: MAX accumulated precoputed hypernyms
+ */
 using InputDataTransformSettings = std::vector<std::string>;
 
 /*!
-* FORMAT:
-*  0 => Simulated user exponent
-*/
+ * FORMAT:
+ *  0 => Simulated user exponent
+ */
 using SimulatedUserSettings = std::vector<std::string>;
 
-using TestSettings = std::tuple<InputDataTransformId, RankingModelId, DataSourceTypeId, RankingModelSettings, InputDataTransformSettings>;
+using TestSettings = std::tuple<InputDataTransformId, RankingModelId, DataSourceTypeId, RankingModelSettings,
+                                InputDataTransformSettings>;
 
 using Buffer = std::vector<std::byte>;
 
 //! This is returned to front end app when some quesries are submited
 //! <SessionID, image filename, user keywords, net <keyword, probability> >
-using GameSessionQueryResult = std::tuple<std::string, std::string, std::vector<std::string>, std::vector<std::pair<std::string, float>>>;
+using GameSessionQueryResult =
+    std::tuple<std::string, std::string, std::vector<std::string>, std::vector<std::pair<std::string, float>>>;
 
 //! Array of those is submited from front-end app game
 using GameSessionInputQuery = std::tuple<std::string, size_t, std::string>;
 
 /*!
  * Keywords that are possible for given prefix
- * 
+ *
  * FORMAT:
  *  [ nearKeywords ]
- * 
+ *
  */
 using NearKeywordsResponse = std::vector<Keyword*>;
 
@@ -337,10 +356,13 @@ using UserAccuracyChartDataMisc = std::tuple<size_t, float>;
 
 using UserAccuracyChartData = std::pair<UserAccuracyChartDataMisc, ChartData>;
 
-class SimulatedUser {
+class SimulatedUser
+{
  public:
   SimulatedUser() : m_exponent(1) {}
 
  public:
   int m_exponent;
 };
+
+#endif  // _IR_COMMON_H_
