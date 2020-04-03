@@ -1,52 +1,20 @@
 #pragma once
 
-#include <assert.h>
-
-#include <limits>
 #include <string>
+#include <unordered_map>
+#include <vector>
 using namespace std::string_literals;
 
-#include <cmath>
-#include <fstream>
-#include <iostream>
-#include <stack>
-#include <stdexcept>
-
-#include <array>
-#include <cstdint>
-#include <filesystem>
-#include <fstream>
-#include <vector>
-
-#include <chrono>
-#include <functional>
-#include <queue>
-#include <random>
-#include <sstream>
-
-#include <unordered_map>
-
-#include <atomic>
-#include <chrono>
-#include <iomanip>
-#include <locale>
-#include <map>
-#include <set>
-#include <thread>
-
+#include "common.h"
 #include "config.h"
+#include "utility.h"
 
 #include "Database.h"
 #include "FileParser.h"
-#include "Image.hpp"
-#include "KeywordsContainer.h"
-#include "common.h"
-#include "utility.h"
 
-#include "GridTest.h"
+#include "datasets/SelFramesDataset.h"
+#include "data_packs/BaseDataPack.h"
 
-#include "ranking_models.h"
-#include "transformations.h"
 
 class ImageRanker
 {
@@ -54,18 +22,6 @@ class ImageRanker
    * Subtypes
    ****************************/
  public:
-  /**
-   * Config structure needed for instantiation of ImageRanker.
-   */
-  struct Config
-  {
-    std::vector<ViretDataPack> dataset_packs;
-
-    std::vector<ViretDataPack> VIRET_packs;
-    std::vector<GoogleDataPack> Google_packs;
-    std::vector<BowDataPack> BoW_packs;
-  };
-
   /**
    * ImageRanker modes of operation.
    */
@@ -75,24 +31,69 @@ class ImageRanker
     cCollector = 1,
     cSearchTool = 2
   };
-  
+
+  /**
+   * Config structure needed for instantiation of ImageRanker.
+   */
+  struct Config
+  {
+    eMode mode;
+
+    std::vector<DatasetDataPackRef> dataset_packs;
+
+    std::vector<ViretDataPackRef> VIRET_packs;
+    std::vector<GoogleDataPackRef> Google_packs;
+    std::vector<BowDataPackRef> BoW_packs;
+  };
+
+  struct Settings
+  {
+    Settings(const Config& cfg) : config(cfg) {}
+    Config config;
+  };
+
   /****************************
    * Methods
    ****************************/
  public:
   ImageRanker() = delete;
 
+  ImageRanker(const ImageRanker::Config& cfg);
+
   bool Initialize();
+  bool InitializeFullMode();
 
-  const FileParser* GetFileParser() const
-  {
-    return &_fileParser;
-  }
+  [[nodiscard]]
+  RankingResult rank_frames(const std::vector<std::string>& user_queries, eDataPackType data_pack_type,
+                                DataPackId data_pack_ID, PackModelId pack_model_ID, PackModelCommands model_commands,
+                                size_t result_size, FrameId target_image_ID = ERR_VAL<FrameId>()) const;
+  
+  [[nodiscard]]
+  const FileParser* get_file_parser() const { return &_fileParser; }
 
+ private:
+  Settings _settings;
+  Database _db;
+  FileParser _fileParser;
+
+  eMode _mode;
+
+  std::unordered_map<DataPackId, std::unique_ptr<BaseDataset>> _datasets;
+
+  std::unordered_map<DataPackId, std::unique_ptr<BaseDataPack>> _VIRET_packs;
+  /*std::unordered_map<DataPackId, std::unique_ptr<GoogleModelPackRef>> _Google_packs;
+  std::unordered_map<DataPackId, std::unique_ptr<BoWModelPackRef>> _BoW_packs;*/
+
+  /****************************
+   * Member variables
+   ****************************/
+ private:
   // =====================================
   //  NOT REFACTORED CODE BELOW
   // =====================================
 
+#if 0
+public:
   //! Constructor with data from files with presoftmax file
   ImageRanker(const std::string& imagesPath, const std::vector<KeywordsFileRef>& keywordsFileRefs,
               const std::vector<DataFileSrc>& imageScoringFileRefs,
@@ -181,12 +182,7 @@ class ImageRanker
                                        bool withExampleImages);
   Keyword* GetKeywordByVectorIndex(DataId data_ID, size_t index);
 
-  RelevantImagesResponse GetRelevantImages(DataId data_ID,
-                                           const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
-                                           InputDataTransformId aggId, RankingModelId modelId,
-                                           const RankingModelSettings& modelSettings,
-                                           const InputDataTransformSettings& aggSettings,
-                                           size_t imageId = SIZE_T_ERROR_VALUE, bool withOccuranceValue = false) const;
+  
 
   std::pair<uint8_t, uint8_t> GetGridTestProgress() const;
 
@@ -308,135 +304,12 @@ class ImageRanker
 
   std::string EncodeAndQuery(const std::string& query) const;
 
-  /*!
-   * Initializes ImageRanker for working in Collector app
-   *
-   * \return True on success
-   */
-  bool InitializeCollectorMode();
 
-  /*!
-   * Initializes ImageRanker for working as search tool with reduced memory usage
-   *
-   * \return True on success
-   */
-  bool InitializeSearchToolMode();
-
-  /*!
-   * Initializes ImageRanker for working in IRApp
-   *
-   * \return True on success
-   */
-  bool InitializeFullMode();
-
-  /*!
-   *  Parses binary file containing raw ranking data
-   *
-   * \return  Hash map with all Image instances loaded
-   */
-  std::map<size_t, std::unique_ptr<Image>> ParseRawNetRankingBinFile();
-  std::map<size_t, std::unique_ptr<Image>> LowMem_ParseRawNetRankingBinFile();
-
-  /*!
-   * Parses Softmax binary file into all \ref Image instances we're now holding
-   *
-   * \return
-   */
-  bool ParseSoftmaxBinFile();
-
-  /*!
-   * Parses Little Endian integer from provided buffer starting at specified index
-   *
-   * \return  Correct integer representation.
-   */
-  int32_t ParseIntegerLE(const std::byte* pFirstByte) const;
-
-  /*!
-   * Parses Little Endian float from provided buffer starting at specified index
-   *
-   * \return  Correct float representation.
-   */
-  float ParseFloatLE(const std::byte* pFirstByte) const;
-
-  /*!
-   * Returns true if no specific image filename mapping file provided
-   *
-   * \return True if default order of images in directory should be used
-   */
-  bool UseDefaultImageFilenames() const { return (_imageToIdMapFilepath.empty() ? true : false); };
-
-  /*!
-   * Gets aggregation instance if found
-   *
-   * \param id
-   * \return
-   */
-  TransformationFunctionBase* GetAggregationById(InputDataTransformId id) const;
-
-  /*!
-   * Gets ranking model instance if found
-   *
-   * \param id
-   * \return
-   */
-  RankingModelBase* GetRankingModelById(RankingModelId id) const;
-
-  /*!
-   * Gets list of image filenames we're working with
-   *
-   * \return
-   */
-  std::vector<std::string> GetImageFilenames() const;
-  std::vector<std::string> GetImageFilenamesTrecvid() const;
 
   bool LoadRepresentativeImages(DataId data_ID, Keyword* pKw);
 
   void GenerateBestHypernymsForImages();
   void PrintIntActionsCsv() const;
 
-#if TRECVID_MAPPING
-
-  std::pair<size_t, size_t> ConvertToTrecvidShotId(size_t ourFrameId);
-  std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>>
-  ParseTrecvidShotReferencesFromDirectory(const std::string& path) const;
-  std::vector<std::pair<size_t, size_t>> ParseTrecvidDroppedShotsFile(const std::string& filepath) const;
-  void ResetTrecvidShotMap();
-
-#endif
-
-  // Attributes
- private:
-  FileParser _fileParser;
-  Database _primaryDb;
-  Database _secondaryDb;
-
-  eMode _mode;
-  size_t _imageIdStride;
-  std::string _imageToIdMapFilepath;
-  std::string _imagesPath;
-  std::map<DataId, std::string> _imageScoringFileRefs;
-  std::map<DataId, std::string> _imageSoftmaxScoringFileRefs;
-  std::map<DataId, std::string> _deepFeaturesFileRefs;
-
-  std::map<eVocabularyId, KeywordsContainer> _keywordContainers;
-  KeywordsContainer* _pViretKws;
-  KeywordsContainer* _pGoogleKws;
-
-  std::unordered_map<InputDataTransformId, std::unique_ptr<TransformationFunctionBase>> _transformations;
-  std::unordered_map<RankingModelId, std::unique_ptr<RankingModelBase>> _models;
-
-  std::vector<std::unique_ptr<Image>> _images;
-
-  std::vector<float> _indexKwFrequency;
-
-  mutable std::map<DataId, size_t> _stat_minLabels;
-  mutable std::map<DataId, size_t> _stat_maxLabels;
-  mutable std::map<DataId, float> _stat_avgLabels;
-  mutable std::map<DataId, float> _stat_medianLabels;
-  mutable std::map<DataId, float> _stat_labelHit;
-
-#if TRECVID_MAPPING
-  std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> _trecvidShotReferenceMap;
-  std::vector<std::pair<size_t, size_t>> _tvDroppedShots;
 #endif
 };

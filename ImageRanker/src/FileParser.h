@@ -16,77 +16,51 @@ using namespace std::literals;
 #include "data_format_config.h"
 #include "utility.h"
 
-class Image;
 class ImageRanker;
 
 class FileParser
 {
  public:
+   static std::pair<
+       std::vector<std::vector<float>>,
+       std::vector<std::vector<std::pair<FrameId, float>>>
+     > ParseRawScoringData_ViretFormat(const std::string& inputFilepath);
+   static std::vector<std::vector<float>> ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath);
+   static std::vector<std::vector<float>> ParseDeepFeasBinFile_ViretFormat(const std::string& inputFilepath);
+     static std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
+             std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>
+  ParseKeywordClassesFile_ViretFormat(const std::string& filepath);
+   
+
   FileParser(ImageRanker* pRanker);
-  ~FileParser() noexcept;
 
-  std::tuple<size_t, size_t, size_t> ParseVideoFilename(const std::string& filename) const;
-  size_t GetVideoIdFromFrameFilename(const std::string& filename) const;
-  size_t GetShotIdFromFrameFilename(const std::string& filename) const;
+  std::tuple<VideoId, ShotId, FrameNumber> ParseVideoFilename(const std::string& filename) const;
+  VideoId GetVideoIdFromFrameFilename(const std::string& filename) const;
+  ShotId GetShotIdFromFrameFilename(const std::string& filename) const;
 
-  int32_t ParseIntegerLE(const std::byte* pFirstByte) const;
-  float ParseFloatLE(const std::byte* pFirstByte) const;
 
-  std::array<char, 4> floatToBytesLE(float number)
-  {
-    std::array<char, 4> byteArray;
 
-    char* bitNumber{reinterpret_cast<char*>(&number)};
+  std::vector<SelFrame> ParseImagesMetaData(const std::string& idToFilename, size_t imageIdStride = 1) const;
 
-    std::get<0>(byteArray) = bitNumber[0];
-    std::get<1>(byteArray) = bitNumber[1];
-    std::get<2>(byteArray) = bitNumber[2];
-    std::get<3>(byteArray) = bitNumber[3];
+  // =================================
+  // =================================
+  // =================================
+  void ProcessVideoShotsStack(std::stack<SelFrame*>& videoFrames) const;
+  
 
-    return byteArray;
-  }
-
-  std::array<char, 4> uint32ToBytesLE(uint32_t number)
-  {
-    std::array<char, 4> byteArray;
-
-    char* bitNumber{reinterpret_cast<char*>(&number)};
-
-    std::get<0>(byteArray) = bitNumber[0];
-    std::get<1>(byteArray) = bitNumber[1];
-    std::get<2>(byteArray) = bitNumber[2];
-    std::get<3>(byteArray) = bitNumber[3];
-
-    return byteArray;
-  }
-
-  void ProcessVideoShotsStack(std::stack<Image*>& videoFrames) const;
 
   std::vector<ImageIdFilenameTuple> GetImageFilenames(const std::string& _imageToIdMapFilepath) const;
 
-  bool ParseWordToVecFile(eVocabularyId kwType, std::vector<std::unique_ptr<Keyword>>& keywordsCont,
+  bool ParseWordToVecFile(DataName data_name, std::vector<std::unique_ptr<Keyword>>& keywordsCont,
                           const std::string& filename);
 
-  bool LowMem_ParseRawScoringData_ViretFormat(std::vector<std::unique_ptr<Image>>& imagesCont,
-                                              DataId data_ID, const std::string& inputFilepath) const;
+  bool ParseRawScoringData_ViretFormat(DataName data_name, const std::string& inputFilepath) const;
 
-  std::vector<std::unique_ptr<Image>> ParseImagesMetaData(const std::string& idToFilename, size_t imageIdStride) const;
+  bool ParseSoftmaxBinFile_ViretFormat(DataName data_name,const std::string& inputFilepath) const;
 
-  bool ParseRawScoringData_ViretFormat(std::vector<std::unique_ptr<Image>>& imagesCont, DataId data_ID,
-                                       const std::string& inputFilepath) const;
+  bool ParseSoftmaxBinFile_GoogleAiVisionFormat(DataName data_name, const std::string& inputFilepath) const;
 
-  bool ParseSoftmaxBinFile_ViretFormat(std::vector<std::unique_ptr<Image>>& imagesCont, DataId data_ID,
-                                       const std::string& inputFilepath) const;
-
-  bool ParseSoftmaxBinFile_GoogleAiVisionFormat(std::vector<std::unique_ptr<Image>>& imagesCont,
-                                                DataId data_ID, const std::string& inputFilepath) const;
-
-  bool ParseRawScoringData_GoogleAiVisionFormat(std::vector<std::unique_ptr<Image>>& imagesCont,
-                                                DataId data_ID, const std::string& inputFilepath) const;
-
-  std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
-             std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>
-  ParseKeywordClassesFile_ViretFormat(const std::string& filepath) const;
+  bool ParseRawScoringData_GoogleAiVisionFormat(DataName data_name, const std::string& inputFilepath) const;
 
   std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
              std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>

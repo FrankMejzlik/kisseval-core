@@ -1,80 +1,67 @@
 
-#include "ImageRanker.h"
 
 #include "json.hpp"
 using json = nlohmann::json;
 
-std::vector<std::vector<size_t>> vec_of_ranks;
+#include "data_packs/VIRET_based/ViretDataPack.h"
 
-ImageRanker::ImageRanker(const std::string& imagesPath, const std::vector<KeywordsFileRef>& keywordsFileRefs,
-                         const std::vector<DataFileSrc>& imageScoringFileRefs,
-                         const std::vector<DataFileSrc>& imageSoftmaxScoringFileRefs,
-                         const std::vector<DataFileSrc>& deepFeaturesFileRefs, const std::string& imageToIdMapFilepath,
-                         size_t idStride, eMode mode, const std::vector<KeywordsFileRef>& wordToVecMapFileRefs)
-    : _primaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
-      _secondaryDb(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
+#include "ImageRanker.h"
 
-      _mode(mode),
-      _imageIdStride(idStride),
-      _imagesPath(imagesPath),
-      _imageToIdMapFilepath(imageToIdMapFilepath),
+#include "datasets/SelFramesDataset.h"
+
+ImageRanker::ImageRanker(const ImageRanker::Config& cfg)
+    : _settings(cfg),
+      _db(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
       _fileParser(this)
 {
-  // Construct all desired keyword containers
+  /*
+   * Load all available datasets
+   */
+  for (auto&& pack : _settings.config.dataset_packs)
   {
-    size_t i{0_z};
-    for (auto&& [id, filepath] : keywordsFileRefs)
-    {
-      auto result = _keywordContainers.insert(
-          std::pair(id, KeywordsContainer(this, eVocabularyId(id), filepath, std::get<1>(wordToVecMapFileRefs[i]))));
+    // Initialize all images
+    auto frames = _fileParser.ParseImagesMetaData(pack.imgage_to_ID_fpth, 1);
 
-      // Save shortcuts
-      switch (id)
-      {
-        case eVocabularyId::VIRET_1200_WORDNET_2019:
-          _pViretKws = &(result.first->second);
-          break;
-
-        case eVocabularyId::GOOGLE_AI_20K_2019:
-          _pGoogleKws = &(result.first->second);
-          break;
-      }
-
-      ++i;
-    }
+    _datasets.emplace(pack.name, std::make_unique<SelFramesDataset>(pack.name, pack.images_dir, std::move(frames)));
   }
 
-  //
-  // Store initial scoring filepaths
-  //
-  for (auto&& [kwId, netId, filepath] : imageScoringFileRefs)
+  /*
+   * Load all available data packs
+   */
+  // VIRET type
+  for (auto&& pack : _settings.config.VIRET_packs)
   {
-    _imageScoringFileRefs.emplace(std::pair(kwId, netId), filepath);
+    // Initialize all images
+    auto presoft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
+    auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
+    auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
+
+    _VIRET_packs.emplace(pack.name,
+                      std::make_unique<ViretDataPack>(pack.name, pack.vocabulary_data, std::move(presoft_data),
+                                                      std::move(soft_data), std::move(deep_features)));
   }
 
-  //
-  // Store initial Softmax scoring filepaths
-  //
-  for (auto&& [kwId, netId, filepath] : imageSoftmaxScoringFileRefs)
-  {
-    _imageSoftmaxScoringFileRefs.emplace(std::pair(kwId, netId), filepath);
-  }
+  // Google type
 
-  //
-  // Store initial deep features filepaths
-  //
-  for (auto&& [kwId, netId, filepath] : deepFeaturesFileRefs)
-  {
-    _deepFeaturesFileRefs.emplace(std::pair(kwId, netId), filepath);
-  }
+  // BoW type
 
   // Connect to the database
-  auto result{_primaryDb.EstablishConnection()};
-  if (result != 0ULL)
+  auto result = _db.EstablishConnection();
+  if (result != 0)
   {
     LOG_ERROR("Connecting to primary DB failed.");
   }
 }
+
+// =====================================
+//  NOT REFACTORED CODE BELOW
+// =====================================
+
+#if 0
+
+
+std::vector<std::vector<size_t>> vec_of_ranks;
+
 
 Keyword* ImageRanker::GetKeywordPtr(eVocabularyId kwType, const std::string& wordString)
 {
@@ -86,7 +73,7 @@ bool ImageRanker::Initialize()
   bool res{true};
 
   // Initialize keyword containers
-  for (auto&& [id, kwCont] : _keywordContainers)
+  for (auto&& [id, kwCont] : _keywordContainers)  
   {
     res &= kwCont.Initialize();
   }
@@ -225,7 +212,7 @@ bool ImageRanker::ExportUserAnnotatorData(DataId data_ID, UserDataSourceId dataS
   std::string query(
       "\
         SELECT image_id, type, query  FROM `" +
-      _primaryDb.GetDbName() +
+      _db.GetDbName() +
       "`.queries \
           WHERE " +
       strType +
@@ -236,7 +223,7 @@ bool ImageRanker::ExportUserAnnotatorData(DataId data_ID, UserDataSourceId dataS
             scoring_data_type = " +
       std::to_string((int)std::get<1>(data_ID)) + ";");
 
-  auto dbData = _primaryDb.ResultQuery(query);
+  auto dbData = _db.ResultQuery(query);
 
   if (dbData.first != 0)
   {
@@ -373,7 +360,7 @@ bool ImageRanker::ExportUserAnnotatorNumHits(DataId data_ID, UserDataSourceId da
   std::string query(
       "\
         SELECT id, image_id, type, query  FROM `" +
-      _primaryDb.GetDbName() +
+      _db.GetDbName() +
       "`.queries \
           WHERE " +
       strType +
@@ -384,7 +371,7 @@ bool ImageRanker::ExportUserAnnotatorNumHits(DataId data_ID, UserDataSourceId da
             scoring_data_type = " +
       std::to_string((int)std::get<1>(data_ID)) + ";");
 
-  auto dbData = _primaryDb.ResultQuery(query);
+  auto dbData = _db.ResultQuery(query);
 
   if (dbData.first != 0)
   {
@@ -543,8 +530,7 @@ bool ImageRanker::InitializeFullMode()
     _models.emplace(RankingModelId::cBooleanBucket, std::make_unique<BooleanBucketModel>());
   }
 
-  // Initialize all images
-  _images = _fileParser.ParseImagesMetaData(_imageToIdMapFilepath, _imageIdStride);
+
 
   // Fill in scoring data to images
   for (auto&& [data_ID, filepath] : _imageScoringFileRefs)
@@ -1418,7 +1404,7 @@ std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(
   sqlQuery.pop_back();
   sqlQuery += ";";
 
-  auto result = _primaryDb.NoResultQuery(sqlQuery);
+  auto result = _db.NoResultQuery(sqlQuery);
   if (result != 0)
   {
     LOG_ERROR(std::string("query: ") + sqlQuery +
@@ -1467,7 +1453,7 @@ void ImageRanker::SubmitUserDataNativeQueries(std::vector<std::tuple<size_t, std
   sqlQuery.pop_back();
   sqlQuery += ";";
 
-  auto result = _primaryDb.NoResultQuery(sqlQuery);
+  auto result = _db.NoResultQuery(sqlQuery);
   if (result != 0)
   {
     LOG_ERROR(std::string("query: ") + sqlQuery +
@@ -2162,7 +2148,7 @@ std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(UserDataSourceId 
             "`image-ranker-collector-data2`.queries WHERE type = " +
             std::to_string((int)dataSource) + ";");
 
-        auto dbData = _primaryDb.ResultQuery(query);
+        auto dbData = _db.ResultQuery(query);
 
         if (dbData.first != 0)
         {
@@ -2197,7 +2183,7 @@ std::vector<UserImgQueryRaw>& ImageRanker::GetCachedQueriesRaw(UserDataSourceId 
             "SELECT image_id, query FROM "
             "`image-ranker-collector-data2`.queries WHERE type = " +
             std::to_string((int)dataSource) + ";");
-        auto dbData = _primaryDb.ResultQuery(query);
+        auto dbData = _db.ResultQuery(query);
 
         if (dbData.first != 0)
         {
@@ -2240,9 +2226,9 @@ std::vector<UserDataNativeQuery>& ImageRanker::GetUserAnnotationNativeQueriesCac
         "SELECT image_id, query, created,\
         session_id, manually_validated\
       FROM `" +
-        _primaryDb.GetDbName() + "`.user_data_native_queries;");
+        _db.GetDbName() + "`.user_data_native_queries;");
 
-    auto dbData = _primaryDb.ResultQuery(sqlQuery);
+    auto dbData = _db.ResultQuery(sqlQuery);
 
     if (dbData.first != 0)
     {
@@ -2315,7 +2301,7 @@ std::vector<std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(DataId dat
         std::string query(
             "\
         SELECT image_id, query, type FROM `" +
-            _primaryDb.GetDbName() +
+            _db.GetDbName() +
             "`.queries \
           WHERE ( type = " +
             std::to_string((int)dataSource) + " OR type =  " + std::to_string(((int)dataSource + 10)) +
@@ -2326,7 +2312,7 @@ std::vector<std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(DataId dat
             scoring_data_type = " +
             std::to_string((int)std::get<1>(data_ID)) + ";");
 
-        auto dbData = _primaryDb.ResultQuery(query);
+        auto dbData = _db.ResultQuery(query);
 
         if (dbData.first != 0)
         {
@@ -2378,7 +2364,7 @@ std::vector<std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(DataId dat
         std::string query(
             "\
         SELECT image_id, query, type FROM `" +
-            _primaryDb.GetDbName() +
+            _db.GetDbName() +
             "`.queries \
           WHERE (type = " +
             std::to_string((int)dataSource) + " OR type = " + std::to_string(((int)dataSource + 10)) +
@@ -2389,7 +2375,7 @@ std::vector<std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(DataId dat
             scoring_data_type = " +
             std::to_string((int)std::get<1>(data_ID)) + ";");
 
-        auto dbData = _primaryDb.ResultQuery(query);
+        auto dbData = _db.ResultQuery(query);
 
         if (dbData.first != 0)
         {
@@ -2490,9 +2476,9 @@ void ImageRanker::SubmitInteractiveSearchSubmit(DataId data_ID, InteractiveSearc
            << sessionDuration << "," << isEmpty << ");";
 
   std::string query1{query1Ss.str()};
-  size_t result1{_primaryDb.NoResultQuery(query1)};
+  size_t result1{_db.NoResultQuery(query1)};
 
-  size_t id{_primaryDb.GetLastId()};
+  size_t id{_db.GetLastId()};
 
   std::stringstream query2Ss;
   query2Ss << "INSERT INTO `interactive_searches_actions`(`interactive_search_id`, "
@@ -2515,7 +2501,7 @@ void ImageRanker::SubmitInteractiveSearchSubmit(DataId data_ID, InteractiveSearc
   }
 
   std::string query2{query2Ss.str()};
-  size_t result2{_primaryDb.NoResultQuery(query2)};
+  size_t result2{_db.NoResultQuery(query2)};
 
   if (result1 != 0 || result2 != 0)
   {
@@ -3021,8 +3007,8 @@ void ImageRanker::PrintIntActionsCsv() const
       "SELECT `interactive_search_id`, `index`, `action`, `score`, `operand` "
       "FROM "
       "`image-ranker-collector-data2`.interactive_searches_actions;"};
-  auto result1{_primaryDb.ResultQuery(query1)};
-  auto result2{_primaryDb.ResultQuery(query2)};
+  auto result1{_db.ResultQuery(query1)};
+  auto result2{_db.ResultQuery(query2)};
 
   auto actionIt{result2.second.begin()};
 
@@ -3194,348 +3180,4 @@ void ImageRanker::PrintIntActionsCsv() const
   }
 }
 
-#if TRECVID_MAPPING
-
-std::tuple<float, std::vector<std::pair<size_t, size_t>>> ImageRanker::TrecvidGetRelevantShots(
-    DataId data_ID, const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
-    InputDataTransformId aggId, RankingModelId modelId, const RankingModelSettings& modelSettings,
-    const InputDataTransformSettings& aggSettings, float elapsedTime, size_t imageId)
-{
-#if DEBUG_SHOW_OUR_FRAME_IDS
-
-  std::cout << "===============================" << std::endl;
-  std::cout << "transformation ID = " << std::to_string((size_t)aggId) << std::endl;
-  std::cout << "model ID = " << std::to_string((size_t)modelId) << std::endl;
-  std::cout << "model settings: " << std::endl;
-  for (auto&& q : modelSettings)
-  {
-    std::cout << q << std::endl;
-  }
-
-  std::cout << "transform settings:" << std::endl;
-  for (auto&& q : aggSettings)
-  {
-    std::cout << q << std::endl;
-  }
-  std::cout << "elapsed time  = " << elapsedTime << std::endl;
-
-#endif
-
-  // Start timer
-  auto start = std::chrono::steady_clock::now();
-
-  std::vector<CnfFormula> formulae;
-
-  for (auto&& queryString : queriesEncodedPlaintext)
-  {
-    // Decode query to logical CNF formula
-    CnfFormula queryFormula{_pViretKws->GetCanonicalQuery(EncodeAndQuery(queryString))};
-
-    formulae.push_back(queryFormula);
-  }
-
-  // Get desired aggregation
-  auto pAggFn = GetAggregationById(aggId);
-  // Setup model correctly
-  pAggFn->SetTransformationSettings(aggSettings);
-
-  // Get disired model
-  auto pRankingModel = GetRankingModelById(modelId);
-  // Setup model correctly
-  pRankingModel->SetModelSettings(modelSettings);
-
-  // Rank it
-  auto [imgOrder, targetImgRank]{pRankingModel->GetRankedImages(formulae, data_ID, pAggFn, &_indexKwFrequency,
-                                                                _images, _keywordContainers, 40000, imageId)};
-
-  std::vector<std::pair<size_t, size_t>> resultTrecvidShotIds;
-  resultTrecvidShotIds.reserve(numResults);
-
-#if DEBUG_SHOW_OUR_FRAME_IDS
-
-  std::cout << "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << std::endl;
-  for (auto&& q : queriesEncodedPlaintext)
-  {
-    std::cout << "Q:" << q << std::endl;
-  }
-  std::cout << "--------------------" << std::endl;
-
-#endif
-
-  for (auto&& ourFrameId : imgOrder)
-  {
-    // If we have enough shots already
-    if (resultTrecvidShotIds.size() >= numResults)
-    {
-      // Stop
-      break;
-    }
-
-#if DEBUG_SHOW_OUR_FRAME_IDS
-
-    std::cout << ourFrameId << std::endl;
-
-#endif
-
-    std::pair<size_t, size_t> trecvidVideoIdShotIdPair{ConvertToTrecvidShotId(ourFrameId)};
-
-    // If this shot is already picked
-    if (trecvidVideoIdShotIdPair.first == SIZE_T_ERROR_VALUE || trecvidVideoIdShotIdPair.second == SIZE_T_ERROR_VALUE)
-    {
-      // Go on to next our frame
-      continue;
-    }
-
-    // Check if it is dropped shot
-    for (auto&& [dVideoId, dShotId] : _tvDroppedShots)
-    {
-      if (trecvidVideoIdShotIdPair.first == dVideoId && trecvidVideoIdShotIdPair.second == dShotId)
-      {
-        continue;
-      }
-    }
-
-    // Add this TRECVID shot ID to resultset
-    resultTrecvidShotIds.emplace_back(std::move(trecvidVideoIdShotIdPair));
-  }
-
-  // Stop timer
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
-
-  size_t calculationElapsedInMs{static_cast<size_t>(duration.count())};
-  float totalElapsed{elapsedTime + ((float)calculationElapsedInMs / 1000)};
-
-  float totalElapsedRounded{((float)((int)(totalElapsed * 10))) / 10};
-
-  // Reset trecvid shot reference map
-  ResetTrecvidShotMap();
-
-#if 0
-
-  std::set<std::pair<size_t, size_t>> set;
-  for (auto&&[videoId, shotId] : resultTrecvidShotIds)
-  {
-    auto result{ set.insert(std::pair(videoId, shotId)) };
-
-    if (result.second == false)
-    {
-      LOG_ERROR("Duplicate!!!");
-    }
-  }
-
-#endif
-
-  return std::tuple(totalElapsedRounded, std::move(resultTrecvidShotIds));
-}
-
-std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>>
-ImageRanker::ParseTrecvidShotReferencesFromDirectory(const std::string& path) const
-{
-  std::vector<std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>>> resultMap;
-
-  for (auto&& file : std::filesystem::directory_iterator(path))
-  {
-    std::vector<std::pair<std::pair<unsigned int, unsigned int>, bool>> metaResult;
-
-    // Open file for reading as binary from the end side
-    std::ifstream ifs(file.path().string(), std::ios::ate);
-
-    // If failed to open file
-    if (!ifs)
-    {
-      LOG_ERROR("Error opening file: "s + file.path().string());
-    }
-
-    // Get end of file
-    auto end = ifs.tellg();
-
-    // Get iterator to begining
-    ifs.seekg(0, std::ios::beg);
-
-    // Compute size of file
-    auto size = std::size_t(end - ifs.tellg());
-
-    // If emtpy file
-    if (size == 0)
-    {
-      LOG_ERROR("Empty file opened!");
-    }
-
-    size_t lineNr{0_z};
-    std::string line;
-
-    // Iterate until there is something to read from file
-    while (std::getline(ifs, line))
-    {
-      ++lineNr;
-
-      // Skip first line - there are only column headers
-      if (lineNr == 1)
-      {
-        continue;
-      }
-
-      // WARNING:
-      // TRECVID shot reference starts videos from 1, we do from 0
-      // Index in this vector will match our indexing
-
-      unsigned int frameFrom;
-      unsigned int frameTo;
-      float byteBin;
-      std::stringstream lineStream(line);
-
-      lineStream >> frameFrom;
-      lineStream >> byteBin;  // Throw this away
-      lineStream >> frameTo;
-
-      // Contains std::pair<std::pair<unsigned int, unsigned int>, bool>
-      metaResult.emplace_back(std::pair(frameFrom, frameTo), false);
-    }
-
-    // Add this file reference to map
-    resultMap.push_back(metaResult);
-  }
-
-  return resultMap;
-}
-
-std::vector<std::pair<size_t, size_t>> ImageRanker::ParseTrecvidDroppedShotsFile(const std::string& filepath) const
-{
-  std::vector<std::pair<size_t, size_t>> metaResult;
-
-  // Open file for reading as binary from the end side
-  std::ifstream ifs(filepath, std::ios::ate);
-
-  // If failed to open file
-  if (!ifs)
-  {
-    LOG_ERROR("Error opening file: "s + filepath);
-  }
-
-  // Get end of file
-  auto end = ifs.tellg();
-
-  // Get iterator to begining
-  ifs.seekg(0, std::ios::beg);
-
-  // Compute size of file
-  auto size = std::size_t(end - ifs.tellg());
-
-  // If emtpy file
-  if (size == 0)
-  {
-    LOG_ERROR("Empty file opened!");
-  }
-
-  size_t lineNr{0_z};
-  std::string line;
-
-  // Iterate until there is something to read from file
-  while (std::getline(ifs, line))
-  {
-    ++lineNr;
-
-    // cut "shot" prefix
-    line = line.substr(4);
-
-    std::string videoIdStr{line.substr(0, 5)};
-    size_t videoId{(size_t)strToInt(videoIdStr)};
-
-    line = line.substr(6);
-    size_t shotId{(size_t)strToInt(line)};
-
-    metaResult.emplace_back(videoId, shotId);
-  }
-
-  return metaResult;
-}
-
-void ImageRanker::ResetTrecvidShotMap()
-{
-  // Just reset all trues to falses
-  for (auto&& submap : _trecvidShotReferenceMap)
-  {
-    for (auto&& [pair, isTaken] : submap)
-    {
-      isTaken = false;
-    }
-  }
-}
-
-std::pair<size_t, size_t> ImageRanker::ConvertToTrecvidShotId(size_t ourFrameId)
-{
-  auto ourFrameIdDowncasted{static_cast<unsigned int>(ourFrameId)};
-
-  // Get image pointer
-  const Image* pImg{GetImageDataById(ourFrameId)};
-  auto ourFrameNumber{pImg->m_frameNumber};
-
-  // Get video ID, this is idx in trecvid map vector
-  auto videoId{static_cast<size_t>(pImg->m_videoId)};
-
-  // Get correct submap for this video
-  auto& videoMap{_trecvidShotReferenceMap[videoId]};
-
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  // Return ID PLUS 1, because TRECVID vids start at 1 and our source file
-  // starts at 0
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  videoId = videoId + 1;
-
-  size_t ourFrameNumberA;
-  if (ourFrameNumber > 1)
-  {
-    ourFrameNumberA = ourFrameNumber - 1;
-  }
-
-  //
-  // Binary search frame interval, that this frame belongs to
-  //
-  auto shotIntervalIt = std::lower_bound(
-      videoMap.begin(), videoMap.end(), std::pair(std::pair(ourFrameNumber, ourFrameNumber), false),
-      [](const std::pair<std::pair<size_t, size_t>, bool>& l, const std::pair<std::pair<size_t, size_t>, bool>& r) {
-        auto lVal{l.first};
-        auto rVal{r.first};
-
-        return lVal.first < rVal.first && lVal.second < rVal.second;
-      });
-
-  if (shotIntervalIt == videoMap.end())
-  {
-    std::cout << "videoId = " << videoId << std::endl;
-    std::cout << "ourFrameNumber = " << ourFrameNumber << std::endl;
-    std::cout << "shot ref intervals:" << std::endl;
-
-    for (auto&& [pair, t] : videoMap)
-    {
-      std::cout << "[" << pair.first << ", " << pair.second << "]" << std::endl;
-    }
-    LOG("This frame not present in shot reference.");
-
-    return std::pair(SIZE_T_ERROR_VALUE, SIZE_T_ERROR_VALUE);
-  }
-
-  // If this shot is already picked
-  if (shotIntervalIt->second == true)
-  {
-    // Return "Fail value"
-    return std::pair(SIZE_T_ERROR_VALUE, SIZE_T_ERROR_VALUE);
-  }
-  // Otherwise mark this shot as picked
-  else
-  {
-    shotIntervalIt->second = true;
-  }
-
-  // Get idx of this iterator
-  auto shotIdx{shotIntervalIt - videoMap.begin()};
-  assert(shotIdx >= 0);
-
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  // Return index PLUS 1, because TRECVID vids start at 1
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  size_t shotId{static_cast<size_t>(shotIdx + 1)};
-
-  return std::pair(videoId, shotId);
-}
 #endif

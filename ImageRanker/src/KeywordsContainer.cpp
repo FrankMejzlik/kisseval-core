@@ -7,34 +7,15 @@
 
 #include "ImageRanker.h"
 
-KeywordsContainer::KeywordsContainer(ImageRanker* pRanker, eVocabularyId type,
-                                     const std::string& keywordClassesFilepath, const std::string& wordToVecMapFilepath)
-    : _pRanker(pRanker),
-      _pDataType(type),
-      _keywordsFilepath(keywordClassesFilepath),
-      _wordToVecFilepath(wordToVecMapFilepath)
-{
-}
-
-bool KeywordsContainer::Initialize()
+KeywordsContainer::KeywordsContainer(const std::string& keywordClassesFilepath):
+      _keywordsFilepath(keywordClassesFilepath)
 {
   std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
              std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>
       res;
 
-  switch (_pDataType)
-  {
-    case eVocabularyId::VIRET_1200_WORDNET_2019:
 
-      // Parse data
-      res = _pRanker->GetFileParser()->ParseKeywordClassesFile_ViretFormat(_keywordsFilepath);
-      break;
-
-    case eVocabularyId::GOOGLE_AI_20K_2019:
-      // Parse data
-      res = _pRanker->GetFileParser()->ParseKeywordClassesFile_GoogleAiVisionFormat(_keywordsFilepath);
-      break;
-  }
+  res = FileParser::ParseKeywordClassesFile_ViretFormat(_keywordsFilepath); 
 
   // Store results
   _allDescriptions = std::move(std::get<0>(res));
@@ -45,46 +26,6 @@ bool KeywordsContainer::Initialize()
 
   // Sort keywords
   std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
-
-#if PARSE_W2V_FILE
-
-  switch (_pDataType)
-  {
-    case eKeywordsDataType::cViret1:
-
-      // Parse data
-      _pRanker->GetFileParser()->ParseWordToVecFile(eKeywordsDataType::cViret1, _keywords, _wordToVecFilepath);
-
-      break;
-
-    case eKeywordsDataType::cGoogleAI:
-      _pRanker->GetFileParser()->ParseWordToVecFile(eKeywordsDataType::cGoogleAI, _keywords, _wordToVecFilepath);
-
-      break;
-  }
-#endif
-
-  // Iterate over all unique keywords
-  for (auto&& [wordnetId, pKw] : _wordnetIdToKeywords)
-  {
-#if LOG_DEBUG_HYPERNYMS_EXPANSION
-    LOG_NO_ENDL(std::to_string(wordnetId) + "; "s + pKw->m_word + ";");
-#endif
-
-    GetVectorKeywordsIndicesSet(pKw->m_hyponymBinIndices, wordnetId);
-
-#if LOG_DEBUG_HYPERNYMS_EXPANSION
-    for (auto&& index : pKw->m_hyponymBinIndices)
-    {
-      auto kw = GetKeywordConstPtrByVectorIndex(index);
-
-      LOG_NO_ENDL(std::to_string(kw->m_vectorIndex) + ",");
-    }
-    LOG("");
-#endif
-  }
-
-  return true;
 }
 
 KeywordData KeywordsContainer::GetKeywordByVectorIndex(size_t index) const

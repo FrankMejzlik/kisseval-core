@@ -9,73 +9,34 @@
 #include "custom_exceptions.h"
 
 /**
- * Unique IDs of all possible frames datasets used.
- *
- * EXAMPLES: V3C1 20k subset, V3C1
+ * Basic typenames
  */
-enum class eDatasetId
-{
-  V3C1_20K_SUBSET_2019,
-  V3C1_2019,
-  V3C1_VBS2020
-};
+using DataName = std::string;
+using FrameId = uint32_t;
+using VideoId = uint32_t;
+using ShotId = uint32_t;
+using FrameNumber = uint32_t;
 
-/**
- * Unique IDs of all possible vocabularies used.
- *
- * EXAMPLES: Viret synsets, Google AI set, BoW vocabulary
- */
-enum class eVocabularyId
-{
-  VIRET_1200_WORDNET_2019 = 0,
-  GOOGLE_AI_20K_2019 = 100,
-  BOW_2020 = 1000
-};
 
-/**
- * Unique IDs of all possible vocabularies used.
- *
- * EXAMPLES: NasNet 2019 by TS, GoogLeNet 2019 by TS, Google AI from 2019, BoW variant by Xirong
- */
-enum class eScoringsId
+template <typename T>
+constexpr T ERR_VAL()
 {
-  NASNET_2019 = 0,
-  GOOG_LE_NET_2019 = 1,
-  GOOGLE_AI_2019 = 100,
-  RESNEXT_RESNET_BOW_2020 = 1000
-};
-
-/**
- * Type representing reference to file containing input image scoring data.
- *
- * FORMAT: ( <vocabulary_type>, <scoring_type>, <filepath> )
- *
- *  <vocabulary_type>:
-      Unique ID determining what format file is in (e.g. Viret, Google AI Vision).
- *    - \see enum class eKeywordsDataType
- *
- *  <scoring_type>:
- *    Unique ID determining what how scoring data has been generated.
- *    - \see enum class eImageScoringDataType
- *
- *  <filepath>:
-*     String containing filepath (relative of absolute) to the data file.
- *
- */
-using DataFileSrc = std::tuple<eVocabularyId, eScoringsId, std::string>;
+  return std::numeric_limits<T>::max();
+}
 
 /**
  * Base class for all usable data packs.
  */
-struct BaseDataPack
+struct BaseDataPackRef
 {
-  eDatasetId target_dataset;
+  std::string name;
+  std::string target_dataset;
 };
 
 /**
  * Represents one input dataset containg selected frames we have scorings for.
  */
-struct DatasetDataPack : public BaseDataPack
+struct DatasetDataPackRef : public BaseDataPackRef
 {
   std::string images_dir;
   std::string imgage_to_ID_fpth;
@@ -84,21 +45,21 @@ struct DatasetDataPack : public BaseDataPack
 /**
  * Represents input data for 'Viret' based models.
  */
-struct ViretDataPack : public BaseDataPack
+struct ViretDataPackRef : public BaseDataPackRef
 {
   /*
    * Substructures
    */
   struct VocabData
   {
-    DataFileSrc keyword_synsets_fpth;
+    std::string keyword_synsets_fpth;
   };
 
   struct ScoreData
   {
-    DataFileSrc presoftmax_scorings_fpth;
-    DataFileSrc softmax_scorings_fpth;
-    DataFileSrc deep_features_fpth;
+    std::string presoftmax_scorings_fpth;
+    std::string softmax_scorings_fpth;
+    std::string deep_features_fpth;
   };
 
   /*
@@ -108,21 +69,23 @@ struct ViretDataPack : public BaseDataPack
   ScoreData score_data;
 };
 
+using VecMat = std::vector<std::vector<float>>;
+
 /**
  * Represents input data for 'Google AI' based models.
  */
-struct GoogleDataPack : public BaseDataPack
+struct GoogleDataPackRef : public BaseDataPackRef
 {
   struct VocabData
   {
-    DataFileSrc keyword_synsets_fpth;
+    std::string keyword_synsets_fpth;
   };
 
   struct ScoreData
   {
-    DataFileSrc presoftmax_scorings_fpth;
-    DataFileSrc softmax_scorings_fpth;
-    DataFileSrc deep_features_fpth;
+    std::string presoftmax_scorings_fpth;
+    std::string softmax_scorings_fpth;
+    std::string deep_features_fpth;
   };
 
   VocabData vocabulary_data;
@@ -132,23 +95,95 @@ struct GoogleDataPack : public BaseDataPack
 /**
  * Represents input data for 'BoW/W2V++' based models.
  */
-struct BowDataPack : public BaseDataPack
+struct BowDataPackRef : public BaseDataPackRef
 {
   struct VocabData
   {
-    DataFileSrc word_to_idx_fpth;
-    DataFileSrc kw_features_fpth;
-    DataFileSrc kw_bias_vec_fpth;
-    DataFileSrc kw_PCA_mat_fpth;
+    std::string word_to_idx_fpth;
+    std::string kw_features_fpth;
+    std::string kw_bias_vec_fpth;
+    std::string kw_PCA_mat_fpth;
   };
 
   struct ScoreData
   {
-    DataFileSrc img_features_fpth;
+    std::string img_features_fpth;
   };
 
   VocabData vocabulary_data;
   ScoreData score_data;
+};
+
+using DataPackId = std::string;
+using PackModelId = std::string;
+using PackModelCommands = std::string;
+using StringId = std::string;
+
+enum class eDataPackType {
+  VIRET,
+  GOOGLE,
+  BOW
+};
+
+enum class eModelOptType {
+  INT,
+  FLOAT,
+  STRING
+};
+
+struct ModelOption
+{
+  std::string ID;
+  std::string name;
+  std::string description;
+  eModelOptType type;
+  std::vector<std::string> enum_vals;
+  std::pair<float, float> range;
+};
+
+/** 
+ * Configuration pack for VIRET based mode
+ */
+struct ModelInfo {
+  std::string ID;
+  std::string name;
+  std::string description;
+  eDataPackType target_pack_type;
+  std::vector<ModelOption> options;
+};
+
+struct SelFrame
+{
+  SelFrame(FrameId ID, FrameId external_ID, const std::string& filename, VideoId videoId, ShotId shotId, FrameNumber frameNumber)
+      : m_ID(ID),
+        m_external_ID(external_ID),
+        m_video_ID(videoId),
+        m_shot_ID(shotId),
+        m_frame_number(frameNumber),
+        m_num_successors(0),
+        m_filename(filename)
+  {
+  }
+
+  FrameId m_ID;
+  FrameId m_external_ID;
+  
+  VideoId m_video_ID;
+  ShotId m_shot_ID;
+  FrameNumber m_frame_number;
+
+  size_t m_num_successors;
+  std::string m_filename;
+};
+
+
+using ImageIdFilenameTuple = std::tuple<FrameId, std::string>;
+
+struct RankingResult
+{
+  std::vector<FrameId> m_frames;
+  FrameId target;
+  size_t target_pos;
 };
 
 // =====================================
@@ -160,61 +195,6 @@ struct BowDataPack : public BaseDataPack
 
 // Forward decls
 class Keyword;
-class Image;
-
-inline std::string ToString(eVocabularyId id)
-{
-  std::string resultString;
-
-  switch (id)
-  {
-    case eVocabularyId::VIRET_1200_WORDNET_2019:
-      resultString += "eKeywordsDataType::cViret1";
-      break;
-
-    case eVocabularyId::GOOGLE_AI_20K_2019:
-      resultString += "eKeywordsDataType::cGoogleAI";
-      break;
-  }
-
-  return resultString;
-}
-
-/*!
- * Type representing reference to file containing keyword descriptions
- *
- * FORMAT:
- *  (type ID, filepath)
- *
- *  Type ID - unique ID determining what format file is in (e.g. Viret, Google AI Vision)
- *    \see enum class eKeywordsDataType
- *
- *  filepath - String containing filepath (relative of absolute) to file
- *
- */
-using KeywordsFileRef = std::tuple<eVocabularyId, std::string>;
-
-inline std::string ToString(eScoringsId id)
-{
-  std::string resultString;
-
-  switch (id)
-  {
-    case eScoringsId::NASNET_2019:
-      resultString += "cNasNet";
-      break;
-
-    case eScoringsId::GOOG_LE_NET_2019:
-      resultString += "cGoogLeNet";
-      break;
-
-    case eScoringsId::GOOGLE_AI_2019:
-      resultString += "cGoogleAI";
-      break;
-  }
-
-  return resultString;
-}
 
 /*!
  * Structure holding data about occurance rate of one keyword
@@ -239,23 +219,8 @@ using KeywordOccurance = std::tuple<size_t, std::string, float>;
  *  \see KeywordOccurance
  * targetImagePosition - position of image that was set as target
  */
-using RelevantImagesResponse = std::tuple<std::vector<const Image*>, std::vector<KeywordOccurance>, size_t>;
+using RelevantImagesResponse = std::tuple<std::vector<const FrameId*>, std::vector<KeywordOccurance>, size_t>;
 
-//! Identifier for ( kwTypeId, scoringTypeId )
-using DataId = std::tuple<eVocabularyId, eScoringsId>;
-
-//! Unique ID for type of final data transformation
-using TransformFullId = size_t;
-
-/*!
- * Structure representing ptr to keyword and its scores
- *
- * FORMAT:
- *  [ ( keywordPtr, keywordScore ), (...)  ]
- */
-using KeywordPtrScoringPair = std::vector<std::tuple<Keyword*, float>>;
-
-using ImageIdFilenameTuple = std::tuple<size_t, std::string>;
 
 /*!
  *

@@ -1,6 +1,6 @@
 ---
-Checks:            ''
-WarningsAsErrors:  ''
-HeaderFilterRegex: none
-FormatStyle:       'file'
-User:              frankmejzlik
+Checks:          '-*,cppcoreguidelines-*,modernize-*,-modernize-use-trailing-return-type,performance-*,portability-*,readability-*,clang-analyzer-*'
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+FormatStyle:     none
+User:            frankmejzlik

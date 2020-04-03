@@ -11,18 +11,23 @@
 #include "utility.h"
 
 #include "Image.hpp"
-#include "TransformationFunctionBase.h"
+
 
 #include "KeywordsContainer.h"
 
+#include "data_packs/VIRET_based/transformations/TransformationFunctionBase.h"
+#include "data_packs/VIRET_based/ranking_models/RankingModelBase.h"
+
 class RankingModelBase
 {
+
+
+
+#if 0
   // Required API for ranking models
  public:
-  virtual void SetModelSettings(RankingModelSettings settingsString) = 0;
-
-  virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
-      const std::vector<CnfFormula>& queryFormulae, DataId data_ID,
+    virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
+      const std::vector<std::string>& user_queries, 
       TransformationFunctionBase* pAggregation, const std::vector<float>* pIndexKwFrequency,
       const std::vector<std::unique_ptr<Image>>& _imagesCont,
       const std::map<eVocabularyId, KeywordsContainer>& keywordContainers, size_t numResults = SIZE_T_ERROR_VALUE,
@@ -39,4 +44,6 @@ class RankingModelBase
       const std::vector<std::vector<UserImgQuery>>& testQueries,
       const std::vector<std::vector<UserImgQuery>>& testQueriesOrig, const std::vector<std::unique_ptr<Image>>& images,
       const std::map<eVocabularyId, KeywordsContainer>& keywordContainers) const = 0;
+
+#endif
 };

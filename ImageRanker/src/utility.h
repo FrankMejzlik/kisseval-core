@@ -7,8 +7,64 @@ using namespace std::literals;
 #include <iostream>
 #include <random>
 #include <sstream>
+#include <array>
 
 #include "common.h"
+
+
+  inline std::array<char, 4> floatToBytesLE(float number)
+  {
+    std::array<char, 4> byteArray;
+
+    char* bitNumber{reinterpret_cast<char*>(&number)};
+
+    std::get<0>(byteArray) = bitNumber[0];
+    std::get<1>(byteArray) = bitNumber[1];
+    std::get<2>(byteArray) = bitNumber[2];
+    std::get<3>(byteArray) = bitNumber[3];
+
+    return byteArray;
+  }
+
+  inline std::array<char, 4> uint32ToBytesLE(uint32_t number)
+  {
+    std::array<char, 4> byteArray;
+
+    char* bitNumber{reinterpret_cast<char*>(&number)};
+
+    std::get<0>(byteArray) = bitNumber[0];
+    std::get<1>(byteArray) = bitNumber[1];
+    std::get<2>(byteArray) = bitNumber[2];
+    std::get<3>(byteArray) = bitNumber[3];
+
+    return byteArray;
+  }
+
+inline int32_t ParseIntegerLE(const std::byte* pFirstByte)
+{
+  // Initialize value
+  int32_t signedInteger = 0;
+
+  // Construct final BE integer
+  signedInteger = static_cast<uint32_t>(pFirstByte[3]) << 24 | static_cast<uint32_t>(pFirstByte[2]) << 16 |
+                  static_cast<uint32_t>(pFirstByte[1]) << 8 | static_cast<uint32_t>(pFirstByte[0]);
+
+  // Return parsed integer
+  return signedInteger;
+}
+
+inline float ParseFloatLE(const std::byte* pFirstByte)
+{
+  // Initialize temp value
+  uint32_t byteFloat = 0;
+
+  // Get correct unsigned value of float data
+  byteFloat = static_cast<uint32_t>(pFirstByte[3]) << 24 | static_cast<uint32_t>(pFirstByte[2]) << 16 |
+              static_cast<uint32_t>(pFirstByte[1]) << 8 | static_cast<uint32_t>(pFirstByte[0]);
+
+  // Return reinterpreted data
+  return *(reinterpret_cast<float*>(&byteFloat));
+}
 
 inline std::vector<std::string> SplitString(const std::string& s, char delimiter)
 {
@@ -67,10 +123,10 @@ inline float strToFloat(const std::string& str)
   }
   */
 }
-
-inline int strToInt(const std::string& str)
+template<typename T>
+inline T strTo(const std::string& str)
 {
-  int result;
+  T result;
 
   // Convert and check if successful
   if (auto [p, ec] = std::from_chars(str.data(), str.data() + str.size(), result); ec == std::errc())

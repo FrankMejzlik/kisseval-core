@@ -25,6 +25,8 @@ class ImageRanker;
 using Clause = std::vector<std::pair<bool, size_t>>;
 using CnfFormula = std::vector<Clause>;
 
+
+
 class Keyword
 {
  public:
@@ -71,10 +73,14 @@ class KeywordsContainer
 {
  public:
   KeywordsContainer() = delete;
-  KeywordsContainer(ImageRanker* pRanker, eVocabularyId type, const std::string& keywordClassesFilepath,
-                    const std::string& wordToVecMapFilepath);
+  KeywordsContainer(const std::string& keywordClassesFilepath);
 
-  bool Initialize();
+
+private:
+  
+
+public:
+
 
   void SubstringExpansionPrecompute()
   {
@@ -360,8 +366,7 @@ class KeywordsContainer
   std::map<size_t, Keyword*> _wordnetIdToKeywords;
 
  private:
-  ImageRanker* _pRanker;
-  eVocabularyId _pDataType;
+  DataName _data_name;
 
   std::string _keywordsFilepath;
   std::string _wordToVecFilepath;
