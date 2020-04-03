@@ -163,6 +163,7 @@
 
 #define LOG_CALLS 1
 
+
 /*!
  * Set what databases will be used as primary/secondary
  *
@@ -173,6 +174,6 @@
  * 3: Herkules --
  * 4: Herkules "image-ranker-collector-data2"
  */
-#define PRIMARY_DB_ID 4
+#define PRIMARY_DB_ID 2
 
 #include "credentials.h"

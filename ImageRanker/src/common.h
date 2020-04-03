@@ -5,8 +5,82 @@
 #ifndef _IR_COMMON_H_
 #define _IR_COMMON_H_
 
+#include <vector>
+#include <array>
+
 #include "config.h"
 #include "custom_exceptions.h"
+
+/**********************************************
+ * Name definitions
+ ***********************************************/
+enum class eImagesetId
+{
+  V3C1_20K,
+  V3C1_2019,
+  V3C1_JAN_2020,
+  LSC_APR_2020,
+  _COUNT
+};
+
+ const std::array<std::pair<std::string, std::string>, size_t(eImagesetId::_COUNT)> eImagesetId_labels = {{
+    std::pair("V3C1_20k", "Subset of V31C dataset, every 50th selected frame."),
+    std::pair("V3C1_2019", "Selected frames from V31C dataset by Tomas Soucek in 2019."),
+    std::pair("V3C1_Jan_2020", "Selected frames from V31C dataset by Tomas Soucek for VBS 2020."),
+    std::pair("LSC_Apr_2020", "Selected frames from V31C dataset by Tomas Soucek for LSC 2020."),
+}};
+
+inline const std::pair<std::string, std::string>& enum_label(eImagesetId val)
+{
+  return eImagesetId_labels[size_t(val)];
+}
+
+
+enum class eVocabularyId
+{
+  VIRET_WordNet2019,
+  Google_AI_2019,
+  BOW_JAN_2020_20K_WORDS,
+  NATIVE_LANGUAGE,
+  _COUNT
+};
+
+const std::array<std::pair<std::string, std::string>, size_t(eVocabularyId::_COUNT)> eVocabularyId_labels = {{
+    std::pair("VIRET_WordNet2019", "With ~1300 phrases."),
+    std::pair("Google_AI_2019", "In total ~ 12000 phrases."),
+    std::pair("BoW_Jan_2020", "With ~12k words."),
+    std::pair("native_language", "Free form native language sentences."),
+}};
+
+inline const std::pair<std::string, std::string>& enum_label(eVocabularyId val)
+{
+  return eVocabularyId_labels[size_t(val)];
+}
+
+enum class eDataPackId
+{
+  NASNET_2019,
+  GOOGLENET_2019,
+  GOOGLE_AI_2019,
+  RESNET_RESNEXT_BOW_JAN_2019,
+  _COUNT
+};
+
+const std::array<std::pair<std::string, std::string>, size_t(eDataPackId::_COUNT)> eDataPackId_labels = {{
+    std::pair("NASNET_2019", "NasNet for 20k subset."),
+    std::pair("GOOGLENET_2019", "GoogLeNet for 20k subset."),
+    std::pair("GOOGLE_AI_2019", "Google AI results on 20k subset."),
+    std::pair("RESNET_RESNEXT_BOW_JAN_2019", "BoW model by Xirong for 20k subset."),
+}};
+
+inline const std::pair<std::string, std::string>& enum_label(eDataPackId val)
+{
+  return eDataPackId_labels[size_t(val)];
+}
+
+/**********************************************
+ **********************************************
+ ***********************************************/
 
 /**
  * Basic typenames
@@ -29,8 +103,8 @@ constexpr T ERR_VAL()
  */
 struct BaseDataPackRef
 {
-  std::string name;
-  std::string target_dataset;
+  std::string ID;
+  std::string target_imageset;
 };
 
 /**
@@ -52,6 +126,7 @@ struct ViretDataPackRef : public BaseDataPackRef
    */
   struct VocabData
   {
+    std::string ID;
     std::string keyword_synsets_fpth;
   };
 
@@ -78,6 +153,7 @@ struct GoogleDataPackRef : public BaseDataPackRef
 {
   struct VocabData
   {
+    std::string ID;
     std::string keyword_synsets_fpth;
   };
 
@@ -99,6 +175,7 @@ struct BowDataPackRef : public BaseDataPackRef
 {
   struct VocabData
   {
+    std::string ID;
     std::string word_to_idx_fpth;
     std::string kw_features_fpth;
     std::string kw_bias_vec_fpth;

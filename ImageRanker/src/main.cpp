@@ -3,19 +3,33 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <array>
 #include "ImageRanker.h"
 
 #define BASE_DIR "./data/"
 
+
+//static const char* EnumStrings[] = { "bananas & monkeys", "Round and orange", "APPLE" };
+
+//vocabulary_IDs = {
+//    0: "VIRET_WordNet2019",
+//    100: "Google_AI_2019"
+//}
+
 int main()
 {
+
+  auto a = enum_label(eImagesetId::V3C1_20K);
+
+  auto b = enum_label(eVocabularyId::VIRET_WordNet2019);
+
   std::vector<DatasetDataPackRef> datasets{{"V3C1_20k", "V3C1_20k", "./data/thumbs", "./data/files.txt"}};
-  std::vector<ViretDataPackRef> VIRET_data_packs{
-      {"NasNet2019", "V3C1_20k", "./data/VIRET/keyword_classes.txt",
+  std::vector<ViretDataPackRef> VIRET_data_packs{ 
+      {"V3C1_20k_NasNet_2019", "V3C1_20k", "VIRET_WordNet2019", "./data/VIRET/keyword_classes.txt",
        "./data/VIRET/NasNet2019/Studenti_NasNetLarge.pre-softmax",
        "./data/VIRET/NasNet2019/Studenti_NasNetLarge.softmax",
        "./data/VIRET/NasNet2019/Studenti_NasNetLarge.deep-features"},
-      {"GoogLeNet2019", "V3C1_20k", "./data/VIRET/keyword_classes.txt",
+      {"V3C1_20k_GoogLeNet_2019", "V3C1_20k", "./data/VIRET/keyword_classes.txt",
        "./data/VIRET/GoogLeNet2019/05_googlenet.pre-softmax", "./data/VIRET/GoogLeNet2019/05_googlenet.softmax",
        "./data/VIRET/GoogLeNet2019/05_googlenet.deep-features"}};
 

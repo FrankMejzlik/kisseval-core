@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['imageranker_20for_20kiseval',['ImageRanker for KISEval',['../index.html',1,'']]]
+  ['database_20data',['Database data',['../db_data.html',1,'manual']]]
 ];

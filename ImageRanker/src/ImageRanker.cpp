@@ -22,7 +22,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg)
     // Initialize all images
     auto frames = _fileParser.ParseImagesMetaData(pack.imgage_to_ID_fpth, 1);
 
-    _datasets.emplace(pack.name, std::make_unique<SelFramesDataset>(pack.name, pack.images_dir, std::move(frames)));
+    _datasets.emplace(pack.ID, std::make_unique<SelFramesDataset>(pack.ID, pack.images_dir, std::move(frames)));
   }
 
   /*
@@ -36,8 +36,8 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg)
     auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
     auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
 
-    _VIRET_packs.emplace(pack.name,
-                      std::make_unique<ViretDataPack>(pack.name, pack.vocabulary_data, std::move(presoft_data),
+    _VIRET_packs.emplace(pack.ID,
+                      std::make_unique<ViretDataPack>(pack.ID, pack.vocabulary_data, std::move(presoft_data),
                                                       std::move(soft_data), std::move(deep_features)));
   }
 
