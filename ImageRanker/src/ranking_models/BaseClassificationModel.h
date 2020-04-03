@@ -1,7 +1,5 @@
 #pragma once
 
-#include <assert.h>
-
 #include <algorithm>
 #include <map>
 #include <string>
@@ -15,17 +13,12 @@
 
 #include "KeywordsContainer.h"
 
-#include "data_packs/VIRET_based/transformations/TransformationFunctionBase.h"
-#include "data_packs/VIRET_based/ranking_models/RankingModelBase.h"
-
-class RankingModelBase
+class BaseClassificationModel
 {
-
+ public:
 
 
 #if 0
-  // Required API for ranking models
- public:
     virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
       const std::vector<std::string>& user_queries, 
       TransformationFunctionBase* pAggregation, const std::vector<float>* pIndexKwFrequency,

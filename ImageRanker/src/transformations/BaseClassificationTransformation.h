@@ -8,14 +8,15 @@
 #include "common.h"
 #include "utility.h"
 
-class Image;
-
-class TransformationFunctionBase
+class BaseClassificationTransformation
 {
   // Methods
  public:
-  TransformationFunctionBase(InputDataTransformId id) : _id(id) {}
+  BaseClassificationTransformation(InputDataTransformId id) {}
 
+
+
+  #if 0
   // Required API for ranking models
  public:
   virtual void SetTransformationSettings(InputDataTransformSettings settingsString) = 0;
@@ -49,4 +50,6 @@ class TransformationFunctionBase
   // Attributes
  private:
   InputDataTransformId _id;
+
+#endif
 };

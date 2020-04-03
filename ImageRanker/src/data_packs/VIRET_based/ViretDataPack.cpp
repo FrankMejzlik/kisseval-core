@@ -1,10 +1,11 @@
 
 #include "ViretDataPack.h"
 
-#include "data_packs/VIRET_based/ranking_models/RankingModelBase.h"
-#include "data_packs/VIRET_based/transformations/TransformationFunctionBase.h"
+//#include "classification_transformations.h"
+//#include "classification_ranking_models.h"
 
-ViretDataPack::ViretDataPack(StringId ID, ViretDataPackRef::VocabData vocab_data_refs, 
+
+ViretDataPack::ViretDataPack(const StringId& ID, const ViretDataPackRef::VocabData& vocab_data_refs, 
   std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
                            std::vector<std::vector<float>>&& feas_data)
     : _ID(ID),
