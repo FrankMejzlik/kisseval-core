@@ -38,9 +38,9 @@ inline const std::pair<std::string, std::string>& enum_label(eImagesetId val)
 
 enum class eVocabularyId
 {
-  VIRET_WordNet2019,
-  Google_AI_2019,
-  BOW_JAN_2020_20K_WORDS,
+  VIRET_WORDNET_2019,
+  GOOGLE_AI_2019,
+  BOW_JAN_2020,
   NATIVE_LANGUAGE,
   _COUNT
 };
@@ -104,6 +104,7 @@ constexpr T ERR_VAL()
 struct BaseDataPackRef
 {
   std::string ID;
+  std::string description;
   std::string target_imageset;
 };
 
@@ -127,6 +128,7 @@ struct ViretDataPackRef : public BaseDataPackRef
   struct VocabData
   {
     std::string ID;
+    std::string description;
     std::string keyword_synsets_fpth;
   };
 
@@ -154,6 +156,7 @@ struct GoogleDataPackRef : public BaseDataPackRef
   struct VocabData
   {
     std::string ID;
+    std::string description;
     std::string keyword_synsets_fpth;
   };
 
