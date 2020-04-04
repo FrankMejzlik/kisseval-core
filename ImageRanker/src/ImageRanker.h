@@ -78,13 +78,16 @@ class ImageRanker
   const SelFrame* get_random_frame(const std::string& imageset_ID) const;
 
   AutocompleteInputResult get_autocomplete_results(const std::string& data_pack_ID, const std::string& query_prefix,
-                                       size_t result_size, bool with_example_images) const;
+                                                   size_t result_size, bool with_example_images) const;
+
+  LoadedImagesetsInfo get_loaded_imagesets_info() const;
+  LoadedDataPacksInfo get_loaded_data_packs_info() const;
 
   const std::string& get_frame_filename(const std::string& imageset_ID, size_t imageId) const;
   const SelFrame& get_frame(const std::string& imageset_ID, size_t imageId) const;
 
  private:
-  const BaseDataset& imageset(const std::string& imageset_ID) const { return *_datasets.at(imageset_ID); }
+  const BaseImageset& imageset(const std::string& imageset_ID) const { return *_imagesets.at(imageset_ID); }
 
   const BaseDataPack& data_pack(const std::string& data_pack_ID) const { return *_data_packs.at(data_pack_ID); }
 
@@ -97,7 +100,7 @@ class ImageRanker
 
   eMode _mode;
 
-  std::unordered_map<std::string, std::unique_ptr<BaseDataset>> _datasets;
+  std::unordered_map<std::string, std::unique_ptr<BaseImageset>> _imagesets;
 
   std::unordered_map<DataPackId, std::unique_ptr<BaseDataPack>> _data_packs;
 

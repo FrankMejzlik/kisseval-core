@@ -269,7 +269,7 @@
     <ClInclude Include="src\ranking_models\BaseSpaceModel.h" />
     <ClInclude Include="src\datasets\SelFramesDataset.h" />
     <ClInclude Include="src\data_packs\BaseDataPack.h" />
-    <ClInclude Include="src\datasets\BaseDataset.h" />
+    <ClInclude Include="src\datasets\BaseImageset.h" />
     <ClInclude Include="src\DataManager.h" />
     <ClInclude Include="src\custom_exceptions.h" />
     <ClInclude Include="src\data_format_config.h" />

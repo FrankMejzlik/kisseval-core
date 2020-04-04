@@ -113,7 +113,10 @@ const std::array<std::pair<std::string, std::string>, size_t(eTransformationIds:
     std::pair("X_pow_P", ""),
 }};
 
-inline const std::pair<std::string, std::string>& enum_label(eTransformationIds val) { return eTransformationIds_labels[size_t(val)]; }
+inline const std::pair<std::string, std::string>& enum_label(eTransformationIds val)
+{
+  return eTransformationIds_labels[size_t(val)];
+}
 
 /**********************************************
  **********************************************
@@ -305,10 +308,6 @@ struct RankingResult
   size_t target_pos;
 };
 
-struct DataPackInfo
-{
-};
-
 /** User queries come in in as vector of those. */
 struct AnnotatorUserQuery
 {
@@ -329,16 +328,43 @@ struct GameSessionQueryResult
 /**
  * Keywords that are possible for given prefix.
  */
-struct AutocompleteInputResult {
+struct AutocompleteInputResult
+{
   std::vector<const Keyword*> top_keywords;
 };
+
+struct ImagesetInfo
+{
+  const std::string& ID;
+  const std::string& directory;
+  size_t num_sel_frames;
+};
+
+struct LoadedImagesetsInfo
+{
+  std::vector<ImagesetInfo> imagesets_info;
+};
+
+struct DataPackInfo
+{
+  const std::string& ID;
+  const std::string& description;
+  const std::string& target_imageset_ID;
+
+  const std::string& vocabulary_ID;
+  const std::string& vocabulary_description;
+};
+
+struct LoadedDataPacksInfo
+{
+  std::vector<DataPackInfo> data_packs_info;
+};
+
 // =====================================
 //  NOT REFACTORED CODE BELOW
 // =====================================
 
 #include <cstddef>
-
-
 
 /*!
  * Structure holding data about occurance rate of one keyword
@@ -538,8 +564,6 @@ using TestSettings = std::tuple<InputDataTransformId, RankingModelId, UserDataSo
                                 InputDataTransformSettings>;
 
 using Buffer = std::vector<std::byte>;
-
-
 
 /*! <wordnetID, keyword, description> */
 using KeywordData = std::tuple<size_t, std::string, std::string>;

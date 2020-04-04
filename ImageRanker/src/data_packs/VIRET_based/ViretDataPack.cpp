@@ -60,3 +60,11 @@ AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::strin
 {
   return { _keywords.GetNearKeywordsPtrs(query_prefix, result_size) };
 }
+
+DataPackInfo ViretDataPack::get_info() const 
+{
+  return DataPackInfo{
+    _ID,_description, _target_imageset_ID, _keywords.get_ID(), _keywords.get_description()
+
+  };
+}

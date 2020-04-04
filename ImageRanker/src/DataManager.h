@@ -11,9 +11,8 @@ class DataManager
  public:
   DataManager(ImageRanker* p_owner);
 
-  void submit_annotator_user_queries(
-      const StringId& data_pack_ID, const StringId& vocab_ID, size_t user_level, bool with_example_images,
-      const std::vector<AnnotatorUserQuery>& user_queries);
+  void submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID, size_t user_level,
+                                     bool with_example_images, const std::vector<AnnotatorUserQuery>& user_queries);
 
  private:
  private:

@@ -31,6 +31,8 @@ class ViretDataPack : public BaseDataPack
   [[nodiscard]] AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix, size_t result_size,
                                                               bool with_example_images) const override;
 
+  [[nodiscard]] DataPackInfo get_info() const override;
+
  private:
   KeywordsContainer _keywords;
 

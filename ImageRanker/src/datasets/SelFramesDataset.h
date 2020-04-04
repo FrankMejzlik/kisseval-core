@@ -7,9 +7,9 @@
 #include "common.h"
 #include "utility.h"
 
-#include "BaseDataset.h"
+#include "BaseImageset.h"
 
-class SelFramesDataset : public BaseDataset
+class SelFramesDataset : public BaseImageset
 {
  public:
   SelFramesDataset(const std::string& name, const std::string& images_dir, std::vector<SelFrame>&& frames)
@@ -27,6 +27,13 @@ class SelFramesDataset : public BaseDataset
   [[nodiscard]] const SelFrame& random_frame() const override
   {
     return _frames[rand_integral<size_t>(0, _frames.size())];
+  }
+
+  [[nodiscard]] ImagesetInfo get_info() const override
+  {
+    return {
+      _name, _dir, _frames.size()
+    };
   }
 
  private:

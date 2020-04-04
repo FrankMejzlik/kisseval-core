@@ -19,7 +19,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
     // Initialize all images
     auto frames = _fileParser.ParseImagesMetaData(pack.imgage_to_ID_fpth, 1);
 
-    _datasets.emplace(pack.ID, std::make_unique<SelFramesDataset>(pack.ID, pack.images_dir, std::move(frames)));
+    _imagesets.emplace(pack.ID, std::make_unique<SelFramesDataset>(pack.ID, pack.images_dir, std::move(frames)));
   }
 
   /*
@@ -33,9 +33,9 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
     auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
     auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
 
-    _data_packs.emplace(pack.ID, std::make_unique<ViretDataPack>(pack.ID, pack.target_imageset, pack.description, pack.vocabulary_data,
-                                                                 std::move(presoft_data), std::move(soft_data),
-                                                                 std::move(deep_features)));
+    _data_packs.emplace(pack.ID, std::make_unique<ViretDataPack>(pack.ID, pack.target_imageset, pack.description,
+                                                                 pack.vocabulary_data, std::move(presoft_data),
+                                                                 std::move(soft_data), std::move(deep_features)));
   }
 
   // Google type
@@ -55,15 +55,14 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
   }
 
   _data_manager.submit_annotator_user_queries(data_pack_ID, res->second->get_vocab_ID(), user_level,
-                                                     with_example_images, user_queries);
-
+                                              with_example_images, user_queries);
 
   /*
    * Construct result for the user
    */
   std::vector<GameSessionQueryResult> userResult;
   userResult.reserve(user_queries.size());
-  
+
   const auto& dp = data_pack(data_pack_ID);
   const auto& is = imageset(dp.target_imageset_ID());
 
@@ -74,7 +73,7 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
     result.session_ID = query.session_ID;
     result.human_readable_query = query.user_query_readable;
     result.frame_filename = is[query.target_frame_ID].m_filename;
-  
+
     auto top_KWs = dp.top_frame_keywords(query.target_frame_ID);
 
     std::stringstream model_top_query_ss;
@@ -85,7 +84,7 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
     }
 
     result.model_top_query = model_top_query_ss.str();
-  
+
     userResult.emplace_back(std::move(result));
   }
 
@@ -99,13 +98,13 @@ const std::string& ImageRanker::get_frame_filename(const std::string& imageset_I
   return img.m_filename;
 }
 
-const SelFrame&  ImageRanker::get_frame(const std::string& imageset_ID, size_t imageId) const
+const SelFrame& ImageRanker::get_frame(const std::string& imageset_ID, size_t imageId) const
 {
   return imageset(imageset_ID)[imageId];
 }
 
-
-std::vector<const SelFrame*> ImageRanker::get_random_frame_sequence(const std::string& imageset_ID, size_t seq_len) const
+std::vector<const SelFrame*> ImageRanker::get_random_frame_sequence(const std::string& imageset_ID,
+                                                                    size_t seq_len) const
 {
   std::vector<const SelFrame*> result_frame_ptrs;
 
@@ -134,9 +133,9 @@ const SelFrame* ImageRanker::get_random_frame(const std::string& imageset_ID) co
   return &(imageset(imageset_ID).random_frame());
 }
 
-
-AutocompleteInputResult ImageRanker::get_autocomplete_results(const std::string& data_pack_ID, const std::string& query_prefix,
-                                       size_t result_size, bool with_example_image) const
+AutocompleteInputResult ImageRanker::get_autocomplete_results(const std::string& data_pack_ID,
+                                                              const std::string& query_prefix, size_t result_size,
+                                                              bool with_example_image) const
 {
   // Force lowercase
   std::locale loc;
@@ -151,6 +150,30 @@ AutocompleteInputResult ImageRanker::get_autocomplete_results(const std::string&
   const BaseDataPack& dp = data_pack(data_pack_ID);
 
   return dp.get_autocomplete_results(query_prefix, result_size, with_example_image);
+}
+
+LoadedImagesetsInfo ImageRanker::get_loaded_imagesets_info() const
+{
+  std::vector<ImagesetInfo> infos;
+
+  for (auto&& is : _imagesets)
+  {
+    infos.emplace_back(is.second->get_info());
+  }
+
+  return LoadedImagesetsInfo{infos};
+}
+
+LoadedDataPacksInfo ImageRanker::get_loaded_data_packs_info() const
+{
+  std::vector<DataPackInfo> infos;
+
+  for (auto&& dp : _data_packs)
+  {
+    infos.emplace_back(dp.second->get_info());
+  }
+
+  return LoadedDataPacksInfo{infos};
 }
 
 // =====================================

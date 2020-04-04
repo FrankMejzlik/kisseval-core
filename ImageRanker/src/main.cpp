@@ -41,12 +41,10 @@ int main()
 
   ImageRanker ranker(cfg);
 
-
 #define TEST_submit_annotator_user_queries 0
-  #define TEST_get_random_frame_sequence 0
-  #define TEST_get_autocomplete_results 1
-
-
+#define TEST_get_random_frame_sequence 0
+#define TEST_get_autocomplete_results 0
+#define TEST_get_loaded_imagesets_info 1
 
   // TEST: `submit_annotator_user_queries`
 #if TEST_submit_annotator_user_queries
@@ -56,12 +54,11 @@ int main()
                                            {"Shonicka2", "1213&3451&32321", "cars, cats, cows", 5321},
                                        });
 #endif
-  
+
   // TEST: `get_random_frame_sequence`
 #if TEST_get_random_frame_sequence
   auto r1 = ranker.get_random_frame_sequence(enum_label(eImagesetId::V3C1_20K).first, 3);
 #endif
-
 
   // TEST: `get_autocomplete_results`
 #if TEST_get_autocomplete_results
@@ -71,6 +68,14 @@ int main()
   {
     throw std::runtime_error("failed");
   }
+#endif
+
+  // TEST: `get_loaded_imagesets_info`
+#if TEST_get_loaded_imagesets_info
+
+  auto r1 = ranker.get_loaded_imagesets_info();
+  auto r2 = ranker.get_loaded_data_packs_info();
+
 #endif
 
   return 0;

@@ -25,6 +25,8 @@ class BaseDataPack
   [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix, size_t result_size,
                                                               bool with_example_images) const = 0;
 
+  [[nodiscard]] virtual DataPackInfo get_info() const = 0;
+
   [[nodiscard]] virtual const std::string& get_ID() const { return _ID; };
   [[nodiscard]] virtual const std::string& get_description() const { return _description; };
   [[nodiscard]] virtual const std::string& target_imageset_ID() const { return _target_imageset_ID; };

@@ -16,9 +16,9 @@ DataManager::DataManager(ImageRanker* p_owner)
   }
 }
 
-void DataManager::submit_annotator_user_queries(
-    const StringId& data_pack_ID, const StringId& vocab_ID, size_t user_level, bool with_example_images,
-    const std::vector<AnnotatorUserQuery>& user_queries)
+void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,
+                                                size_t user_level, bool with_example_images,
+                                                const std::vector<AnnotatorUserQuery>& user_queries)
 {
   std::stringstream sql_query_ss;
   sql_query_ss << ("INSERT INTO `" + db_name + "`.`" + queries_table_name +
@@ -55,5 +55,4 @@ void DataManager::submit_annotator_user_queries(
     LOG_ERROR("SQL query result: "s + sql_query + "\n\t Inserting queries into DB failed with error code: "s +
               std::to_string(result));
   }
-
 }
