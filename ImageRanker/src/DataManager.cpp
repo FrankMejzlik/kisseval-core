@@ -16,7 +16,7 @@ DataManager::DataManager(ImageRanker* p_owner)
   }
 }
 
-std::vector<GameSessionQueryResult> DataManager::submit_annotator_user_queries(
+void DataManager::submit_annotator_user_queries(
     const StringId& data_pack_ID, const StringId& vocab_ID, size_t user_level, bool with_example_images,
     const std::vector<AnnotatorUserQuery>& user_queries)
 {
@@ -56,28 +56,4 @@ std::vector<GameSessionQueryResult> DataManager::submit_annotator_user_queries(
               std::to_string(result));
   }
 
-  /******************************
-    Construct result for user
-  *******************************/
-  std::vector<GameSessionQueryResult> userResult;
-  userResult.reserve(user_queries.size());
-  //
-  // for (auto&& query : inputQueries)
-  //{
-  //  // Get user keywords tokens
-  //  std::vector<std::string> userKeywords{StringenizeAndQuery(data_ID, std::get<2>(query))};
-  //
-  //  // Get image ID
-  //  size_t imageId = std::get<1>(query);
-  //
-  //  // Get image filename
-  //  std::string imageFilename{GetImageFilenameById(imageId)};
-  //
-  //  std::vector<std::pair<std::string, float>> netKeywordsProbs{};
-  //
-  //  userResult.emplace_back(std::get<0>(query), std::move(imageFilename), std::move(userKeywords),
-  //                          GetHighestProbKeywords(data_ID, imageId, 10ULL));
-  //}
-
-  return userResult;
 }

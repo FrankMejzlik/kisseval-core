@@ -141,7 +141,7 @@
 //! Standard logging macro
 #define LOG(x) std::cout << x << std::endl
 
-#define LOG_WARN(x) std::cout << x << std::endl
+#define LOG_WARN(x) std::cout << x << "(" << __LINE__ << ", " << __FILE__ << ")" << std::endl
 
 #define LOG_NO_ENDL(x) std::cout << x
 

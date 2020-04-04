@@ -33,7 +33,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
     auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
     auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
 
-    _data_packs.emplace(pack.ID, std::make_unique<ViretDataPack>(pack.ID, pack.description, pack.vocabulary_data,
+    _data_packs.emplace(pack.ID, std::make_unique<ViretDataPack>(pack.ID, pack.target_imageset, pack.description, pack.vocabulary_data,
                                                                  std::move(presoft_data), std::move(soft_data),
                                                                  std::move(deep_features)));
   }
@@ -54,8 +54,82 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
     return std::vector<GameSessionQueryResult>();
   }
 
-  return _data_manager.submit_annotator_user_queries(data_pack_ID, res->second->get_vocab_ID(), user_level,
+  _data_manager.submit_annotator_user_queries(data_pack_ID, res->second->get_vocab_ID(), user_level,
                                                      with_example_images, user_queries);
+
+
+  /*
+   * Construct result for the user
+   */
+  std::vector<GameSessionQueryResult> userResult;
+  userResult.reserve(user_queries.size());
+  
+  auto dp = data_pack(data_pack_ID);
+  auto is = imageset(dp.target_imageset_ID());
+
+  for (auto&& query : user_queries)
+  {
+    GameSessionQueryResult result;
+
+    result.session_ID = query.session_ID;
+    result.human_readable_query = query.user_query_readable;
+    result.frame_filename = is[query.target_frame_ID].m_filename;
+  
+    auto top_KWs = dp.top_frame_keywords(query.target_frame_ID);
+
+    std::stringstream model_top_query_ss;
+
+    for (auto&& KW : top_KWs)
+    {
+      model_top_query_ss << KW->m_word << ", ";
+    }
+
+    result.model_top_query = model_top_query_ss.str();
+  
+    userResult.emplace_back(std::move(result));
+  }
+
+  return userResult;
+}
+
+const std::string& ImageRanker::GetImageFilenameById(std::string imageset_ID, size_t imageId) const
+{
+  auto img = GetImageDataById(imageset_ID, imageId);
+
+  return img.m_filename;
+}
+
+const SelFrame&  ImageRanker::GetImageDataById(std::string imageset_ID, size_t imageId) const
+{
+  return imageset(imageset_ID)[imageId];
+}
+
+
+std::vector<std::string> ImageRanker::StringenizeAndQuery(DataId data_ID, const std::string& query) const
+{
+  // Create sstram from query
+  std::stringstream querySs{query.data()};
+
+  std::vector<std::string> resultTokens;
+  std::string tokenString;
+
+  while (std::getline(querySs, tokenString, '&'))
+  {
+    // If empty string
+    if (tokenString.empty())
+    {
+      continue;
+    }
+
+    std::stringstream tokenSs{tokenString};
+    size_t wordnetId;
+    tokenSs >> wordnetId;
+
+    // Push new token into result
+    resultTokens.emplace_back(GetKeywordByWordnetId(data_ID, wordnetId));
+  }
+
+  return resultTokens;
 }
 
 // =====================================
@@ -1511,32 +1585,7 @@ std::vector<std::string> ImageRanker::TokenizeAndQuery(std::string_view query) c
   return resultTokens;
 }
 
-std::vector<std::string> ImageRanker::StringenizeAndQuery(DataId data_ID, const std::string& query) const
-{
-  // Create sstram from query
-  std::stringstream querySs{query.data()};
 
-  std::vector<std::string> resultTokens;
-  std::string tokenString;
-
-  while (std::getline(querySs, tokenString, '&'))
-  {
-    // If empty string
-    if (tokenString.empty())
-    {
-      continue;
-    }
-
-    std::stringstream tokenSs{tokenString};
-    size_t wordnetId;
-    tokenSs >> wordnetId;
-
-    // Push new token into result
-    resultTokens.emplace_back(GetKeywordByWordnetId(data_ID, wordnetId));
-  }
-
-  return resultTokens;
-}
 
 std::vector<std::vector<UserImgQuery>> ImageRanker::DoQueryAndExpansion(
     DataId data_ID, const std::vector<std::vector<UserImgQuery>>& origQuery, size_t setting) const
@@ -2771,32 +2820,9 @@ const Image* ImageRanker::GetImageDataById(size_t imageId) const
   return _images[index].get();
 }
 
-Image* ImageRanker::GetImageDataById(size_t imageId)
-{
-  // Get correct image index
-  size_t index{imageId / _imageIdStride};
 
-  if (index >= _images.size())
-  {
-    LOG_ERROR("Out of bounds image index."s);
-    return nullptr;
-  }
 
-  return _images[index].get();
-}
 
-std::string ImageRanker::GetImageFilenameById(size_t imageId) const
-{
-  auto imgPtr{GetImageDataById(imageId)};
-
-  if (imgPtr == nullptr)
-  {
-    LOG_ERROR("Incorrect image ID."s);
-    return ""s;
-  }
-
-  return imgPtr->m_filename;
-}
 
 // =======================================================================================
 // =======================================================================================

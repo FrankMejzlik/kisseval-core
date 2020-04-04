@@ -43,7 +43,7 @@ int main()
 
   ranker.submit_annotator_user_queries(enum_label(eDataPackId::NASNET_2019).first, 9, true,
                                        {
-                                           {"Shonicka1", "123&345&3232", "car, cat, cow", 4321},
+                                           {"Shonicka1", "123&345&3232", "car,; '  '  \\ \\ cat, cow", 4321},
                                            {"Shonicka2", "1213&3451&32321", "cars, cats, cows", 5321},
                                        });
 

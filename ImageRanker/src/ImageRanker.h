@@ -74,6 +74,22 @@ class ImageRanker
       const StringId& data_pack_ID, size_t user_level, bool with_example_images,
       const std::vector<AnnotatorUserQuery>& user_queries);
 
+
+  const std::string& GetImageFilenameById(std::string imageset_ID, size_t imageId) const;
+  const SelFrame& GetImageDataById(std::string imageset_ID, size_t imageId) const;
+
+private:
+  const BaseDataset& imageset(std::string imageset_ID) const
+  {
+    return *_datasets.at(imageset_ID);
+  }
+
+  const BaseDataPack& data_pack(std::string data_pack_ID) const
+  {
+    return *_data_packs.at(data_pack_ID);
+  }
+
+
  private:
   Settings _settings;
   FileParser _fileParser;
@@ -83,7 +99,7 @@ class ImageRanker
 
   eMode _mode;
 
-  std::unordered_map<DataPackId, std::unique_ptr<BaseDataset>> _datasets;
+  std::unordered_map<std::string, std::unique_ptr<BaseDataset>> _datasets;
 
   std::unordered_map<DataPackId, std::unique_ptr<BaseDataPack>> _data_packs;
 

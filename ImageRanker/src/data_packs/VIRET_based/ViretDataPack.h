@@ -14,7 +14,7 @@
 class ViretDataPack : public BaseDataPack
 {
  public:
-  ViretDataPack(const StringId& ID, const std::string& description, const ViretDataPackRef::VocabData& vocab_data_refs,
+  ViretDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& description, const ViretDataPackRef::VocabData& vocab_data_refs,
                 std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
                 std::vector<std::vector<float>>&& feas_data);
 
@@ -24,6 +24,9 @@ class ViretDataPack : public BaseDataPack
 
   [[nodiscard]] const std::string& get_vocab_ID() const override;
   [[nodiscard]] const std::string& get_vocab_description() const override;
+
+  [[nodiscard]] std::string humanize_and_query(const std::string& and_query) const override;
+  [[nodiscard]] std::vector<Keyword*> top_frame_keywords(FrameId frame_ID) const override;
 
  private:
   KeywordsContainer _keywords;

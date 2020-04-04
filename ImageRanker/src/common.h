@@ -105,13 +105,13 @@ enum class eTransformationIds
   _COUNT
 };
 
-const std::array<std::pair<std::string, std::string>, size_t(eModelIds::_COUNT)> eModelIds_labels = {{
+const std::array<std::pair<std::string, std::string>, size_t(eTransformationIds::_COUNT)> eTransformationIds_labels = {{
     std::pair("Linear_01", ""),
     std::pair("Softmax", ""),
     std::pair("X_pow_P", ""),
 }};
 
-inline const std::pair<std::string, std::string>& enum_label(eModelIds val) { return eModelIds_labels[size_t(val)]; }
+inline const std::pair<std::string, std::string>& enum_label(eTransformationIds val) { return eTransformationIds_labels[size_t(val)]; }
 
 /**********************************************
  **********************************************
@@ -314,6 +314,14 @@ struct AnnotatorUserQuery
   std::string user_query_encoded;
   std::string user_query_readable;
   FrameId target_frame_ID;
+};
+
+struct GameSessionQueryResult
+{
+  std::string session_ID;
+  std::string frame_filename;
+  std::string human_readable_query;
+  std::string model_top_query;
 };
 
 // =====================================
@@ -524,11 +532,6 @@ using TestSettings = std::tuple<InputDataTransformId, RankingModelId, UserDataSo
                                 InputDataTransformSettings>;
 
 using Buffer = std::vector<std::byte>;
-
-//! This is returned to front end app when some quesries are submited
-//! <SessionID, image filename, user keywords, net <keyword, probability> >
-using GameSessionQueryResult =
-    std::tuple<std::string, std::string, std::vector<std::string>, std::vector<std::pair<std::string, float>>>;
 
 /*!
  * Keywords that are possible for given prefix
