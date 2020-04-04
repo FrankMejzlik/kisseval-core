@@ -41,11 +41,13 @@ int main()
 
   ImageRanker ranker(cfg);
 
-  ranker.submit_annotator_user_queries(enum_label(eDataPackId::NASNET_2019).first, 9, true,
+  /*ranker.submit_annotator_user_queries(enum_label(eDataPackId::NASNET_2019).first, 9, true,
                                        {
                                            {"Shonicka1", "123&345&3232", "car,; '  '  \\ \\ cat, cow", 4321},
                                            {"Shonicka2", "1213&3451&32321", "cars, cats, cows", 5321},
-                                       });
+                                       });*/
+
+  auto r1 = ranker.get_random_frame_sequence(enum_label(eImagesetId::V3C1_20K).first, 3);
 
   return 0;
 }

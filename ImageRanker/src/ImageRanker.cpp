@@ -105,6 +105,36 @@ const SelFrame&  ImageRanker::get_frame(const std::string& imageset_ID, size_t i
 }
 
 
+std::vector<const SelFrame*> ImageRanker::get_random_frame_sequence(const std::string& imageset_ID, size_t seq_len) const
+{
+  std::vector<const SelFrame*> result_frame_ptrs;
+
+  const SelFrame* p_first_frame = nullptr;
+
+  // Get the first frame with enough successors
+  do
+  {
+    p_first_frame = get_random_frame(imageset_ID);
+  } while (p_first_frame->m_num_successors < seq_len);
+
+  result_frame_ptrs.emplace_back(p_first_frame);
+
+  // Get his successors
+  for (size_t i = 1; i < seq_len; ++i)
+  {
+    const SelFrame& frame = get_frame(imageset_ID, p_first_frame->m_ID + i);
+    result_frame_ptrs.emplace_back(&frame);
+  }
+
+  return result_frame_ptrs;
+}
+
+const SelFrame* ImageRanker::get_random_frame(const std::string& imageset_ID) const
+{
+  return &(imageset(imageset_ID).random_frame());
+}
+
+
 // =====================================
 //  NOT REFACTORED CODE BELOW
 // =====================================
@@ -871,19 +901,6 @@ void ImageRanker::RunGridTestsFromTo(std::vector<std::pair<TestSettings, ChartDa
   //}
 }
 
-size_t ImageRanker::GetRandomImageId() const
-{
-  // Get random index
-  return static_cast<size_t>(GetRandomInteger(0, (int)GetNumImages()) * _imageIdStride);
-}
-
-const Image* ImageRanker::GetRandomImage() const
-{
-  size_t imageId{GetRandomImageId()};
-
-  return GetImageDataById(imageId);
-}
-
 std::tuple<const Image*, bool, size_t> ImageRanker::GetCoupledImagesNative() const
 {
   // Get Viret KW data
@@ -1078,27 +1095,6 @@ std::tuple<const Image*, bool, size_t> ImageRanker::GetCouplingImage() const
   return std::tuple(pImg, !((bool)it->second.second), totalCounter);
 }
 
-std::vector<const Image*> ImageRanker::GetRandomImageSequence(size_t seqLength) const
-{
-  std::vector<const Image*> resultImagePtrs;
-
-  const Image* firstImgPtr{nullptr};
-
-  do
-  {
-    firstImgPtr = GetRandomImage();
-  } while (firstImgPtr->m_numSuccessorFrames <= (seqLength - 1));
-
-  resultImagePtrs.emplace_back(firstImgPtr);
-
-  for (size_t i{1_z}; i <= (seqLength - 1); ++i)
-  {
-    auto ptr = GetImageDataById(firstImgPtr->m_imageId + (i * _imageIdStride));
-    resultImagePtrs.emplace_back(ptr);
-  }
-
-  return resultImagePtrs;
-}
 
 NearKeywordsResponse ImageRanker::GetNearKeywords(DataId data_ID, const std::string& prefix,
                                                   size_t numResults, bool withExampleImages)

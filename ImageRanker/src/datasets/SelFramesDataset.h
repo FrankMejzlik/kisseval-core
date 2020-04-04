@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 
-#include "BaseDataset.h"
 #include "common.h"
+#include "utility.h"
+
+#include "BaseDataset.h"
 
 class SelFramesDataset : public BaseDataset
 {
@@ -20,6 +22,11 @@ class SelFramesDataset : public BaseDataset
   [[nodiscard]] const SelFrame& operator[](size_t frame_ID) const override
   {
     return _frames.at(frame_ID);
+  }
+
+  [[nodiscard]] const SelFrame& random_frame() const override
+  {
+    return _frames[rand_integral<size_t>(0, _frames.size())];
   }
 
  private:

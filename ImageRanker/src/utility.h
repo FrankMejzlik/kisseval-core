@@ -87,12 +87,16 @@ inline unsigned int FastAtoU(const char* str)
   return val;
 }
 
-inline int GetRandomInteger(int from, int to)
+/**
+ * Returns ingeger sampled from uniform distribution from the interval [from, to].
+ */
+template <typename T>
+inline T rand_integral(T from, T to)
 {
   // Create random generator
   std::random_device dev;
   std::mt19937 rng(dev());
-  std::uniform_int_distribution<int> randFromDistribution(from, to);
+  std::uniform_int_distribution<T> randFromDistribution(from, to);
 
   return randFromDistribution(rng);
 }
@@ -170,7 +174,7 @@ inline T strTo(const std::string& str)
 
   return result_tokens;
 }
-[[nodiscard]] inline std::string EncodeAndQuery(const std::string& query)
+[[nodiscard]] inline std::string encode_and_query(const std::string& query)
 {
   auto word_IDs(tokenize_query_and(query));
 

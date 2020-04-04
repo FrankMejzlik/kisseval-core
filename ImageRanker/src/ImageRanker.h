@@ -74,20 +74,24 @@ class ImageRanker
       const StringId& data_pack_ID, size_t user_level, bool with_example_images,
       const std::vector<AnnotatorUserQuery>& user_queries);
 
+  std::vector<const SelFrame*> get_random_frame_sequence(const std::string& imageset_ID, size_t seq_len) const;
+  const SelFrame* get_random_frame(const std::string& imageset_ID) const;
+
 
   const std::string& get_frame_filename(const std::string& imageset_ID, size_t imageId) const;
   const SelFrame& get_frame(const std::string& imageset_ID, size_t imageId) const;
 
 private:
-  const BaseDataset& imageset(std::string imageset_ID) const
+  const BaseDataset& imageset(const std::string& imageset_ID) const
   {
     return *_datasets.at(imageset_ID);
   }
 
-  const BaseDataPack& data_pack(std::string data_pack_ID) const
+  const BaseDataPack& data_pack(const std::string& data_pack_ID) const
   {
     return *_data_packs.at(data_pack_ID);
   }
+  
 
 
  private:
@@ -190,7 +194,7 @@ public:
   std::tuple<const Image*, bool, size_t> GetCouplingImage() const;
   std::tuple<const Image*, bool, size_t> GetCoupledImagesNative() const;
 
-  std::vector<const Image*> GetRandomImageSequence(size_t seqLength) const;
+  
 
   NearKeywordsResponse GetNearKeywords(DataId data_ID, const std::string& prefix, size_t numResults,
                                        bool withExampleImages);

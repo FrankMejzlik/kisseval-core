@@ -31,7 +31,7 @@ void DataManager::submit_annotator_user_queries(
   size_t i = 0;
   for (auto&& query : user_queries)
   {
-    sql_query_ss << "('"s << EncodeAndQuery(query.user_query_encoded) + "','"s << query.user_query_readable << "','"
+    sql_query_ss << "('"s << encode_and_query(query.user_query_encoded) + "','"s << query.user_query_readable << "','"
                  << vocab_ID << "','" << data_pack_ID << "',NULL," << std::to_string(query.target_frame_ID) << ", "s
                  << ex_imgs_str << "," << std::to_string(user_level) << ",0,'" << query.session_ID + "')";
 
