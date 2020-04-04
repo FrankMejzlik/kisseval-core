@@ -77,22 +77,16 @@ class ImageRanker
   std::vector<const SelFrame*> get_random_frame_sequence(const std::string& imageset_ID, size_t seq_len) const;
   const SelFrame* get_random_frame(const std::string& imageset_ID) const;
 
+  AutocompleteInputResult get_autocomplete_results(const std::string& data_pack_ID, const std::string& query_prefix,
+                                       size_t result_size, bool with_example_images) const;
 
   const std::string& get_frame_filename(const std::string& imageset_ID, size_t imageId) const;
   const SelFrame& get_frame(const std::string& imageset_ID, size_t imageId) const;
 
-private:
-  const BaseDataset& imageset(const std::string& imageset_ID) const
-  {
-    return *_datasets.at(imageset_ID);
-  }
+ private:
+  const BaseDataset& imageset(const std::string& imageset_ID) const { return *_datasets.at(imageset_ID); }
 
-  const BaseDataPack& data_pack(const std::string& data_pack_ID) const
-  {
-    return *_data_packs.at(data_pack_ID);
-  }
-  
-
+  const BaseDataPack& data_pack(const std::string& data_pack_ID) const { return *_data_packs.at(data_pack_ID); }
 
  private:
   Settings _settings;
@@ -196,8 +190,7 @@ public:
 
   
 
-  NearKeywordsResponse GetNearKeywords(DataId data_ID, const std::string& prefix, size_t numResults,
-                                       bool withExampleImages);
+  
   Keyword* GetKeywordByVectorIndex(DataId data_ID, size_t index);
 
   

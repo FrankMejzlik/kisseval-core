@@ -54,3 +54,9 @@ RankingResult ViretDataPack::rank_frames(const std::vector<std::string>& user_qu
   // Parse command string
   return RankingResult();
 }
+
+AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::string& query_prefix,
+                                       size_t result_size, bool with_example_image) const
+{
+  return { _keywords.GetNearKeywordsPtrs(query_prefix, result_size) };
+}

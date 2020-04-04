@@ -67,7 +67,7 @@ int main()
 #if TEST_get_autocomplete_results
   auto r1 = ranker.get_autocomplete_results(enum_label(eDataPackId::NASNET_2019).first, "ca", 20, true);
 
-  if (r1.top_keywords.size() < 20)
+  if (r1.top_keywords.size() < 10)
   {
     throw std::runtime_error("failed");
   }

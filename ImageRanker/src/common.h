@@ -11,6 +11,8 @@
 #include "config.h"
 #include "custom_exceptions.h"
 
+class Keyword;
+
 /**********************************************
  * Name definitions
  ***********************************************/
@@ -324,15 +326,19 @@ struct GameSessionQueryResult
   std::string model_top_query;
 };
 
+/**
+ * Keywords that are possible for given prefix.
+ */
+struct AutocompleteInputResult {
+  std::vector<const Keyword*> top_keywords;
+};
 // =====================================
 //  NOT REFACTORED CODE BELOW
 // =====================================
 
 #include <cstddef>
-#include <vector>
 
-// Forward decls
-class Keyword;
+
 
 /*!
  * Structure holding data about occurance rate of one keyword
@@ -533,14 +539,7 @@ using TestSettings = std::tuple<InputDataTransformId, RankingModelId, UserDataSo
 
 using Buffer = std::vector<std::byte>;
 
-/*!
- * Keywords that are possible for given prefix
- *
- * FORMAT:
- *  [ nearKeywords ]
- *
- */
-using NearKeywordsResponse = std::vector<Keyword*>;
+
 
 /*! <wordnetID, keyword, description> */
 using KeywordData = std::tuple<size_t, std::string, std::string>;

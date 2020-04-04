@@ -581,7 +581,7 @@ std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsConstPtrs(const st
   return resultKeywords;
 }
 
-std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& prefix, size_t numResults)
+std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& prefix, size_t numResults) const
 {
   KeywordsContainer::KeywordLessThanStringComparator comparator;
   size_t left = 0ULL;
@@ -611,9 +611,9 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
     i = (right + left) / 2;
   }
 
-  std::vector<Keyword*> resultKeywords;
+  std::vector<const Keyword*> resultKeywords;
   resultKeywords.reserve(numResults);
-  std::vector<Keyword*> postResultKeywords;
+  std::vector<const Keyword*> postResultKeywords;
 
   // Get desired number of results
   for (size_t j = 0ULL; j < numResults; ++j)
@@ -625,7 +625,7 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
       break;
     }
 
-    Keyword* pKeyword{_keywords[idx].get()};
+    const Keyword* pKeyword{_keywords[idx].get()};
 
     // Check if prefix is equal to searched word
 
@@ -663,7 +663,7 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
 
     for (auto&& index : needleIndices)
     {
-      Keyword* pKeyword = MapDescIndexToKeyword(index);
+      const Keyword* pKeyword = MapDescIndexToKeyword(index);
 
       resultKeywords.emplace_back(pKeyword);
     }

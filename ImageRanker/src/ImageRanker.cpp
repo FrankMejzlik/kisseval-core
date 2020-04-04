@@ -135,6 +135,24 @@ const SelFrame* ImageRanker::get_random_frame(const std::string& imageset_ID) co
 }
 
 
+AutocompleteInputResult ImageRanker::get_autocomplete_results(const std::string& data_pack_ID, const std::string& query_prefix,
+                                       size_t result_size, bool with_example_image) const
+{
+  // Force lowercase
+  std::locale loc;
+  std::string lower;
+
+  // Convert to lowercase
+  for (auto elem : query_prefix)
+  {
+    lower.push_back(std::tolower(elem, loc));
+  }
+
+  const BaseDataPack& dp = data_pack(data_pack_ID);
+
+  return dp.get_autocomplete_results(query_prefix, result_size, with_example_image);
+}
+
 // =====================================
 //  NOT REFACTORED CODE BELOW
 // =====================================

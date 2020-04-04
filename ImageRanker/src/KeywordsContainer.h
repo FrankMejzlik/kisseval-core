@@ -93,7 +93,7 @@ public:
     SubstringExpansionPrecompute2();
   }
 
-  Keyword* GetKeywordPtr(const std::string& wordString)
+  const Keyword* GetKeywordPtr(const std::string& wordString) const
   {
     auto pKw{GetNearKeywordsPtrs(wordString, 1)[0]};
 
@@ -235,7 +235,7 @@ public:
   [[deprecated]] std::vector<std::tuple<size_t, std::string, std::string>> GetNearKeywords(const std::string& prefix);
 
   std::vector<const Keyword*> GetNearKeywordsConstPtrs(const std::string& prefix) const;
-  std::vector<Keyword*> GetNearKeywordsPtrs(const std::string& prefix, size_t numResults);
+  std::vector<const Keyword*> GetNearKeywordsPtrs(const std::string& prefix, size_t numResults) const;
 
   const Keyword* GetKeywordConstPtrByWordnetId(size_t wordnetId) const;
 
