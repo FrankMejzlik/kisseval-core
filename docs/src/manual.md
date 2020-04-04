@@ -59,7 +59,7 @@ Stores all search sessions done by users in the web UI.
 |target_frame_ID   |INT(11)       |Frame that was used as the target.|
 |vocabulary_ID     |VARCHAR(45)       |String ID of vocabulary this query was collected for.|
 |data_pack_ID    |VARCHAR(45)       |Data pack that was used for autocomplete results during query creation.|
-|model_options   |LONGTEXT       | String describing options of model that was used for autocomplete results during query creation.|
+|model_options   |LONGTEXT       | String describing options of model that was used for autocomplete results during query creation (more info below).|
 |duration   |INT(11)       |Duration (in seconds) of this search session.|
 |user_level   |TINYINT(4)       | Describes level of user that created this query, the higher the more experienced user in video browsing.|
 |result   |TINYINT(1)       |True if this session ended with user finding the target.|
@@ -79,3 +79,29 @@ Stores all metadata for search sessions stored in `search_sessions` table.
 |operand   |INT(11)       |Object that this action was done on.|
 |result_target_rank   |INT(11)       |Rank of the target frame that this action resulted in.|
 |time   |INT(255)       | Time elapsed since the start of this search session (in seconds). |
+
+# Columns
+## `model_options`
+This is string containing <key>`=`<value> pairs separated with `;`. There is guaranteed that nor in values or keys will be `;` or `=` present.
+
+@note
+    If no key-value pair present, default value is used.
+
+Keys are specific to the models:
+
+### "Boolean"" model
+
+### "Vector space" model
+
+### "mult-sum-max" model
+|Key| Possible values| Default value | Description |
+|---|---|---|---|
+|model_ID |`Boolean`,`Vector_space`,`Mult_sum_max`,`Boolean_bucket`,`BoW_VBS2020`  |`Mult_sum_max` | What model is used during evaluation. |
+|model_outter | `mult`,`sum` |`mult` | Outter operation for top level keyword groups. |
+|model_inner | `mult`,`sum`,`max` |`sum` |Outter operation for lower-level keyword groups. |
+|model_ignore_treshold | float in `[0.0, 1.0]`  | `0.0f` | All vector elements with less than or equal value will be considered 0. |
+|transform_ID| `Linear_01`,`Softmax`| `Linear_01`| What transformation is applied on vectors before the model itself.|
+
+
+### **Boolean bucketed** model
+

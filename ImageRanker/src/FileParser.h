@@ -21,16 +21,13 @@ class ImageRanker;
 class FileParser
 {
  public:
-   static std::pair<
-       std::vector<std::vector<float>>,
-       std::vector<std::vector<std::pair<FrameId, float>>>
-     > ParseRawScoringData_ViretFormat(const std::string& inputFilepath);
-   static std::vector<std::vector<float>> ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath);
-   static std::vector<std::vector<float>> ParseDeepFeasBinFile_ViretFormat(const std::string& inputFilepath);
-     static std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
-             std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>
+  static std::pair<std::vector<std::vector<float>>, std::vector<std::vector<std::pair<FrameId, float>>>>
+  ParseRawScoringData_ViretFormat(const std::string& inputFilepath);
+  static std::vector<std::vector<float>> ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath);
+  static std::vector<std::vector<float>> ParseDeepFeasBinFile_ViretFormat(const std::string& inputFilepath);
+  static std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
+                    std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>
   ParseKeywordClassesFile_ViretFormat(const std::string& filepath);
-   
 
   FileParser(ImageRanker* pRanker);
 
@@ -38,16 +35,12 @@ class FileParser
   VideoId GetVideoIdFromFrameFilename(const std::string& filename) const;
   ShotId GetShotIdFromFrameFilename(const std::string& filename) const;
 
-
-
   std::vector<SelFrame> ParseImagesMetaData(const std::string& idToFilename, size_t imageIdStride = 1) const;
 
   // =================================
   // =================================
   // =================================
   void ProcessVideoShotsStack(std::stack<SelFrame*>& videoFrames) const;
-  
-
 
   std::vector<ImageIdFilenameTuple> GetImageFilenames(const std::string& _imageToIdMapFilepath) const;
 
@@ -56,7 +49,7 @@ class FileParser
 
   bool ParseRawScoringData_ViretFormat(DataName data_name, const std::string& inputFilepath) const;
 
-  bool ParseSoftmaxBinFile_ViretFormat(DataName data_name,const std::string& inputFilepath) const;
+  bool ParseSoftmaxBinFile_ViretFormat(DataName data_name, const std::string& inputFilepath) const;
 
   bool ParseSoftmaxBinFile_GoogleAiVisionFormat(DataName data_name, const std::string& inputFilepath) const;
 

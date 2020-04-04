@@ -5,18 +5,16 @@
 #include <vector>
 using namespace std::string_literals;
 
-
 #include "common.h"
 #include "config.h"
 #include "utility.h"
 
+#include "DataManager.h"
 #include "Database.h"
 #include "FileParser.h"
-#include "DataManager.h"
 
-#include "datasets/SelFramesDataset.h"
 #include "data_packs/BaseDataPack.h"
-
+#include "datasets/SelFramesDataset.h"
 
 class ImageRanker
 {
@@ -65,19 +63,18 @@ class ImageRanker
   bool Initialize();
   bool InitializeFullMode();
 
-  [[nodiscard]]
-  RankingResult rank_frames(const std::vector<std::string>& user_queries,
-                                DataPackId data_pack_ID, PackModelId pack_model_ID, PackModelCommands model_commands,
-                                size_t result_size, FrameId target_image_ID = ERR_VAL<FrameId>()) const;
-  
+  [[nodiscard]] RankingResult rank_frames(const std::vector<std::string>& user_queries, DataPackId data_pack_ID,
+                                          PackModelId pack_model_ID, PackModelCommands model_commands,
+                                          size_t result_size, FrameId target_image_ID = ERR_VAL<FrameId>()) const;
+
   /*!
    * This processes input queries that come from users, generates results and sends them back
    */
-  std::vector<GameSessionQueryResult> submit_annotator_user_queries(const StringId& data_pack_ID, size_t user_level,
-                                                                   const std::vector<AnnotatorUserQuery>& user_queries);
+  std::vector<GameSessionQueryResult> submit_annotator_user_queries(
+      const StringId& data_pack_ID, size_t user_level, bool with_example_images,
+      const std::vector<AnnotatorUserQuery>& user_queries);
 
-
-private:
+ private:
   Settings _settings;
   FileParser _fileParser;
 

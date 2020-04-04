@@ -163,7 +163,6 @@
 
 #define LOG_CALLS 1
 
-
 /*!
  * Set what databases will be used as primary/secondary
  *

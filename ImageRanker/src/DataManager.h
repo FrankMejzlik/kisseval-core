@@ -12,12 +12,10 @@ class DataManager
   DataManager(ImageRanker* p_owner);
 
   std::vector<GameSessionQueryResult> submit_annotator_user_queries(
-      const StringId& data_pack_ID, const StringId& vocab_ID, size_t user_level,
+      const StringId& data_pack_ID, const StringId& vocab_ID, size_t user_level, bool with_example_images,
       const std::vector<AnnotatorUserQuery>& user_queries);
 
  private:
-  
-
  private:
   ImageRanker* _p_owner;
   Database _db;

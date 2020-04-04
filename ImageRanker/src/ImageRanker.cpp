@@ -44,7 +44,8 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
 }
 
 std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
-    const StringId& data_pack_ID, size_t user_level, const std::vector<AnnotatorUserQuery>& user_queries)
+    const StringId& data_pack_ID, size_t user_level, bool with_example_images,
+    const std::vector<AnnotatorUserQuery>& user_queries)
 {
   auto res = _data_packs.find(data_pack_ID);
   if (res == _data_packs.end())
@@ -53,7 +54,8 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
     return std::vector<GameSessionQueryResult>();
   }
 
-  return _data_manager.submit_annotator_user_queries(data_pack_ID, res->second->get_ID(), user_level, user_queries);
+  return _data_manager.submit_annotator_user_queries(data_pack_ID, res->second->get_vocab_ID(), user_level,
+                                                     with_example_images, user_queries);
 }
 
 // =====================================

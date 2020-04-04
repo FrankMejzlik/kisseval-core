@@ -7,7 +7,6 @@
 
 FileParser::FileParser(ImageRanker* pRanker) : _pRanker(pRanker) {}
 
-
 std::tuple<VideoId, ShotId, FrameNumber> FileParser::ParseVideoFilename(const std::string& filename) const
 {
   // Extract string representing video ID
@@ -92,8 +91,7 @@ std::vector<ImageIdFilenameTuple> FileParser::GetImageFilenames(const std::strin
   return result;
 }
 
-std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFilename,
-                                                                    size_t imageIdStride) const
+std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFilename, size_t imageIdStride) const
 {
   std::vector<ImageIdFilenameTuple> imageIdFilenameTuples = GetImageFilenames(idToFilename);
 
@@ -171,10 +169,10 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
   return resultImages;
 }
 
-
 std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
            std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>
-FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath){
+FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath)
+{
   // Open file with list of files in images dir
   std::ifstream inFile(filepath, std::ios::in);
 
@@ -296,11 +294,8 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath){
                     std::move(_descIndexToKeyword), std::move(_keywords)};
 }
 
-
-std::pair<
-    std::vector<std::vector<float>>,
-    std::vector<std::vector<std::pair<FrameId, float>>>
-  > FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
+std::pair<std::vector<std::vector<float>>, std::vector<std::vector<std::pair<FrameId, float>>>>
+FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
 {
   // Open file for reading as binary from the end side
   std::ifstream ifs(inputFilepath, std::ios::binary | std::ios::ate);
@@ -354,11 +349,9 @@ std::pair<
   size_t prevVideoId{SIZE_T_ERROR_VALUE};
   size_t prevShotId{SIZE_T_ERROR_VALUE};
 
-
   // Create line buffer
   std::vector<std::byte> lineBuffer;
   lineBuffer.resize(byteRowLengths);
-
 
   std::vector<std::vector<float>> result_data;
   std::vector<std::vector<std::pair<FrameId, float>>> result_top_KWs;
@@ -432,7 +425,6 @@ std::pair<
     }
     float variance = sqrtf((float)1 / (numFloats - 1) * varSum);
 
-    
     std::vector<std::pair<FrameId, float>> top_KW_frame_IDs;
     top_KW_frame_IDs.reserve(NUM_TOP_KEYWORDS);
 
@@ -445,22 +437,18 @@ std::pair<
 
       top_KW_frame_IDs.emplace_back(FrameId(pair.first), pair.second);
     }
-    
+
     result_data.emplace_back(std::move(rawRankData));
     result_top_KWs.emplace_back(std::move(top_KW_frame_IDs));
   }
 
-  return std::pair<
-    std::vector<std::vector<float>>,
-    std::vector<std::vector<std::pair<FrameId, float>>>
-  >(result_data, result_top_KWs);
+  return std::pair<std::vector<std::vector<float>>, std::vector<std::vector<std::pair<FrameId, float>>>>(
+      result_data, result_top_KWs);
 }
 
 std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath)
 {
-
   std::vector<std::vector<float>> result;
-
 
   // Open file for reading as binary from the end side
   std::ifstream ifs(inputFilepath, std::ios::binary | std::ios::ate);
@@ -574,7 +562,6 @@ std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(cons
       varSum += (tmp * tmp);
     }
     float variance = sqrtf((float)1 / (numFloats - 1) * varSum);
-
 
     result.emplace_back(std::move(rawRankData));
   }
@@ -984,6 +971,5 @@ FileParser::ParseKeywordClassesFile_GoogleAiVisionFormat(const std::string& file
 {
   return ParseKeywordClassesFile_ViretFormat(filepath);
 }
-
 
 #endif

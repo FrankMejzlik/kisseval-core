@@ -10,6 +10,7 @@
 
 int main()
 {
+  // V3C1 20k subset
   std::vector<DatasetDataPackRef> datasets{
       {enum_label(eImagesetId::V3C1_20K).first, enum_label(eImagesetId::V3C1_20K).second,
        enum_label(eImagesetId::V3C1_20K).first, "./data/thumbs", "./data/files.txt"}};
@@ -40,170 +41,11 @@ int main()
 
   ImageRanker ranker(cfg);
 
-
-  // SimulatedUser su;
-  // su.m_exponent = 4;
-
-  // auto charts = ranker.RunModelSimulatedQueries(
-  //    "MULT-SUM", DataId(eVocabularyId::VIRET_1200_WORDNET_2019, eScoringsId::NASNET_2019),
-  //    InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (UserDataSourceId)999,
-  //    std::vector<std::string>({"0"s}), std::vector<std::string>({"0"s, "0.0"s, "0"s}),
-  //    std::vector<std::string>({"1"s, "0"s}), 0);
-
-  // for (auto&& chart : charts)
-  //{
-  //  for (auto&& [i, num] : chart)
-  //  {
-  //    std::cout << i << "=>" << num << std::endl;
-  //  }
-  //  std::cout << "==========================================" << std::endl;
-  //  std::cout << "==========================================" << std::endl;
-  //}
-
-  // std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-  // std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-  // std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-
-  // charts = ranker.RunModelSimulatedQueries(
-  //    "MULT-MAX", DataId(eVocabularyId::VIRET_1200_WORDNET_2019, eScoringsId::NASNET_2019),
-  //    InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (UserDataSourceId)999,
-  //    std::vector<std::string>({"0"s}), std::vector<std::string>({"0"s, "0.0"s, "1"s}),
-  //    std::vector<std::string>({"1"s, "1"s}), 0);
-
-  // for (auto&& chart : charts)
-  //{
-  //  for (auto&& [i, num] : chart)
-  //  {
-  //    std::cout << i << "=>" << num << std::endl;
-  //  }
-  //  std::cout << "==========================================" << std::endl;
-  //  std::cout << "==========================================" << std::endl;
-  //}
-
-  // std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-  // std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-  // std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-
-  // charts = ranker.RunModelSimulatedQueries(
-  //    "SUM-MAX", DataId(eVocabularyId::VIRET_1200_WORDNET_2019, eScoringsId::NASNET_2019),
-  //    InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (UserDataSourceId)999,
-  //    std::vector<std::string>({"0"s}), std::vector<std::string>({"0"s, "0.0"s, "2"s}),
-  //    std::vector<std::string>({"1"s, "1"s}), 0);
-
-  // for (auto&& chart : charts)
-  //{
-  //  for (auto&& [i, num] : chart)
-  //  {
-  //    std::cout << i << "=>" << num << std::endl;
-  //  }
-  //  std::cout << "==========================================" << std::endl;
-  //  std::cout << "==========================================" << std::endl;
-  //}
-
-  // std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-  // std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-  // std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-
-  // charts = ranker.RunModelSimulatedQueries(
-  //    "SUM-SUM", DataId(eVocabularyId::VIRET_1200_WORDNET_2019, eScoringsId::NASNET_2019),
-  //    InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (UserDataSourceId)999,
-  //    std::vector<std::string>({"0"s}), std::vector<std::string>({"0"s, "0.0"s, "3"s}),
-  //    std::vector<std::string>({"1"s, "0"s}), 0);
-
-  // for (auto&& chart : charts)
-  //{
-  //  for (auto&& [i, num] : chart)
-  //  {
-  //    std::cout << i << "=>" << num << std::endl;
-  //  }
-  //  std::cout << "==========================================" << std::endl;
-  //  std::cout << "==========================================" << std::endl;
-  //}
-
-  // std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-  // std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-  // std::cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
-
-  /*
-  std::cout << "<<2>>WholeSubstringExp========================" << std::endl;
-  auto result12{
-  ranker.RunModelTestWrapper(
-    std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
-    InputDataTransformId::cNoTransform, RankingModelId::cViretBase, (DataSourceTypeId)999,
-    std::vector<std::string>({ "0"s }),
-    std::vector<std::string>({ "0"s, "0.0"s, "0"s }), std::vector<std::string>({ "1"s, "0"s }),
-    2
-  )
-  };
-
-  std::cout << "<<3>>w2vExp========================" << std::endl;
-  auto result13{
-  ranker.RunModelTestWrapper(
-    std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
-    InputDataTransformId::cNoTransform, RankingModelId::cViretBase, (DataSourceTypeId)999,
-    std::vector<std::string>({ "0"s }),
-    std::vector<std::string>({ "0"s, "0.0"s, "0"s }), std::vector<std::string>({ "1"s, "0"s }),
-    3
-  )
-  };
-
-  std::cout << "<<4>>w2vExp+WholeSubstringExp========================" << std::endl;
-  auto result14{
-  ranker.RunModelTestWrapper(
-    std::tuple(eKeywordsDataType::cGoogleAI, eImageScoringDataType::cGoogleAI),
-    InputDataTransformId::cNoTransform, RankingModelId::cViretBase, (DataSourceTypeId)999,
-    std::vector<std::string>({ "0"s }),
-    std::vector<std::string>({ "0"s, "0.0"s, "0"s }), std::vector<std::string>({ "1"s, "0"s }),
-    23
-  )
-  };*/
-
-  /*
-    std::cout << "<<1>>AnySubstringExp========================" << std::endl;
-    auto result11{
-    ranker.RunModelTestWrapper(
-      std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet),
-      InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (DataSourceTypeId)999,
-      std::vector<std::string>({ "0"s }),
-      std::vector<std::string>({ "0"s, "0.0"s, "0"s }), std::vector<std::string>({ "1"s, "0"s }),
-      1
-    )
-    };
-
-    std::cout << "<<2>>WholeSubstringExp========================" << std::endl;
-    auto result12{
-    ranker.RunModelTestWrapper(
-      std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet),
-      InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (DataSourceTypeId)999,
-      std::vector<std::string>({ "0"s }),
-      std::vector<std::string>({ "0"s, "0.0"s, "0"s }), std::vector<std::string>({ "1"s, "0"s }),
-      2
-    )
-    };
-
-    std::cout << "<<3>>w2vExp========================" << std::endl;
-    auto result13{
-    ranker.RunModelTestWrapper(
-      std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet),
-      InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (DataSourceTypeId)999,
-      std::vector<std::string>({ "0"s }),
-      std::vector<std::string>({ "0"s, "0.0"s, "0"s }), std::vector<std::string>({ "1"s, "0"s }),
-      3
-    )
-    };
-
-    std::cout << "<<4>>w2vExp+WholeSubstringExp========================" << std::endl;
-    auto result14{
-    ranker.RunModelTestWrapper(
-      std::tuple(eKeywordsDataType::cViret1, eImageScoringDataType::cNasNet),
-      InputDataTransformId::cXToTheP, RankingModelId::cViretBase, (DataSourceTypeId)999,
-      std::vector<std::string>({ "0"s }),
-      std::vector<std::string>({ "0"s, "0.0"s, "0"s }), std::vector<std::string>({ "1"s, "0"s }),
-      23
-    )
-    };
-
-    */
+  ranker.submit_annotator_user_queries(enum_label(eDataPackId::NASNET_2019).first, 9, true,
+                                       {
+                                           {"Shonicka1", "123&345&3232", "car, cat, cow", 4321},
+                                           {"Shonicka2", "1213&3451&32321", "cars, cats, cows", 5321},
+                                       });
 
   return 0;
 }

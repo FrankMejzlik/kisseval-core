@@ -5,8 +5,8 @@
 #ifndef _IR_COMMON_H_
 #define _IR_COMMON_H_
 
-#include <vector>
 #include <array>
+#include <vector>
 
 #include "config.h"
 #include "custom_exceptions.h"
@@ -23,7 +23,7 @@ enum class eImagesetId
   _COUNT
 };
 
- const std::array<std::pair<std::string, std::string>, size_t(eImagesetId::_COUNT)> eImagesetId_labels = {{
+const std::array<std::pair<std::string, std::string>, size_t(eImagesetId::_COUNT)> eImagesetId_labels = {{
     std::pair("V3C1_20k", "Subset of V31C dataset, every 50th selected frame."),
     std::pair("V3C1_2019", "Selected frames from V31C dataset by Tomas Soucek in 2019."),
     std::pair("V3C1_Jan_2020", "Selected frames from V31C dataset by Tomas Soucek for VBS 2020."),
@@ -34,7 +34,6 @@ inline const std::pair<std::string, std::string>& enum_label(eImagesetId val)
 {
   return eImagesetId_labels[size_t(val)];
 }
-
 
 enum class eVocabularyId
 {
@@ -78,6 +77,42 @@ inline const std::pair<std::string, std::string>& enum_label(eDataPackId val)
   return eDataPackId_labels[size_t(val)];
 }
 
+enum class eModelIds
+{
+  BOOLEAN,
+  VECTOR_SPACE,
+  MULT_SUM_MAX,
+  BOOLEAN_BUCKET,
+  BOW_VBS2020,
+  _COUNT
+};
+
+const std::array<std::pair<std::string, std::string>, size_t(eModelIds::_COUNT)> eModelIds_labels = {{
+    std::pair("Boolean", ""),
+    std::pair("Vector_space", ""),
+    std::pair("Mult-sum-max", ""),
+    std::pair("Boolean_bucket", ""),
+    std::pair("BoW_VBS2020", "BoW model by Xirong."),
+}};
+
+inline const std::pair<std::string, std::string>& enum_label(eModelIds val) { return eModelIds_labels[size_t(val)]; }
+
+enum class eTransformationIds
+{
+  LINEAR_01,
+  SOFTMAX,
+  X_POW_P,
+  _COUNT
+};
+
+const std::array<std::pair<std::string, std::string>, size_t(eModelIds::_COUNT)> eModelIds_labels = {{
+    std::pair("Linear_01", ""),
+    std::pair("Softmax", ""),
+    std::pair("X_pow_P", ""),
+}};
+
+inline const std::pair<std::string, std::string>& enum_label(eModelIds val) { return eModelIds_labels[size_t(val)]; }
+
 /**********************************************
  **********************************************
  ***********************************************/
@@ -90,7 +125,6 @@ using FrameId = uint32_t;
 using VideoId = uint32_t;
 using ShotId = uint32_t;
 using FrameNumber = uint32_t;
-
 
 template <typename T>
 constexpr T ERR_VAL()
@@ -199,13 +233,15 @@ using PackModelId = std::string;
 using PackModelCommands = std::string;
 using StringId = std::string;
 
-enum class eDataPackType {
+enum class eDataPackType
+{
   VIRET,
   GOOGLE,
   BOW
 };
 
-enum class eModelOptType {
+enum class eModelOptType
+{
   INT,
   FLOAT,
   STRING
@@ -221,10 +257,11 @@ struct ModelOption
   std::pair<float, float> range;
 };
 
-/** 
+/**
  * Configuration pack for VIRET based mode
  */
-struct ModelInfo {
+struct ModelInfo
+{
   std::string ID;
   std::string name;
   std::string description;
@@ -234,7 +271,8 @@ struct ModelInfo {
 
 struct SelFrame
 {
-  SelFrame(FrameId ID, FrameId external_ID, const std::string& filename, VideoId videoId, ShotId shotId, FrameNumber frameNumber)
+  SelFrame(FrameId ID, FrameId external_ID, const std::string& filename, VideoId videoId, ShotId shotId,
+           FrameNumber frameNumber)
       : m_ID(ID),
         m_external_ID(external_ID),
         m_video_ID(videoId),
@@ -247,7 +285,7 @@ struct SelFrame
 
   FrameId m_ID;
   FrameId m_external_ID;
-  
+
   VideoId m_video_ID;
   ShotId m_shot_ID;
   FrameNumber m_frame_number;
@@ -255,7 +293,6 @@ struct SelFrame
   size_t m_num_successors;
   std::string m_filename;
 };
-
 
 using ImageIdFilenameTuple = std::tuple<FrameId, std::string>;
 
@@ -268,11 +305,11 @@ struct RankingResult
 
 struct DataPackInfo
 {
-
 };
 
 /** User queries come in in as vector of those. */
-struct AnnotatorUserQuery {
+struct AnnotatorUserQuery
+{
   std::string session_ID;
   std::string user_query_encoded;
   std::string user_query_readable;
@@ -313,7 +350,6 @@ using KeywordOccurance = std::tuple<size_t, std::string, float>;
  * targetImagePosition - position of image that was set as target
  */
 using RelevantImagesResponse = std::tuple<std::vector<const FrameId*>, std::vector<KeywordOccurance>, size_t>;
-
 
 /*!
  *
@@ -493,8 +529,6 @@ using Buffer = std::vector<std::byte>;
 //! <SessionID, image filename, user keywords, net <keyword, probability> >
 using GameSessionQueryResult =
     std::tuple<std::string, std::string, std::vector<std::string>, std::vector<std::pair<std::string, float>>>;
-
-
 
 /*!
  * Keywords that are possible for given prefix
