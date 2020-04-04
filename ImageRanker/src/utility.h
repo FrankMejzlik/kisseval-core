@@ -3,42 +3,41 @@
 #include <string>
 #include <vector>
 using namespace std::literals;
+#include <array>
 #include <charconv>
 #include <iostream>
 #include <random>
 #include <sstream>
-#include <array>
 
 #include "common.h"
 
+inline std::array<char, 4> floatToBytesLE(float number)
+{
+  std::array<char, 4> byteArray;
 
-  inline std::array<char, 4> floatToBytesLE(float number)
-  {
-    std::array<char, 4> byteArray;
+  char* bitNumber{reinterpret_cast<char*>(&number)};
 
-    char* bitNumber{reinterpret_cast<char*>(&number)};
+  std::get<0>(byteArray) = bitNumber[0];
+  std::get<1>(byteArray) = bitNumber[1];
+  std::get<2>(byteArray) = bitNumber[2];
+  std::get<3>(byteArray) = bitNumber[3];
 
-    std::get<0>(byteArray) = bitNumber[0];
-    std::get<1>(byteArray) = bitNumber[1];
-    std::get<2>(byteArray) = bitNumber[2];
-    std::get<3>(byteArray) = bitNumber[3];
+  return byteArray;
+}
 
-    return byteArray;
-  }
+inline std::array<char, 4> uint32ToBytesLE(uint32_t number)
+{
+  std::array<char, 4> byteArray;
 
-  inline std::array<char, 4> uint32ToBytesLE(uint32_t number)
-  {
-    std::array<char, 4> byteArray;
+  char* bitNumber{reinterpret_cast<char*>(&number)};
 
-    char* bitNumber{reinterpret_cast<char*>(&number)};
+  std::get<0>(byteArray) = bitNumber[0];
+  std::get<1>(byteArray) = bitNumber[1];
+  std::get<2>(byteArray) = bitNumber[2];
+  std::get<3>(byteArray) = bitNumber[3];
 
-    std::get<0>(byteArray) = bitNumber[0];
-    std::get<1>(byteArray) = bitNumber[1];
-    std::get<2>(byteArray) = bitNumber[2];
-    std::get<3>(byteArray) = bitNumber[3];
-
-    return byteArray;
-  }
+  return byteArray;
+}
 
 inline int32_t ParseIntegerLE(const std::byte* pFirstByte)
 {
@@ -123,7 +122,13 @@ inline float strToFloat(const std::string& str)
   }
   */
 }
-template<typename T>
+/**
+ * Converts provided string into the `T` type.
+ *
+ * If not convertible we return defaultly constructed value of T.
+ * Therefore we assume T to be default constructible.
+ */
+template <typename T>
 inline T strTo(const std::string& str)
 {
   T result;
@@ -137,5 +142,44 @@ inline T strTo(const std::string& str)
   else
   {
     LOG_ERROR("Conversion of string '"s + str + "' failed with error code "s + std::to_string((int)ec) + ".");
+    return T();
   }
+}
+
+[[nodiscard]] inline std::vector<std::string> tokenize_query_and(std::string_view query)
+{
+  char separator_char = '&';
+
+  // Prepare sstream for parsing from it
+  std::stringstream query_ss(query.data());
+
+  std::vector<std::string> result_tokens;
+  {
+    std::string token_buffer;
+    while (std::getline(query_ss, token_buffer, separator_char))
+    {
+      if (token_buffer.empty())
+      {
+        continue;
+      }
+
+      // Push new token into the result
+      result_tokens.emplace_back(std::move(token_buffer));
+    }
+  }
+
+  return result_tokens;
+}
+[[nodiscard]] inline std::string EncodeAndQuery(const std::string& query)
+{
+  auto word_IDs(tokenize_query_and(query));
+
+  std::string result_encoded_query{"&"s};
+
+  for (auto&& ID : word_IDs)
+  {
+    result_encoded_query += "-"s + ID + "+"s;
+  }
+
+  return result_encoded_query;
 }

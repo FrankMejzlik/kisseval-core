@@ -5,12 +5,14 @@
 #include <vector>
 using namespace std::string_literals;
 
+
 #include "common.h"
 #include "config.h"
 #include "utility.h"
 
 #include "Database.h"
 #include "FileParser.h"
+#include "DataManager.h"
 
 #include "datasets/SelFramesDataset.h"
 #include "data_packs/BaseDataPack.h"
@@ -64,25 +66,29 @@ class ImageRanker
   bool InitializeFullMode();
 
   [[nodiscard]]
-  RankingResult rank_frames(const std::vector<std::string>& user_queries, eDataPackType data_pack_type,
+  RankingResult rank_frames(const std::vector<std::string>& user_queries,
                                 DataPackId data_pack_ID, PackModelId pack_model_ID, PackModelCommands model_commands,
                                 size_t result_size, FrameId target_image_ID = ERR_VAL<FrameId>()) const;
   
-  [[nodiscard]]
-  const FileParser* get_file_parser() const { return &_fileParser; }
+  /*!
+   * This processes input queries that come from users, generates results and sends them back
+   */
+  std::vector<GameSessionQueryResult> submit_annotator_user_queries(const StringId& data_pack_ID, size_t user_level,
+                                                                   const std::vector<AnnotatorUserQuery>& user_queries);
 
- private:
+
+private:
   Settings _settings;
-  Database _db;
   FileParser _fileParser;
+
+  /** Manages database data collection, processing and retrieval */
+  DataManager _data_manager;
 
   eMode _mode;
 
   std::unordered_map<DataPackId, std::unique_ptr<BaseDataset>> _datasets;
 
-  std::unordered_map<DataPackId, std::unique_ptr<BaseDataPack>> _VIRET_packs;
-  /*std::unordered_map<DataPackId, std::unique_ptr<GoogleModelPackRef>> _Google_packs;
-  std::unordered_map<DataPackId, std::unique_ptr<BoWModelPackRef>> _BoW_packs;*/
+  std::unordered_map<DataPackId, std::unique_ptr<BaseDataPack>> _data_packs;
 
   /****************************
    * Member variables
@@ -163,12 +169,7 @@ public:
   const Keyword* GetKeywordConstPtr(eVocabularyId kwDataType, size_t keywordId) const;
   Keyword* GetKeywordPtr(eVocabularyId kwDataType, size_t keywordId);
 
-  /*!
-   * This processes input queries that come from users, generates results and sends them back
-   */
-  std::vector<GameSessionQueryResult> SubmitUserQueriesWithResults(DataId data_ID,
-                                                                   std::vector<GameSessionInputQuery> inputQueries,
-                                                                   UserDataSourceId origin = UserDataSourceId::cPublic);
+  
 
   void SubmitUserDataNativeQueries(std::vector<std::tuple<size_t, std::string, std::string>>& queries);
 

@@ -253,9 +253,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ranking_models\BaseSpaceModel.cpp" />
     <ClCompile Include="src\datasets\SelFramesDataset.cpp" />
     <ClCompile Include="src\DataManager.cpp" />
-    <ClCompile Include="src\data_packs\VIRET_based\ranking_models\RankingModelBase.cpp" />
+    <ClCompile Include="src\ranking_models\BaseClassificationModel.cpp" />
     <ClCompile Include="src\data_packs\VIRET_based\ViretDataPack.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\FileParser.cpp" />
@@ -265,14 +266,15 @@
     <ClCompile Include="src\KeywordsContainer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ranking_models\BaseSpaceModel.h" />
     <ClInclude Include="src\datasets\SelFramesDataset.h" />
     <ClInclude Include="src\data_packs\BaseDataPack.h" />
     <ClInclude Include="src\datasets\BaseDataset.h" />
     <ClInclude Include="src\DataManager.h" />
     <ClInclude Include="src\custom_exceptions.h" />
     <ClInclude Include="src\data_format_config.h" />
-    <ClInclude Include="src\data_packs\VIRET_based\ranking_models\RankingModelBase.h" />
-    <ClInclude Include="src\data_packs\VIRET_based\transformations\TransformationFunctionBase.h" />
+    <ClInclude Include="src\ranking_models\BaseClassificationModel.h" />
+    <ClInclude Include="src\transformations\BaseClassificationTransformation.h" />
     <ClInclude Include="src\FileParser.h" />
     <ClInclude Include="src\data_packs\VIRET_based\ViretDataPack.h" />
     <ClInclude Include="src\common.h" />

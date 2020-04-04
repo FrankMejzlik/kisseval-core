@@ -9,10 +9,7 @@ using json = nlohmann::json;
 
 #include "datasets/SelFramesDataset.h"
 
-ImageRanker::ImageRanker(const ImageRanker::Config& cfg)
-    : _settings(cfg),
-      _db(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME),
-      _fileParser(this)
+ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _fileParser(this), _data_manager(this)
 {
   /*
    * Load all available datasets
@@ -36,21 +33,27 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg)
     auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
     auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
 
-    _VIRET_packs.emplace(pack.ID,
-                      std::make_unique<ViretDataPack>(pack.ID, pack.vocabulary_data, std::move(presoft_data),
-                                                      std::move(soft_data), std::move(deep_features)));
+    _data_packs.emplace(pack.ID, std::make_unique<ViretDataPack>(pack.ID, pack.description, pack.vocabulary_data,
+                                                                 std::move(presoft_data), std::move(soft_data),
+                                                                 std::move(deep_features)));
   }
 
   // Google type
 
   // BoW type
+}
 
-  // Connect to the database
-  auto result = _db.EstablishConnection();
-  if (result != 0)
+std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
+    const StringId& data_pack_ID, size_t user_level, const std::vector<AnnotatorUserQuery>& user_queries)
+{
+  auto res = _data_packs.find(data_pack_ID);
+  if (res == _data_packs.end())
   {
-    LOG_ERROR("Connecting to primary DB failed.");
+    LOG_WARN("Accessing non-existent data pack '" << data_pack_ID << "'");
+    return std::vector<GameSessionQueryResult>();
   }
+
+  return _data_manager.submit_annotator_user_queries(data_pack_ID, res->second->get_ID(), user_level, user_queries);
 }
 
 // =====================================
@@ -1359,19 +1362,7 @@ void ImageRanker::LowMem_RecalculateHypernymsInVectorUsingMax(std::vector<float>
   }
 }
 
-std::string ImageRanker::EncodeAndQuery(const std::string& query) const
-{
-  auto wordIds{TokenizeAndQuery(query)};
 
-  std::string resultEncodedGraph{"&"s};
-
-  for (auto&& wordId : wordIds)
-  {
-    resultEncodedGraph += "-"s + wordId + "+"s;
-  }
-
-  return resultEncodedGraph;
-}
 
 std::vector<GameSessionQueryResult> ImageRanker::SubmitUserQueriesWithResults(
     DataId data_ID, std::vector<GameSessionInputQuery> inputQueries, UserDataSourceId origin)

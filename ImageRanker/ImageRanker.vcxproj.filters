@@ -39,10 +39,13 @@
     <ClCompile Include="src\datasets\SelFramesDataset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\data_packs\VIRET_based\ranking_models\RankingModelBase.cpp">
+    <ClCompile Include="src\data_packs\VIRET_based\ViretDataPack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\data_packs\VIRET_based\ViretDataPack.cpp">
+    <ClCompile Include="src\ranking_models\BaseSpaceModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ranking_models\BaseClassificationModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -98,10 +101,13 @@
     <ClInclude Include="src\data_packs\VIRET_based\ViretDataPack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\data_packs\VIRET_based\transformations\TransformationFunctionBase.h">
+    <ClInclude Include="src\ranking_models\BaseSpaceModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\data_packs\VIRET_based\ranking_models\RankingModelBase.h">
+    <ClInclude Include="src\transformations\BaseClassificationTransformation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ranking_models\BaseClassificationModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

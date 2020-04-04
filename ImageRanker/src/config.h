@@ -174,6 +174,6 @@
  * 3: Herkules --
  * 4: Herkules "image-ranker-collector-data2"
  */
-#define PRIMARY_DB_ID 2
+#define PRIMARY_DB_ID 0
 
 #include "credentials.h"

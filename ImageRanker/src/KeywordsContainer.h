@@ -73,11 +73,16 @@ class KeywordsContainer
 {
  public:
   KeywordsContainer() = delete;
-  KeywordsContainer(const std::string& keywordClassesFilepath);
+  KeywordsContainer(const ViretDataPackRef::VocabData& vocab_data_refs);
 
+
+  const std::string& get_ID() const { return _ID; }
+  const std::string& get_description() const { return _description; }
 
 private:
-  
+  std::string _ID;
+  std::string _description;
+  std::string _kw_classes_fpth;
 
 public:
 
@@ -366,10 +371,6 @@ public:
   std::map<size_t, Keyword*> _wordnetIdToKeywords;
 
  private:
-  DataName _data_name;
-
-  std::string _keywordsFilepath;
-  std::string _wordToVecFilepath;
 
   //! One huge string of all descriptions for fast keyword search
   std::string _allDescriptions;
@@ -379,9 +380,5 @@ public:
 
   std::vector<std::pair<size_t, Keyword*>> _descIndexToKeyword;
 
-#if PUSH_DATA_TO_DB
 
-  std::vector<std::pair<size_t, std::string>> _keywordToWord;
-  std::set<std::string> _words;
-#endif
 };

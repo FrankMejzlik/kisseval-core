@@ -11,12 +11,10 @@
 #include "BaseClassificationModel.h"
 #include "BaseClassificationTransformation.h"
 
-class TransformationFunctionBase;
-
 class ViretDataPack : public BaseDataPack
 {
  public:
-  ViretDataPack(const StringId& ID, const ViretDataPackRef::VocabData& vocab_data_refs,
+  ViretDataPack(const StringId& ID, const std::string& description, const ViretDataPackRef::VocabData& vocab_data_refs,
                 std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
                 std::vector<std::vector<float>>&& feas_data);
 
@@ -24,16 +22,21 @@ class ViretDataPack : public BaseDataPack
                                           PackModelCommands model_commands, size_t result_size,
                                           FrameId target_image_ID = ERR_VAL<FrameId>()) const override;
 
+  [[nodiscard]] const std::string& get_vocab_ID() const override;
+  [[nodiscard]] const std::string& get_vocab_description() const override;
+
  private:
-  StringId _ID;
   KeywordsContainer _keywords;
 
   std::vector<std::vector<float>> _presoftmax_data;
   std::vector<std::vector<float>> _softmax_data;
   std::vector<std::vector<float>> _feas_data;
 
+  /** Models for this data pack - only classification ones */
   std::unordered_map<StringId, std::unique_ptr<BaseClassificationModel>> _models;
-  std::unordered_map<StringId, std::unique_ptr<TransformationFunctionBase>> _transforms;
+
+  /** Transformations for this data pack - only classification ones */
+  std::unordered_map<StringId, std::unique_ptr<BaseClassificationTransformation>> _transforms;
 
   std::unordered_map<StringId, VecMat> _transformed_data;
 };

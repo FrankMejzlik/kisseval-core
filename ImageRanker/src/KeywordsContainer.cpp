@@ -7,15 +7,16 @@
 
 #include "ImageRanker.h"
 
-KeywordsContainer::KeywordsContainer(const std::string& keywordClassesFilepath):
-      _keywordsFilepath(keywordClassesFilepath)
+KeywordsContainer::KeywordsContainer(const ViretDataPackRef::VocabData& vocab_data_refs)
+    : _ID(vocab_data_refs.ID),
+      _description(vocab_data_refs.description),
+      _kw_classes_fpth(vocab_data_refs.keyword_synsets_fpth)
 {
   std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
              std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>
       res;
 
-
-  res = FileParser::ParseKeywordClassesFile_ViretFormat(_keywordsFilepath); 
+  res = FileParser::ParseKeywordClassesFile_ViretFormat(_kw_classes_fpth);
 
   // Store results
   _allDescriptions = std::move(std::get<0>(res));

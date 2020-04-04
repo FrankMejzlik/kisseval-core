@@ -266,6 +266,19 @@ struct RankingResult
   size_t target_pos;
 };
 
+struct DataPackInfo
+{
+
+};
+
+/** User queries come in in as vector of those. */
+struct AnnotatorUserQuery {
+  std::string session_ID;
+  std::string user_query_encoded;
+  std::string user_query_readable;
+  FrameId target_frame_ID;
+};
+
 // =====================================
 //  NOT REFACTORED CODE BELOW
 // =====================================
@@ -481,8 +494,7 @@ using Buffer = std::vector<std::byte>;
 using GameSessionQueryResult =
     std::tuple<std::string, std::string, std::vector<std::string>, std::vector<std::pair<std::string, float>>>;
 
-//! Array of those is submited from front-end app game
-using GameSessionInputQuery = std::tuple<std::string, size_t, std::string>;
+
 
 /*!
  * Keywords that are possible for given prefix
