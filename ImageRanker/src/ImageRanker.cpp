@@ -64,8 +64,8 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
   std::vector<GameSessionQueryResult> userResult;
   userResult.reserve(user_queries.size());
   
-  auto dp = data_pack(data_pack_ID);
-  auto is = imageset(dp.target_imageset_ID());
+  const auto& dp = data_pack(data_pack_ID);
+  const auto& is = imageset(dp.target_imageset_ID());
 
   for (auto&& query : user_queries)
   {
@@ -92,45 +92,18 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
   return userResult;
 }
 
-const std::string& ImageRanker::GetImageFilenameById(std::string imageset_ID, size_t imageId) const
+const std::string& ImageRanker::get_frame_filename(const std::string& imageset_ID, size_t imageId) const
 {
-  auto img = GetImageDataById(imageset_ID, imageId);
+  const SelFrame& img = get_frame(imageset_ID, imageId);
 
   return img.m_filename;
 }
 
-const SelFrame&  ImageRanker::GetImageDataById(std::string imageset_ID, size_t imageId) const
+const SelFrame&  ImageRanker::get_frame(const std::string& imageset_ID, size_t imageId) const
 {
   return imageset(imageset_ID)[imageId];
 }
 
-
-std::vector<std::string> ImageRanker::StringenizeAndQuery(DataId data_ID, const std::string& query) const
-{
-  // Create sstram from query
-  std::stringstream querySs{query.data()};
-
-  std::vector<std::string> resultTokens;
-  std::string tokenString;
-
-  while (std::getline(querySs, tokenString, '&'))
-  {
-    // If empty string
-    if (tokenString.empty())
-    {
-      continue;
-    }
-
-    std::stringstream tokenSs{tokenString};
-    size_t wordnetId;
-    tokenSs >> wordnetId;
-
-    // Push new token into result
-    resultTokens.emplace_back(GetKeywordByWordnetId(data_ID, wordnetId));
-  }
-
-  return resultTokens;
-}
 
 // =====================================
 //  NOT REFACTORED CODE BELOW

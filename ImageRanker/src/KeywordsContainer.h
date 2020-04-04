@@ -243,9 +243,6 @@ public:
 
   Keyword* MapDescIndexToKeyword(size_t descIndex) const;
 
-#if PUSH_DATA_TO_DB
-  bool PushKeywordsToDatabase(Database& db);
-#endif
   [[deprecated]] Keyword* GetWholeKeywordByWordnetId(size_t wordnetId) const;
 
   [[deprecated]] std::string GetKeywordByWordnetId(size_t wordnetId) const;

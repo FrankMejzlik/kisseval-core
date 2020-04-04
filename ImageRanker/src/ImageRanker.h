@@ -75,8 +75,8 @@ class ImageRanker
       const std::vector<AnnotatorUserQuery>& user_queries);
 
 
-  const std::string& GetImageFilenameById(std::string imageset_ID, size_t imageId) const;
-  const SelFrame& GetImageDataById(std::string imageset_ID, size_t imageId) const;
+  const std::string& get_frame_filename(const std::string& imageset_ID, size_t imageId) const;
+  const SelFrame& get_frame(const std::string& imageset_ID, size_t imageId) const;
 
 private:
   const BaseDataset& imageset(std::string imageset_ID) const
