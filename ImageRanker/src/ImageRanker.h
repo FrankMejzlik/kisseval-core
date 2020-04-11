@@ -63,9 +63,9 @@ class ImageRanker
   bool Initialize();
   bool InitializeFullMode();
 
-  [[nodiscard]] RankingResult rank_frames(const std::vector<std::string>& user_queries, DataPackId data_pack_ID,
-                                          PackModelId pack_model_ID, PackModelCommands model_commands,
-                                          size_t result_size, FrameId target_image_ID = ERR_VAL<FrameId>()) const;
+  [[nodiscard]] RankingResult rank_frames(const std::vector<std::string>& user_queries, const DataPackId& data_pack_ID,
+                                          const PackModelCommands& model_commands, size_t result_size,
+                                          FrameId target_image_ID = ERR_VAL<FrameId>()) const;
 
   /*!
    * This processes input queries that come from users, generates results and sends them back

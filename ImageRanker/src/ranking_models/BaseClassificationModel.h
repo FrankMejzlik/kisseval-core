@@ -1,42 +1,32 @@
 #pragma once
 
-#include <algorithm>
-#include <map>
 #include <string>
+using namespace std::string_literals;
 #include <vector>
 
 #include "common.h"
-#include "utility.h"
 
-#include "Image.hpp"
-
-
-#include "KeywordsContainer.h"
+class KeywordsContainer;
 
 class BaseClassificationModel
 {
  public:
+  /**
+   * Returns sorted vector of ranked images based on provided data for the given query.
+   *
+   * Query in format: "1&3&4" where numbers are indices to scoring vector.
+   */
+  virtual std::vector<FrameId> rank_frames(const Matrix<float>& data_mat, const KeywordsContainer& keywords,
+                                           const std::vector<std::string>& user_query,
+                                           const std::string& options = ""s) const = 0;
 
-
-#if 0
-    virtual std::pair<std::vector<size_t>, size_t> GetRankedImages(
-      const std::vector<std::string>& user_queries, 
-      TransformationFunctionBase* pAggregation, const std::vector<float>* pIndexKwFrequency,
-      const std::vector<std::unique_ptr<Image>>& _imagesCont,
-      const std::map<eVocabularyId, KeywordsContainer>& keywordContainers, size_t numResults = SIZE_T_ERROR_VALUE,
-      size_t targetImageId = SIZE_T_ERROR_VALUE) const = 0;
-
-  virtual ChartData RunModelTest(DataId data_ID, TransformationFunctionBase* pAggregation,
-                                 const std::vector<float>* pIndexKwFrequency,
-                                 const std::vector<std::vector<UserImgQuery>>& testQueries,
-                                 const std::vector<std::unique_ptr<Image>>& _imagesCont,
-                                 const std::map<eVocabularyId, KeywordsContainer>& keywordContainers) const = 0;
-
-  virtual ChartData RunModelTestWithOrigQueries(
-      DataId data_ID, TransformationFunctionBase* pTransformFn, const std::vector<float>* pIndexKwFrequency,
-      const std::vector<std::vector<UserImgQuery>>& testQueries,
-      const std::vector<std::vector<UserImgQuery>>& testQueriesOrig, const std::vector<std::unique_ptr<Image>>& images,
-      const std::map<eVocabularyId, KeywordsContainer>& keywordContainers) const = 0;
-
-#endif
+  /**
+   * Returns results of this model after running provided test queries .
+   *
+   * Query in format: "1&3&4" where numbers are indices to scoring vector.
+   */
+  virtual std::vector<FrameId> run_test(
+      const Matrix<float>& data_mat, const KeywordsContainer& keywords,
+      const std::vector<std::pair<std::vector<std::string>, FrameId>>& test_user_queries,
+      const std::string& options = ""s, size_t result_points = 100) const = 0;
 };

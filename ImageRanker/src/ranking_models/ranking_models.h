@@ -8,4 +8,4 @@
 //#include "BooleanBucketModel.h"
 
 // Viret model
-//#include "ViretModel.h"
+#include "ViretModel.h"

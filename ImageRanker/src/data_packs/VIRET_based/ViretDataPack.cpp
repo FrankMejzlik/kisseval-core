@@ -1,8 +1,8 @@
 
 #include "ViretDataPack.h"
 
-//#include "classification_transformations.h"
-//#include "classification_ranking_models.h"
+#include "./ranking_models/ranking_models.h"
+#include "./transformations/transformations.h"
 
 
 ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& description, const ViretDataPackRef::VocabData& vocab_data_refs, 
@@ -13,8 +13,15 @@ ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset
   _presoftmax_data(std::move(presoft)), _softmax_data(std::move(softmax_data)), _feas_data(std::move(feas_data))
 {
   // Instantiate all wanted transforms
+  // "no_transform": => default data are used
+  //_transforms.emplace("softmax", std::make_unique<TransformationSoftmax>());
+  _transforms.emplace("linear_0-1", std::make_unique<TransformationLinear01>());
+
 
   // Instantiate all wanted models
+  // Boolean
+  // Vector space
+  _models.emplace("mult-sum-max", std::make_unique<ViretModel>());
 }
 
 const std::string&  ViretDataPack::get_vocab_ID() const

@@ -44,7 +44,8 @@ int main()
 #define TEST_submit_annotator_user_queries 0
 #define TEST_get_random_frame_sequence 0
 #define TEST_get_autocomplete_results 0
-#define TEST_get_loaded_imagesets_info 1
+#define TEST_get_loaded_imagesets_info 0
+#define TEST_rank_frames 1
 
   // TEST: `submit_annotator_user_queries`
 #if TEST_submit_annotator_user_queries
@@ -75,6 +76,34 @@ int main()
 
   auto r1 = ranker.get_loaded_imagesets_info();
   auto r2 = ranker.get_loaded_data_packs_info();
+
+#endif
+
+  // TEST: `rank_frames`
+#if TEST_rank_frames
+
+  std::vector<std::string> a = {"1&2", "3&4"};
+  std::vector<std::string> b{"1&2", "3&4"};
+
+  /**
+   * model_ID:
+   *    "boolean"
+   *    "vector_space"
+   *    "mult-sum-max"
+   *    "boolean_bucket"
+   *
+   * transform_ID:
+   *    "no_transform"
+   *    "linear_0-1"
+   *    "softmax"
+   *
+   */
+
+  // "model_ID=mult-sum-max;transform_ID=linear_0-1;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0",
+  auto r1 = ranker.rank_frames(
+      {"1&2", "3&4"}, enum_label(eDataPackId::NASNET_2019).first,
+      "model_ID=mult-sum-max;transform_ID=linear_0-1;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0",
+      1000);
 
 #endif
 

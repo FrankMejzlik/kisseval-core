@@ -6,7 +6,9 @@
 #define _IR_COMMON_H_
 
 #include <array>
+#include <string>
 #include <vector>
+using namespace std::string_literals;
 
 #include "config.h"
 #include "custom_exceptions.h"
@@ -130,6 +132,12 @@ using FrameId = uint32_t;
 using VideoId = uint32_t;
 using ShotId = uint32_t;
 using FrameNumber = uint32_t;
+
+template <typename T>
+using Vector = std::vector<T>;
+
+template <typename T>
+using Matrix = std::vector<Vector<T>>;
 
 template <typename T>
 constexpr T ERR_VAL()
@@ -359,7 +367,6 @@ struct LoadedDataPacksInfo
 {
   std::vector<DataPackInfo> data_packs_info;
 };
-
 // =====================================
 //  NOT REFACTORED CODE BELOW
 // =====================================

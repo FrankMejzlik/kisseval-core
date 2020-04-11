@@ -9,7 +9,7 @@
 #include "data_packs/BaseDataPack.h"
 
 #include "BaseClassificationModel.h"
-#include "BaseClassificationTransformation.h"
+#include "BaseVectorTransform.h"
 
 class ViretDataPack : public BaseDataPack
 {
@@ -29,7 +29,7 @@ class ViretDataPack : public BaseDataPack
   [[nodiscard]] std::vector<Keyword*> top_frame_keywords(FrameId frame_ID) const override;
 
   [[nodiscard]] AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix, size_t result_size,
-                                                              bool with_example_images) const override;
+                                                                 bool with_example_images) const override;
 
   [[nodiscard]] DataPackInfo get_info() const override;
 
@@ -44,7 +44,7 @@ class ViretDataPack : public BaseDataPack
   std::unordered_map<StringId, std::unique_ptr<BaseClassificationModel>> _models;
 
   /** Transformations for this data pack - only classification ones */
-  std::unordered_map<StringId, std::unique_ptr<BaseClassificationTransformation>> _transforms;
+  std::unordered_map<StringId, std::unique_ptr<BaseVectorTransform>> _transforms;
 
   std::unordered_map<StringId, VecMat> _transformed_data;
 };

@@ -2,6 +2,12 @@
 
 #include <stdint.h>
 
+constexpr size_t NUM_MODEL_TEST_RESULT_POINTS = 100;
+
+/********************************************************
+
+********************************************************/
+
 /*!
  * If set to 1 queries will be evaluated on original query first
  * Then on the new ones and printed to stdout

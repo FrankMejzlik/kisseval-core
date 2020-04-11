@@ -4,10 +4,9 @@
 // Include user-defined aggregations
 // ==================================
 
-// Softmax exponential
-#include "TransformationSoftmax.h"
 
-// f(x) = x^p
-#include "TransformationLinearXToTheP.h"
+//#include "TransformationSoftmax.h"
 
-#include "TransformationNoTransform.h"
+#include "TransformationLinear.h"
+
+//#include "TransformationNoTransform.h"

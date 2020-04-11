@@ -176,6 +176,15 @@ LoadedDataPacksInfo ImageRanker::get_loaded_data_packs_info() const
   return LoadedDataPacksInfo{infos};
 }
 
+RankingResult ImageRanker::rank_frames(const std::vector<std::string>& user_queries, const DataPackId& data_pack_ID,
+                                       const PackModelCommands& model_commands, size_t result_size,
+                                       FrameId target_image_ID) const
+{
+  const BaseDataPack& dp{data_pack(data_pack_ID)};
+
+  return dp.rank_frames(user_queries, model_commands, result_size, target_image_ID);
+}
+
 // =====================================
 //  NOT REFACTORED CODE BELOW
 // =====================================
@@ -646,7 +655,7 @@ bool ImageRanker::InitializeFullMode()
     // Insert all desired transformations
     _transformations.emplace(InputDataTransformId::cNoTransform, std::make_unique<TransformationNoTransform>());
     _transformations.emplace(InputDataTransformId::cSoftmax, std::make_unique<TransformationSoftmax>());
-    _transformations.emplace(InputDataTransformId::cXToTheP, std::make_unique<TransformationLinearXToTheP>());
+    _transformations.emplace(InputDataTransformId::cXToTheP, std::make_unique<TransformationLinear>());
 
     // Insert all desired ranking models
     _models.emplace(RankingModelId::cViretBase, std::make_unique<ViretModel>());

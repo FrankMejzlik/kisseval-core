@@ -48,6 +48,9 @@
     <ClCompile Include="src\ranking_models\BaseClassificationModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ranking_models\ViretModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\config.h">
@@ -101,13 +104,25 @@
     <ClInclude Include="src\ranking_models\BaseSpaceModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\transformations\BaseClassificationTransformation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\ranking_models\BaseClassificationModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\datasets\BaseImageset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\transformations\transformations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\transformations\BaseVectorTransform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\transformations\TransformationLinear.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ranking_models\ViretModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ranking_models\ranking_models.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

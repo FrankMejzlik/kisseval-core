@@ -264,6 +264,7 @@
     <ClCompile Include="src\GridTest.cpp" />
     <ClCompile Include="src\ImageRanker.cpp" />
     <ClCompile Include="src\KeywordsContainer.cpp" />
+    <ClCompile Include="src\ranking_models\ViretModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ranking_models\BaseSpaceModel.h" />
@@ -274,7 +275,9 @@
     <ClInclude Include="src\custom_exceptions.h" />
     <ClInclude Include="src\data_format_config.h" />
     <ClInclude Include="src\ranking_models\BaseClassificationModel.h" />
-    <ClInclude Include="src\transformations\BaseClassificationTransformation.h" />
+    <ClInclude Include="src\ranking_models\ranking_models.h" />
+    <ClInclude Include="src\ranking_models\ViretModel.h" />
+    <ClInclude Include="src\transformations\BaseVectorTransform.h" />
     <ClInclude Include="src\FileParser.h" />
     <ClInclude Include="src\data_packs\VIRET_based\ViretDataPack.h" />
     <ClInclude Include="src\common.h" />
@@ -285,6 +288,8 @@
     <ClInclude Include="src\Image.hpp" />
     <ClInclude Include="src\ImageRanker.h" />
     <ClInclude Include="src\KeywordsContainer.h" />
+    <ClInclude Include="src\transformations\TransformationLinear.h" />
+    <ClInclude Include="src\transformations\transformations.h" />
     <ClInclude Include="src\utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
