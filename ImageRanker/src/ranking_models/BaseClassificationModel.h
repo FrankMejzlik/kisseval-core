@@ -6,6 +6,8 @@ using namespace std::string_literals;
 
 #include "common.h"
 
+namespace image_ranker
+{
 class KeywordsContainer;
 
 class BaseClassificationModel
@@ -30,3 +32,4 @@ class BaseClassificationModel
       const std::vector<std::pair<std::vector<std::string>, FrameId>>& test_user_queries,
       const std::string& options = ""s, size_t result_points = 100) const = 0;
 };
+}  // namespace image_ranker

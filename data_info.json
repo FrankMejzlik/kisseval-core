@@ -1,0 +1,43 @@
+{
+    "imagesets":[
+        {
+            "ID": "V3C1_20k",
+            "description": "Subset of V31C dataset, every 50th selected frame."
+        },
+        {
+            "ID": "V3C1_2019",
+            "description": "Selected frames from V31C dataset by Tomas Soucek in 2019."
+        },
+        {
+            "ID": "V3C1_Jan_2020",
+            "description": "Selected frames from V31C dataset by Tomas Soucek for VBS 2020."
+        },
+        {
+            "ID": "LSC_Apr_2020",
+            "description": "Selected frames from V31C dataset by Tomas Soucek for LSC 2020."
+        }
+    ],
+    "vocabularies": [
+        {
+            "ID": "VIRET_WordNet2019",
+            "description": "With ~1300 phrases."
+        },
+        {
+            "ID": "Google_AI_2019",
+            "description": "In total ~5000 phrases."
+        },
+        {
+            "ID": "BoW_Jan_2020",
+            "description": "With ~12k words."
+        },
+        {
+            "ID": "native_language",
+            "description": "Free form native language sentences."
+        }
+    ],
+    "data_packs": {
+        "VIRET_based": [],
+        "Google_based": [],
+        "BoW_based": []
+    }
+}

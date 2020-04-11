@@ -4,6 +4,8 @@
 
 #include "ImageRanker.h"
 
+using namespace image_ranker;
+
 DataManager::DataManager(ImageRanker* p_owner)
     : _p_owner(p_owner),
       _db(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME)

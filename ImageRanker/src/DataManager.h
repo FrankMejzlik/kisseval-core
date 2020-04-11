@@ -4,6 +4,8 @@
 
 #include "Database.h"
 
+namespace image_ranker
+{
 class ImageRanker;
 
 class DataManager
@@ -24,3 +26,4 @@ class DataManager
   const std::string searches_table_name = "search_sessions";
   const std::string search_actions_table_name = "search_sessions_actions";
 };
+}  // namespace image_ranker

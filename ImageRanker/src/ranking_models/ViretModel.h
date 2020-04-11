@@ -5,9 +5,8 @@
 #include <common.h>
 #include <queue>
 
-extern std::vector<std::vector<size_t>> vec_of_ranks;
-
-
+namespace image_ranker
+{
 class ViretModel : public BaseClassificationModel
 {
  public:
@@ -39,9 +38,9 @@ class ViretModel : public BaseClassificationModel
   };
 
  public:
-   static Options ParseOptionsString(const std::string& options_string);
+  static Options ParseOptionsString(const std::string& options_string);
 
-    /**
+  /**
    * Returns sorted vector of ranked images based on provided data for the given query.
    *
    * Query in format: "1&3&4" where numbers are indices to scoring vector.
@@ -59,6 +58,5 @@ class ViretModel : public BaseClassificationModel
       const Matrix<float>& data_mat, const KeywordsContainer& keywords,
       const std::vector<std::pair<std::vector<std::string>, FrameId>>& test_user_queries,
       const std::string& options = ""s, size_t result_points = NUM_MODEL_TEST_RESULT_POINTS) const override;
-
-
 };
+}  // namespace image_ranker

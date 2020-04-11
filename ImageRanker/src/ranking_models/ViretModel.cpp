@@ -1,6 +1,8 @@
 
 #include "ViretModel.h"
 
+using namespace image_ranker;
+
 ViretModel::Options ViretModel::ParseOptionsString(const std::string& options_string) { return ViretModel::Options(); }
 
 std::vector<FrameId> ViretModel::rank_frames(const Matrix<float>& data_mat, const KeywordsContainer& keywords,

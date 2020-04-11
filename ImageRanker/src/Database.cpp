@@ -1,5 +1,7 @@
 #include "Database.h"
 
+using namespace image_ranker;
+
 Database::Database(std::string_view host, size_t port, std::string_view username, std::string_view password,
                    std::string_view dbName)
     : _host(host),

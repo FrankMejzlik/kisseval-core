@@ -125,5 +125,11 @@
     <ClInclude Include="src\ranking_models\ranking_models.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\transformations\TransformationSoftmax.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

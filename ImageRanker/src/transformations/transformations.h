@@ -4,9 +4,6 @@
 // Include user-defined aggregations
 // ==================================
 
-
-//#include "TransformationSoftmax.h"
-
+#include "BaseVectorTransform.h"
 #include "TransformationLinear.h"
-
-//#include "TransformationNoTransform.h"
+#include "TransformationSoftmax.h"

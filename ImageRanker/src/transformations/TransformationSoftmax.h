@@ -1,42 +1,33 @@
 #pragma once
 
-#include "TransformationFunctionBase.h"
+#include "BaseVectorTransform.h"
 
-/*!
- * Softmax aggregation
+#include "common.h"
+
+namespace image_ranker
+{
+/**
+ * Row-wise transformation that ONLY HOLDS Softmax transformed data.
  *
- * WARNING:
- *    Calling CalculateTransformedVectors() will load values from file.
+ * \remark Please note that this class assumes that already softmax-ed data will be passed into it's contructor.
  */
-class TransformationSoftmax : public TransformationFunctionBase
+class TransformationSoftmax : public BaseVectorTransform
 {
  public:
-  struct Settings
+  struct Options
   {
   };
 
-  // Methods
  public:
-  TransformationSoftmax() : TransformationFunctionBase(InputDataTransformId::cSoftmax) {}
-
-  virtual void SetTransformationSettings(InputDataTransformSettings settingsString) override {}
-
-  virtual bool CalculateTransformedVectors(const std::vector<std::unique_ptr<Image>>& images) const
+  [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, const std::string& options = "")
   {
-    // Softmax file is loaded by default
-    return true;
+    LOG_WARN("No transformation has been applied.");
+    return data;
   }
 
-  virtual bool LowMem_CalculateTransformedVectors(const std::vector<std::unique_ptr<Image>>& images,
-                                                  size_t settings) const
+  TransformationSoftmax(Matrix<float>&& data_mat, const std::string& options = "")
+      : BaseVectorTransform(std::move(data_mat))
   {
-    // Softmax file is loaded by default
-    return true;
   }
-
-  virtual size_t GetGuidFromSettings() const override { return GetGuid(0ULL); }
-
-  // Attributes
- private:
-  Settings _settings;
 };
+}  // namespace image_ranker

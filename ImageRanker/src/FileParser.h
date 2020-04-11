@@ -16,6 +16,8 @@ using namespace std::literals;
 #include "data_format_config.h"
 #include "utility.h"
 
+namespace image_ranker
+{
 class ImageRanker;
 
 class FileParser
@@ -62,3 +64,4 @@ class FileParser
  private:
   ImageRanker* _pRanker;
 };
+}  // namespace image_ranker

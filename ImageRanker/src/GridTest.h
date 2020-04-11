@@ -10,6 +10,8 @@ using namespace std::string_literals;
 #include "common.h"
 #include "utility.h"
 
+namespace image_ranker
+{
 class GridTest
 {
  public:
@@ -43,3 +45,4 @@ class GridTest
   static std::vector<RankingModelId> m_rankingModels;
   static std::vector<TestSettings> m_testSettings;
 };
+}  // namespace image_ranker

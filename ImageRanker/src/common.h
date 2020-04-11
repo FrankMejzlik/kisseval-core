@@ -12,7 +12,10 @@ using namespace std::string_literals;
 
 #include "config.h"
 #include "custom_exceptions.h"
+#include "log.h"
 
+namespace image_ranker
+{
 class Keyword;
 
 /**********************************************
@@ -50,7 +53,7 @@ enum class eVocabularyId
 
 const std::array<std::pair<std::string, std::string>, size_t(eVocabularyId::_COUNT)> eVocabularyId_labels = {{
     std::pair("VIRET_WordNet2019", "With ~1300 phrases."),
-    std::pair("Google_AI_2019", "In total ~ 12000 phrases."),
+    std::pair("Google_AI_2019", "In total ~ 5000 phrases."),
     std::pair("BoW_Jan_2020", "With ~12k words."),
     std::pair("native_language", "Free form native language sentences."),
 }};
@@ -371,8 +374,6 @@ struct LoadedDataPacksInfo
 //  NOT REFACTORED CODE BELOW
 // =====================================
 
-#include <cstddef>
-
 /*!
  * Structure holding data about occurance rate of one keyword
  *
@@ -600,4 +601,5 @@ class SimulatedUser
   int m_exponent;
 };
 
+}  // namespace image_ranker
 #endif  // _IR_COMMON_H_

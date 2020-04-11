@@ -8,6 +8,8 @@
 
 #define BASE_DIR "./data/"
 
+using namespace image_ranker;
+
 int main()
 {
   // V3C1 20k subset

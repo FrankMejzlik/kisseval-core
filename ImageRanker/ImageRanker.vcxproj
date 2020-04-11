@@ -267,6 +267,7 @@
     <ClCompile Include="src\ranking_models\ViretModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\log.h" />
     <ClInclude Include="src\ranking_models\BaseSpaceModel.h" />
     <ClInclude Include="src\datasets\SelFramesDataset.h" />
     <ClInclude Include="src\data_packs\BaseDataPack.h" />
@@ -290,6 +291,7 @@
     <ClInclude Include="src\KeywordsContainer.h" />
     <ClInclude Include="src\transformations\TransformationLinear.h" />
     <ClInclude Include="src\transformations\transformations.h" />
+    <ClInclude Include="src\transformations\TransformationSoftmax.h" />
     <ClInclude Include="src\utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

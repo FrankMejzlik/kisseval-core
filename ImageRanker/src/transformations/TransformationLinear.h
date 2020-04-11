@@ -2,13 +2,20 @@
 
 #include "BaseVectorTransform.h"
 
+namespace image_ranker
+{
+/**
+ * Row-wise transformation that moves values to 0 and then scales them down into [0, 1] range linearly.
+ */
 class TransformationLinear01 : public BaseVectorTransform
 {
+ public:
   struct Options
   {
   };
 
-  [[nodiscard]] Matrix<float> apply(const Matrix<float>& data, const std::string& options = "") const override
+ public:
+  [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, const std::string& options = "")
   {
     Matrix<float> result_mat;
 
@@ -39,4 +46,10 @@ class TransformationLinear01 : public BaseVectorTransform
 
     return result_mat;
   }
+
+  TransformationLinear01(const Matrix<float>& data_mat, const std::string& options = "")
+      : BaseVectorTransform(apply(data_mat))
+  {
+  }
 };
+}  // namespace image_ranker

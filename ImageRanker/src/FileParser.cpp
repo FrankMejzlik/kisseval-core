@@ -5,6 +5,8 @@
 
 #include <queue>
 
+using namespace image_ranker;
+
 FileParser::FileParser(ImageRanker* pRanker) : _pRanker(pRanker) {}
 
 std::tuple<VideoId, ShotId, FrameNumber> FileParser::ParseVideoFilename(const std::string& filename) const

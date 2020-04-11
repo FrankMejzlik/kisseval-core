@@ -7,6 +7,8 @@
 
 #include "ImageRanker.h"
 
+using namespace image_ranker;
+
 KeywordsContainer::KeywordsContainer(const ViretDataPackRef::VocabData& vocab_data_refs)
     : _ID(vocab_data_refs.ID),
       _description(vocab_data_refs.description),

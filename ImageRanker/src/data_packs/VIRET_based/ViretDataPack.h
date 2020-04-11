@@ -11,6 +11,8 @@
 #include "BaseClassificationModel.h"
 #include "BaseVectorTransform.h"
 
+namespace image_ranker
+{
 class ViretDataPack : public BaseDataPack
 {
  public:
@@ -37,7 +39,6 @@ class ViretDataPack : public BaseDataPack
   KeywordsContainer _keywords;
 
   std::vector<std::vector<float>> _presoftmax_data;
-  std::vector<std::vector<float>> _softmax_data;
   std::vector<std::vector<float>> _feas_data;
 
   /** Models for this data pack - only classification ones */
@@ -45,6 +46,5 @@ class ViretDataPack : public BaseDataPack
 
   /** Transformations for this data pack - only classification ones */
   std::unordered_map<StringId, std::unique_ptr<BaseVectorTransform>> _transforms;
-
-  std::unordered_map<StringId, VecMat> _transformed_data;
 };
+}  // namespace image_ranker

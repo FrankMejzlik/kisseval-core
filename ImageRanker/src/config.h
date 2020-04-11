@@ -132,9 +132,6 @@ constexpr size_t NUM_MODEL_TEST_RESULT_POINTS = 100;
 
 #define DEFAULT_MODE ImageRanker::eMode::cFullAnalytical
 
-//! Will throw exception on LOG_ERROR
-#define THROW_ON_ERROR 1
-
 #define MIN_DESC_SEARCH_LENGTH 3
 
 //! How many suggestions will be returned when called \ref ImageRanker::GetNearKeywords
@@ -143,31 +140,6 @@ constexpr size_t NUM_MODEL_TEST_RESULT_POINTS = 100;
 #define LOG_DEBUG_HYPERNYMS_EXPANSION 0
 #define LOG_DEBUG_IMAGE_RANKING 0
 #define LOG_DEBUG_RUN_TESTS 0
-
-//! Standard logging macro
-#define LOG(x) std::cout << x << std::endl
-
-#define LOG_WARN(x) std::cout << x << "(" << __LINE__ << ", " << __FILE__ << ")" << std::endl
-
-#define LOG_NO_ENDL(x) std::cout << x
-
-//! Basic log error macro
-#if THROW_ON_ERROR
-
-#define LOG_ERROR(x)                                                                      \
-  std::cout << "ERROR: " << x << "(" << __LINE__ << ", " << __FILE__ << ")" << std::endl; \
-  throw std::runtime_error(std::string(x));
-
-#elif
-
-#define LOG_ERROR(x) std::cout << "ERROR: " << x << std::endl;
-
-#endif
-
-//! Error value for size_t types
-#define SIZE_T_ERROR_VALUE SIZE_MAX
-
-#define LOG_CALLS 1
 
 /*!
  * Set what databases will be used as primary/secondary

@@ -9,6 +9,8 @@ using json = nlohmann::json;
 
 #include "datasets/SelFramesDataset.h"
 
+using namespace image_ranker;
+
 ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _fileParser(this), _data_manager(this)
 {
   /*

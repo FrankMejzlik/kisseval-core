@@ -20,12 +20,12 @@ using namespace std::literals::string_literals;
 #include "Database.h"
 #include "utility.h"
 
+namespace image_ranker
+{
 class ImageRanker;
 
 using Clause = std::vector<std::pair<bool, size_t>>;
 using CnfFormula = std::vector<Clause>;
-
-
 
 class Keyword
 {
@@ -75,18 +75,15 @@ class KeywordsContainer
   KeywordsContainer() = delete;
   KeywordsContainer(const ViretDataPackRef::VocabData& vocab_data_refs);
 
-
   const std::string& get_ID() const { return _ID; }
   const std::string& get_description() const { return _description; }
 
-private:
+ private:
   std::string _ID;
   std::string _description;
   std::string _kw_classes_fpth;
 
-public:
-
-
+ public:
   void SubstringExpansionPrecompute()
   {
     SubstringExpansionPrecompute1();
@@ -368,7 +365,6 @@ public:
   std::map<size_t, Keyword*> _wordnetIdToKeywords;
 
  private:
-
   //! One huge string of all descriptions for fast keyword search
   std::string _allDescriptions;
 
@@ -376,6 +372,5 @@ public:
   std::map<size_t, Keyword*> _vecIndexToKeyword;
 
   std::vector<std::pair<size_t, Keyword*>> _descIndexToKeyword;
-
-
 };
+}  // namespace image_ranker

@@ -7,6 +7,8 @@
 #include <mysql.h>
 #include "config.h"
 
+namespace image_ranker
+{
 class Database
 {
   // Structs
@@ -102,3 +104,4 @@ show_error(mysql);
 //  show_error(mysql);
 // printf("Affected_rows after DELETE: %lu\n",
 //  (unsigned long) mysql_affected_rows(mysql));
+}  // namespace image_ranker
