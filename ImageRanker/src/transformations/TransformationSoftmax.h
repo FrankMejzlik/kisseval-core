@@ -6,6 +6,8 @@
 
 namespace image_ranker
 {
+class KeywordsContainer;
+
 /**
  * Row-wise transformation that ONLY HOLDS Softmax transformed data.
  *
@@ -19,15 +21,10 @@ class TransformationSoftmax : public BaseVectorTransform
   };
 
  public:
-  [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, const std::string& options = "")
-  {
-    LOG_WARN("No transformation has been applied.");
-    return data;
-  }
+  [[nodiscard]] static Matrix<float> apply(const KeywordsContainer& keywords, const Matrix<float>& data,
+                                           [[maybe_unused]] const std::string& options = "");
 
-  TransformationSoftmax(Matrix<float>&& data_mat, const std::string& options = "")
-      : BaseVectorTransform(std::move(data_mat))
-  {
-  }
+  TransformationSoftmax(const KeywordsContainer& keywords, Matrix<float>& data_mat,
+                        [[maybe_unused]] const std::string& options = "");
 };
 }  // namespace image_ranker

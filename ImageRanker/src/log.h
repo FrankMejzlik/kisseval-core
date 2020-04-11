@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 //! Will throw exception on LOG_ERROR
 #define THROW_ON_ERROR 1
 

@@ -35,11 +35,15 @@ class ViretDataPack : public BaseDataPack
 
   [[nodiscard]] DataPackInfo get_info() const override;
 
+private:
+  Matrix<float> accumulate_hypernyms(const Matrix<float>& data_mat) const;
+
  private:
   KeywordsContainer _keywords;
 
-  std::vector<std::vector<float>> _presoftmax_data;
-  std::vector<std::vector<float>> _feas_data;
+  std::vector<std::vector<float>> _feas_data_raw;
+  std::vector<std::vector<float>> _presoftmax_data_raw;
+  std::vector<std::vector<float>> _softmax_data_raw;
 
   /** Models for this data pack - only classification ones */
   std::unordered_map<StringId, std::unique_ptr<BaseClassificationModel>> _models;

@@ -32,8 +32,8 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
   {
     // Initialize all images
     auto presoft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
-    auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
-    auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
+    auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.softmax_scorings_fpth);
+    auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.deep_features_fpth);
 
     _data_packs.emplace(pack.ID, std::make_unique<ViretDataPack>(pack.ID, pack.target_imageset, pack.description,
                                                                  pack.vocabulary_data, std::move(presoft_data),
