@@ -2,6 +2,7 @@
 
 #include "BaseClassificationModel.h"
 
+
 #include <common.h>
 #include <queue>
 
@@ -45,7 +46,7 @@ class ViretModel : public BaseClassificationModel
    *
    * Query in format: "1&3&4" where numbers are indices to scoring vector.
    */
-  virtual std::vector<FrameId> rank_frames(const Matrix<float>& data_mat, const KeywordsContainer& keywords,
+  virtual std::vector<FrameId> rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
                                            const std::vector<std::string>& user_query,
                                            const std::string& options = ""s) const override;
 
@@ -55,7 +56,7 @@ class ViretModel : public BaseClassificationModel
    * Query in format: "1&3&4" where numbers are indices to scoring vector.
    */
   virtual std::vector<FrameId> run_test(
-      const Matrix<float>& data_mat, const KeywordsContainer& keywords,
+      const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
       const std::vector<std::pair<std::vector<std::string>, FrameId>>& test_user_queries,
       const std::string& options = ""s, size_t result_points = NUM_MODEL_TEST_RESULT_POINTS) const override;
 };

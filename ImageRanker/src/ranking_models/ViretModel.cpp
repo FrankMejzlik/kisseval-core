@@ -5,7 +5,7 @@ using namespace image_ranker;
 
 ViretModel::Options ViretModel::ParseOptionsString(const std::string& options_string) { return ViretModel::Options(); }
 
-std::vector<FrameId> ViretModel::rank_frames(const Matrix<float>& data_mat, const KeywordsContainer& keywords,
+std::vector<FrameId> ViretModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
                                              const std::vector<std::string>& user_query,
                                              const std::string& options) const
 {
@@ -283,7 +283,7 @@ std::vector<FrameId> ViretModel::rank_frames(const Matrix<float>& data_mat, cons
 }
 
 std::vector<FrameId> ViretModel::run_test(
-    const Matrix<float>& data_mat, const KeywordsContainer& keywords,
+    const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
     const std::vector<std::pair<std::vector<std::string>, FrameId>>& test_user_queries, const std::string& options,
     size_t result_points) const
 {

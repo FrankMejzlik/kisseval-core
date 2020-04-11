@@ -9,6 +9,59 @@
 
 using namespace image_ranker;
 
+void KeywordsContainer::GetVectorKeywordsIndicesSet(std::unordered_set<size_t>& destIndicesSetRef,
+                                                    size_t wordnetId) const
+{
+  // Get this Keyword
+  Keyword* pRootKw = GetKeywordPtrByWordnetId(wordnetId);
+
+  // If this hypernyms has spot in data vector
+  if (!pRootKw->IsInBinVector())
+  {
+    // Add it to set as well
+    destIndicesSetRef.emplace(pRootKw->m_vectorIndex);
+  }
+
+  // If is hypernym
+  if (pRootKw->IsHypernym())
+  {
+    // Recursively get hyponyms into provided set
+    for (auto&& hypo : pRootKw->m_hyponyms)
+    {
+      GetVectorKeywordsIndicesSet(destIndicesSetRef, hypo);
+    }
+  }
+}
+
+void KeywordsContainer::GetVectorKeywordsIndicesSetShallow(std::unordered_set<size_t>& destIndicesSetRef,
+                                                           size_t wordnetId, bool skipConstructedHypernyms) const
+{
+  // Get this Keyword
+  Keyword* pRootKw = GetKeywordPtrByWordnetId(wordnetId);
+
+  // If this hypernyms has spot in data vector
+  if (!pRootKw->IsInBinVector())
+  {
+    // Add it to set as well
+    destIndicesSetRef.emplace(pRootKw->m_vectorIndex);
+  }
+  else
+  {
+    // If we want to include subsets of constructed hypernyms
+    if (!skipConstructedHypernyms)
+    {
+      // Recursively get hyponyms into provided set
+      for (auto&& hypo : pRootKw->m_hyponyms)
+      {
+        GetVectorKeywordsIndicesSetShallow(destIndicesSetRef, hypo);
+      }
+    }
+  }
+}
+
+/******************************************************************
+********************************************************************/
+
 KeywordsContainer::KeywordsContainer(const ViretDataPackRef::VocabData& vocab_data_refs)
     : _ID(vocab_data_refs.ID),
       _description(vocab_data_refs.description),
@@ -29,6 +82,20 @@ KeywordsContainer::KeywordsContainer(const ViretDataPackRef::VocabData& vocab_da
 
   // Sort keywords
   std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
+
+  for (auto&& kw : _keywords)
+  {
+    std::unordered_set<size_t> accum_indices;
+    // Add self
+    accum_indices.emplace(kw->m_vectorIndex);
+
+    for (auto&& hypo_wordnet_ID : kw->m_hyponyms)
+    {
+      GetVectorKeywordsIndicesSet(accum_indices, hypo_wordnet_ID);
+    }
+
+    kw->m_hyponymBinIndices = std::move(accum_indices);
+  }
 }
 
 KeywordData KeywordsContainer::GetKeywordByVectorIndex(size_t index) const
@@ -164,56 +231,6 @@ Keyword* KeywordsContainer::GetKeywordPtrByWordnetId(size_t wordnetId) const
   }
 
   return pairIt->second;
-}
-
-void KeywordsContainer::GetVectorKeywordsIndicesSet(std::unordered_set<size_t>& destIndicesSetRef,
-                                                    size_t wordnetId) const
-{
-  // Get this Keyword
-  Keyword* pRootKw = GetKeywordPtrByWordnetId(wordnetId);
-
-  // If this hypernyms has spot in data vector
-  if (!pRootKw->IsInBinVector())
-  {
-    // Add it to set as well
-    destIndicesSetRef.emplace(pRootKw->m_vectorIndex);
-  }
-
-  // If is hypernym
-  if (pRootKw->IsHypernym())
-  {
-    // Recursively get hyponyms into provided set
-    for (auto&& hypo : pRootKw->m_hyponyms)
-    {
-      GetVectorKeywordsIndicesSet(destIndicesSetRef, hypo);
-    }
-  }
-}
-
-void KeywordsContainer::GetVectorKeywordsIndicesSetShallow(std::unordered_set<size_t>& destIndicesSetRef,
-                                                           size_t wordnetId, bool skipConstructedHypernyms) const
-{
-  // Get this Keyword
-  Keyword* pRootKw = GetKeywordPtrByWordnetId(wordnetId);
-
-  // If this hypernyms has spot in data vector
-  if (!pRootKw->IsInBinVector())
-  {
-    // Add it to set as well
-    destIndicesSetRef.emplace(pRootKw->m_vectorIndex);
-  }
-  else
-  {
-    // If we want to include subsets of constructed hypernyms
-    if (!skipConstructedHypernyms)
-    {
-      // Recursively get hyponyms into provided set
-      for (auto&& hypo : pRootKw->m_hyponyms)
-      {
-        GetVectorKeywordsIndicesSetShallow(destIndicesSetRef, hypo);
-      }
-    }
-  }
 }
 
 CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool skipConstructedHypernyms) const

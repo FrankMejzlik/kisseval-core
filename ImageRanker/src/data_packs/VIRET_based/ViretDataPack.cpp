@@ -1,6 +1,8 @@
 
 #include "ViretDataPack.h"
 
+#include <thread>
+
 #include "./ranking_models/ranking_models.h"
 #include "./transformations/transformations.h"
 
@@ -17,14 +19,25 @@ ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset
       _keywords(vocab_data_refs)
 {
   // Instantiate all wanted transforms
-  _transforms.emplace("softmax", std::make_unique<TransformationSoftmax>(_keywords, _softmax_data_raw));
-  _transforms.emplace("linear_0-1", std::make_unique<TransformationLinear01>(_keywords, _presoftmax_data_raw));
-  _transforms.emplace("no_transform", std::make_unique<BaseVectorTransform>(_presoftmax_data_raw, _presoftmax_data_raw));
+  std::thread t1([this]() {
+    _transforms.emplace("softmax", std::make_unique<TransformationSoftmax>(_keywords, _softmax_data_raw));
+  });
+  std::thread t2([this]() {
+    _transforms.emplace("linear_0-1", std::make_unique<TransformationLinear01>(_keywords, _presoftmax_data_raw));
+  });
+  std::thread t3([this]() {
+    _transforms.emplace("no_transform",
+                        std::make_unique<BaseVectorTransform>(_presoftmax_data_raw, _presoftmax_data_raw));
+  });
 
   // Instantiate all wanted models
   // Boolean
   // Vector space
   _models.emplace("mult-sum-max", std::make_unique<ViretModel>());
+
+  t1.join();
+  t2.join();
+  t3.join();
 }
 
 const std::string& ViretDataPack::get_vocab_ID() const { return _keywords.get_ID(); }

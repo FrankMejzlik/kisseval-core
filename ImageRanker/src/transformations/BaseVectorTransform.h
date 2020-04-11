@@ -25,7 +25,7 @@ enum class HyperAccumType
 };
 
 [[nodiscard]] Matrix<float> accumulate_hypernyms(const KeywordsContainer& keywords, Matrix<float>&& data,
-                                                 HyperAccumType type);
+                                                 HyperAccumType type, bool normalize = true);
 
 /**
  * Class representing transformed data matrix, but this serves mainly as base class and theferoe is "no_transform"
