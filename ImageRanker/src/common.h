@@ -108,14 +108,14 @@ enum class eTransformationIds
 {
   LINEAR_01,
   SOFTMAX,
-  X_POW_P,
+  NO_TRANSFORM,
   _COUNT
 };
 
 const std::array<std::pair<std::string, std::string>, size_t(eTransformationIds::_COUNT)> eTransformationIds_labels = {{
-    std::pair("Linear_01", ""),
-    std::pair("Softmax", ""),
-    std::pair("X_pow_P", ""),
+    std::pair("linear_01", ""),
+    std::pair("softmax", ""),
+    std::pair("no_transform", ""),
 }};
 
 inline const std::pair<std::string, std::string>& enum_label(eTransformationIds val)
@@ -123,9 +123,39 @@ inline const std::pair<std::string, std::string>& enum_label(eTransformationIds 
   return eTransformationIds_labels[size_t(val)];
 }
 
+enum class eModelOptsKeys
+{
+  MODEL_ID,
+  TRANSFORM_ID,
+  _COUNT
+};
+
+const std::array<std::pair<std::string, std::string>, size_t(eModelOptsKeys::_COUNT)> eModelOptsKeys_labels = {{
+    std::pair("model_ID", ""),
+    std::pair("transform_ID", ""),
+}};
+
+inline const std::pair<std::string, std::string>& enum_label(eModelOptsKeys val)
+{
+  return eModelOptsKeys_labels[size_t(val)];
+}
+
+
+using ModelKeyValOption = std::pair<std::string, std::string>;
 /**********************************************
  **********************************************
  ***********************************************/
+
+using KeywordId = size_t;
+
+template <typename T>
+struct Literal
+{
+  T atom;
+  bool neg;
+};
+using Clause = std::vector<Literal<KeywordId>>;
+using CnfFormula = std::vector<Clause>;
 
 /**
  * Basic typenames
@@ -141,6 +171,10 @@ using Vector = std::vector<T>;
 
 template <typename T>
 using Matrix = std::vector<Vector<T>>;
+
+/** User query for testing models.
+ *  FORMAT: (user_query, target_frame_ID) */
+using UserTestQuery = std::pair<std::vector<CnfFormula>, FrameId>;
 
 template <typename T>
 constexpr T ERR_VAL()
@@ -370,6 +404,20 @@ struct LoadedDataPacksInfo
 {
   std::vector<DataPackInfo> data_packs_info;
 };
+
+enum class eMainTempRankingAggregation
+{
+  cSum,
+  cProduct
+};
+
+enum class eSuccesorAggregation
+{
+  cSum,
+  cProduct,
+  cMax
+};
+
 // =====================================
 //  NOT REFACTORED CODE BELOW
 // =====================================
@@ -438,26 +486,13 @@ enum class eExportFileTypeId
 };
 
 // ------------------------------------------------
-enum class eTempQueryOpOutter
-{
-  cSum,
-  cProduct
-};
-
-enum class eTempQueryOpInner
-{
-  cSum,
-  cProduct,
-  cMax
-};
 
 /*
  * User defined literals
  */
 constexpr size_t operator""_z(unsigned long long int x) { return static_cast<size_t>(x); }
 // std::vector<std::vector<std::pair<bool, size_t>>>
-using Clause = std::vector<std::pair<bool, size_t>>;
-using CnfFormula = std::vector<Clause>;
+
 using InteractiveSearchAction = std::tuple<size_t, size_t, size_t>;
 
 struct StatPerKwSc

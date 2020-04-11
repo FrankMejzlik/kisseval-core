@@ -1,15 +1,120 @@
 #pragma once
 
 #include <string>
-#include <vector>
 using namespace std::literals;
+
 #include <array>
 #include <charconv>
 #include <iostream>
 #include <random>
 #include <sstream>
+#include <vector>
 
 #include "common.h"
+
+using namespace image_ranker;
+
+/**
+ * Parses string representation of tree CNF formula.
+ *
+ * EXAMPLE INPUT: &-20+--1+-3++-55+-333+
+ */
+inline CnfFormula parse_cnf_string(const std::string& string)
+{
+  std::vector<Clause> result;
+
+  std::stringstream idx_ss;
+  KeywordId idx_buffer;
+  bool negate_next_atom{false};
+
+  size_t depth{0};
+
+  Clause clause_buffer;
+
+  for (auto&& c : string)
+  {
+    if (bool(std::isdigit(int(c))))
+    {
+      idx_ss << c;
+      continue;
+    }
+
+    // Flush index SS
+    if (idx_ss.rdbuf()->in_avail() > 0)
+    {
+      idx_ss >> idx_buffer;
+      clause_buffer.emplace_back(Literal<KeywordId>{idx_buffer, negate_next_atom});
+      idx_ss = std::stringstream();
+    }
+
+    if (c == '&' || c == '|')
+    {
+      continue;
+    }
+
+    if (c == '-')
+    {
+      ++depth;
+      continue;
+    }
+
+    if (c == '+')
+    {
+      --depth;
+      if (depth == 0)
+      {
+        // Dispatch clause
+        result.emplace_back(clause_buffer);
+        clause_buffer = Clause();
+      }
+      continue;
+    }
+
+    if (c == '~')
+    {
+      negate_next_atom = true;
+      continue;
+    }
+  }
+
+  return result;
+}
+
+inline std::vector<std::string> split(const std::string& str, char delim)
+{
+  std::vector<std::string> result;
+  std::stringstream ss(str);
+  std::string item;
+
+  while (getline(ss, item, delim))
+  {
+    result.emplace_back(item);
+  }
+
+  return result;
+}
+
+inline std::vector<std::string> split(const std::string& str, const std::string& delim)
+{
+  std::vector<std::string> result;
+
+  std::string s{str};
+
+  size_t pos = 0;
+  std::string token;
+  while ((pos = s.find(delim)) != std::string::npos)
+  {
+    token = s.substr(0, pos);
+    result.emplace_back(token);
+    s.erase(0, pos + delim.length());
+  }
+  result.emplace_back(s);
+
+  return result;
+}
+
+/***********************************
+***************************************/
 
 inline std::array<char, 4> floatToBytesLE(float number)
 {

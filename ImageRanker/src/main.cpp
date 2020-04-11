@@ -47,7 +47,9 @@ int main()
 #define TEST_get_random_frame_sequence 0
 #define TEST_get_autocomplete_results 0
 #define TEST_get_loaded_imagesets_info 0
-#define TEST_rank_frames 1
+#define TEST_rank_frames 0
+
+  
 
   // TEST: `submit_annotator_user_queries`
 #if TEST_submit_annotator_user_queries

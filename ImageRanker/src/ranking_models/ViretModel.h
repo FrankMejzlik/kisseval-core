@@ -2,7 +2,6 @@
 
 #include "BaseClassificationModel.h"
 
-
 #include <common.h>
 #include <queue>
 
@@ -14,7 +13,7 @@ class ViretModel : public BaseClassificationModel
   /*!
    * List of possible settings what how to calculate rank
    */
-  enum class eQueryOperations
+  enum class eScoringOperations
   {
     cMultSum = 0,
     cMultMax = 1,
@@ -25,39 +24,47 @@ class ViretModel : public BaseClassificationModel
 
   struct Options
   {
-    //! How to handle keyword frequency in ranking
-    unsigned int m_keywordFrequencyHandling;
+    /** Values less then this threshold will be considered zero */
+    float ignore_below_threshold;
 
-    //! What values are considered significant enough to calculate with them
-    float m_trueTreshold;
+    /** How ranking for each frame will be calculated */
+    eScoringOperations scoring_operations;
 
-    //! What operations are executed when creating rank for given image
-    eQueryOperations m_queryOperation;
+    /** How aggregated siccesor ranking will be combined with ranking of the main frame */
+    eMainTempRankingAggregation main_temp_aggregation;
 
-    eTempQueryOpOutter m_tempQueryOutterOperation;
-    eTempQueryOpInner m_tempQueryInnerOperation;
+    /** How rankings of successor frames will be aggregated. */
+    eSuccesorAggregation succ_aggregation;
   };
 
  public:
-  static Options ParseOptionsString(const std::string& options_string);
+  static Options ParseOptionsString(const std::vector<ModelKeyValOption>& options_string);
 
   /**
    * Returns sorted vector of ranked images based on provided data for the given query.
    *
    * Query in format: "1&3&4" where numbers are indices to scoring vector.
    */
-  virtual std::vector<FrameId> rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-                                           const std::vector<std::string>& user_query,
-                                           const std::string& options = ""s) const override;
+  [[nodiscard]] virtual RankingResult rank_frames(
+      const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+      const std::vector<CnfFormula>& user_query, size_t result_size,
+      const std::vector<ModelKeyValOption>& options = std::vector<ModelKeyValOption>(),
+      FrameId target_frame_ID = ERR_VAL<FrameId>()) const override;
 
   /**
    * Returns results of this model after running provided test queries .
    *
    * Query in format: "1&3&4" where numbers are indices to scoring vector.
    */
-  virtual std::vector<FrameId> run_test(
+  [[nodiscard]] virtual std::vector<FrameId> run_test(
       const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-      const std::vector<std::pair<std::vector<std::string>, FrameId>>& test_user_queries,
-      const std::string& options = ""s, size_t result_points = NUM_MODEL_TEST_RESULT_POINTS) const override;
+      const std::vector<UserTestQuery>& test_user_queries,
+      const std::vector<ModelKeyValOption>& options = std::vector<ModelKeyValOption>(),
+      size_t result_points = NUM_MODEL_TEST_RESULT_POINTS) const override;
+
+ private:
+  /** Returns ranking for the provided frame data, query and options */
+  [[nodiscard]] float rank_frame(const Vector<float>& frame_data, const CnfFormula& single_query,
+                                 const Options& options) const;
 };
 }  // namespace image_ranker

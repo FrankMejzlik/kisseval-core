@@ -20,7 +20,7 @@ class ViretDataPack : public BaseDataPack
                 const ViretDataPackRef::VocabData& vocab_data_refs, std::vector<std::vector<float>>&& presoft,
                 std::vector<std::vector<float>>&& softmax_data, std::vector<std::vector<float>>&& feas_data);
 
-  [[nodiscard]] virtual RankingResult rank_frames(const std::vector<std::string>& user_queries,
+  [[nodiscard]] virtual RankingResult rank_frames(const std::vector<CnfFormula>& user_queries,
                                                   PackModelCommands model_commands, size_t result_size,
                                                   FrameId target_image_ID = ERR_VAL<FrameId>()) const override;
 
@@ -44,9 +44,9 @@ class ViretDataPack : public BaseDataPack
   std::vector<std::vector<float>> _softmax_data_raw;
 
   /** Models for this data pack - only classification ones */
-  std::unordered_map<StringId, std::unique_ptr<BaseClassificationModel>> _models;
+  std::unordered_map<std::string, std::unique_ptr<BaseClassificationModel>> _models;
 
   /** Transformations for this data pack - only classification ones */
-  std::unordered_map<StringId, std::unique_ptr<BaseVectorTransform>> _transforms;
+  std::unordered_map<std::string, std::unique_ptr<BaseVectorTransform>> _transforms;
 };
 }  // namespace image_ranker

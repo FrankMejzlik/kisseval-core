@@ -45,6 +45,9 @@ class BaseVectorTransform
 
   [[nodiscard]] virtual const Matrix<float>& data_max() const { return _data_max_mat; }
   [[nodiscard]] virtual const Matrix<float>& data_sum() const { return _data_sum_mat; }
+  
+  [[nodiscard]] virtual size_t num_frames() const { return _data_sum_mat.size(); }
+  [[nodiscard]] virtual size_t num_dims() const { return _data_sum_mat.at(0).size(); }
 
  private:
   /** Data with precomputed hypernyms as a sum of all hyponyms

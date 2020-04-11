@@ -15,7 +15,7 @@ using namespace std::literals::string_literals;
 
 #include <unordered_set>
 
-#include "config.h"
+#include "common.h"
 
 #include "Database.h"
 #include "utility.h"
@@ -23,9 +23,6 @@ using namespace std::literals::string_literals;
 namespace image_ranker
 {
 class ImageRanker;
-
-using Clause = std::vector<std::pair<bool, size_t>>;
-using CnfFormula = std::vector<Clause>;
 
 class Keyword
 {
@@ -292,7 +289,7 @@ class KeywordsContainer
 
       for (auto&& vecIndex : clause)
       {
-        result += std::get<1>(GetKeywordByVectorIndex(vecIndex.second)) + " | "s;
+        result += std::get<1>(GetKeywordByVectorIndex(vecIndex.atom)) + " | "s;
       }
       result.pop_back();
       result.pop_back();

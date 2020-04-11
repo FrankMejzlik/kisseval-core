@@ -20,9 +20,12 @@
 //! Basic log error macro
 #if THROW_ON_ERROR
 
-#define LOG_ERROR(x)                                                                      \
-  std::cout << "ERROR: " << x << "(" << __LINE__ << ", " << __FILE__ << ")" << std::endl; \
-  throw std::runtime_error(std::string(x));
+#define LOG_ERROR(x)                                                                        \
+  do                                                                                        \
+  {                                                                                         \
+    std::cout << "ERROR: " << x << "(" << __LINE__ << ", " << __FILE__ << ")" << std::endl; \
+    throw std::runtime_error(std::string(x));                                               \
+  } while (0);
 
 #elif
 

@@ -19,10 +19,11 @@ class BaseClassificationModel
    *
    * Query in format: "1&3&4" where numbers are indices to scoring vector.
    */
-  [[nodiscard]] virtual std::vector<FrameId> rank_frames(const BaseVectorTransform& transformed_data,
-                                                         const KeywordsContainer& keywords,
-                                                         const std::vector<std::string>& user_query,
-                                                         const std::string& options = ""s) const = 0;
+  [[nodiscard]] virtual RankingResult rank_frames(
+      const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+      const std::vector<CnfFormula>& user_query, size_t result_size,
+      const std::vector<ModelKeyValOption>& options = std::vector<ModelKeyValOption>(),
+      FrameId target_frame_ID = ERR_VAL<FrameId>()) const = 0;
 
   /**
    * Returns results of this model after running provided test queries .
@@ -31,7 +32,8 @@ class BaseClassificationModel
    */
   [[nodiscard]] virtual std::vector<FrameId> run_test(
       const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-      const std::vector<std::pair<std::vector<std::string>, FrameId>>& test_user_queries,
-      const std::string& options = ""s, size_t result_points = NUM_MODEL_TEST_RESULT_POINTS) const = 0;
+      const std::vector<UserTestQuery>& test_user_queries,
+      const std::vector<ModelKeyValOption>& options = std::vector<ModelKeyValOption>(),
+      size_t result_points = NUM_MODEL_TEST_RESULT_POINTS) const = 0;
 };
 }  // namespace image_ranker

@@ -283,7 +283,7 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool s
         // Add their negations as ANDs
         for (auto&& id : vecIds)
         {
-          Clause tmp{std::pair(true, id)};
+          Clause tmp{{id, true}};
 
           resultFormula.push_back(tmp);
         }
@@ -294,7 +294,7 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool s
         // Add their
         for (auto&& id : vecIds)
         {
-          tmp.emplace_back(std::pair(false, id));
+          tmp.emplace_back(Literal<KeywordId>{id, false});
         }
 
         resultFormula.emplace_back(tmp);

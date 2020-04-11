@@ -1,291 +1,103 @@
 
 #include "ViretModel.h"
 
+#include "BaseVectorTransform.h"
+
 using namespace image_ranker;
 
-ViretModel::Options ViretModel::ParseOptionsString(const std::string& options_string) { return ViretModel::Options(); }
-
-std::vector<FrameId> ViretModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-                                             const std::vector<std::string>& user_query,
-                                             const std::string& options) const
+ViretModel::Options ViretModel::ParseOptionsString(const std::vector<ModelKeyValOption>& options_string)
 {
-#if 0
-#if LOG_DEBUG_IMAGE_RANKING
-
-    auto kwsId{std::get<0>(data_ID)};
-    auto& kwCont{keywordContainers.at(kwsId)};
-
-    std::cout << "Image ID: " << std::to_string(pImg->m_imageId) << ": " << pImg->m_filename << std::endl;
-    std::cout << "======================" << std::endl;
-#endif
-
-    // Prepare pointer for ranking vector aggregation data
-    const std::vector<float>* pImgRankingVector{
-        pImg->GetAggregationVectorById(data_ID, pTransformFn->GetGuidFromSettings())};
-
-#if LOG_DEBUG_IMAGE_RANKING
-
-    std::cout << "Precomputed data: " << std::endl;
-    {
-      size_t i{0_z};
-      for (auto&& bin : *pImgRankingVector)
-      {
-        if (bin > GOOGLE_AI_NO_LABEL_SCORE)
-        {
-          auto pKw{kwCont.GetKeywordConstPtrByVectorIndex(i)};
-
-          std::cout << pKw->m_wordnetId << ": " << pKw->m_word << " -> " << std::to_string(bin) << std::endl;
-        }
-
-        ++i;
-      }
-    }
-    std::cout << "======================" << std::endl;
-    std::cout << std::endl;
-#endif
-
-    // Initialize this image ranking value
-    float imageRanking{1.0f};
-
-    // ========================================
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    // SETTINGS: Choose correct operation with ranking
-    switch (_settings.m_queryOperation)
-    {
-      case eQueryOperations::cMultMax:
-      case eQueryOperations::cMultSum:
-        imageRanking = 1.0f;
-        break;
-
-      case eQueryOperations::cSumSum:
-      case eQueryOperations::cSumMax:
-      case eQueryOperations::cMaxMax:
-        imageRanking = 0.0f;
-        break;
-
-      default:
-        LOG_ERROR("Unknown query operation "s + std::to_string(static_cast<int>(_settings.m_queryOperation)) + "."s);
-    }
-    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    // ========================================
-
-    float negateFactor{0.0f};
-
-#if LOG_DEBUG_IMAGE_RANKING
-    std::cout << "queryFormula = " << std::endl;
-    for (auto&& clause : queryFormulae[0])
-    {
-      std::cout << " ( ";
-      for (auto&& literal : clause)
-      {
-        auto currKwRanking{(*pImgRankingVector)[literal.second]};
-        auto pKw{kwCont.GetKeywordConstPtrByVectorIndex(literal.second)};
-
-        std::cout << pKw->m_word << "<" << currKwRanking << ">"
-                  << " + ";
-      }
-      std::cout << " )  * " << std::endl;
-    }
-
-    std::cout << "====================================" << std::endl << std::endl;
-    std::cout << "=> => => START COMPUTE IMAGE SCORE" << std::endl;
-    std::cout << "imageRanking = " << imageRanking << std::endl;
-
-    size_t clauseCounter{0_z};
-#endif
-
-    // Itarate through clauses connected with AND
-    for (auto&& clause : queryFormulae[0])
-    {
-      float clauseRanking{0.0f};
-
-      // Iterate through all variables in clause
-      for (auto&& literal : clause)
-      {
-        auto currKwRanking{(*pImgRankingVector)[literal.second]};
-
-#if LOG_DEBUG_IMAGE_RANKING
-        auto pKw{kwCont.GetKeywordConstPtrByVectorIndex(literal.second)};
-
-        std::cout << "\t => " << pKw->m_word << "< " << std::to_string(currKwRanking) << " >" << std::endl;
-#endif
-
-        float factor{1.0f};
-
-        // ========================================
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        // SETTINGS: Choose correct KF handling
-        switch (_settings.m_keywordFrequencyHandling)
-        {
-            // No care about TFIDF
-          case 0:
-
-            break;
-
-            // Multiply with TFIDF
-          case 1:
-            factor = (*pIndexKwFrequency)[literal.second];
-            currKwRanking = currKwRanking * factor;
-            break;
-
-          default:
-            LOG_ERROR("Unknown keyword freq operation.");
-        }
-        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        // ========================================
-
-        // Is negative
-        if (literal.first)
-        {
-          negateFactor += currKwRanking;
-          continue;
-        }
-
-        // Skip all labels with too low ranking
-        if (currKwRanking < _settings.m_trueTreshold)
-        {
-          continue;
-        }
-
-        // ========================================
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        // SETTINGS: Choose what to do with caluse ranks
-        switch (_settings.m_queryOperation)
-        {
-            // For sum based
-          case eQueryOperations::cMultSum:
-          case eQueryOperations::cSumSum:
-          {
-#if LOG_DEBUG_IMAGE_RANKING
-            std::cout << "\t < clauseRanking += currKwRanking >" << std::endl;
-            std::cout << "\t clauseRanking += " << currKwRanking << std::endl;
-#endif
-            // just accumulate
-            clauseRanking += currKwRanking;
-
-#if LOG_DEBUG_IMAGE_RANKING
-            std::cout << "\t clauseRanking = " << clauseRanking << std::endl;
-#endif
-          }
-          break;
-
-          // For max based
-          case eQueryOperations::cMultMax:
-          case eQueryOperations::cSumMax:
-          case eQueryOperations::cMaxMax:
-          {
-#if LOG_DEBUG_IMAGE_RANKING
-            std::cout << "\t < clauseRanking = std::max(clauseRanking, currKwRanking) >" << std::endl;
-            std::cout << "\t clauseRanking = std::max(" << clauseRanking << ", " << currKwRanking << ")" << std::endl;
-#endif
-
-            // Get just maximum
-            clauseRanking = std::max(clauseRanking, currKwRanking);
-
-#if LOG_DEBUG_IMAGE_RANKING
-            std::cout << "\t clauseRanking = " << clauseRanking << std::endl;
-#endif
-          }
-          break;
-
-          default:
-            LOG_ERROR("Unknown query operation "s + std::to_string(static_cast<int>(_settings.m_queryOperation)) +
-                      "."s);
-        }
-        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        // ========================================
-      }
-
-      // ========================================
-      // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-      // SETTINGS: Choose correct operation
-      switch (_settings.m_queryOperation)
-      {
-          // Outter operatin Multiplication
-        case eQueryOperations::cMultSum:
-        case eQueryOperations::cMultMax:
-        {
-#if LOG_DEBUG_IMAGE_RANKING
-          std::cout << "< imageRanking = imageRanking * clauseRanking; >" << std::endl;
-          std::cout << "imageRanking = " << std::to_string(imageRanking) << " * " << std::to_string(clauseRanking)
-                    << std::endl;
-#endif
-          // Multiply all clause rankings
-          imageRanking = imageRanking * clauseRanking;
-
-#if LOG_DEBUG_IMAGE_RANKING
-          std::cout << "imageRanking = " << std::to_string(imageRanking) << std::endl;
-#endif
-        }
-        break;
-
-        // Outter operatin Sum
-        case eQueryOperations::cSumSum:
-        case eQueryOperations::cSumMax:
-        {
-#if LOG_DEBUG_IMAGE_RANKING
-          std::cout << "< imageRanking = imageRanking + clauseRanking; >" << std::endl;
-          std::cout << "imageRanking = " << std::to_string(imageRanking) << " + " << std::to_string(clauseRanking)
-                    << std::endl;
-#endif
-
-          // Add all clause rankings
-          imageRanking = imageRanking + clauseRanking;
-
-#if LOG_DEBUG_IMAGE_RANKING
-          std::cout << "imageRanking = " << std::to_string(imageRanking) << std::endl;
-#endif
-        }
-        break;
-
-        // Outter operatin Max
-        case eQueryOperations::cMaxMax:
-        {
-#if LOG_DEBUG_IMAGE_RANKING
-          std::cout << "< imageRanking = std::max(imageRanking, clauseRanking); >" << std::endl;
-          std::cout << " imageRanking = std::max(" << std::to_string(imageRanking) << " + "
-                    << std::to_string(clauseRanking) << ")" << std::endl;
-#endif
-
-          // Get just maximum
-          imageRanking = std::max(imageRanking, clauseRanking);
-
-#if LOG_DEBUG_IMAGE_RANKING
-          std::cout << "imageRanking = " << std::to_string(imageRanking) << std::endl;
-#endif
-        }
-        break;
-
-        default:
-          LOG_ERROR("Unknown query operation "s + std::to_string(static_cast<int>(_settings.m_queryOperation)) + "."s);
-      }
-        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        // ========================================
-
-#if LOG_DEBUG_IMAGE_RANKING
-      ++clauseCounter;
-#endif
-    }
-
-    // If there were some negative keywords
-    if (negateFactor > 0)
-    {
-      imageRanking /= ((negateFactor * queryFormulae[0].size()) + 1);
-    }
-
-#if LOG_DEBUG_IMAGE_RANKING
-    std::cout << "imageRanking = " << imageRanking << std::endl;
-    std::cout << "<= <= <= END COMPUTE IMAGE SCORE" << std::endl;
-    std::cout << "====================================" << std::endl << std::endl;
-#endif
-#endif
-  return std::vector<FrameId>();
+  return ViretModel::Options();
 }
 
-std::vector<FrameId> ViretModel::run_test(
-    const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-    const std::vector<std::pair<std::vector<std::string>, FrameId>>& test_user_queries, const std::string& options,
-    size_t result_points) const
+RankingResult ViretModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+                                      const std::vector<CnfFormula>& user_query, size_t result_size,
+                                      const std::vector<ModelKeyValOption>& options, FrameId target_frame_ID) const
+{
+  if (user_query.empty())
+  {
+    LOG_WARN("Empty query");
+    return RankingResult{};
+  }
+
+  // Parse provided options
+  Options opts = ParseOptionsString(options);
+
+  using FramePair = std::pair<float, size_t>;
+
+  // Comparator for the priority queue
+  auto frame_pair_cmptor = [](const FramePair& left, const FramePair& right) { return left.first < right.first; };
+
+  // Create inner container for the queue
+  std::vector<FramePair> queue_cont;
+  queue_cont.reserve(transformed_data.num_frames());
+
+  // Construct prioprity queue
+  std::priority_queue<FramePair, std::vector<FramePair>, decltype(frame_pair_cmptor)> max_prio_queue(
+      frame_pair_cmptor, std::move(queue_cont));
+
+  RankingResult result;
+  result.target = target_frame_ID;
+  result.m_frames.reserve(result_size);
+
+  Matrix<float> data_mat;
+  switch (opts.scoring_operations)
+  {
+      // SUM based
+    case eScoringOperations::cMultSum:
+    case eScoringOperations::cSumSum:
+      data_mat = transformed_data.data_sum();
+      break;
+
+      // MAX based
+    case eScoringOperations::cMaxMax:
+    case eScoringOperations::cMultMax:
+    case eScoringOperations::cSumMax:
+      data_mat = transformed_data.data_max();
+      break;
+
+    default:
+      LOG_ERROR("Unknown scoring operation.");
+      return RankingResult{};
+  }
+
+  {
+    size_t i{0};
+    for (auto&& fea_vec : data_mat)
+    {
+      float prim_ranking = rank_frame(fea_vec, user_query.front(), opts);
+
+      max_prio_queue.emplace(prim_ranking, i);
+
+      // \todo Add temporal ranking
+    }
+    ++i;
+  }
+
+  {
+    bool found_target{false};
+    for (size_t i{0}; i < result_size || !found_target; ++i)
+    {
+      auto pair{max_prio_queue.top()};
+
+      if (pair.second == target_frame_ID)
+      {
+        found_target = true;
+        result.target_pos = i + 1;
+      }
+
+      result.m_frames.emplace_back();
+      max_prio_queue.pop();
+    }
+  }
+
+  return result;
+}
+
+std::vector<FrameId> ViretModel::run_test(const BaseVectorTransform& transformed_data,
+                                          const KeywordsContainer& keywords,
+                                          const std::vector<UserTestQuery>& test_user_queries,
+                                          const std::vector<ModelKeyValOption>& options, size_t result_points) const
 {
   return std::vector<FrameId>();
 }
@@ -771,3 +583,101 @@ std::vector<FrameId> ViretModel::run_test(
   }
 
 #endif
+
+float ViretModel::rank_frame(const Vector<float>& frame_data, const CnfFormula& single_query,
+                             const Options& options) const
+{
+  float frame_ranking{1.0F};
+
+  /********************************************************
+   * SETTINGS: Initialize frame ranking with correct value
+   ********************************************************/
+  switch (options.scoring_operations)
+  {
+    case eScoringOperations::cMultMax:
+    case eScoringOperations::cMultSum:
+      frame_ranking = 1.0F;
+      break;
+
+    case eScoringOperations::cSumSum:
+    case eScoringOperations::cSumMax:
+    case eScoringOperations::cMaxMax:
+      frame_ranking = 0.0F;
+      break;
+
+    default:
+      LOG_ERROR("Unknown scoring operation optaion: '"s + std::to_string(int(options.scoring_operations)) + "'."s);
+  }
+
+  for (auto&& clause : single_query)
+  {
+    float clause_ranking{0.0F};
+
+    for (auto&& literal : clause)
+    {
+      float literal_ranking{frame_data[literal.atom]};
+
+      // If literal_ranking under the threshold
+      if (literal_ranking < options.ignore_below_threshold)
+      {
+        continue;
+      }
+
+      /********************************************************
+       * SETTINGS: Choose correct INNER query operation
+       ********************************************************/
+      switch (options.scoring_operations)
+      {
+          // Inner operation: SUM
+        case eScoringOperations::cMultSum:
+        case eScoringOperations::cSumSum:
+          clause_ranking += literal_ranking;
+          break;
+
+          // Inner operation: MAX
+        case eScoringOperations::cMultMax:
+        case eScoringOperations::cSumMax:
+        case eScoringOperations::cMaxMax:
+          clause_ranking = std::max(clause_ranking, literal_ranking);
+          break;
+
+        default:
+          LOG_ERROR("Unknown query operation "s + std::to_string(int(options.scoring_operations)) + "."s);
+      }
+    }
+
+    /********************************************************
+     * SETTINGS: Choose correct OUTTER query operation
+     ********************************************************/
+    switch (options.scoring_operations)
+    {
+        // Outter operationn: MULT
+      case eScoringOperations::cMultSum:
+      case eScoringOperations::cMultMax:
+      {
+        frame_ranking *= clause_ranking;
+      }
+      break;
+
+        // Outter operationn: SUM
+      case eScoringOperations::cSumSum:
+      case eScoringOperations::cSumMax:
+      {
+        frame_ranking += clause_ranking;
+      }
+      break;
+
+        // Outter operation: MAX
+      case eScoringOperations::cMaxMax:
+      {
+        frame_ranking = std::max(frame_ranking, clause_ranking);
+      }
+      break;
+
+      default:
+        LOG_ERROR("Unknown query scoring operation: '"s + std::to_string(int(options.scoring_operations)) + "'."s);
+    }
+  }
+
+  return frame_ranking;
+}

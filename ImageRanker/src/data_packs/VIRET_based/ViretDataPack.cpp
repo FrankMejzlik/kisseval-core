@@ -20,20 +20,22 @@ ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset
 {
   // Instantiate all wanted transforms
   std::thread t1([this]() {
-    _transforms.emplace("softmax", std::make_unique<TransformationSoftmax>(_keywords, _softmax_data_raw));
+    _transforms.emplace(enum_label(eTransformationIds::SOFTMAX).first,
+                        std::make_unique<TransformationSoftmax>(_keywords, _softmax_data_raw));
   });
   std::thread t2([this]() {
-    _transforms.emplace("linear_0-1", std::make_unique<TransformationLinear01>(_keywords, _presoftmax_data_raw));
+    _transforms.emplace(enum_label(eTransformationIds::LINEAR_01).first,
+                        std::make_unique<TransformationLinear01>(_keywords, _presoftmax_data_raw));
   });
   std::thread t3([this]() {
-    _transforms.emplace("no_transform",
+    _transforms.emplace(enum_label(eTransformationIds::NO_TRANSFORM).first,
                         std::make_unique<BaseVectorTransform>(_presoftmax_data_raw, _presoftmax_data_raw));
   });
 
   // Instantiate all wanted models
   // Boolean
   // Vector space
-  _models.emplace("mult-sum-max", std::make_unique<ViretModel>());
+  _models.emplace(enum_label(eModelIds::MULT_SUM_MAX).first, std::make_unique<ViretModel>());
 
   t1.join();
   t2.join();
@@ -62,13 +64,53 @@ const std::string& ViretDataPack::get_vocab_description() const { return _keywor
   });
 }
 
-RankingResult ViretDataPack::rank_frames(const std::vector<std::string>& user_queries, PackModelCommands model_commands,
+RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, PackModelCommands model_commands,
                                          size_t result_size, FrameId target_image_ID) const
 {
-  LOG_WARN("Not implemented!");
+  std::vector<std::string> tokens = split(model_commands, ';');
 
-  // Parse command string
-  return RankingResult();
+  std::vector<ModelKeyValOption> opt_key_vals;
+
+  std::string model_ID;
+  std::string transform_ID;
+
+  for (auto&& tok : tokens)
+  {
+    auto key_val = split(tok, '=');
+
+    // Model ID && Transform ID
+    if (key_val[0] == enum_label(eModelOptsKeys::MODEL_ID).first ||
+        key_val[0] == enum_label(eModelOptsKeys::TRANSFORM_ID).first)
+    {
+      model_ID = key_val[1];
+    }
+    // Options for model itself
+    else
+    {
+      opt_key_vals.emplace_back();
+    }
+  }
+
+  // Choose desired model
+  auto iter_m = _models.find(model_ID);
+  if (iter_m == _models.end())
+  {
+    LOG_ERROR("Uknown model_ID: '" + model_ID +"'.");
+    return RankingResult{};
+  }
+  const auto& ranking_model = *(iter_m->second);
+
+  // Choose desired transform
+  auto iter_t = _transforms.find(transform_ID);
+  if (iter_t == _transforms.end())
+  {
+    LOG_ERROR("Uknown transform_ID: '" + transform_ID +"'.");
+    return RankingResult{};
+  }
+  const auto& transform = *(iter_t->second);
+
+  // Run this model
+  return ranking_model.rank_frames(transform, _keywords, user_queries, result_size, opt_key_vals);
 }
 
 AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,

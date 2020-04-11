@@ -184,7 +184,14 @@ RankingResult ImageRanker::rank_frames(const std::vector<std::string>& user_quer
 {
   const BaseDataPack& dp{data_pack(data_pack_ID)};
 
-  return dp.rank_frames(user_queries, model_commands, result_size, target_image_ID);
+  // Parse CNF strings
+  std::vector<CnfFormula> cnf_user_query;
+  for (auto&& single_query : user_queries)
+  {
+    cnf_user_query.emplace_back(parse_cnf_string(single_query));
+  }
+  
+  return dp.rank_frames(cnf_user_query, model_commands, result_size, target_image_ID);
 }
 
 // =====================================
