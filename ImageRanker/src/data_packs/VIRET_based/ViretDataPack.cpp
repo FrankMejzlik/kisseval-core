@@ -13,13 +13,13 @@ ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset
     : BaseDataPack(ID, target_imageset_ID, description),
       _feas_data_raw(std::move(feas_data)),
       _presoftmax_data_raw(std::move(presoft)),
-      _softmax_data_raw(std::move(presoft)),
+      _softmax_data_raw(std::move(softmax_data)),
       _keywords(vocab_data_refs)
 {
   // Instantiate all wanted transforms
   _transforms.emplace("softmax", std::make_unique<TransformationSoftmax>(_keywords, _softmax_data_raw));
   _transforms.emplace("linear_0-1", std::make_unique<TransformationLinear01>(_keywords, _presoftmax_data_raw));
-  _transforms.emplace("no_transform", std::make_unique<BaseVectorTransform>(_presoftmax_data_raw));
+  _transforms.emplace("no_transform", std::make_unique<BaseVectorTransform>(_presoftmax_data_raw, _presoftmax_data_raw));
 
   // Instantiate all wanted models
   // Boolean
@@ -69,9 +69,4 @@ DataPackInfo ViretDataPack::get_info() const
   return DataPackInfo{get_ID(), get_description(), target_imageset_ID(), _keywords.get_ID(), _keywords.get_description()
 
   };
-}
-
-Matrix<float> ViretDataPack::accumulate_hypernyms(const Matrix<float>& data_mat) const
-{
-
 }

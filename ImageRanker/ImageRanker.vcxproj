@@ -265,6 +265,7 @@
     <ClCompile Include="src\ImageRanker.cpp" />
     <ClCompile Include="src\KeywordsContainer.cpp" />
     <ClCompile Include="src\ranking_models\ViretModel.cpp" />
+    <ClCompile Include="src\transformations\BaseVectorTransform.cpp" />
     <ClCompile Include="src\transformations\TransformationLinear.cpp" />
     <ClCompile Include="src\transformations\TransformationSoftmax.cpp" />
   </ItemGroup>

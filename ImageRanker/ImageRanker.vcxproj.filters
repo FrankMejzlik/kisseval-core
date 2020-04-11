@@ -57,6 +57,9 @@
     <ClCompile Include="src\transformations\TransformationSoftmax.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\transformations\BaseVectorTransform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\config.h">

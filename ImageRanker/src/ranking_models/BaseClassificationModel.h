@@ -18,18 +18,19 @@ class BaseClassificationModel
    *
    * Query in format: "1&3&4" where numbers are indices to scoring vector.
    */
-  virtual std::vector<FrameId> rank_frames(const Matrix<float>& data_mat, const KeywordsContainer& keywords,
-                                           const std::vector<std::string>& user_query,
-                                           const std::string& options = ""s) const = 0;
+  [[nodiscard]] virtual std::vector<FrameId> rank_frames(const Matrix<float>& data_mat,
+                                                         const KeywordsContainer& keywords,
+                                                         const std::vector<std::string>& user_query,
+                                                         const std::string& options = ""s) const = 0;
 
   /**
    * Returns results of this model after running provided test queries .
    *
    * Query in format: "1&3&4" where numbers are indices to scoring vector.
    */
-  virtual std::vector<FrameId> run_test(
+  [[nodiscard]] virtual std::vector<FrameId> run_test(
       const Matrix<float>& data_mat, const KeywordsContainer& keywords,
       const std::vector<std::pair<std::vector<std::string>, FrameId>>& test_user_queries,
-      const std::string& options = ""s, size_t result_points = 100) const = 0;
+      const std::string& options = ""s, size_t result_points = NUM_MODEL_TEST_RESULT_POINTS) const = 0;
 };
 }  // namespace image_ranker

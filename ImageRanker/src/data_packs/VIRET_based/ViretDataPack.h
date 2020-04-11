@@ -20,23 +20,21 @@ class ViretDataPack : public BaseDataPack
                 const ViretDataPackRef::VocabData& vocab_data_refs, std::vector<std::vector<float>>&& presoft,
                 std::vector<std::vector<float>>&& softmax_data, std::vector<std::vector<float>>&& feas_data);
 
-  [[nodiscard]] RankingResult rank_frames(const std::vector<std::string>& user_queries,
-                                          PackModelCommands model_commands, size_t result_size,
-                                          FrameId target_image_ID = ERR_VAL<FrameId>()) const override;
+  [[nodiscard]] virtual RankingResult rank_frames(const std::vector<std::string>& user_queries,
+                                                  PackModelCommands model_commands, size_t result_size,
+                                                  FrameId target_image_ID = ERR_VAL<FrameId>()) const override;
 
-  [[nodiscard]] const std::string& get_vocab_ID() const override;
-  [[nodiscard]] const std::string& get_vocab_description() const override;
+  [[nodiscard]] virtual const std::string& get_vocab_ID() const override;
+  [[nodiscard]] virtual const std::string& get_vocab_description() const override;
 
-  [[nodiscard]] std::string humanize_and_query(const std::string& and_query) const override;
-  [[nodiscard]] std::vector<Keyword*> top_frame_keywords(FrameId frame_ID) const override;
+  [[nodiscard]] virtual std::string humanize_and_query(const std::string& and_query) const override;
+  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID) const override;
 
-  [[nodiscard]] AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix, size_t result_size,
-                                                                 bool with_example_images) const override;
+  [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix,
+                                                                         size_t result_size,
+                                                                         bool with_example_images) const override;
 
-  [[nodiscard]] DataPackInfo get_info() const override;
-
-private:
-  Matrix<float> accumulate_hypernyms(const Matrix<float>& data_mat) const;
+  [[nodiscard]] virtual DataPackInfo get_info() const override;
 
  private:
   KeywordsContainer _keywords;

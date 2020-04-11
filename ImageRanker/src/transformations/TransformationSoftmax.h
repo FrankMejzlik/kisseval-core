@@ -21,8 +21,7 @@ class TransformationSoftmax : public BaseVectorTransform
   };
 
  public:
-  [[nodiscard]] static Matrix<float> apply(const KeywordsContainer& keywords, const Matrix<float>& data,
-                                           [[maybe_unused]] const std::string& options = "");
+  [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, [[maybe_unused]] const std::string& options = "");
 
   TransformationSoftmax(const KeywordsContainer& keywords, Matrix<float>& data_mat,
                         [[maybe_unused]] const std::string& options = "");

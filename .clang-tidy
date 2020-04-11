@@ -1,5 +1,5 @@
 ---
-Checks:          '-*,cppcoreguidelines-*,modernize-*,-modernize-use-trailing-return-type,performance-*,portability-*,readability-*,clang-analyzer-*'
+Checks:          '-*,cppcoreguidelines-*,-cppcoreguidelines-explicit-virtual-functions,modernize-*,-modernize-use-override,-modernize-use-trailing-return-type,performance-*,portability-*,readability-*,clang-analyzer-*'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 FormatStyle:     none
