@@ -36,6 +36,10 @@ class ViretDataPack : public BaseDataPack
 
   [[nodiscard]] virtual DataPackInfo get_info() const override;
 
+private:
+  /** Converts CNF query using keyword IDs to the one using only valid vector indices */
+  CnfFormula keyword_IDs_to_vector_indices(CnfFormula ID_query) const;
+
  private:
   KeywordsContainer _keywords;
 

@@ -67,11 +67,7 @@ KeywordsContainer::KeywordsContainer(const ViretDataPackRef::VocabData& vocab_da
       _description(vocab_data_refs.description),
       _kw_classes_fpth(vocab_data_refs.keyword_synsets_fpth)
 {
-  std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
-             std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>
-      res;
-
-  res = FileParser::ParseKeywordClassesFile_ViretFormat(_kw_classes_fpth);
+  auto res = FileParser::ParseKeywordClassesFile_ViretFormat(_kw_classes_fpth);
 
   // Store results
   _allDescriptions = std::move(std::get<0>(res));
@@ -79,6 +75,7 @@ KeywordsContainer::KeywordsContainer(const ViretDataPackRef::VocabData& vocab_da
   _wordnetIdToKeywords = std::move(std::get<2>(res));
   _descIndexToKeyword = std::move(std::get<3>(res));
   _keywords = std::move(std::get<4>(res));
+  _ID_to_keyword = std::move(std::get<5>(res));
 
   // Sort keywords
   std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);

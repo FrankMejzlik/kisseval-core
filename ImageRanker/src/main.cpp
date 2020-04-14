@@ -60,8 +60,8 @@ int main()
 #define TEST_get_random_frame_sequence 0
 #define TEST_get_autocomplete_results 0
 #define TEST_get_loaded_imagesets_info 0
-#define TEST_rank_frames 1
-#define TEST_run_model_test 0
+#define TEST_rank_frames 0
+#define TEST_run_model_test 1
 
   // TEST: `submit_annotator_user_queries`
 #if TEST_submit_annotator_user_queries
@@ -117,18 +117,17 @@ int main()
 
   // "model_ID=mult-sum-max;transform_ID=linear_0-1;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0",
   auto r1 = ranker.rank_frames(
-      {"&-20+--1+-3++-55+-333+", "&-2+--10+-33++-5+-33+"}, dp1["ID"].get<std::string>(),
-      "model_ID=mult-sum-max;transform_ID=linear_0-1;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0",
-      1000);
+      {"&-274+"}, dp1["ID"].get<std::string>(),
+      "model_ID=Mult-sum-max;transform_ID=softmax;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0", 1000,
+      1304);
 
 #endif
 
 #if TEST_run_model_test
 
-  auto r1 = ranker.rank_frames(
-      {"&-20+--1+-3++-55+-333+", "&-2+--10+-33++-5+-33+"}, dp1["ID"].get<std::string>(),
-      "model_ID=mult-sum-max;transform_ID=linear_0-1;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0",
-      1000);
+  auto r1 = ranker.run_model_test(
+      eUserQueryOrigin::SEMI_EXPERTS, dp1["ID"].get<std::string>(),
+      "model_ID=Mult-sum-max;transform_ID=linear_01;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0");
 
 #endif
 

@@ -75,10 +75,17 @@ class KeywordsContainer
   const std::string& get_ID() const { return _ID; }
   const std::string& get_description() const { return _description; }
 
+  const Keyword& operator[](KeywordId keyword_ID) const
+  {
+    return *_ID_to_keyword.at(keyword_ID);
+  }
+
  private:
   std::string _ID;
   std::string _description;
   std::string _kw_classes_fpth;
+
+  std::map<KeywordId, Keyword*> _ID_to_keyword;
 
  public:
   void SubstringExpansionPrecompute()

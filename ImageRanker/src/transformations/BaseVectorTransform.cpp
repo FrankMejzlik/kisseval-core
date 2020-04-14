@@ -49,7 +49,7 @@ Matrix<float> accumulate_hypernyms(const KeywordsContainer& keywords, Matrix<flo
         });
     }
 
-    result_data.emplace_back(new_row);
+    result_data.emplace_back(std::move(new_row));
   }
 
   return result_data;

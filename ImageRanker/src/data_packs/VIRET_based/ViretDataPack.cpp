@@ -67,6 +67,15 @@ const std::string& ViretDataPack::get_vocab_description() const { return _keywor
 RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, PackModelCommands model_commands,
                                          size_t result_size, FrameId target_image_ID) const
 {
+
+  // Expand query to vector indices
+  std::vector<CnfFormula> idx_queries;
+  idx_queries.reserve(user_queries.size());
+  for (auto&& q : user_queries)
+  {
+    idx_queries.emplace_back(keyword_IDs_to_vector_indices(q));
+  }
+
   std::vector<std::string> tokens = split(model_commands, ';');
 
   std::vector<ModelKeyValOption> opt_key_vals;
@@ -98,7 +107,7 @@ RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_que
   auto iter_m = _models.find(model_ID);
   if (iter_m == _models.end())
   {
-    LOG_ERROR("Uknown model_ID: '" + model_ID +"'.");
+    LOG_ERROR("Uknown model_ID: '" + model_ID + "'.");
     return RankingResult{};
   }
   const auto& ranking_model = *(iter_m->second);
@@ -107,13 +116,13 @@ RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_que
   auto iter_t = _transforms.find(transform_ID);
   if (iter_t == _transforms.end())
   {
-    LOG_ERROR("Uknown transform_ID: '" + transform_ID +"'.");
+    LOG_ERROR("Uknown transform_ID: '" + transform_ID + "'.");
     return RankingResult{};
   }
   const auto& transform = *(iter_t->second);
 
   // Run this model
-  return ranking_model.rank_frames(transform, _keywords, user_queries, result_size, opt_key_vals);
+  return ranking_model.rank_frames(transform, _keywords, idx_queries, result_size, opt_key_vals, target_image_ID);
 }
 
 AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,
@@ -124,7 +133,28 @@ AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::strin
 
 DataPackInfo ViretDataPack::get_info() const
 {
-  return DataPackInfo{get_ID(), get_description(), target_imageset_ID(), _keywords.get_ID(), _keywords.get_description()
+  return DataPackInfo{get_ID(), get_description(), target_imageset_ID(), _keywords.get_ID(), _keywords.get_description()};
+}
 
-  };
+CnfFormula ViretDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) const
+{
+  for (auto&& ID_clause : ID_query)
+  {
+    assert(ID_clause.size() == 1);
+
+    KeywordId kw_ID{ID_clause[0].atom};
+
+    const Keyword& kw{ _keywords[kw_ID] };
+
+    std::unordered_set<size_t> vecIds;
+    _keywords.GetVectorKeywordsIndicesSetShallow(vecIds, kw.m_wordnetId);
+
+    ID_clause.clear();
+    for (auto&& id : vecIds)
+    {
+      ID_clause.emplace_back(Literal<KeywordId>{ id, false });
+    }
+
+  }
+  return ID_query;
 }

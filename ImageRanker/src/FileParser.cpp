@@ -172,7 +172,8 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
 }
 
 std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
-           std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>
+           std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>,
+           std::map<KeywordId, Keyword*>>
 FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath)
 {
   // Open file with list of files in images dir
@@ -190,9 +191,10 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath)
   std::map<size_t, Keyword*> _vecIndexToKeyword;
   std::vector<std::pair<size_t, Keyword*>> _descIndexToKeyword;
   std::vector<std::unique_ptr<Keyword>> _keywords;
+  std::map<KeywordId, Keyword*> ID_to_keyword;
 
   std::string lineBuffer;
-
+  size_t iii{0};
   // While there is something to read
   while (std::getline(inFile, lineBuffer))
   {
@@ -290,10 +292,13 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath)
       // Insert into vector index -> Keyword
       _vecIndexToKeyword.insert(std::make_pair(vectorIndex, _keywords.back().get()));
     }
+
+    ID_to_keyword.insert(std::make_pair(iii, _keywords.back().get()));
+    ++iii;
   }
 
-  return std::tuple{std::move(_allDescriptions), std::move(_vecIndexToKeyword), std::move(_wordnetIdToKeywords),
-                    std::move(_descIndexToKeyword), std::move(_keywords)};
+  return std::tuple{std::move(_allDescriptions),    std::move(_vecIndexToKeyword), std::move(_wordnetIdToKeywords),
+                    std::move(_descIndexToKeyword), std::move(_keywords),          std::move(ID_to_keyword)};
 }
 
 std::pair<std::vector<std::vector<float>>, std::vector<std::vector<std::pair<FrameId, float>>>>
@@ -450,7 +455,7 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
 
 std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath)
 {
-  std::vector<std::vector<float>> result;
+  std::vector<std::vector<float>> result{20000};
 
   // Open file for reading as binary from the end side
   std::ifstream ifs(inputFilepath, std::ios::binary | std::ios::ate);
@@ -565,7 +570,7 @@ std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(cons
     }
     float variance = sqrtf((float)1 / (numFloats - 1) * varSum);
 
-    result.emplace_back(std::move(rawRankData));
+    result[id] = std::move(rawRankData);
   }
 
   return result;

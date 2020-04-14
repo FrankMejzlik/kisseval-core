@@ -16,10 +16,9 @@ class DataManager
   void submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID, size_t user_level,
                                      bool with_example_images, const std::vector<AnnotatorUserQuery>& user_queries);
 
-  const std::vector<UserTestQuery>& fetch_user_test_queries(eUserQueryOrigin queries_origin,
-                                                            const StringId& vocabulary_ID,
-                                                            const StringId& data_pack_ID = ""s,
-                                                            const StringId& model_options = ""s);
+  std::vector<UserTestQuery> fetch_user_test_queries(eUserQueryOrigin queries_origin, const StringId& vocabulary_ID,
+                                                     const StringId& data_pack_ID = ""s,
+                                                     const StringId& model_options = ""s) const;
 
  private:
  private:

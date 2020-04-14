@@ -13,7 +13,7 @@ Matrix<float> TransformationLinear01::apply(const Matrix<float>& data, const std
   {
     float sum{0.0F};
     float min{std::numeric_limits<float>::max()};
-    float max{std::numeric_limits<float>::min()};
+    float max{-std::numeric_limits<float>::max()};
 
     Vector<float> new_row;
 

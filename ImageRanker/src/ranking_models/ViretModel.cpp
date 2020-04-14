@@ -70,12 +70,13 @@ RankingResult ViretModel::rank_frames(const BaseVectorTransform& transformed_dat
       max_prio_queue.emplace(prim_ranking, i);
 
       // \todo Add temporal ranking
+      ++i;
     }
-    ++i;
+    
   }
 
   {
-    bool found_target{false};
+    bool found_target{target_frame_ID == ERR_VAL<FrameId>() ? true : false};
     for (size_t i{0}; i < result_size || !found_target; ++i)
     {
       auto pair{max_prio_queue.top()};
@@ -86,7 +87,10 @@ RankingResult ViretModel::rank_frames(const BaseVectorTransform& transformed_dat
         result.target_pos = i + 1;
       }
 
-      result.m_frames.emplace_back();
+      if (i < result_size)
+      {
+        result.m_frames.emplace_back();
+      }
       max_prio_queue.pop();
     }
   }

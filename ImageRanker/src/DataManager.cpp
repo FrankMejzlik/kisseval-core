@@ -59,73 +59,48 @@ void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, co
   }
 }
 
-const std::vector<UserTestQuery>& DataManager::fetch_user_test_queries(eUserQueryOrigin queries_origin,
-                                                                       const StringId& vocabulary_ID,
-                                                                       const StringId& data_pack_ID,
-                                                                       const StringId& model_options)
+std::vector<UserTestQuery> DataManager::fetch_user_test_queries(eUserQueryOrigin queries_origin,
+                                                                const StringId& vocabulary_ID,
+                                                                const StringId& data_pack_ID,
+                                                                const StringId& model_options) const
 {
-#if 0
-  switch (dataSource)
+  std::vector<UserTestQuery> result;
+
+  std::stringstream SQL_query_ss;
+  SQL_query_ss << "SELECT `target_frame_ID`, `user_query` FROM `" << _db.GetDbName() << "`.`" << queries_table_name
+               << "` ";
+  SQL_query_ss << "WHERE (`user_level` = " << int(queries_origin) << " AND `vocabulary_ID` = '" << vocabulary_ID
+               << "' ";
+
+  if (!data_pack_ID.empty())
   {
-    case UserDataSourceId::cDeveloper:
+    SQL_query_ss << " AND `data_pack_ID` = '" << data_pack_ID << "'";
+  }
+  if (!model_options.empty())
+  {
+    SQL_query_ss << " AND `model_options` = '" << model_options << "'";
+  }
 
-      if (cachedData0.empty() || cachedData0Ts < currentTime)
-      {
-        cachedData0.clear();
+  SQL_query_ss << ");";
 
-        // Fetch pairs of <Q, Img>
-        std::string query(
-            "\
-        SELECT image_id, query, type FROM `" +
-            _db.GetDbName() +
-            "`.queries \
-          WHERE ( type = " +
-            std::to_string((int)dataSource) + " OR type =  " + std::to_string(((int)dataSource + 10)) +
-            ") AND \
-            keyword_data_type = " +
-            std::to_string((int)std::get<0>(data_ID)) +
-            " AND \
-            scoring_data_type = " +
-            std::to_string((int)std::get<1>(data_ID)) + ";");
+  auto [res, db_rows] = _db.ResultQuery(SQL_query_ss.str());
 
-        auto dbData = _db.ResultQuery(query);
+  if (res != 0)
+  {
+    LOG_ERROR("Error fetching user queries from the DB. \n\n Error code: "s + std::to_string(res));
+  }
 
-        if (dbData.first != 0)
-        {
-          LOG_ERROR("Error getting queries from database."s);
-        }
+  // Parse DB results
+  for (auto&& row : db_rows)
+  {
+    FrameId target_frame_ID{strTo<FrameId>(row[0])};
+    CnfFormula single_query{parse_cnf_string(row[1])};
 
-        // Parse DB results
-        for (auto&& idQueryRow : dbData.second)
-        {
-          size_t imageId{static_cast<size_t>(strToInt(idQueryRow[0].data())) * TEST_QUERIES_ID_MULTIPLIER};
+    std::vector<CnfFormula> query;
+    query.emplace_back(single_query);
 
-          CnfFormula queryFormula{GetCorrectKwContainerPtr(data_ID)
-                                      ->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS)};
-          bool wasWithExamples{(bool)((strToInt(idQueryRow[2]) / 10) % 2)};
+    result.emplace_back(query, target_frame_ID);
+  }
 
-#if RUN_TESTS_ONLY_ON_NON_EMPTY_POSTREMOVE_HYPERNYM
-
-          CnfFormula queryFormulaTest{
-              GetCorrectKwContainerPtr(data_ID)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), true)};
-          if (!queryFormulaTest.empty())
-#else
-
-          if (!queryFormula.empty())
-
-#endif
-          {
-            std::vector<UserImgQuery> tmp;
-            tmp.emplace_back(std::move(imageId), std::move(queryFormula), wasWithExamples);
-
-            cachedData0.emplace_back(std::move(tmp));
-          }
-        }
-
-        cachedData0Ts = std::chrono::steady_clock::now();
-        cachedData0Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
-      }
-
-      return cachedData0;
-#endif
+  return result;
 }
