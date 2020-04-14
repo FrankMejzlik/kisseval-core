@@ -69,6 +69,10 @@ class ImageRanker
                                           const PackModelCommands& model_commands, size_t result_size,
                                           FrameId target_image_ID = ERR_VAL<FrameId>()) const;
 
+  [[nodiscard]] virtual ModelTestResult run_model_test(eUserQueryOrigin queries_origin, const DataPackId& data_pack_ID,
+                                                       const PackModelCommands& model_commands,
+                                                       size_t result_size = NUM_MODEL_TEST_RESULT_POINTS) const;
+
   /*!
    * This processes input queries that come from users, generates results and sends them back
    */
@@ -116,17 +120,8 @@ class ImageRanker
 
 #if 0
   public:
-    //! Constructor with data from files with presoftmax file
-    ImageRanker(const std::string& imagesPath, const std::vector<KeywordsFileRef>& keywordsFileRefs,
-      const std::vector<DataFileSrc>& imageScoringFileRefs,
-      const std::vector<DataFileSrc>& imageSoftmaxScoringFileRefs = std::vector<DataFileSrc>(),
-      const std::vector<DataFileSrc>& deepFeaturesFileRefs = std::vector<DataFileSrc>(),
-      const std::string& imageToIdMapFilepath = ""s, size_t idOffset = 1ULL, eMode mode = DEFAULT_MODE,
-      const std::vector<KeywordsFileRef>& imageToIdMapFilepaths = std::vector<KeywordsFileRef>());
-
-    ~ImageRanker() noexcept = default;
-
-    Keyword* GetKeywordPtr(eVocabularyId kwType, const std::string& wordString);
+   
+    
 
     std::tuple<KeywordsGeneralStatsTuple, ScoringsGeneralStatsTuple, AnnotatorDataGeneralStatsTuple,
       RankerDataGeneralStatsTuple>

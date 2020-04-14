@@ -79,10 +79,13 @@ RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_que
     auto key_val = split(tok, '=');
 
     // Model ID && Transform ID
-    if (key_val[0] == enum_label(eModelOptsKeys::MODEL_ID).first ||
-        key_val[0] == enum_label(eModelOptsKeys::TRANSFORM_ID).first)
+    if (key_val[0] == enum_label(eModelOptsKeys::MODEL_ID).first)
     {
       model_ID = key_val[1];
+    }
+    if (key_val[0] == enum_label(eModelOptsKeys::TRANSFORM_ID).first)
+    {
+      transform_ID = key_val[1];
     }
     // Options for model itself
     else

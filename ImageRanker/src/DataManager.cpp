@@ -58,3 +58,74 @@ void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, co
               std::to_string(result));
   }
 }
+
+const std::vector<UserTestQuery>& DataManager::fetch_user_test_queries(eUserQueryOrigin queries_origin,
+                                                                       const StringId& vocabulary_ID,
+                                                                       const StringId& data_pack_ID,
+                                                                       const StringId& model_options)
+{
+#if 0
+  switch (dataSource)
+  {
+    case UserDataSourceId::cDeveloper:
+
+      if (cachedData0.empty() || cachedData0Ts < currentTime)
+      {
+        cachedData0.clear();
+
+        // Fetch pairs of <Q, Img>
+        std::string query(
+            "\
+        SELECT image_id, query, type FROM `" +
+            _db.GetDbName() +
+            "`.queries \
+          WHERE ( type = " +
+            std::to_string((int)dataSource) + " OR type =  " + std::to_string(((int)dataSource + 10)) +
+            ") AND \
+            keyword_data_type = " +
+            std::to_string((int)std::get<0>(data_ID)) +
+            " AND \
+            scoring_data_type = " +
+            std::to_string((int)std::get<1>(data_ID)) + ";");
+
+        auto dbData = _db.ResultQuery(query);
+
+        if (dbData.first != 0)
+        {
+          LOG_ERROR("Error getting queries from database."s);
+        }
+
+        // Parse DB results
+        for (auto&& idQueryRow : dbData.second)
+        {
+          size_t imageId{static_cast<size_t>(strToInt(idQueryRow[0].data())) * TEST_QUERIES_ID_MULTIPLIER};
+
+          CnfFormula queryFormula{GetCorrectKwContainerPtr(data_ID)
+                                      ->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), IGNORE_CONSTRUCTED_HYPERNYMS)};
+          bool wasWithExamples{(bool)((strToInt(idQueryRow[2]) / 10) % 2)};
+
+#if RUN_TESTS_ONLY_ON_NON_EMPTY_POSTREMOVE_HYPERNYM
+
+          CnfFormula queryFormulaTest{
+              GetCorrectKwContainerPtr(data_ID)->GetCanonicalQuery(EncodeAndQuery(idQueryRow[1]), true)};
+          if (!queryFormulaTest.empty())
+#else
+
+          if (!queryFormula.empty())
+
+#endif
+          {
+            std::vector<UserImgQuery> tmp;
+            tmp.emplace_back(std::move(imageId), std::move(queryFormula), wasWithExamples);
+
+            cachedData0.emplace_back(std::move(tmp));
+          }
+        }
+
+        cachedData0Ts = std::chrono::steady_clock::now();
+        cachedData0Ts += std::chrono::seconds(QUERIES_CACHE_LIFETIME);
+      }
+
+      return cachedData0;
+#endif
+}

@@ -94,12 +94,12 @@ RankingResult ViretModel::rank_frames(const BaseVectorTransform& transformed_dat
   return result;
 }
 
-std::vector<FrameId> ViretModel::run_test(const BaseVectorTransform& transformed_data,
+ModelTestResult ViretModel::run_test(const BaseVectorTransform& transformed_data,
                                           const KeywordsContainer& keywords,
                                           const std::vector<UserTestQuery>& test_user_queries,
                                           const std::vector<ModelKeyValOption>& options, size_t result_points) const
 {
-  return std::vector<FrameId>();
+  return ModelTestResult{};
 }
 
 #if 0

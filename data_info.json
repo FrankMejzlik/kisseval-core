@@ -1,42 +1,67 @@
 {
-    "imagesets":[
+    "imagesets": [
         {
+            "active": true,
             "ID": "V3C1_20k",
-            "description": "Subset of V31C dataset, every 50th selected frame."
+            "name": "V3C1_20k",
+            "description": "Subset of V31C dataset, every 50th selected frame.",
+            "frames_dir": "/imageset_V3C1_20k/thumbs/",
+            "ID_to_frame_fpth": "./imageset_V3C1_20k/files.txt"
         },
         {
+            "active": false,
             "ID": "V3C1_2019",
-            "description": "Selected frames from V31C dataset by Tomas Soucek in 2019."
+            "name": "V3C1_2019",
+            "description": "Selected frames from V31C dataset by Tomas Soucek in 2019.",
+            "frames_dir": null,
+            "ID_to_frame_fpth": null
         },
         {
+            "active": false,
             "ID": "V3C1_Jan_2020",
-            "description": "Selected frames from V31C dataset by Tomas Soucek for VBS 2020."
+            "description": "Selected frames from V31C dataset by Tomas Soucek for VBS 2020.",
+            "frames_dir": null,
+            "ID_to_frame_fpth": null
         },
         {
+            "active": false,
             "ID": "LSC_Apr_2020",
-            "description": "Selected frames from V31C dataset by Tomas Soucek for LSC 2020."
-        }
-    ],
-    "vocabularies": [
-        {
-            "ID": "VIRET_WordNet2019",
-            "description": "With ~1300 phrases."
-        },
-        {
-            "ID": "Google_AI_2019",
-            "description": "In total ~5000 phrases."
-        },
-        {
-            "ID": "BoW_Jan_2020",
-            "description": "With ~12k words."
-        },
-        {
-            "ID": "native_language",
-            "description": "Free form native language sentences."
+            "description": "Selected frames from V31C dataset by Tomas Soucek for LSC 2020.",
+            "frames_dir": null,
+            "ID_to_frame_fpth": null
         }
     ],
     "data_packs": {
-        "VIRET_based": [],
+        "VIRET_based": [
+            {
+                "active": true,
+                "ID": "NasNet2019",
+                "name": "NasNet2019",
+                "vocabulary": {
+                    "ID": "VIRET_WordNet2019",
+                    "description": "With ~1300 phrases.",
+                    "keyword_synsets_fpth": "./imageset_V3C1_20k/VIRET/keyword_classes.txt"
+                },
+                "data": {
+                    "target_dataset": "V3C1_20k",
+                    "presoftmax_scorings_fpth": "./imageset_V3C1_20k/VIRET/NasNet2019/Studenti_NasNetLarge.pre-softmax",
+                    "softmax_scorings_fpth": "./imageset_V3C1_20k/VIRET/NasNet2019/Studenti_NasNetLarge.softmax",
+                    "deep_features_fpth": "./imageset_V3C1_20k/VIRET/NasNet2019/Studenti_NasNetLarge.deep-features"
+                }
+            },
+            {
+                "active": false,
+                "ID": "GoogLeNet2019",
+                "vocabulary": {
+                    "keyword_synsets_fpth": "./data/VIRET/keyword_classes.txt"
+                },
+                "name": "GoogLeNet2019",
+                "target_dataset": "V3C1_20k",
+                "presoftmax_scorings_fpth": "./data/VIRET/GoogLeNet2019/05_googlenet.pre-softmax",
+                "softmax_scorings_fpth": "./data/VIRET/GoogLeNet2019/05_googlenet.softmax",
+                "deep_features_fpth": "./data/VIRET/GoogLeNet2019/05_googlenet.deep-features"
+            }
+        ],
         "Google_based": [],
         "BoW_based": []
     }

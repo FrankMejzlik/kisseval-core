@@ -140,7 +140,6 @@ inline const std::pair<std::string, std::string>& enum_label(eModelOptsKeys val)
   return eModelOptsKeys_labels[size_t(val)];
 }
 
-
 using ModelKeyValOption = std::pair<std::string, std::string>;
 /**********************************************
  **********************************************
@@ -418,6 +417,17 @@ enum class eSuccesorAggregation
   cMax
 };
 
+/**
+ * Output data for drawing chart
+ */
+using ModelTestResult = std::vector<std::pair<uint32_t, uint32_t>>;
+
+enum class eUserQueryOrigin
+{
+  PUBLIC = 5,
+  SEMI_EXPERTS = 10,
+  EXPERTS = 15
+};
 // =====================================
 //  NOT REFACTORED CODE BELOW
 // =====================================
@@ -611,11 +621,6 @@ using Buffer = std::vector<std::byte>;
 /*! <wordnetID, keyword, description> */
 using KeywordData = std::tuple<size_t, std::string, std::string>;
 
-/*!
- * Output data for drawing chart
- */
-using ChartData = std::vector<std::pair<uint32_t, uint32_t>>;
-
 using UserImgQuery = std::tuple<size_t, CnfFormula, bool>;
 using UserImgQueryRaw = std::tuple<size_t, std::vector<size_t>>;
 
@@ -625,7 +630,7 @@ using UserDataNativeQuery = std::tuple<size_t, std::string, size_t, std::string,
 //! (datasourceID, percentageofAll)
 using UserAccuracyChartDataMisc = std::tuple<size_t, float>;
 
-using UserAccuracyChartData = std::pair<UserAccuracyChartDataMisc, ChartData>;
+using UserAccuracyChartData = std::pair<UserAccuracyChartDataMisc, ModelTestResult>;
 
 class SimulatedUser
 {

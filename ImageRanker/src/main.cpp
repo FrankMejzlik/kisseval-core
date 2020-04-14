@@ -4,39 +4,52 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
-#include "ImageRanker.h"
 
-#define BASE_DIR "./data/"
+#define DATA_DIR "data/"
+#define DATA_INFO_FPTH R"(c:\Users\devwe\data\data_info.json)"
+
+#include "common.h"
+#include "utility.h"
+
+#include "ImageRanker.h"
 
 using namespace image_ranker;
 
 int main()
 {
+  auto json_data = parse_data_config_file(DATA_INFO_FPTH);
+
+  auto is1 = json_data["imagesets"][0];
+  auto dp1 = json_data["data_packs"]["VIRET_based"][0];
+  auto dp2 = json_data["data_packs"]["VIRET_based"][1];
+
   // V3C1 20k subset
   std::vector<DatasetDataPackRef> datasets{
-      {enum_label(eImagesetId::V3C1_20K).first, enum_label(eImagesetId::V3C1_20K).second,
-       enum_label(eImagesetId::V3C1_20K).first, "./data/thumbs", "./data/files.txt"}};
+      {is1["ID"].get<std::string>(), is1["description"].get<std::string>(), is1["ID"].get<std::string>(),
+       DATA_DIR + is1["frames_dir"].get<std::string>(), DATA_DIR + is1["ID_to_frame_fpth"].get<std::string>()}};
 
   std::vector<ViretDataPackRef> VIRET_data_packs{
       // NasNet
-      {enum_label(eDataPackId::NASNET_2019).first, enum_label(eDataPackId::NASNET_2019).second,
-       enum_label(eImagesetId::V3C1_20K).first,
+      {dp1["ID"].get<std::string>(), dp1["description"].get<std::string>(),
+       dp1["data"]["target_dataset"].get<std::string>(),
 
-       enum_label(eVocabularyId::VIRET_WORDNET_2019).first, enum_label(eVocabularyId::VIRET_WORDNET_2019).second,
-       "./data/VIRET/keyword_classes.txt",
+       dp1["vocabulary"]["ID"].get<std::string>(), dp1["vocabulary"]["description"].get<std::string>(),
+       DATA_DIR + dp1["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
 
-       "./data/VIRET/NasNet2019/Studenti_NasNetLarge.pre-softmax",
-       "./data/VIRET/NasNet2019/Studenti_NasNetLarge.softmax",
-       "./data/VIRET/NasNet2019/Studenti_NasNetLarge.deep-features"},
+       DATA_DIR + dp1["data"]["presoftmax_scorings_fpth"].get<std::string>(),
+       DATA_DIR + dp1["data"]["softmax_scorings_fpth"].get<std::string>(),
+       DATA_DIR + dp1["data"]["deep_features_fpth"].get<std::string>()},
       // GoogLeNet
-      {enum_label(eDataPackId::GOOGLENET_2019).first, enum_label(eDataPackId::GOOGLENET_2019).second,
-       enum_label(eImagesetId::V3C1_20K).first,
+      {dp2["ID"].get<std::string>(), dp2["description"].get<std::string>(),
+       dp2["data"]["target_dataset"].get<std::string>(),
 
-       enum_label(eVocabularyId::VIRET_WORDNET_2019).first, enum_label(eVocabularyId::VIRET_WORDNET_2019).second,
-       "./data/VIRET/keyword_classes.txt",
+       dp2["vocabulary"]["ID"].get<std::string>(), dp2["vocabulary"]["description"].get<std::string>(),
+       DATA_DIR + dp2["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
 
-       "./data/VIRET/GoogLeNet2019/05_googlenet.pre-softmax", "./data/VIRET/GoogLeNet2019/05_googlenet.softmax",
-       "./data/VIRET/GoogLeNet2019/05_googlenet.deep-features"}};
+       DATA_DIR + dp2["data"]["presoftmax_scorings_fpth"].get<std::string>(),
+       DATA_DIR + dp2["data"]["softmax_scorings_fpth"].get<std::string>(),
+       DATA_DIR + dp2["data"]["deep_features_fpth"].get<std::string>()},
+  };
 
   ImageRanker::Config cfg{ImageRanker::eMode::cFullAnalytical, datasets, VIRET_data_packs,
                           std::vector<GoogleDataPackRef>(), std::vector<BowDataPackRef>()};
@@ -47,9 +60,8 @@ int main()
 #define TEST_get_random_frame_sequence 0
 #define TEST_get_autocomplete_results 0
 #define TEST_get_loaded_imagesets_info 0
-#define TEST_rank_frames 0
-
-  
+#define TEST_rank_frames 1
+#define TEST_run_model_test 0
 
   // TEST: `submit_annotator_user_queries`
 #if TEST_submit_annotator_user_queries
@@ -105,7 +117,16 @@ int main()
 
   // "model_ID=mult-sum-max;transform_ID=linear_0-1;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0",
   auto r1 = ranker.rank_frames(
-      {"1&2", "3&4"}, enum_label(eDataPackId::NASNET_2019).first,
+      {"&-20+--1+-3++-55+-333+", "&-2+--10+-33++-5+-33+"}, dp1["ID"].get<std::string>(),
+      "model_ID=mult-sum-max;transform_ID=linear_0-1;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0",
+      1000);
+
+#endif
+
+#if TEST_run_model_test
+
+  auto r1 = ranker.rank_frames(
+      {"&-20+--1+-3++-55+-333+", "&-2+--10+-33++-5+-33+"}, dp1["ID"].get<std::string>(),
       "model_ID=mult-sum-max;transform_ID=linear_0-1;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0",
       1000);
 

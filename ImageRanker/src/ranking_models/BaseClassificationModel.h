@@ -30,7 +30,7 @@ class BaseClassificationModel
    *
    * Query in format: "1&3&4" where numbers are indices to scoring vector.
    */
-  [[nodiscard]] virtual std::vector<FrameId> run_test(
+  [[nodiscard]] virtual ModelTestResult run_test(
       const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
       const std::vector<UserTestQuery>& test_user_queries,
       const std::vector<ModelKeyValOption>& options = std::vector<ModelKeyValOption>(),

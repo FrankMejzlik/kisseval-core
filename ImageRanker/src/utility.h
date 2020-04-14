@@ -5,15 +5,29 @@ using namespace std::literals;
 
 #include <array>
 #include <charconv>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <random>
 #include <sstream>
 #include <vector>
 
+#include "json.hpp"
+using json = nlohmann::json;
+
 #include "common.h"
 
 using namespace image_ranker;
 
+inline json parse_data_config_file(const std::string& filepath)
+{
+  // read a JSON file
+  std::ifstream i(filepath);
+  json j;
+  i >> j;
+
+  return j;
+}
 /**
  * Parses string representation of tree CNF formula.
  *

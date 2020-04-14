@@ -13,7 +13,7 @@
 //! Standard logging macro
 #define LOG(x) std::cout << x << std::endl
 
-#define LOG_WARN(x) std::cout << x << "(" << __LINE__ << ", " << __FILE__ << ")" << std::endl
+#define LOG_WARN(x) std::cout << x << "(" << __FILE__ << ": " << __LINE__ << ")" << std::endl
 
 #define LOG_NO_ENDL(x) std::cout << x
 
@@ -23,12 +23,15 @@
 #define LOG_ERROR(x)                                                                        \
   do                                                                                        \
   {                                                                                         \
-    std::cout << "ERROR: " << x << "(" << __LINE__ << ", " << __FILE__ << ")" << std::endl; \
+    std::cout << "ERROR: " << x << "(" << __FILE__ << ": " << __LINE__ << ")" << std::endl; \
     throw std::runtime_error(std::string(x));                                               \
   } while (0);
 
 #elif
 
-#define LOG_ERROR(x) std::cout << "ERROR: " << x << std::endl;
+do
+{
+  std::cout << "ERROR: " << x << "(" << __FILE__ << ": " << __LINE__ << ")" << std::endl;
+} while (0);
 
 #endif

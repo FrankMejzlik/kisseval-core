@@ -190,7 +190,7 @@ RankingResult ImageRanker::rank_frames(const std::vector<std::string>& user_quer
   {
     cnf_user_query.emplace_back(parse_cnf_string(single_query));
   }
-  
+
   return dp.rank_frames(cnf_user_query, model_commands, result_size, target_image_ID);
 }
 
@@ -199,34 +199,6 @@ RankingResult ImageRanker::rank_frames(const std::vector<std::string>& user_quer
 // =====================================
 
 #if 0
-
-
-std::vector<std::vector<size_t>> vec_of_ranks;
-
-
-Keyword* ImageRanker::GetKeywordPtr(eVocabularyId kwType, const std::string& wordString)
-{
-  return _keywordContainers.at(kwType).GetKeywordPtr(wordString);
-}
-
-bool ImageRanker::Initialize()
-{
-  bool res{true};
-
-  // Initialize keyword containers
-  for (auto&& [id, kwCont] : _keywordContainers)  
-  {
-    res &= kwCont.Initialize();
-  }
-
- 
-  res &= InitializeFullMode();
- 
-
-  return res;
-}
-
-
 
 std::tuple<KeywordsGeneralStatsTuple, ScoringsGeneralStatsTuple, AnnotatorDataGeneralStatsTuple,
            RankerDataGeneralStatsTuple>
