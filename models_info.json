@@ -1,0 +1,269 @@
+{
+    "VIRET_based": {
+        "options": [
+            {
+                "key": "model",
+                "name": "Model",
+                "description": "",
+                "input_type": "enum",
+                "values": [
+                    {
+                        "ID": "boolean",
+                        "name": "BoW VBS2020",
+                        "description": "",
+                        "options": [
+                            {
+                                "key": "true_threshold",
+                                "input_type": "enum",
+                                "values": [
+                                    {
+                                        "ID": "constant",
+                                        "name": "constant",
+                                        "description": "",
+                                        "options": [
+                                            {
+                                                "key": "value",
+                                                "input_type": "float",
+                                                "from": 0,
+                                                "to": 1,
+                                                "step": 0.01
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "ID": "vector_space",
+                        "name": "Vector space",
+                        "description": "",
+                        "options": [
+                            {
+                                "key": "outter_op",
+                                "input_type": "enum",
+                                "options": [
+                                    {
+                                        "ID": "sum",
+                                        "name": "sum",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "ID": "mult",
+                                        "name": "mult",
+                                        "description": "",
+                                        "options": []
+                                    }
+                                ]
+                            },
+                            {   
+                                "key": "inner_op",
+                                "input_type": "enum",
+                                "options": [
+                                    {
+                                        "ID": "sum",
+                                        "name": "sum",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "ID": "max",
+                                        "name": "max",
+                                        "description": "",
+                                        "options": []
+                                    }
+                                ]
+                            },
+                            {
+                                "key": "ignore_treshold",
+                                "input_type": "float",
+                                "from": 0,
+                                "to": 1,
+                                "step": 0.01
+                            }
+                        ]
+                    },
+                    {
+                        "ID": "mult-sum-max",
+                        "name": "MULT/SUM/MAX",
+                        "description": "",
+                        "options": [
+                            {
+                                "key": "outter_op",
+                                "input_type": "enum",
+                                "values": [
+                                    {
+                                        "ID": "sum",
+                                        "name": "sum",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "ID": "mult",
+                                        "name": "mult",
+                                        "description": "",
+                                        "options": []
+                                    }
+                                ]
+                            },
+                            {   
+                                "key": "inner_op",
+                                "input_type": "enum",
+                                "options": [
+                                    {
+                                        "ID": "sum",
+                                        "name": "sum",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "ID": "max",
+                                        "name": "max",
+                                        "description": "",
+                                        "options": []
+                                    }
+                                ]
+                            },
+                            {
+                                "key": "ignore_treshold",
+                                "input_type": "float",
+                                "from": 0,
+                                "to": 1,
+                                "step": 0.01
+                            }
+                        ]
+                    }
+
+                ]
+            },
+            {
+                "key": "transform",
+                "name": "transform",
+                "description": "",
+                "input_type": "enum",
+                "options": [
+                    {
+                        "ID": "no_transform",
+                        "name": "No transform",
+                        "description": "",
+                        "options": []
+                    },
+                    {
+                        "ID": "softmax",
+                        "name": "Softmax",
+                        "description": "",
+                        "options": []
+                    },
+                    {
+                        "ID": "linear_01",
+                        "name": "Linear scale to [0, 1]",
+                        "description": "",
+                        "options": []
+                    }
+                ]
+            },
+            {
+                "key": "sim_user",
+                "name": "sim_user",
+                "description": "",
+                "input_type": "enum",
+                "options": [
+                    {
+                        "ID": "type",
+                        "name": "type",
+                        "description": "",
+                        "options": [
+                            {
+                                "ID": "no_sim_user",
+                                "name": "No simulated user",
+                                "description": "",
+                                "options": []
+                            },
+                            {
+                                "ID": "sim_single_queries",
+                                "name": "",
+                                "description": "",
+                                "options": []
+                            },
+                            {
+                                "ID": "sim_temp_queries",
+                                "name": "",
+                                "description": "",
+                                "options": []
+                            },
+                            {
+                                "ID": "augment_real_with_temp_queries",
+                                "name": "",
+                                "description": "",
+                                "options": []
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "Google_based": {
+        "options": [
+            {
+                "key": "model",
+                "name": "Model",
+                "description": "",
+                "input_type": "enum",
+                "values": [
+                    {
+                        "ID": "boolean",
+                        "name": "Boolean",
+                        "description": "",
+                        "options": []
+                    }
+                ]
+            },
+            {
+                "key": "transform",
+                "name": "transform",
+                "description": "",
+                "input_type": "enum",
+                "options": [
+                    {
+                        "ID": "no_transform",
+                        "name": "No transform",
+                        "description": "",
+                        "options": []
+                    },
+                    {
+                        "ID": "softmax",
+                        "name": "Softmax",
+                        "description": "",
+                        "options": []
+                    },
+                    {
+                        "ID": "linear_01",
+                        "name": "Linear scale to [0, 1]",
+                        "description": "",
+                        "options": []
+                    }
+                ]
+            }
+        ]
+    },
+    "W2VV_based": {
+        "options": [
+            {
+                "key": "model",
+                "name": "Model",
+                "description": "",
+                "input_type": "enum",
+                "values": [
+                    {
+                        "ID": "bow_vbs2020",
+                        "name": "BoW VBS2020",
+                        "description": "We embedd text query into the space and find the nearest frames.",
+                        "options": []
+                    }
+                ]
+            }
+        ]
+    }    
+}

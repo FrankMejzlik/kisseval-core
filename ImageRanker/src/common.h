@@ -21,68 +21,7 @@ class Keyword;
 /**********************************************
  * Name definitions
  ***********************************************/
-enum class eImagesetId
-{
-  V3C1_20K,
-  V3C1_2019,
-  V3C1_JAN_2020,
-  LSC_APR_2020,
-  _COUNT
-};
 
-const std::array<std::pair<std::string, std::string>, size_t(eImagesetId::_COUNT)> eImagesetId_labels = {{
-    std::pair("V3C1_20k", "Subset of V31C dataset, every 50th selected frame."),
-    std::pair("V3C1_2019", "Selected frames from V31C dataset by Tomas Soucek in 2019."),
-    std::pair("V3C1_Jan_2020", "Selected frames from V31C dataset by Tomas Soucek for VBS 2020."),
-    std::pair("LSC_Apr_2020", "Selected frames from V31C dataset by Tomas Soucek for LSC 2020."),
-}};
-
-inline const std::pair<std::string, std::string>& enum_label(eImagesetId val)
-{
-  return eImagesetId_labels[size_t(val)];
-}
-
-enum class eVocabularyId
-{
-  VIRET_WORDNET_2019,
-  GOOGLE_AI_2019,
-  BOW_JAN_2020,
-  NATIVE_LANGUAGE,
-  _COUNT
-};
-
-const std::array<std::pair<std::string, std::string>, size_t(eVocabularyId::_COUNT)> eVocabularyId_labels = {{
-    std::pair("VIRET_WordNet2019", "With ~1300 phrases."),
-    std::pair("Google_AI_2019", "In total ~ 5000 phrases."),
-    std::pair("BoW_Jan_2020", "With ~12k words."),
-    std::pair("native_language", "Free form native language sentences."),
-}};
-
-inline const std::pair<std::string, std::string>& enum_label(eVocabularyId val)
-{
-  return eVocabularyId_labels[size_t(val)];
-}
-
-enum class eDataPackId
-{
-  NASNET_2019,
-  GOOGLENET_2019,
-  GOOGLE_AI_2019,
-  RESNET_RESNEXT_BOW_JAN_2019,
-  _COUNT
-};
-
-const std::array<std::pair<std::string, std::string>, size_t(eDataPackId::_COUNT)> eDataPackId_labels = {{
-    std::pair("NASNET_2019", "NasNet for 20k subset."),
-    std::pair("GOOGLENET_2019", "GoogLeNet for 20k subset."),
-    std::pair("GOOGLE_AI_2019", "Google AI results on 20k subset."),
-    std::pair("RESNET_RESNEXT_BOW_JAN_2019", "BoW model by Xirong for 20k subset."),
-}};
-
-inline const std::pair<std::string, std::string>& enum_label(eDataPackId val)
-{
-  return eDataPackId_labels[size_t(val)];
-}
 
 enum class eModelIds
 {
@@ -95,11 +34,11 @@ enum class eModelIds
 };
 
 const std::array<std::pair<std::string, std::string>, size_t(eModelIds::_COUNT)> eModelIds_labels = {{
-    std::pair("Boolean", ""),
-    std::pair("Vector_space", ""),
-    std::pair("Mult-sum-max", ""),
-    std::pair("Boolean_bucket", ""),
-    std::pair("BoW_VBS2020", "BoW model by Xirong."),
+    std::pair("boolean", ""),
+    std::pair("bector_space", ""),
+    std::pair("mult-sum-max", ""),
+    std::pair("boolean_bucket", ""),
+    std::pair("bow_vbs2020", "BoW model by Xirong."),
 }};
 
 inline const std::pair<std::string, std::string>& enum_label(eModelIds val) { return eModelIds_labels[size_t(val)]; }
@@ -127,12 +66,19 @@ enum class eModelOptsKeys
 {
   MODEL_ID,
   TRANSFORM_ID,
+  SIM_USER_ID,
+  SIM_USER_TYPE,
+  MODEL_INNER_OP,
+  MODEL_OUTTER_OP,
   _COUNT
 };
 
 const std::array<std::pair<std::string, std::string>, size_t(eModelOptsKeys::_COUNT)> eModelOptsKeys_labels = {{
-    std::pair("model_ID", ""),
-    std::pair("transform_ID", ""),
+    std::pair("model", ""),
+    std::pair("transform", ""),
+    std::pair("sim_user", ""),
+    std::pair("model_inner_op", ""),
+    std::pair("model_outter_op", "")
 }};
 
 inline const std::pair<std::string, std::string>& enum_label(eModelOptsKeys val)
