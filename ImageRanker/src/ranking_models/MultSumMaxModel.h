@@ -7,7 +7,7 @@
 
 namespace image_ranker
 {
-class ViretModel : public BaseClassificationModel
+class MultSumMaxModel : public BaseClassificationModel
 {
  public:
   /*!

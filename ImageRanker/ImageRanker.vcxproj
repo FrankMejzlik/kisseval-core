@@ -264,7 +264,7 @@
     <ClCompile Include="src\GridTest.cpp" />
     <ClCompile Include="src\ImageRanker.cpp" />
     <ClCompile Include="src\KeywordsContainer.cpp" />
-    <ClCompile Include="src\ranking_models\ViretModel.cpp" />
+    <ClCompile Include="src\ranking_models\MultSumMaxModel.cpp" />
     <ClCompile Include="src\transformations\BaseVectorTransform.cpp" />
     <ClCompile Include="src\transformations\TransformationLinear.cpp" />
     <ClCompile Include="src\transformations\TransformationSoftmax.cpp" />
@@ -280,7 +280,7 @@
     <ClInclude Include="src\data_format_config.h" />
     <ClInclude Include="src\ranking_models\BaseClassificationModel.h" />
     <ClInclude Include="src\ranking_models\ranking_models.h" />
-    <ClInclude Include="src\ranking_models\ViretModel.h" />
+    <ClInclude Include="src\ranking_models\MultSumMaxModel.h" />
     <ClInclude Include="src\transformations\BaseVectorTransform.h" />
     <ClInclude Include="src\FileParser.h" />
     <ClInclude Include="src\data_packs\VIRET_based\ViretDataPack.h" />

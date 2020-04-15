@@ -681,7 +681,7 @@ bool ImageRanker::InitializeFullMode()
     _transformations.emplace(InputDataTransformId::cXToTheP, std::make_unique<TransformationLinear>());
 
     // Insert all desired ranking models
-    _models.emplace(RankingModelId::cViretBase, std::make_unique<ViretModel>());
+    _models.emplace(RankingModelId::cViretBase, std::make_unique<MultSumMaxModel>());
     _models.emplace(RankingModelId::cBooleanBucket, std::make_unique<BooleanBucketModel>());
   }
 
@@ -2936,14 +2936,14 @@ void ImageRanker::InitializeGridTests()
   //        }
   //        break;
 
-  //        // BooleanViretModel
+  //        // BooleanMultSumMaxModel
   //      case RankingModelId::cViretBase:
   //        // True treshold probability values
-  //        for (float fi{ ViretModel::m_trueTresholdFrom }; fi <=
-  //        ViretModel::m_trueTresholdTo; fi += ViretModel::m_trueTresholdStep)
+  //        for (float fi{ MultSumMaxModel::m_trueTresholdFrom }; fi <=
+  //        MultSumMaxModel::m_trueTresholdTo; fi += MultSumMaxModel::m_trueTresholdStep)
   //        {
   //          // Query operation options
-  //          for (auto&& qo : ViretModel::m_queryOperations)
+  //          for (auto&& qo : MultSumMaxModel::m_queryOperations)
   //          {
   //            std::vector<std::string> modSettings{std::to_string(fi),
   //            std::to_string((uint8_t)qo)};

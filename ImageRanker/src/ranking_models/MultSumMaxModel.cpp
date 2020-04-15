@@ -1,14 +1,14 @@
 
-#include "ViretModel.h"
+#include "MultSumMaxModel.h"
 
 #include "BaseVectorTransform.h"
 #include "utility.h"
 
 using namespace image_ranker;
 
-ViretModel::Options ViretModel::ParseOptionsString(const std::vector<ModelKeyValOption>& option_key_val_pairs)
+MultSumMaxModel::Options MultSumMaxModel::ParseOptionsString(const std::vector<ModelKeyValOption>& option_key_val_pairs)
 {
-  auto res{ViretModel::Options()};
+  auto res{MultSumMaxModel::Options()};
 
   for (auto&& [key, val] : option_key_val_pairs)
   {
@@ -38,7 +38,7 @@ ViretModel::Options ViretModel::ParseOptionsString(const std::vector<ModelKeyVal
         LOG_WARN("Unknown model option value for key '" + key + "' -> '" + val + "'");
       }
     }
-    if (key == enum_label(eModelOptsKeys::MODEL_INNER_OP).first)
+    else if (key == enum_label(eModelOptsKeys::MODEL_INNER_OP).first)
     {
       if (val == "sum")
       {
@@ -82,7 +82,7 @@ ViretModel::Options ViretModel::ParseOptionsString(const std::vector<ModelKeyVal
   return res;
 }
 
-RankingResult ViretModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
                                       const std::vector<CnfFormula>& user_query, size_t result_size,
                                       const std::vector<ModelKeyValOption>& options, FrameId target_frame_ID) const
 {
@@ -98,7 +98,7 @@ RankingResult ViretModel::rank_frames(const BaseVectorTransform& transformed_dat
   return rank_frames(transformed_data, keywords, user_query, result_size, opts, target_frame_ID);
 }
 
-RankingResult ViretModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
                                       const std::vector<CnfFormula>& user_query, size_t result_size,
                                       const Options& opts, FrameId target_frame_ID) const
 {
@@ -177,7 +177,7 @@ RankingResult ViretModel::rank_frames(const BaseVectorTransform& transformed_dat
   return result;
 }
 
-ModelTestResult ViretModel::run_test(const BaseVectorTransform& transformed_data,
+ModelTestResult MultSumMaxModel::run_test(const BaseVectorTransform& transformed_data,
                                           const KeywordsContainer& keywords,
                                           const std::vector<UserTestQuery>& test_user_queries,
                                           const std::vector<ModelKeyValOption>& options, size_t result_points) const
@@ -667,7 +667,7 @@ ModelTestResult ViretModel::run_test(const BaseVectorTransform& transformed_data
 
 #endif
 
-float ViretModel::rank_frame(const Vector<float>& frame_data, const CnfFormula& single_query,
+float MultSumMaxModel::rank_frame(const Vector<float>& frame_data, const CnfFormula& single_query,
                              const Options& options) const
 {
   float frame_ranking{1.0F};

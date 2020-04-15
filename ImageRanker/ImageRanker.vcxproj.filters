@@ -48,9 +48,6 @@
     <ClCompile Include="src\ranking_models\BaseClassificationModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ranking_models\ViretModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\transformations\TransformationLinear.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -58,6 +55,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\transformations\BaseVectorTransform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ranking_models\MultSumMaxModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -128,9 +128,6 @@
     <ClInclude Include="src\transformations\TransformationLinear.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ranking_models\ViretModel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\ranking_models\ranking_models.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -138,6 +135,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ranking_models\MultSumMaxModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

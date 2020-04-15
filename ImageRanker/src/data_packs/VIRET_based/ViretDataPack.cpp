@@ -35,7 +35,7 @@ ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset
   // Instantiate all wanted models
   // Boolean
   // Vector space
-  _models.emplace(enum_label(eModelIds::MULT_SUM_MAX).first, std::make_unique<ViretModel>());
+  _models.emplace(enum_label(eModelIds::MULT_SUM_MAX).first, std::make_unique<MultSumMaxModel>());
 
   t1.join();
   t2.join();
@@ -92,14 +92,14 @@ RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_que
     {
       model_ID = key_val[1];
     }
-    if (key_val[0] == enum_label(eModelOptsKeys::TRANSFORM_ID).first)
+    else if (key_val[0] == enum_label(eModelOptsKeys::TRANSFORM_ID).first)
     {
       transform_ID = key_val[1];
     }
     // Options for model itself
     else
     {
-      opt_key_vals.emplace_back();
+      opt_key_vals.emplace_back(key_val[0], key_val[1]);
     }
   }
 
