@@ -2,12 +2,84 @@
 #include "ViretModel.h"
 
 #include "BaseVectorTransform.h"
+#include "utility.h"
 
 using namespace image_ranker;
 
-ViretModel::Options ViretModel::ParseOptionsString(const std::vector<ModelKeyValOption>& options_string)
+ViretModel::Options ViretModel::ParseOptionsString(const std::vector<ModelKeyValOption>& option_key_val_pairs)
 {
-  return ViretModel::Options();
+  auto res{ViretModel::Options()};
+
+  for (auto&& [key, val] : option_key_val_pairs)
+  {
+    if (key == enum_label(eModelOptsKeys::MODEL_OPERATIONS).first)
+    {
+      if (val == "mult-sum")
+      {
+        res.scoring_operations = eScoringOperations::cMultSum;
+      }
+      else if (val == "mult-max")
+      {
+        res.scoring_operations = eScoringOperations::cMultMax;
+      }
+      else if (val == "sum-sum")
+      {
+        res.scoring_operations = eScoringOperations::cSumSum;
+      }
+      else if (val == "sum-max")
+      {
+        res.scoring_operations = eScoringOperations::cSumMax;
+      }
+      else if (val == "max-max")
+      {
+        res.scoring_operations = eScoringOperations::cMaxMax;
+      }
+      else {
+        LOG_WARN("Unknown model option value for key '" + key + "' -> '" + val + "'");
+      }
+    }
+    if (key == enum_label(eModelOptsKeys::MODEL_INNER_OP).first)
+    {
+      if (val == "sum")
+      {
+        res.succ_aggregation = eSuccesorAggregation::cSum;
+      }
+      else if (val == "max")
+      {
+        res.succ_aggregation = eSuccesorAggregation::cMax;
+      }
+      else if (val == "mult")
+      {
+        res.succ_aggregation = eSuccesorAggregation::cProduct;
+      }
+      else {
+        LOG_WARN("Unknown model option value for key '" + key + "' -> '" + val + "'");
+      }
+    }
+    else if (key == enum_label(eModelOptsKeys::MODEL_OUTTER_OP).first)
+    {
+      if (val == "sum")
+      {
+        res.main_temp_aggregation = eMainTempRankingAggregation::cSum;
+      }
+      else if (val == "mult")
+      {
+        res.main_temp_aggregation = eMainTempRankingAggregation::cProduct;
+      }
+      else {
+        LOG_WARN("Unknown model option value for key '" + key + "' -> '" + val + "'");
+      }
+    }
+    else if (key == enum_label(eModelOptsKeys::MODEL_IGNORE_THRESHOLD).first)
+    {
+      res.ignore_below_threshold = strTo<float>(val);
+    }
+    else {
+      LOG_WARN("Unknown model option key '" + key + "'");
+    }
+  }
+
+  return res;
 }
 
 RankingResult ViretModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
@@ -23,6 +95,13 @@ RankingResult ViretModel::rank_frames(const BaseVectorTransform& transformed_dat
   // Parse provided options
   Options opts = ParseOptionsString(options);
 
+  return rank_frames(transformed_data, keywords, user_query, result_size, opts, target_frame_ID);
+}
+
+RankingResult ViretModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+                                      const std::vector<CnfFormula>& user_query, size_t result_size,
+                                      const Options& opts, FrameId target_frame_ID) const
+{
   using FramePair = std::pair<float, size_t>;
 
   // Comparator for the priority queue

@@ -115,11 +115,9 @@ int main()
    *
    */
 
-  // "model_ID=mult-sum-max;transform_ID=linear_0-1;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0",
   auto r1 = ranker.rank_frames(
       {"&-274+"}, dp1["ID"].get<std::string>(),
-      "model_ID=Mult-sum-max;transform_ID=softmax;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0", 1000,
-      1304);
+      "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0", 1000, 1304);
 
 #endif
 
@@ -127,7 +125,7 @@ int main()
 
   auto r1 = ranker.run_model_test(
       eUserQueryOrigin::SEMI_EXPERTS, dp1["ID"].get<std::string>(),
-      "model_ID=Mult-sum-max;transform_ID=linear_01;model_outter=mult;model_inner=sum;model_ignore_treshold=0.0");
+      "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0");
 
 #endif
 

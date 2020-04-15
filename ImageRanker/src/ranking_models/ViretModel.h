@@ -24,6 +24,14 @@ class ViretModel : public BaseClassificationModel
 
   struct Options
   {
+    Options()
+        : ignore_below_threshold(0.0F),
+          scoring_operations(eScoringOperations::cMultSum),
+          main_temp_aggregation(eMainTempRankingAggregation::cProduct),
+          succ_aggregation(eSuccesorAggregation::cSum)
+    {
+    }
+
     /** Values less then this threshold will be considered zero */
     float ignore_below_threshold;
 
@@ -38,10 +46,12 @@ class ViretModel : public BaseClassificationModel
   };
 
  public:
-  static Options ParseOptionsString(const std::vector<ModelKeyValOption>& options_string);
+  static Options ParseOptionsString(const std::vector<ModelKeyValOption>& option_key_val_pairs);
 
   /**
    * Returns sorted vector of ranked images based on provided data for the given query.
+   *
+   * \remark Options are provided unparsed as vector of key->value string pairs.
    *
    * Query in format: "1&3&4" where numbers are indices to scoring vector.
    */
@@ -50,6 +60,18 @@ class ViretModel : public BaseClassificationModel
       const std::vector<CnfFormula>& user_query, size_t result_size,
       const std::vector<ModelKeyValOption>& options = std::vector<ModelKeyValOption>(),
       FrameId target_frame_ID = ERR_VAL<FrameId>()) const override;
+
+  /**
+   * Returns sorted vector of ranked images based on provided data for the given query.
+   *
+   * \remark Options are provded already parsed.
+   *
+   * Query in format: "1&3&4" where numbers are indices to scoring vector.
+   */
+  [[nodiscard]] RankingResult rank_frames(const BaseVectorTransform& transformed_data,
+                                                      const KeywordsContainer& keywords,
+                                                      const std::vector<CnfFormula>& user_query, size_t result_size,
+                                                      const Options& opts, FrameId target_frame_ID) const;
 
   /**
    * Returns results of this model after running provided test queries .
