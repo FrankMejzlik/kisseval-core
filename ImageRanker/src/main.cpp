@@ -51,8 +51,8 @@ int main()
        DATA_DIR + dp2["data"]["deep_features_fpth"].get<std::string>()},
   };
 
-  ImageRanker::Config cfg{ImageRanker::eMode::cFullAnalytical, datasets, VIRET_data_packs,
-                          std::vector<GoogleDataPackRef>(), std::vector<BowDataPackRef>()};
+    ImageRanker::Config cfg{ImageRanker::eMode::cFullAnalytical, datasets, VIRET_data_packs,
+                            std::vector<GoogleDataPackRef>(), std::vector<BowDataPackRef>()};
 
   ImageRanker ranker(cfg);
 

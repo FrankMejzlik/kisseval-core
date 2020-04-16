@@ -28,18 +28,24 @@ class Keyword
 {
  public:
   Keyword() = default;
-  Keyword(size_t wordnetId, size_t vectorIndex, std::string&& word, size_t descStartIndex, size_t descEndIndex,
-          std::vector<size_t>&& hypernyms, std::vector<size_t>&& hyponyms)
-      : m_wordnetId(wordnetId),
+  Keyword(FrameId ID, size_t wordnetId, size_t vectorIndex, std::string&& word, size_t descStartIndex, size_t descEndIndex,
+          std::vector<size_t>&& hypernyms, std::vector<size_t>&& hyponyms, std::string&& description)
+      : ID(ID),
+        m_wordnetId(wordnetId),
         m_vectorIndex(vectorIndex),
         m_word(std::move(word)),
         m_descStartIndex(descStartIndex),
         m_descEndIndex(descEndIndex),
         m_hypernyms(hypernyms),
-        m_hyponyms(hyponyms)
+        m_hyponyms(hyponyms),
+        description(std::move(description))
 
   {
   }
+
+  std::string description;
+  FrameId ID;
+  // ==================================
 
   bool IsHypernym() const { return !m_hyponyms.empty(); };
   bool IsInBinVector() const { return m_vectorIndex == SIZE_T_ERROR_VALUE; };
@@ -52,6 +58,7 @@ class Keyword
   std::string m_word;
   std::vector<size_t> m_hypernyms;
   std::vector<size_t> m_hyponyms;
+  
 
   //! Set of indices that are hyponyms of this keyword
   std::unordered_set<size_t> m_hyponymBinIndices;
