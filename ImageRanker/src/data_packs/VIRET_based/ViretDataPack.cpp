@@ -8,11 +8,11 @@
 
 using namespace image_ranker;
 
-ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& description,
-                             const ViretDataPackRef::VocabData& vocab_data_refs,
+ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
+                             const std::string& description, const ViretDataPackRef::VocabData& vocab_data_refs,
                              std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
                              std::vector<std::vector<float>>&& feas_data)
-    : BaseDataPack(ID, target_imageset_ID, description),
+    : BaseDataPack(ID, target_imageset_ID, model_options, description),
       _feas_data_raw(std::move(feas_data)),
       _presoftmax_data_raw(std::move(presoft)),
       _softmax_data_raw(std::move(softmax_data)),
@@ -67,7 +67,6 @@ const std::string& ViretDataPack::get_vocab_description() const { return _keywor
 RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, PackModelCommands model_commands,
                                          size_t result_size, FrameId target_image_ID) const
 {
-
   // Expand query to vector indices
   std::vector<CnfFormula> idx_queries;
   idx_queries.reserve(user_queries.size());
@@ -133,7 +132,8 @@ AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::strin
 
 DataPackInfo ViretDataPack::get_info() const
 {
-  return DataPackInfo{get_ID(), get_description(), target_imageset_ID(), _keywords.get_ID(), _keywords.get_description()};
+  return DataPackInfo{get_ID(),           get_description(),          get_model_options(), target_imageset_ID(),
+                      _keywords.get_ID(), _keywords.get_description()};
 }
 
 CnfFormula ViretDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) const
@@ -144,7 +144,7 @@ CnfFormula ViretDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) con
 
     KeywordId kw_ID{ID_clause[0].atom};
 
-    const Keyword& kw{ _keywords[kw_ID] };
+    const Keyword& kw{_keywords[kw_ID]};
 
     std::unordered_set<size_t> vecIds;
     _keywords.GetVectorKeywordsIndicesSetShallow(vecIds, kw.m_wordnetId);
@@ -152,9 +152,8 @@ CnfFormula ViretDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) con
     ID_clause.clear();
     for (auto&& id : vecIds)
     {
-      ID_clause.emplace_back(Literal<KeywordId>{ id, false });
+      ID_clause.emplace_back(Literal<KeywordId>{id, false});
     }
-
   }
   return ID_query;
 }

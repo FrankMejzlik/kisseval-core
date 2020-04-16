@@ -37,6 +37,8 @@
                 "active": true,
                 "ID": "NasNet2019",
                 "name": "NasNet2019",
+                "description": "Desc NasNet2019",
+                "model_options": "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0",
                 "vocabulary": {
                     "ID": "VIRET_WordNet2019",
                     "description": "With ~1300 phrases.",
@@ -52,17 +54,41 @@
             {
                 "active": false,
                 "ID": "GoogLeNet2019",
-                "vocabulary": {
-                    "keyword_synsets_fpth": "./data/VIRET/keyword_classes.txt"
-                },
                 "name": "GoogLeNet2019",
-                "target_dataset": "V3C1_20k",
-                "presoftmax_scorings_fpth": "./data/VIRET/GoogLeNet2019/05_googlenet.pre-softmax",
-                "softmax_scorings_fpth": "./data/VIRET/GoogLeNet2019/05_googlenet.softmax",
-                "deep_features_fpth": "./data/VIRET/GoogLeNet2019/05_googlenet.deep-features"
+                "description": "Desc GoogLeNet2019",
+                "model_options": "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0",
+                "vocabulary": {
+                    "ID": "VIRET_WordNet2019",
+                    "description": "With ~1300 phrases.",
+                    "keyword_synsets_fpth": "./imageset_V3C1_20k/VIRET/keyword_classes.txt"
+                },
+                "data": {
+                    "target_dataset": "V3C1_20k",
+                    "presoftmax_scorings_fpth": "./imageset_V3C1_20k/VIRET/GoogLeNet2019/05_googlenet.pre-softmax",
+                    "softmax_scorings_fpth": "./imageset_V3C1_20k/VIRET/GoogLeNet2019/05_googlenet.softmax",
+                    "deep_features_fpth": "./imageset_V3C1_20k/VIRET/GoogLeNet2019/05_googlenet.deep-features"
+                }
             }
         ],
-        "Google_based": [],
+        "Google_based": [
+            {
+                "active": true,
+                "ID": "GoogLeNet2019",
+                "name": "GoogLeNet2019",
+                "description": "Desc GoogLeNet2019",
+                "model_options": "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0",
+                "vocabulary": {
+                    "ID": "Google_AI_2019",
+                    "description": "With ~5000 phrases.",
+                    "keyword_synsets_fpth": "./imageset_V3C1_20k/Google/keyword_classes.google.txt"
+                },
+                "data": {
+                    "target_dataset": "V3C1_20k",
+                    "scoring_files_dir": "./imageset_V3C1_20k/Google/extracted_sep_2019/google_labels/",
+                    "scoring_files_list_fpth": "./imageset_V3C1_20k/Google/extracted_sep_2019/files.google.txt"
+                }
+            }
+        ],
         "BoW_based": []
     }
 }

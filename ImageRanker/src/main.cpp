@@ -30,7 +30,7 @@ int main()
 
   std::vector<ViretDataPackRef> VIRET_data_packs{
       // NasNet
-      {dp1["ID"].get<std::string>(), dp1["description"].get<std::string>(),
+      {dp1["ID"].get<std::string>(), dp1["description"].get<std::string>(), dp1["model_options"].get<std::string>(),
        dp1["data"]["target_dataset"].get<std::string>(),
 
        dp1["vocabulary"]["ID"].get<std::string>(), dp1["vocabulary"]["description"].get<std::string>(),
@@ -40,7 +40,7 @@ int main()
        DATA_DIR + dp1["data"]["softmax_scorings_fpth"].get<std::string>(),
        DATA_DIR + dp1["data"]["deep_features_fpth"].get<std::string>()},
       // GoogLeNet
-      {dp2["ID"].get<std::string>(), dp2["description"].get<std::string>(),
+      {dp2["ID"].get<std::string>(), dp2["description"].get<std::string>(), dp2["model_options"].get<std::string>(),
        dp2["data"]["target_dataset"].get<std::string>(),
 
        dp2["vocabulary"]["ID"].get<std::string>(), dp2["vocabulary"]["description"].get<std::string>(),

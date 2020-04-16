@@ -282,7 +282,7 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath)
       std::string description{_allDescriptions.data() + descStartIndex};
 
       // Insert this record into table
-      _keywords.emplace_back(std::make_unique<Keyword>(iii, wordnetId, vectorIndex, std::move(finalWord),
+      _keywords.emplace_back(std::make_unique<Keyword>(FrameId(iii), wordnetId, vectorIndex, std::move(finalWord),
                                                        descStartIndex, tokens[3].size(), std::move(hyperyms),
                                                        std::move(hyponyms), std::move(description)));
 

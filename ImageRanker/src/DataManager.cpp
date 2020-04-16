@@ -18,7 +18,7 @@ DataManager::DataManager(ImageRanker* p_owner)
   }
 }
 
-void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,
+void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID, const::std::string& model_options,
                                                 size_t user_level, bool with_example_images,
                                                 const std::vector<AnnotatorUserQuery>& user_queries)
 {
@@ -30,12 +30,15 @@ void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, co
 
   std::string ex_imgs_str(with_example_images ? "1" : "0");
 
+  /* \todo This is now taking only single query.
+            We need to add temp query support. */
   size_t i = 0;
   for (auto&& query : user_queries)
   {
-    sql_query_ss << "('"s << encode_and_query(query.user_query_encoded) + "','"s << query.user_query_readable << "','"
-                 << vocab_ID << "','" << data_pack_ID << "',NULL," << std::to_string(query.target_frame_ID) << ", "s
-                 << ex_imgs_str << "," << std::to_string(user_level) << ",0,'" << query.session_ID + "')";
+    sql_query_ss << "('"s << query.user_query_encoded.at(0) + "','"s
+                 << query.user_query_readable.at(0) << "','" << vocab_ID << "','" << data_pack_ID << "','" + model_options + "',"
+                 << std::to_string(query.target_sequence_IDs.at(0)) << ", "s << ex_imgs_str << ","
+                 << std::to_string(user_level) << ",0,'" << query.session_ID + "')";
 
     if (i < (user_queries.size() - 1))
     {

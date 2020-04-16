@@ -138,13 +138,21 @@ struct BaseDataPackRef
 {
   std::string ID;
   std::string description;
+  std::string model_options;
+  std::string target_imageset;
+};
+
+struct BaseImagesetkRef
+{
+  std::string ID;
+  std::string description;
   std::string target_imageset;
 };
 
 /**
  * Represents one input dataset containg selected frames we have scorings for.
  */
-struct DatasetDataPackRef : public BaseDataPackRef
+struct DatasetDataPackRef : public BaseImagesetkRef
 {
   std::string images_dir;
   std::string imgage_to_ID_fpth;
@@ -306,9 +314,16 @@ struct RankingResult
 struct AnnotatorUserQuery
 {
   std::string session_ID;
-  std::string user_query_encoded;
-  std::string user_query_readable;
-  FrameId target_frame_ID;
+  /** Query containing unique identifiers (ID, or unique string repre)
+        EXAMPLE: "&-1+-31+>&-13+-43+" */
+  std::vector<std::string> user_query_encoded;
+
+  /** Query in the same form user entered it (cause the same wordnet ID can have multiple string repres)
+        EXAMPLE: "cat dog food > grass owl" */
+  std::vector<std::string> user_query_readable;
+
+  /** Sequence of images user described */
+  std::vector<FrameId> target_sequence_IDs;
 };
 
 struct GameSessionQueryResult
@@ -343,6 +358,7 @@ struct DataPackInfo
 {
   const std::string& ID;
   const std::string& description;
+  const std::string& model_options;
   const std::string& target_imageset_ID;
 
   const std::string& vocabulary_ID;

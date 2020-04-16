@@ -35,9 +35,10 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
     auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.softmax_scorings_fpth);
     auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.deep_features_fpth);
 
-    _data_packs.emplace(pack.ID, std::make_unique<ViretDataPack>(pack.ID, pack.target_imageset, pack.description,
-                                                                 pack.vocabulary_data, std::move(presoft_data),
-                                                                 std::move(soft_data), std::move(deep_features)));
+    _data_packs.emplace(
+        pack.ID, std::make_unique<ViretDataPack>(pack.ID, pack.target_imageset, pack.model_options, pack.description,
+                                                 pack.vocabulary_data, std::move(presoft_data), std::move(soft_data),
+                                                 std::move(deep_features)));
   }
 
   // Google type
@@ -46,7 +47,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
 }
 
 std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
-    const StringId& data_pack_ID, size_t user_level, bool with_example_images,
+    const StringId& data_pack_ID, const ::std::string& model_options, size_t user_level, bool with_example_images,
     const std::vector<AnnotatorUserQuery>& user_queries)
 {
   auto res = _data_packs.find(data_pack_ID);
@@ -56,7 +57,7 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
     return std::vector<GameSessionQueryResult>();
   }
 
-  _data_manager.submit_annotator_user_queries(data_pack_ID, res->second->get_vocab_ID(), user_level,
+  _data_manager.submit_annotator_user_queries(data_pack_ID, res->second->get_vocab_ID(), model_options, user_level,
                                               with_example_images, user_queries);
 
   /*
@@ -73,10 +74,10 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
     GameSessionQueryResult result;
 
     result.session_ID = query.session_ID;
-    result.human_readable_query = query.user_query_readable;
-    result.frame_filename = is[query.target_frame_ID].m_filename;
+    result.human_readable_query = query.user_query_readable.at(0);
+    result.frame_filename = is[query.target_sequence_IDs.at(0)].m_filename;
 
-    auto top_KWs = dp.top_frame_keywords(query.target_frame_ID);
+    auto top_KWs = dp.top_frame_keywords(query.target_sequence_IDs.at(0));
 
     std::stringstream model_top_query_ss;
 

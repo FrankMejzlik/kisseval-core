@@ -74,7 +74,7 @@ class ImageRanker
    * This processes input queries that come from users, generates results and sends them back
    */
   std::vector<GameSessionQueryResult> submit_annotator_user_queries(
-      const StringId& data_pack_ID, size_t user_level, bool with_example_images,
+      const StringId& data_pack_ID, const ::std::string& model_options, size_t user_level, bool with_example_images,
       const std::vector<AnnotatorUserQuery>& user_queries);
 
   std::vector<const SelFrame*> get_random_frame_sequence(const std::string& imageset_ID, size_t seq_len) const;

@@ -10,9 +10,12 @@ namespace image_ranker
 class BaseDataPack
 {
  public:
-  BaseDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& description)
-      : _ID(ID), _description(description), _target_imageset_ID(target_imageset_ID)
+  BaseDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
+               const std::string& description)
+      : _ID(ID), _description(description), _model_options(model_options), _target_imageset_ID(target_imageset_ID)
   {
+    std::cout << "desc = " << description << std::endl;
+    std::cout << "model_options = " << model_options << std::endl;
   }
 
   [[nodiscard]] virtual RankingResult rank_frames(const std::vector<CnfFormula>& user_queries,
@@ -33,11 +36,13 @@ class BaseDataPack
 
   [[nodiscard]] virtual const std::string& get_ID() const { return _ID; };
   [[nodiscard]] virtual const std::string& get_description() const { return _description; };
+  [[nodiscard]] virtual const std::string& get_model_options() const { return _model_options; };
   [[nodiscard]] virtual const std::string& target_imageset_ID() const { return _target_imageset_ID; };
 
  private:
   StringId _ID;
   std::string _description;
+  std::string _model_options;
   std::string _target_imageset_ID;
 };
 }  // namespace image_ranker

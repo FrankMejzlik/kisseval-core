@@ -16,9 +16,10 @@ namespace image_ranker
 class ViretDataPack : public BaseDataPack
 {
  public:
-  ViretDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& description,
-                const ViretDataPackRef::VocabData& vocab_data_refs, std::vector<std::vector<float>>&& presoft,
-                std::vector<std::vector<float>>&& softmax_data, std::vector<std::vector<float>>&& feas_data);
+  ViretDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
+                const std::string& description, const ViretDataPackRef::VocabData& vocab_data_refs,
+                std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
+                std::vector<std::vector<float>>&& feas_data);
 
   [[nodiscard]] virtual RankingResult rank_frames(const std::vector<CnfFormula>& user_queries,
                                                   PackModelCommands model_commands, size_t result_size,
@@ -36,7 +37,7 @@ class ViretDataPack : public BaseDataPack
 
   [[nodiscard]] virtual DataPackInfo get_info() const override;
 
-private:
+ private:
   /** Converts CNF query using keyword IDs to the one using only valid vector indices */
   CnfFormula keyword_IDs_to_vector_indices(CnfFormula ID_query) const;
 
