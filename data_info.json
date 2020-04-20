@@ -37,7 +37,7 @@
                 "active": true,
                 "ID": "NasNet2019",
                 "name": "NasNet2019",
-                "description": "Desc NasNet2019",
+                "description": "VIRET_based",
                 "model_options": "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0",
                 "vocabulary": {
                     "ID": "VIRET_WordNet2019",
@@ -55,7 +55,7 @@
                 "active": false,
                 "ID": "GoogLeNet2019",
                 "name": "GoogLeNet2019",
-                "description": "Desc GoogLeNet2019",
+                "description": "VIRET_based",
                 "model_options": "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0",
                 "vocabulary": {
                     "ID": "VIRET_WordNet2019",
@@ -75,7 +75,7 @@
                 "active": true,
                 "ID": "GoogLeNet2019",
                 "name": "GoogLeNet2019",
-                "description": "Desc GoogLeNet2019",
+                "description": "Google_based",
                 "model_options": "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0",
                 "vocabulary": {
                     "ID": "Google_AI_2019",
