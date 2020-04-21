@@ -22,6 +22,8 @@ class Keyword;
  * Name definitions
  ***********************************************/
 
+constexpr std::size_t operator""_z(unsigned long long n) { return n; }
+
 enum class eModelIds
 {
   BOOLEAN,
@@ -457,12 +459,6 @@ enum class eExportFileTypeId
 };
 
 // ------------------------------------------------
-
-/*
- * User defined literals
- */
-constexpr size_t operator""_z(unsigned long long int x) { return static_cast<size_t>(x); }
-// std::vector<std::vector<std::pair<bool, size_t>>>
 
 using InteractiveSearchAction = std::tuple<size_t, size_t, size_t>;
 

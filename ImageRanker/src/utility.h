@@ -19,6 +19,23 @@ using json = nlohmann::json;
 
 using namespace image_ranker;
 
+/**
+ * Computes outer sum of discrete function defined by given chart data
+ */
+inline float calc_chart_area(const ModelTestResult& chart_data)
+{
+  float area{0.0F};
+  uint32_t prev_x{0};
+  for (auto&& [x, fx] : chart_data)
+  {
+    area += float((x - prev_x) * fx);
+
+    prev_x = x;
+  }
+
+  return area;
+}
+
 inline json parse_data_config_file(const std::string& filepath)
 {
   // read a JSON file

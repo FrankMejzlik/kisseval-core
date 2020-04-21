@@ -142,7 +142,7 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
     idx_test_queries.emplace_back(std::move(idx_query), target_ID);
   }
 
-  // Parese model & transformation
+  // Parse model & transformation
   std::vector<std::string> tokens = split(model_commands, ';');
 
   std::vector<ModelKeyValOption> opt_key_vals;
