@@ -67,7 +67,7 @@ std::vector<ImageIdFilenameTuple> FileParser::GetImageFilenames(const std::strin
   // If failed to open file
   if (!inFile)
   {
-    LOG_ERROR(std::string("Error opening file :") + _imageToIdMapFilepath);
+    LOG_ERROR(std::string("Error opening file: ") + _imageToIdMapFilepath);
   }
 
   std::vector<ImageIdFilenameTuple> result;

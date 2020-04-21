@@ -51,8 +51,8 @@ int main()
        DATA_DIR + dp2["data"]["deep_features_fpth"].get<std::string>()},
   };
 
-    ImageRanker::Config cfg{ImageRanker::eMode::cFullAnalytical, datasets, VIRET_data_packs,
-                            std::vector<GoogleDataPackRef>(), std::vector<BowDataPackRef>()};
+  ImageRanker::Config cfg{ImageRanker::eMode::cFullAnalytical, datasets, VIRET_data_packs,
+                          std::vector<GoogleDataPackRef>(), std::vector<BowDataPackRef>()};
 
   ImageRanker ranker(cfg);
 
@@ -123,9 +123,12 @@ int main()
 
 #if TEST_run_model_test
 
-  auto r1 = ranker.run_model_test(
-      eUserQueryOrigin::SEMI_EXPERTS, dp1["ID"].get<std::string>(),
-      "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0");
+  /*auto r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+                                  "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.01;model_outter_op=sum;model_inner_op="
+                                  "sum;transform=linear_01;sim_user=no_sim_user;");*/
+
+  auto r2 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+                                  "model=boolean;model_true_threshold=0.001;transform=linear_01;");
 
 #endif
 

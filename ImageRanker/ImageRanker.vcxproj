@@ -253,6 +253,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ranking_models\BooleanModel.cpp" />
     <ClCompile Include="src\ranking_models\BaseSpaceModel.cpp" />
     <ClCompile Include="src\datasets\SelFramesDataset.cpp" />
     <ClCompile Include="src\DataManager.cpp" />
@@ -271,6 +272,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\log.h" />
+    <ClInclude Include="src\ranking_models\BooleanModel.h" />
     <ClInclude Include="src\ranking_models\BaseSpaceModel.h" />
     <ClInclude Include="src\datasets\SelFramesDataset.h" />
     <ClInclude Include="src\data_packs\BaseDataPack.h" />

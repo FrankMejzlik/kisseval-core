@@ -18,8 +18,9 @@ DataManager::DataManager(ImageRanker* p_owner)
   }
 }
 
-void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID, const::std::string& model_options,
-                                                size_t user_level, bool with_example_images,
+void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,
+                                                const ::std::string& model_options, size_t user_level,
+                                                bool with_example_images,
                                                 const std::vector<AnnotatorUserQuery>& user_queries)
 {
   std::stringstream sql_query_ss;
@@ -35,8 +36,8 @@ void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, co
   size_t i = 0;
   for (auto&& query : user_queries)
   {
-    sql_query_ss << "('"s << query.user_query_encoded.at(0) + "','"s
-                 << query.user_query_readable.at(0) << "','" << vocab_ID << "','" << data_pack_ID << "','" + model_options + "',"
+    sql_query_ss << "('"s << query.user_query_encoded.at(0) + "','"s << query.user_query_readable.at(0) << "','"
+                 << vocab_ID << "','" << data_pack_ID << "','" + model_options + "',"
                  << std::to_string(query.target_sequence_IDs.at(0)) << ", "s << ex_imgs_str << ","
                  << std::to_string(user_level) << ",0,'" << query.session_ID + "')";
 

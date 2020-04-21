@@ -33,7 +33,7 @@ ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset
   });
 
   // Instantiate all wanted models
-  // Boolean
+  _models.emplace(enum_label(eModelIds::BOOLEAN).first, std::make_unique<BooleanModel>());
   // Vector space
   _models.emplace(enum_label(eModelIds::MULT_SUM_MAX).first, std::make_unique<MultSumMaxModel>());
 
