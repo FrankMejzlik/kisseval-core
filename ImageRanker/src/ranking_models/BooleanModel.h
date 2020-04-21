@@ -22,7 +22,7 @@ class BooleanModel : public BaseClassificationModel
   };
 
  public:
-  static Options ParseOptionsString(const std::vector<ModelKeyValOption>& option_key_val_pairs);
+  static Options parse_options(const std::vector<ModelKeyValOption>& option_key_val_pairs);
 
   /**
    * Returns sorted vector of ranked images based on provided data for the given query.
@@ -37,6 +37,12 @@ class BooleanModel : public BaseClassificationModel
       const std::vector<ModelKeyValOption>& options = std::vector<ModelKeyValOption>(),
       FrameId target_frame_ID = ERR_VAL<FrameId>()) const override;
 
+  [[nodiscard]] virtual ModelTestResult test_model(
+      const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+      const std::vector<UserTestQuery>& test_user_queries,
+      const std::vector<ModelKeyValOption>& options = std::vector<ModelKeyValOption>(),
+      size_t result_points = NUM_MODEL_TEST_RESULT_POINTS) const override;
+
   /**
    * Returns sorted vector of ranked images based on provided data for the given query.
    *
@@ -49,16 +55,6 @@ class BooleanModel : public BaseClassificationModel
                                                       const std::vector<CnfFormula>& user_query, size_t result_size,
                                                       const Options& opts, FrameId target_frame_ID) const;
 
-  /**
-   * Returns results of this model after running provided test queries .
-   *
-   * Query in format: "1&3&4" where numbers are indices to scoring vector.
-   */
-  [[nodiscard]] virtual ModelTestResult run_test(
-      const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-      const std::vector<UserTestQuery>& test_user_queries,
-      const std::vector<ModelKeyValOption>& options = std::vector<ModelKeyValOption>(),
-      size_t result_points = NUM_MODEL_TEST_RESULT_POINTS) const override;
 
  private:
   /** Returns ranking for the provided frame data, query and options */

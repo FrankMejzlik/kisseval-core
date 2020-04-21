@@ -25,6 +25,9 @@ class ViretDataPack : public BaseDataPack
                                                   PackModelCommands model_commands, size_t result_size,
                                                   FrameId target_image_ID = ERR_VAL<FrameId>()) const override;
 
+  [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
+                                                  PackModelCommands model_commands, size_t num_points) const override;
+
   [[nodiscard]] virtual const std::string& get_vocab_ID() const override;
   [[nodiscard]] virtual const std::string& get_vocab_description() const override;
 

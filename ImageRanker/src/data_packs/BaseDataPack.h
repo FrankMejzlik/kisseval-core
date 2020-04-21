@@ -22,6 +22,9 @@ class BaseDataPack
                                                   PackModelCommands model_commands, size_t result_size,
                                                   FrameId target_image_ID = ERR_VAL<FrameId>()) const = 0;
 
+  [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
+                                                  PackModelCommands model_commands, size_t num_points) const = 0;
+
   [[nodiscard]] virtual const std::string& get_vocab_ID() const = 0;
   [[nodiscard]] virtual const std::string& get_vocab_description() const = 0;
 

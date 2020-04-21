@@ -200,41 +200,11 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
                                             const PackModelCommands& model_commands, size_t num_points) const
 {
   const auto& dp{data_pack(data_pack_ID)};
-  const auto& is{imageset(dp.target_imageset_ID())};
-  size_t imageset_size{is.size()};
-  float divisor{float(imageset_size) / num_points};
 
   // Fetch queries from the DB
   auto test_queries{_data_manager.fetch_user_test_queries(queries_origin, dp.get_vocab_ID())};
 
-  // Prefil result [x,f(x)] values
-  std::vector<std::pair<uint32_t, uint32_t>> test_results;
-  test_results.reserve(num_points + 1);
-  for (size_t i{0}; i <= num_points; ++i)
-  {
-    test_results.emplace_back(uint32_t(i * divisor), 0);
-  }
-
-  // Rank them all
-  for (auto&& [query, target_frame_ID] : test_queries)
-  {
-    auto res = dp.rank_frames(query, model_commands, 0, target_frame_ID);
-
-    uint32_t x{uint32_t(res.target_pos / divisor)};
-
-    ++(test_results[x].second);
-  }
-
-  // Sumarize results into results
-  uint32_t sum{0};
-  for (auto&& num_hits : test_results)
-  {
-    auto val{num_hits.second};
-    num_hits.second = sum;
-    sum += val;
-  }
-
-  return test_results;
+  return dp.test_model(test_queries, model_commands, num_points);
 }
 
 // =====================================

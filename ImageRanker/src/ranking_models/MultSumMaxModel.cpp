@@ -6,7 +6,7 @@
 
 using namespace image_ranker;
 
-MultSumMaxModel::Options MultSumMaxModel::ParseOptionsString(const std::vector<ModelKeyValOption>& option_key_val_pairs)
+MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelKeyValOption>& option_key_val_pairs)
 {
   auto res{MultSumMaxModel::Options()};
 
@@ -93,7 +93,7 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
   }
 
   // Parse provided options
-  Options opts = ParseOptionsString(options);
+  Options opts = parse_options(options);
 
   return rank_frames(transformed_data, keywords, user_query, result_size, opts, target_frame_ID);
 }
@@ -177,12 +177,45 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
   return result;
 }
 
-ModelTestResult MultSumMaxModel::run_test(const BaseVectorTransform& transformed_data,
+ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transformed_data,
                                           const KeywordsContainer& keywords,
                                           const std::vector<UserTestQuery>& test_user_queries,
-                                          const std::vector<ModelKeyValOption>& options, size_t result_points) const
+                                          const std::vector<ModelKeyValOption>& options, size_t num_points) const
 {
-  return ModelTestResult{};
+  size_t imageset_size{transformed_data.num_frames()};
+  float divisor{float(imageset_size) / num_points};
+
+  // Prefil result [x,f(x)] values
+  std::vector<std::pair<uint32_t, uint32_t>> test_results;
+  test_results.reserve(num_points + 1);
+  for (size_t i{0}; i <= num_points; ++i)
+  {
+    test_results.emplace_back(uint32_t(i * divisor), 0);
+  }
+
+  // Parse provided options
+  Options opts = parse_options(options);
+
+  // Rank them all
+  for (auto&& [query, target_frame_ID] : test_user_queries)
+  {
+    auto res = rank_frames(transformed_data, keywords, query, 0, opts, target_frame_ID);
+
+    uint32_t x{uint32_t(res.target_pos / divisor)};
+
+    ++(test_results[x].second);
+  }
+
+  // Sumarize results into results
+  uint32_t sum{0};
+  for (auto&& num_hits : test_results)
+  {
+    auto val{num_hits.second};
+    num_hits.second = sum;
+    sum += val;
+  }
+
+  return test_results;
 }
 
 #if 0

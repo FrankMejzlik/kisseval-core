@@ -124,6 +124,74 @@ RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_que
   return ranking_model.rank_frames(transform, _keywords, idx_queries, result_size, opt_key_vals, target_image_ID);
 }
 
+ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test_queries,
+                                                  PackModelCommands model_commands, size_t num_points) const
+{
+  // Expand query to vector indices
+  std::vector<UserTestQuery> idx_test_queries;
+  idx_test_queries.reserve(test_queries.size());
+  
+  for (auto&& [test_query, target_ID] : test_queries)
+  {
+    std::vector<CnfFormula> idx_query;
+    idx_query.reserve(test_query.size());
+    for (auto&& q : test_query)
+    {
+      idx_query.emplace_back(keyword_IDs_to_vector_indices(q));
+    }
+    idx_test_queries.emplace_back(std::move(idx_query), target_ID);
+  }
+
+  // Parese model & transformation
+  std::vector<std::string> tokens = split(model_commands, ';');
+
+  std::vector<ModelKeyValOption> opt_key_vals;
+
+  std::string model_ID;
+  std::string transform_ID;
+
+  for (auto&& tok : tokens)
+  {
+    auto key_val = split(tok, '=');
+
+    // Model ID && Transform ID
+    if (key_val[0] == enum_label(eModelOptsKeys::MODEL_ID).first)
+    {
+      model_ID = key_val[1];
+    }
+    else if (key_val[0] == enum_label(eModelOptsKeys::TRANSFORM_ID).first)
+    {
+      transform_ID = key_val[1];
+    }
+    // Options for model itself
+    else
+    {
+      opt_key_vals.emplace_back(key_val[0], key_val[1]);
+    }
+  }
+
+  // Choose desired model
+  auto iter_m = _models.find(model_ID);
+  if (iter_m == _models.end())
+  {
+    LOG_ERROR("Uknown model_ID: '" + model_ID + "'.");
+    return ModelTestResult{};
+  }
+  const auto& ranking_model = *(iter_m->second);
+
+  // Choose desired transform
+  auto iter_t = _transforms.find(transform_ID);
+  if (iter_t == _transforms.end())
+  {
+    LOG_ERROR("Uknown transform_ID: '" + transform_ID + "'.");
+    return ModelTestResult{};
+  }
+  const auto& transform = *(iter_t->second);
+
+
+  return ranking_model.test_model(transform, _keywords, idx_test_queries, opt_key_vals, num_points);
+}
+
 AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,
                                                                 bool with_example_image) const
 {

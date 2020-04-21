@@ -8,10 +8,21 @@ using namespace std::string_literals;
 
 namespace image_ranker
 {
+
+template <typename ModelType>
+auto parse_model_options(const std::vector<ModelKeyValOption>& option_key_val_pairs) -> decltype(ModelType::Options)
+{
+  return ModelType::parse_options(option_key_val_pairs);
+}
+
 class KeywordsContainer;
 class BaseVectorTransform;
 
-class BaseClassificationModel
+class BaseModel {
+
+};
+
+class BaseClassificationModel : public BaseModel
 {
  public:
   /**
@@ -25,12 +36,13 @@ class BaseClassificationModel
       const std::vector<ModelKeyValOption>& options = std::vector<ModelKeyValOption>(),
       FrameId target_frame_ID = ERR_VAL<FrameId>()) const = 0;
 
+
   /**
    * Returns results of this model after running provided test queries .
    *
    * Query in format: "1&3&4" where numbers are indices to scoring vector.
    */
-  [[nodiscard]] virtual ModelTestResult run_test(
+  [[nodiscard]] virtual ModelTestResult test_model(
       const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
       const std::vector<UserTestQuery>& test_user_queries,
       const std::vector<ModelKeyValOption>& options = std::vector<ModelKeyValOption>(),
