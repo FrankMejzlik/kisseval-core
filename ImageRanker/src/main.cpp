@@ -61,8 +61,8 @@ int main()
 #define TEST_get_autocomplete_results 0
 #define TEST_get_loaded_imagesets_info 0
 #define TEST_rank_frames 0
-#define TEST_run_model_test 0
-#define TEST_boolean_grid_test_threshold 1
+#define TEST_run_model_test 1
+#define TEST_boolean_grid_test_threshold 0
 
   // TEST: `submit_annotator_user_queries`
 #if TEST_submit_annotator_user_queries
@@ -129,15 +129,15 @@ int main()
                                   "sum;transform=linear_01;sim_user=no_sim_user;");*/
 
   auto r2 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
-                                  "model=boolean;model_true_threshold=0.001;transform=linear_01;");
+                                  "model=boolean;model_true_threshold=0.000598001;transform=linear_01;");
 
 #endif
 
 #if TEST_boolean_grid_test_threshold
 
   constexpr size_t num_iters{100_z};
-  constexpr float p_from{0.0001F};
-  constexpr float p_to{0.01F};
+  constexpr float p_from{0.0005F}; 
+  constexpr float p_to{0.0006F};
 
   constexpr float delta_it{(p_to - p_from) / num_iters};
 

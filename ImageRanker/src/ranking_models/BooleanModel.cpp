@@ -61,7 +61,7 @@ RankingResult BooleanModel::rank_frames(const BaseVectorTransform& transformed_d
   result.target = target_frame_ID;
   result.m_frames.reserve(result_size);
 
-  Matrix<float> data_mat = transformed_data.data_sum();
+  const Matrix<float>& data_mat = transformed_data.data_sum();
 
   {
     size_t i{0};

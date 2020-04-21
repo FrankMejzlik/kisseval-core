@@ -119,26 +119,28 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
   result.target = target_frame_ID;
   result.m_frames.reserve(result_size);
 
-  Matrix<float> data_mat;
+  const Matrix<float>* p_data_mat;
   switch (opts.scoring_operations)
   {
       // SUM based
     case eScoringOperations::cMultSum:
     case eScoringOperations::cSumSum:
-      data_mat = transformed_data.data_sum();
+      p_data_mat = &transformed_data.data_sum();
       break;
 
       // MAX based
     case eScoringOperations::cMaxMax:
     case eScoringOperations::cMultMax:
     case eScoringOperations::cSumMax:
-      data_mat = transformed_data.data_max();
+      p_data_mat = &transformed_data.data_max();
       break;
 
     default:
       LOG_ERROR("Unknown scoring operation.");
       return RankingResult{};
   }
+
+  const Matrix<float>& data_mat{*p_data_mat};
 
   {
     size_t i{0};

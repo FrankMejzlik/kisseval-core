@@ -4,4 +4,7 @@
 cd ..\ImageRanker
 rmdir .\data
 
+cd ..\x64\Release
+rmdir .\data
+
 pause
