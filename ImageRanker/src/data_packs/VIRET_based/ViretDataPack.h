@@ -10,6 +10,7 @@
 
 #include "BaseClassificationModel.h"
 #include "BaseVectorTransform.h"
+#include "SimUser.h"
 
 namespace image_ranker
 {
@@ -26,7 +27,11 @@ class ViretDataPack : public BaseDataPack
                                                   FrameId target_image_ID = ERR_VAL<FrameId>()) const override;
 
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
-                                                  PackModelCommands model_commands, size_t num_points) const override;
+                                                   PackModelCommands model_commands, size_t num_points) const override;
+
+  [[nodiscard]] std::vector<UserTestQuery> process_sim_user(const BaseVectorTransform& transformed_data,
+                                                            const KeywordsContainer& keywords,
+                                                            const std::vector<UserTestQuery>& test_user_queries) const;
 
   [[nodiscard]] virtual const std::string& get_vocab_ID() const override;
   [[nodiscard]] virtual const std::string& get_vocab_description() const override;
@@ -56,5 +61,7 @@ class ViretDataPack : public BaseDataPack
 
   /** Transformations for this data pack - only classification ones */
   std::unordered_map<std::string, std::unique_ptr<BaseVectorTransform>> _transforms;
+
+  std::unordered_map<std::string, std::unique_ptr<BaseSimUser>> _sim_users;
 };
 }  // namespace image_ranker

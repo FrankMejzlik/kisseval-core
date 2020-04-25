@@ -34,8 +34,14 @@ ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset
 
   // Instantiate all wanted models
   _models.emplace(enum_label(eModelIds::BOOLEAN).first, std::make_unique<BooleanModel>());
-  // Vector space
+  _models.emplace(enum_label(eModelIds::VECTOR_SPACE).first, std::make_unique<VectorSpaceModel>());
   _models.emplace(enum_label(eModelIds::MULT_SUM_MAX).first, std::make_unique<MultSumMaxModel>());
+
+  // Simulated user models
+  _sim_users.emplace(enum_label(eSimUserIds::NO_SIM).first, std::make_unique<SimUserNoSim>());
+  _sim_users.emplace(enum_label(eSimUserIds::SIM_SINGLE_QUERIES).first, std::make_unique<SimUserSingleQueries>());
+  _sim_users.emplace(enum_label(eSimUserIds::SIM_TEMPORAL_QUERIES).first, std::make_unique<SimUserTempQueries>());
+  _sim_users.emplace(enum_label(eSimUserIds::AUGMENT_USER_WITH_TEMP).first, std::make_unique<SimUserAugmentRealWithTemp>());
 
   t1.join();
   t2.join();
@@ -125,12 +131,12 @@ RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_que
 }
 
 ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test_queries,
-                                                  PackModelCommands model_commands, size_t num_points) const
+                                          PackModelCommands model_commands, size_t num_points) const
 {
   // Expand query to vector indices
   std::vector<UserTestQuery> idx_test_queries;
   idx_test_queries.reserve(test_queries.size());
-  
+
   for (auto&& [test_query, target_ID] : test_queries)
   {
     std::vector<CnfFormula> idx_query;
@@ -149,6 +155,7 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
 
   std::string model_ID;
   std::string transform_ID;
+  std::string sim_user_ID;
 
   for (auto&& tok : tokens)
   {
@@ -162,6 +169,10 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
     else if (key_val[0] == enum_label(eModelOptsKeys::TRANSFORM_ID).first)
     {
       transform_ID = key_val[1];
+    }
+    else if (key_val[0] == enum_label(eModelOptsKeys::SIM_USER_ID).first)
+    {
+      sim_user_ID = key_val[1];
     }
     // Options for model itself
     else
@@ -188,6 +199,18 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
   }
   const auto& transform = *(iter_t->second);
 
+  // Choose desired simulated user
+  auto iter_su = _sim_users.find(sim_user_ID);
+  if (iter_su == _sim_users.end())
+  {
+    LOG_WARN("sim_user_ID not found... Using default:'" + sim_user_ID + "'.");
+
+    iter_su = _sim_users.find(enum_label(eSimUserIds::NO_SIM).first);
+  }
+  const auto& sim_user = *(iter_su->second);
+
+  // Process sim user
+  idx_test_queries = sim_user.process_sim_user(transform, _keywords, idx_test_queries, opt_key_vals);
 
   return ranking_model.test_model(transform, _keywords, idx_test_queries, opt_key_vals, num_points);
 }

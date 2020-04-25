@@ -7,8 +7,6 @@
 // Boolean bucketed model
 //#include "BooleanBucketModel.h"
 
-// Boolean model
 #include "BooleanModel.h"
-
-// Viret model
+#include "VectorSpaceModel.h"
 #include "MultSumMaxModel.h"

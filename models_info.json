@@ -30,7 +30,36 @@
                         "ID": "vector_space",
                         "name": "Vector space",
                         "description": "",
-                        "options": []
+                        "options": [
+                            {
+                                "active": true,
+                                "key": "dist_fn",
+                                "name": "Distance function",
+                                "input_type": "enum",
+                                "values": [
+                                    {
+                                        "active": true,
+                                        "ID": "Euclid",
+                                        "name": "euclid",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "active": true,
+                                        "ID": "Cosine",
+                                        "name": "cusine",
+                                        "description": "",
+                                        "options": []
+                                    },{
+                                        "active": true,
+                                        "ID": "manhattan",
+                                        "name": "Manhattan",
+                                        "description": "",
+                                        "options": []
+                                    }
+                                ]
+                            }
+                        ]
                     },
                     {
                         "active": true,

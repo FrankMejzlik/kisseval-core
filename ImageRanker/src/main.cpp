@@ -124,19 +124,50 @@ int main()
 
 #if TEST_run_model_test
 
-  /*auto r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
-                                  "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.01;model_outter_op=sum;model_inner_op="
-                                  "sum;transform=linear_01;sim_user=no_sim_user;");*/
+  std::cout << "===============================" << std::endl;
+  std::cout << "MULT-SUM-MAX model: " << std::endl;
+  std::cout << "--------------" << std::endl;
+  auto r1 = ranker.run_model_test(
+      eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+      "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op="
+      "sum;transform=linear_01;sim_user=no_sim_user;");
+  auto r1_area = calc_chart_area(r1);
+  std::cout << "transform=linear_01, model_operations=mult-sum: " << r1_area << std::endl;
+
+  std::cout << "===============================" << std::endl;
+  std::cout << "Boolean model: " << std::endl;
+  std::cout << "--------------" << std::endl;
 
   auto r2 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
                                   "model=boolean;model_true_threshold=0.000598001;transform=linear_01;");
+  auto r2_area = calc_chart_area(r2);
+  std::cout << "t = 0.000598001: " << r2_area << std::endl;
+
+  std::cout << "===============================" << std::endl;
+  std::cout << "Vector space model: " << std::endl;
+  std::cout << "--------------" << std::endl;
+
+  auto r3 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+                                  "model=vector_space;transform=linear_01;model_dist_fn=euclid");
+  auto r3_area = calc_chart_area(r3);
+  std::cout << "Euclid: " << r3_area << std::endl;
+
+  auto r4 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+                                  "model=vector_space;transform=linear_01;model_dist_fn=cosine");
+  auto r4_area = calc_chart_area(r4);
+  std::cout << "Cosine: " << r4_area << std::endl;
+
+  auto r5 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+                                  "model=vector_space;transform=linear_01;model_dist_fn=manhattan");
+  auto r5_area = calc_chart_area(r5);
+  std::cout << "Manhattan: " << r5_area << std::endl;
 
 #endif
 
 #if TEST_boolean_grid_test_threshold
 
   constexpr size_t num_iters{100_z};
-  constexpr float p_from{0.0005F}; 
+  constexpr float p_from{0.0005F};
   constexpr float p_to{0.0006F};
 
   constexpr float delta_it{(p_to - p_from) / num_iters};
@@ -146,10 +177,11 @@ int main()
 
   for (auto [param, i] = std::tuple{p_from, 0_z}; param <= p_to; param += delta_it, ++i)
   {
-    auto res = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
-      "model=boolean;model_true_threshold=" + std::to_string(param) + ";transform=linear_01;");
-   
-    float area{ calc_chart_area(res) };
+    auto res =
+        ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+                              "model=boolean;model_true_threshold=" + std::to_string(param) + ";transform=linear_01;");
+
+    float area{calc_chart_area(res)};
 
     if (area > max_area)
     {

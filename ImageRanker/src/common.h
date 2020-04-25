@@ -24,6 +24,14 @@ class Keyword;
 
 constexpr std::size_t operator""_z(unsigned long long n) { return n; }
 
+enum class eDistFunction
+{
+  EUCLID,
+  EUCLID_SQUARED,
+  MANHATTAN,
+  COSINE_NONORM
+};
+
 enum class eModelIds
 {
   BOOLEAN,
@@ -36,13 +44,31 @@ enum class eModelIds
 
 const std::array<std::pair<std::string, std::string>, size_t(eModelIds::_COUNT)> eModelIds_labels = {{
     std::pair("boolean", ""),
-    std::pair("bector_space", ""),
+    std::pair("vector_space", ""),
     std::pair("mult-sum-max", ""),
     std::pair("boolean_bucket", ""),
     std::pair("bow_vbs2020", "BoW model by Xirong."),
 }};
 
 inline const std::pair<std::string, std::string>& enum_label(eModelIds val) { return eModelIds_labels[size_t(val)]; }
+
+enum class eSimUserIds
+{
+  NO_SIM,
+  SIM_SINGLE_QUERIES,
+  SIM_TEMPORAL_QUERIES,
+  AUGMENT_USER_WITH_TEMP,
+  _COUNT
+};
+
+const std::array<std::pair<std::string, std::string>, size_t(eSimUserIds::_COUNT)> eSimUserIds_labels = {
+    {std::pair("no_sim_user", ""), std::pair("sim_single_queries", ""), std::pair("sim_temp_queries", ""),
+     std::pair("augment_real_with_temp_queries", "")}};
+
+inline const std::pair<std::string, std::string>& enum_label(eSimUserIds val)
+{
+  return eSimUserIds_labels[size_t(val)];
+}
 
 enum class eTransformationIds
 {
@@ -74,13 +100,14 @@ enum class eModelOptsKeys
   MODEL_OUTTER_OP,
   MODEL_IGNORE_THRESHOLD,
   MODEL_TRUE_THRESHOLD,
+  MODEL_DIST_FN,
   _COUNT
 };
 
 const std::array<std::pair<std::string, std::string>, size_t(eModelOptsKeys::_COUNT)> eModelOptsKeys_labels = {
     {std::pair("model", ""), std::pair("transform", ""), std::pair("sim_user", ""), std::pair("sim_user_type", ""),
      std::pair("model_operations", ""), std::pair("model_inner_op", ""), std::pair("model_outter_op", ""),
-     std::pair("model_ignore_treshold", ""), std::pair("model_true_threshold", "")}};
+     std::pair("model_ignore_treshold", ""), std::pair("model_true_threshold", ""), std::pair("model_dist_fn", "")}};
 
 inline const std::pair<std::string, std::string>& enum_label(eModelOptsKeys val)
 {

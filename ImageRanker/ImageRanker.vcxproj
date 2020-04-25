@@ -216,6 +216,10 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <AdditionalOptions>/experimental:external /external:anglebrackets /external:W0 %(AdditionalOptions)</AdditionalOptions>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -253,6 +257,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ranking_models\VectorSpaceModel.cpp" />
     <ClCompile Include="src\ranking_models\BooleanModel.cpp" />
     <ClCompile Include="src\ranking_models\BaseSpaceModel.cpp" />
     <ClCompile Include="src\datasets\SelFramesDataset.cpp" />
@@ -266,11 +271,13 @@
     <ClCompile Include="src\ImageRanker.cpp" />
     <ClCompile Include="src\KeywordsContainer.cpp" />
     <ClCompile Include="src\ranking_models\MultSumMaxModel.cpp" />
+    <ClCompile Include="src\SimUser.cpp" />
     <ClCompile Include="src\transformations\BaseVectorTransform.cpp" />
     <ClCompile Include="src\transformations\TransformationLinear.cpp" />
     <ClCompile Include="src\transformations\TransformationSoftmax.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ranking_models\VectorSpaceModel.h" />
     <ClInclude Include="src\log.h" />
     <ClInclude Include="src\ranking_models\BooleanModel.h" />
     <ClInclude Include="src\ranking_models\BaseSpaceModel.h" />
@@ -283,6 +290,7 @@
     <ClInclude Include="src\ranking_models\BaseClassificationModel.h" />
     <ClInclude Include="src\ranking_models\ranking_models.h" />
     <ClInclude Include="src\ranking_models\MultSumMaxModel.h" />
+    <ClInclude Include="src\SimUser.h" />
     <ClInclude Include="src\transformations\BaseVectorTransform.h" />
     <ClInclude Include="src\FileParser.h" />
     <ClInclude Include="src\data_packs\VIRET_based\ViretDataPack.h" />
@@ -297,6 +305,7 @@
     <ClInclude Include="src\transformations\TransformationLinear.h" />
     <ClInclude Include="src\transformations\transformations.h" />
     <ClInclude Include="src\transformations\TransformationSoftmax.h" />
+    <ClInclude Include="src\use_intrins.h" />
     <ClInclude Include="src\utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

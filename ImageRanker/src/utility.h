@@ -16,6 +16,7 @@ using namespace std::literals;
 using json = nlohmann::json;
 
 #include "common.h"
+#include "use_intrins.h"
 
 using namespace image_ranker;
 
@@ -322,4 +323,90 @@ inline T strTo(const std::string& str)
   }
 
   return result_encoded_query;
+}
+
+inline Vector<float> normalize(const Vector<float>& left)
+{
+  Vector<float> res(left.size(), 0.0F);
+
+  float sum{0.0F};
+
+  for (size_t i{0_z}; i < left.size(); ++i)
+  {
+    sum += left[i];
+  }
+
+  for (size_t i{0_z}; i < left.size(); ++i)
+  {
+    res[i] = left[i] / sum;
+  }
+
+  return res;
+}
+
+inline float dist_manhattan(const Vector<float>& left, const Vector<float>& right)
+{
+  float res{0.0F};
+
+  for (size_t i{0_z}; i < left.size(); ++i)
+  {
+    float sub = std::abs(left[i] - right[i]);
+    res += sub;
+  }
+
+  return res;
+}
+
+inline float dist_cos_norm(const Vector<float>& left, const Vector<float>& right)
+{
+  float res{0.0F};
+
+  for (size_t i{0_z}; i < left.size(); ++i)
+  {
+    res += left[i] * right[i];
+  }
+
+  // Make is cosine distance
+  return 1 - res;
+}
+
+inline float dist_sq_eucl(const Vector<float>& left, const Vector<float>& right)
+{
+  float res{0.0F};
+
+  for (size_t i{0_z}; i < left.size(); ++i)
+  {
+    float sub = left[i] - right[i];
+    res += sub * sub;
+  }
+
+  return res;
+}
+
+inline float dist_eucl(const Vector<float>& left, const Vector<float>& right)
+{
+  return sqrtf(dist_sq_eucl(left, right));
+}
+
+inline std::function<float(const Vector<float>&, const Vector<float>&)> get_dist_fn(eDistFunction fn_type)
+{
+  switch (fn_type)
+  {
+    case eDistFunction::COSINE_NONORM:
+      return dist_cos_norm;
+
+    case eDistFunction::EUCLID:
+      return dist_eucl;
+
+    case eDistFunction::EUCLID_SQUARED:
+      return dist_sq_eucl;
+
+    case eDistFunction::MANHATTAN:
+      return dist_manhattan;
+
+    default:
+      LOG_WARN("Uknown distance function type: " + std::to_string(int(fn_type)) +
+               "\n\tUsing default one: " + std::to_string(int(eDistFunction::MANHATTAN)));
+      return dist_manhattan;
+  }
 }
