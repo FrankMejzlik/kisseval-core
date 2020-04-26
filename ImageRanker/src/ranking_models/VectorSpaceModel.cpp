@@ -12,6 +12,7 @@ VectorSpaceModel::Options VectorSpaceModel::parse_options(const std::vector<Mode
 
   for (auto&& [key, val] : option_key_val_pairs)
   {
+    // Model distance function
     if (key == enum_label(eModelOptsKeys::MODEL_DIST_FN).first)
     {
       if (val == "euclid")
@@ -26,8 +27,85 @@ VectorSpaceModel::Options VectorSpaceModel::parse_options(const std::vector<Mode
       {
         res.dist_fn = eDistFunction::MANHATTAN;
       }
+      else
+      {
+        LOG_WARN("Unknown model option val '" + val + "'");
+      }
     }
-    else {
+    // Weighing TERM term frequency
+    else if (key == enum_label(eModelOptsKeys::MODEL_TERM_TF).first)
+    {
+      if (val == "natural")
+      {
+        res.term_tf = eTermFrequency::NATURAL;
+      }
+      else if (val == "log")
+      {
+        res.term_tf = eTermFrequency::LOGARIGHMIC;
+      }
+      else if (val == "augmented")
+      {
+        res.term_tf = eTermFrequency::AUGMENTED;
+      }
+      else
+      {
+        LOG_WARN("Unknown model option val '" + val + "'");
+      }
+    }
+    // Weighing TERM term frequency
+    else if (key == enum_label(eModelOptsKeys::MODEL_TERM_IDF).first)
+    {
+      if (val == "none")
+      {
+        res.term_idf = eInvDocumentFrequency::NONE;
+      }
+      else if (val == "idf")
+      {
+        res.term_idf = eInvDocumentFrequency::IDF;
+      }
+      else
+      {
+        LOG_WARN("Unknown model option val '" + val + "'");
+      }
+    }
+    // Weighing TERM term frequency
+    else if (key == enum_label(eModelOptsKeys::MODEL_QUERY_TF).first)
+    {
+      if (val == "natural")
+      {
+        res.query_tf = eTermFrequency::NATURAL;
+      }
+      else if (val == "log")
+      {
+        res.query_tf = eTermFrequency::LOGARIGHMIC;
+      }
+      else if (val == "augmented")
+      {
+        res.query_tf = eTermFrequency::AUGMENTED;
+      }
+      else
+      {
+        LOG_WARN("Unknown model option val '" + val + "'");
+      }
+    }
+    // Weighing TERM term frequency
+    else if (key == enum_label(eModelOptsKeys::MODEL_QUERY_IDF).first)
+    {
+      if (val == "none")
+      {
+        res.query_idf = eInvDocumentFrequency::NONE;
+      }
+      else if (val == "idf")
+      {
+        res.query_idf = eInvDocumentFrequency::IDF;
+      }
+      else
+      {
+        LOG_WARN("Unknown model option val '" + val + "'");
+      }
+    }
+    else
+    {
       LOG_WARN("Unknown model option key '" + key + "'");
     }
   }
@@ -76,11 +154,11 @@ RankingResult VectorSpaceModel::rank_frames(const BaseVectorTransform& transform
   result.m_frames.reserve(result_size);
 
   const Matrix<float>& data_mat = transformed_data.data_sum();
- 
+
   auto dist_fn{get_dist_fn(opts.dist_fn)};
 
   // Create user query vector representation
-  Vector<float> user_query_vec{create_user_query_vector( user_query.front(), transformed_data.num_dims())};
+  Vector<float> user_query_vec{create_user_query_vector(user_query.front(), transformed_data.num_dims())};
   user_query_vec = normalize(user_query_vec);
 
   {
@@ -89,8 +167,8 @@ RankingResult VectorSpaceModel::rank_frames(const BaseVectorTransform& transform
     for (auto&& fea_vec : data_mat)
     {
       // Ranking is distance in the space from the query
-      float dist {dist_fn(user_query_vec, fea_vec)}; 
-      
+      float dist{dist_fn(user_query_vec, fea_vec)};
+
       max_prio_queue.emplace(dist, i);
 
       // \todo Add temporal ranking
@@ -165,8 +243,6 @@ ModelTestResult VectorSpaceModel::test_model(const BaseVectorTransform& transfor
 float VectorSpaceModel::rank_frame(const Vector<float>& frame_data, const CnfFormula& single_query,
                                    const Options& options) const
 {
-
-
   float frame_ranking{1.0F};
 
   return frame_ranking;

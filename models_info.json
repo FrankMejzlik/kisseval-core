@@ -33,24 +33,127 @@
                         "options": [
                             {
                                 "active": true,
+                                "key": "model_term_tf",
+                                "name": "Term frequency for frames",
+                                "input_type": "enum",
+                                "values": [
+                                    {
+                                        "active": true,
+                                        "ID": "natural",
+                                        "name": "Natural",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "active": true,
+                                        "ID": "log",
+                                        "name": "Logarithmic",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "active": true,
+                                        "ID": "augmented",
+                                        "name": "Augmented",
+                                        "description": "",
+                                        "options": []
+                                    }
+                                ]
+                            },
+                            {
+                                "active": true,
+                                "key": "model_term_idf",
+                                "name": "Inverse document frequency for frames",
+                                "input_type": "enum",
+                                "values": [
+                                    {
+                                        "active": true,
+                                        "ID": "none",
+                                        "name": "No IDF",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "active": true,
+                                        "ID": "idf",
+                                        "name": "Basic IDF",
+                                        "description": "",
+                                        "options": []
+                                    }
+                                ]
+                            },
+                            {
+                                "active": true,
+                                "key": "model_query_tf",
+                                "name": "Term frequency for queries",
+                                "input_type": "enum",
+                                "values": [
+                                    {
+                                        "active": true,
+                                        "ID": "natural",
+                                        "name": "Natural",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "active": true,
+                                        "ID": "log",
+                                        "name": "Logarithmic",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "active": true,
+                                        "ID": "augmented",
+                                        "name": "Augmented",
+                                        "description": "",
+                                        "options": []
+                                    }
+                                ]
+                            },
+                            {
+                                "active": true,
+                                "key": "model_query_idf",
+                                "name": "Inverse document frequency for frames",
+                                "input_type": "enum",
+                                "values": [
+                                    {
+                                        "active": true,
+                                        "ID": "none",
+                                        "name": "No IDF",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "active": true,
+                                        "ID": "idf",
+                                        "name": "Basic IDF",
+                                        "description": "",
+                                        "options": []
+                                    }
+                                ]
+                            },
+                            {
+                                "active": true,
                                 "key": "dist_fn",
                                 "name": "Distance function",
                                 "input_type": "enum",
                                 "values": [
                                     {
                                         "active": true,
-                                        "ID": "Euclid",
-                                        "name": "euclid",
+                                        "ID": "euclid",
+                                        "name": "Euclid",
                                         "description": "",
                                         "options": []
                                     },
                                     {
                                         "active": true,
-                                        "ID": "Cosine",
-                                        "name": "cusine",
+                                        "ID": "cosine",
+                                        "name": "Cusine",
                                         "description": "",
                                         "options": []
-                                    },{
+                                    },
+                                    {
                                         "active": true,
                                         "ID": "manhattan",
                                         "name": "Manhattan",
@@ -93,7 +196,8 @@
                                         "name": "sum-sum",
                                         "description": "",
                                         "options": []
-                                    },{
+                                    },
+                                    {
                                         "active": true,
                                         "ID": "sum-max",
                                         "name": "sum-max",
@@ -131,7 +235,7 @@
                                     }
                                 ]
                             },
-                            {   
+                            {
                                 "active": true,
                                 "key": "inner_op",
                                 "name": "Inner temp operation",
@@ -172,7 +276,6 @@
                             }
                         ]
                     }
-
                 ]
             },
             {
@@ -305,5 +408,5 @@
                 ]
             }
         ]
-    }    
+    }
 }

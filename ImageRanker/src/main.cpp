@@ -147,20 +147,19 @@ int main()
   std::cout << "Vector space model: " << std::endl;
   std::cout << "--------------" << std::endl;
 
-  auto r3 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
-                                  "model=vector_space;transform=linear_01;model_dist_fn=euclid");
+  std::string m3_opts =
+      "model=vector_space;transform=linear_01;model_dist_fn=euclid;model_term_tf=natural;model_term_idf=no;model_query_tf=natural;model_query_idf=no;"s;
+  auto r3 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", m3_opts);
   auto r3_area = calc_chart_area(r3);
-  std::cout << "Euclid: " << r3_area << std::endl;
+  std::cout << m3_opts << std::endl;
+  std::cout << "\t" << r3_area << std::endl;
 
-  auto r4 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
-                                  "model=vector_space;transform=linear_01;model_dist_fn=cosine");
+  std::string m4_opts =
+      "model=vector_space;transform=linear_01;model_dist_fn=euclid;model_term_tf=natural;model_term_idf=idf;model_query_tf=augmented;model_query_idf=idf;"s;
+  auto r4 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", m4_opts);
   auto r4_area = calc_chart_area(r4);
-  std::cout << "Cosine: " << r4_area << std::endl;
-
-  auto r5 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
-                                  "model=vector_space;transform=linear_01;model_dist_fn=manhattan");
-  auto r5_area = calc_chart_area(r5);
-  std::cout << "Manhattan: " << r5_area << std::endl;
+  std::cout << m4_opts << std::endl;
+  std::cout << "\t" << r4_area << std::endl;
 
 #endif
 

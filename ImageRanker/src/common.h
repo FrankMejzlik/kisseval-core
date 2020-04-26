@@ -32,6 +32,21 @@ enum class eDistFunction
   COSINE_NONORM
 };
 
+enum class eTermFrequency
+{
+  NATURAL,
+  LOGARIGHMIC,
+  AUGMENTED,
+  _COUNT
+};
+
+enum class eInvDocumentFrequency
+{
+  NONE,
+  IDF,
+  _COUNT
+};
+
 enum class eModelIds
 {
   BOOLEAN,
@@ -101,13 +116,19 @@ enum class eModelOptsKeys
   MODEL_IGNORE_THRESHOLD,
   MODEL_TRUE_THRESHOLD,
   MODEL_DIST_FN,
+  MODEL_TERM_TF,
+  MODEL_TERM_IDF,
+  MODEL_QUERY_TF,
+  MODEL_QUERY_IDF,
   _COUNT
 };
 
 const std::array<std::pair<std::string, std::string>, size_t(eModelOptsKeys::_COUNT)> eModelOptsKeys_labels = {
     {std::pair("model", ""), std::pair("transform", ""), std::pair("sim_user", ""), std::pair("sim_user_type", ""),
      std::pair("model_operations", ""), std::pair("model_inner_op", ""), std::pair("model_outter_op", ""),
-     std::pair("model_ignore_treshold", ""), std::pair("model_true_threshold", ""), std::pair("model_dist_fn", "")}};
+     std::pair("model_ignore_treshold", ""), std::pair("model_true_threshold", ""), std::pair("model_dist_fn", ""),
+     std::pair("model_term_tf", ""), std::pair("model_term_idf", ""), std::pair("model_query_tf", ""),
+     std::pair("model_query_idf", "")}};
 
 inline const std::pair<std::string, std::string>& enum_label(eModelOptsKeys val)
 {

@@ -13,9 +13,22 @@ class VectorSpaceModel : public BaseClassificationModel
  public:
   struct Options
   {
-    Options() : dist_fn(eDistFunction::MANHATTAN) {}
+    Options()
+        : dist_fn(eDistFunction::MANHATTAN),
+          term_tf(eTermFrequency::NATURAL),
+          term_idf(eInvDocumentFrequency::IDF),
+          query_tf(eTermFrequency::AUGMENTED),
+          query_idf(eInvDocumentFrequency::IDF)
+    {
+    }
 
     eDistFunction dist_fn;
+
+    eTermFrequency term_tf;
+    eInvDocumentFrequency term_idf;
+
+    eTermFrequency query_tf;
+    eInvDocumentFrequency query_idf;
   };
 
  public:
