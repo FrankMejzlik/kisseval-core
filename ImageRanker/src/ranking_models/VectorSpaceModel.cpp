@@ -21,7 +21,7 @@ VectorSpaceModel::Options VectorSpaceModel::parse_options(const std::vector<Mode
       }
       else if (val == "cosine")
       {
-        res.dist_fn = eDistFunction::COSINE_NONORM;
+        res.dist_fn = eDistFunction::COSINE;
       }
       else if (val == "manhattan")
       {
@@ -35,6 +35,10 @@ VectorSpaceModel::Options VectorSpaceModel::parse_options(const std::vector<Mode
     else if (key == enum_label(eModelOptsKeys::MODEL_TRUE_THRESHOLD).first)
     {
       res.true_threshold = strTo<float>(val);
+    }
+    else if (key == enum_label(eModelOptsKeys::MODEL_IDF_COEF).first)
+    {
+      res.idf_coef = strTo<float>(val);
     }
     // Weighing TERM term frequency
     else if (key == enum_label(eModelOptsKeys::MODEL_TERM_TF).first)
@@ -158,18 +162,18 @@ RankingResult VectorSpaceModel::rank_frames(const BaseVectorTransform& transform
   result.m_frames.reserve(result_size);
 
   // Get cached data reference to already finally transformed data matrix
-  const Matrix<float>& data_mat = transformed_data.data_sum_tfidf(opts.term_tf, opts.query_idf, opts.true_threshold);
+  const Matrix<float>& data_mat =
+      transformed_data.data_sum_tfidf(opts.term_tf, opts.term_idf, opts.true_threshold, opts.idf_coef);
+  // const Matrix<float>& data_mat = transformed_data.data_sum();
 
   auto dist_fn{get_dist_fn(opts.dist_fn)};
 
   // Create user query vector representation
   float query_t = opts.query_idf == eInvDocumentFrequency::IDF ? opts.true_threshold : 0.0F;
-  const Vector<float>& idfs_vector{transformed_data.data_idfs(query_t )};
+  const Vector<float>& idfs_vector{transformed_data.data_idfs(query_t, opts.idf_coef)};
 
-  //Vector<float> user_query_vec{create_user_query_vector(user_query.front(), transformed_data.num_dims(), idfs_vector, opts)};
-  Vector<float> user_query_vec{create_user_query_vector(user_query.front(), transformed_data.num_dims())};
-  
-  user_query_vec = normalize(user_query_vec);
+  Vector<float> user_query_vec{
+      create_user_query_vector(user_query.front(), transformed_data.num_dims(), idfs_vector, opts)};
   {
     // Iterate over all frame feature vectors
     size_t i{0};
@@ -177,7 +181,7 @@ RankingResult VectorSpaceModel::rank_frames(const BaseVectorTransform& transform
     {
       // Compute term weights
       const auto& frame_vector{fea_vec};
-      
+
       // Ranking is distance in the space from the query
       float dist{dist_fn(user_query_vec, frame_vector)};
 
@@ -234,7 +238,8 @@ ModelTestResult VectorSpaceModel::test_model(const BaseVectorTransform& transfor
   size_t i{0_z};
   for (auto&& [query, target_frame_ID] : test_user_queries)
   {
-    LOG("i = " + std::to_string(i));
+    if (i % 100 == 0) LOG("i = " + std::to_string(i));
+
     auto res = rank_frames(transformed_data, keywords, query, 0, opts, target_frame_ID);
 
     uint32_t x{uint32_t(res.target_pos / divisor)};
@@ -282,7 +287,8 @@ Vector<float> VectorSpaceModel::create_user_query_vector(const CnfFormula& singl
   return user_query_vec;
 }
 
-Vector<float> VectorSpaceModel::create_user_query_vector(const CnfFormula& single_query, size_t vec_dim, const Vector<float>& idfs, const Options& options) const
+Vector<float> VectorSpaceModel::create_user_query_vector(const CnfFormula& single_query, size_t vec_dim,
+                                                         const Vector<float>& idfs, const Options& options) const
 {
   Vector<float> user_query_vec(vec_dim, 0.0F);
 
@@ -293,7 +299,7 @@ Vector<float> VectorSpaceModel::create_user_query_vector(const CnfFormula& singl
   {
     for (auto&& literal : clause)
     {
-      auto i{literal.atom}; 
+      auto i{literal.atom};
       ++term_frequencies[i];
 
       max_freq = std::max(max_freq, term_frequencies[i]);
@@ -305,22 +311,23 @@ Vector<float> VectorSpaceModel::create_user_query_vector(const CnfFormula& singl
    */
   auto tf_scheme_fn{pick_tf_scheme_fn(options.query_tf)};
 
- 
   for (auto&& clause : single_query)
   {
     float clause_ranking{0.0F};
 
     for (auto&& literal : clause)
     {
-      auto i{literal.atom}; 
+      auto i{literal.atom};
 
       float tf = tf_scheme_fn(float(term_frequencies[i]), float(max_freq));
       float idf = idfs[i];
 
-      if (options.query_idf == eInvDocumentFrequency::IDF) {
+      if (options.query_idf == eInvDocumentFrequency::IDF)
+      {
         user_query_vec[i] = tf * idf;
       }
-      else {
+      else
+      {
         user_query_vec[i] = tf;
       }
     }

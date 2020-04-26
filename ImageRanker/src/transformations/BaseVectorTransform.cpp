@@ -64,10 +64,11 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
   return std::pair(std::move(result_data), std::move(di));
 }
 
-const Vector<float>& BaseVectorTransform::data_idfs(float true_threshold) const
+const Vector<float>& BaseVectorTransform::data_idfs(float true_threshold, float idf_coef) const
 {
   // Look into the cache first
-  const auto it{_data_idfs.find(true_threshold)};
+  float key = true_threshold + 1000*idf_coef;
+  const auto it{_data_idfs.find(key)};
   if (it != _data_idfs.end())
   {
     return it->second;
@@ -81,7 +82,7 @@ const Vector<float>& BaseVectorTransform::data_idfs(float true_threshold) const
   // Choose correct idf evaluation function based on parameter
   if (true_threshold == 0.0F)
   {
-    idf_val_fn = [](float score) { return score; };
+    idf_val_fn = [idf_coef](float score) { return score; };
   }
   else
   {
@@ -90,13 +91,17 @@ const Vector<float>& BaseVectorTransform::data_idfs(float true_threshold) const
 
   Vector<float> idfs(num_dims(), 0.0F);
 
+  float max{0.0F};
+
   // Iterate all frame feature vectors
   for (auto&& fea_vec : _data_sum_mat)
   {
     // Iterate over all concept indices
     for (size_t i{0_z}; i < num_dims(); ++i)
     {
-      idfs[i] += idf_val_fn(fea_vec[i]);
+      auto v{idf_val_fn(fea_vec[i])};
+      idfs[i] += v;
+      max = std::max(max, idfs[i]);
     }
   }
 
@@ -106,7 +111,8 @@ const Vector<float>& BaseVectorTransform::data_idfs(float true_threshold) const
     // Just normalize with number of frames
     for (auto&& val : idfs)
     {
-      val /= _data_sum_mat.size();
+      auto v = (1 - (val / max));
+      val = 2 * pow(v, idf_coef);
     }
   }
   else
@@ -119,17 +125,17 @@ const Vector<float>& BaseVectorTransform::data_idfs(float true_threshold) const
   }
 
   // Plase inside the cache
-  _data_idfs.emplace(true_threshold, std::move(idfs));
+  _data_idfs.emplace(key, std::move(idfs));
 
   // Return it
-  return data_idfs(true_threshold);
+  return data_idfs(true_threshold, idf_coef);
 }
 
 const Matrix<float>& BaseVectorTransform::data_sum_tfidf(eTermFrequency tf_ID, eInvDocumentFrequency idf_ID,
-                                                         float true_t) const
+                                                         float true_t, float idf_coef) const
 {
   // Look into the cache first
-  TfidfCacheKey key{TfidfCacheKey(tf_ID, idf_ID)};
+  TfidfCacheKey key{TfidfCacheKey(tf_ID, idf_ID, true_t, idf_coef)};
   const auto it{_transformed_data_cache.find(key)};
   if (it != _transformed_data_cache.end())
   {
@@ -141,7 +147,7 @@ const Matrix<float>& BaseVectorTransform::data_sum_tfidf(eTermFrequency tf_ID, e
   float term_t = idf_ID == eInvDocumentFrequency::IDF ? true_t : 0.0F;
 
   // Get IDFs
-  const Vector<float>& term_idfs_vector{data_idfs(term_t)};
+  const Vector<float>& term_idfs_vector{data_idfs(term_t, idf_coef)};
   const Vector<float>& data_mat_maximums = data_sum_info().maxes;
 
   Matrix<float> new_data_mat;
@@ -155,9 +161,12 @@ const Matrix<float>& BaseVectorTransform::data_sum_tfidf(eTermFrequency tf_ID, e
     size_t i{0_z};
     for (auto&& val : fea_vec)
     {
-      //float tf{term_tf_fn(val, data_mat_maximums[i])};
-      float tf{val};
-      float idf{term_idfs_vector[i]};
+      float tf{term_tf_fn(val, data_mat_maximums[i])};
+      float idf{1.0F};
+      if (idf_ID == eInvDocumentFrequency::IDF)
+      {
+        idf = term_idfs_vector[i];
+      }
 
       frame_vector.emplace_back(tf * idf);
       ++i;
@@ -171,7 +180,7 @@ const Matrix<float>& BaseVectorTransform::data_sum_tfidf(eTermFrequency tf_ID, e
   _transformed_data_cache.emplace(key, std::move(new_data_mat));
 
   // Return it
-  return data_sum_tfidf(tf_ID, idf_ID, true_t);
+  return data_sum_tfidf(tf_ID, idf_ID, true_t, idf_coef);
 }
 
 }  // namespace image_ranker

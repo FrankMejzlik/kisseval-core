@@ -14,7 +14,7 @@ class VectorSpaceModel : public BaseClassificationModel
   struct Options
   {
     Options()
-        : true_threshold(0.0F),dist_fn(eDistFunction::MANHATTAN),
+        : true_threshold(0.0F), idf_coef(2.0F), dist_fn(eDistFunction::MANHATTAN),
           term_tf(eTermFrequency::NATURAL),
           term_idf(eInvDocumentFrequency::IDF),
           query_tf(eTermFrequency::AUGMENTED),
@@ -23,6 +23,7 @@ class VectorSpaceModel : public BaseClassificationModel
     }
 
     float true_threshold;
+    float idf_coef;
     eDistFunction dist_fn;
 
     eTermFrequency term_tf;

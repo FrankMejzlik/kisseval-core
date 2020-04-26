@@ -10,7 +10,7 @@ namespace image_ranker
 {
 class KeywordsContainer;
 
-using TfidfCacheKey = std::pair<eTermFrequency, eInvDocumentFrequency>;
+using TfidfCacheKey = std::tuple<eTermFrequency, eInvDocumentFrequency, float, float>;
 
 /**
  * Applies provided transformation on the given input data and returns new instance of transformed data.
@@ -58,8 +58,8 @@ class BaseVectorTransform
   [[nodiscard]] virtual const Matrix<float>& data_sum() const { return _data_sum_mat; }
   [[nodiscard]] virtual const DataInfo& data_sum_info() const { return _data_sum_mat_info; }
 
-  [[nodiscard]] virtual const Matrix<float>& data_sum_tfidf(eTermFrequency tf_ID, eInvDocumentFrequency idf_ID, float true_t) const;
-  [[nodiscard]] virtual const Vector<float>& data_idfs(float true_threshold) const;
+  [[nodiscard]] virtual const Matrix<float>& data_sum_tfidf(eTermFrequency tf_ID, eInvDocumentFrequency idf_ID, float true_t, float idf_coef) const;
+  [[nodiscard]] virtual const Vector<float>& data_idfs(float true_threshold, float idf_coef) const;
 
   [[nodiscard]] virtual size_t num_frames() const { return _data_sum_mat.size(); }
   [[nodiscard]] virtual size_t num_dims() const { return _data_sum_mat.at(0).size(); }

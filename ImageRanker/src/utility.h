@@ -370,6 +370,27 @@ inline float dist_manhattan(const Vector<float>& left, const Vector<float>& righ
   return res;
 }
 
+inline float dist_cos(const Vector<float>& left, const Vector<float>& right)
+{
+  float res{0.0F};
+
+  float sum_l{0.0F};
+  float sum_r{0.0F};
+
+  for (size_t i{0_z}; i < left.size(); ++i)
+  {
+    sum_l += left[i] * left[i];
+    sum_r += right[i] * right[i];
+
+    res += left[i] * right[i];
+  }
+
+  res = res / (sqrtf(sum_l * sum_r));
+
+  // Make is cosine distance
+  return 1 - res;
+}
+
 inline float dist_cos_norm(const Vector<float>& left, const Vector<float>& right)
 {
   float res{0.0F};
@@ -405,6 +426,9 @@ inline std::function<float(const Vector<float>&, const Vector<float>&)> get_dist
 {
   switch (fn_type)
   {
+    case eDistFunction::COSINE:
+      return dist_cos;
+
     case eDistFunction::COSINE_NONORM:
       return dist_cos_norm;
 
