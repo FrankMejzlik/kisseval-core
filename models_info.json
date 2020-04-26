@@ -20,8 +20,8 @@
                                 "input_type": "float",
                                 "min": 0,
                                 "max": 1,
-                                "step": 0.0001,
-                                "default": 0.001
+                                "step": 0.000001,
+                                "default": 0.000598
                             }
                         ]
                     },
@@ -68,15 +68,15 @@
                                 "values": [
                                     {
                                         "active": true,
-                                        "ID": "none",
-                                        "name": "No IDF",
+                                        "ID": "idf",
+                                        "name": "Basic IDF",
                                         "description": "",
                                         "options": []
                                     },
                                     {
                                         "active": true,
-                                        "ID": "idf",
-                                        "name": "Basic IDF",
+                                        "ID": "none",
+                                        "name": "No IDF",
                                         "description": "",
                                         "options": []
                                     }
@@ -90,6 +90,13 @@
                                 "values": [
                                     {
                                         "active": true,
+                                        "ID": "augmented",
+                                        "name": "Augmented",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "active": true,
                                         "ID": "natural",
                                         "name": "Natural",
                                         "description": "",
@@ -101,33 +108,26 @@
                                         "name": "Logarithmic",
                                         "description": "",
                                         "options": []
-                                    },
-                                    {
-                                        "active": true,
-                                        "ID": "augmented",
-                                        "name": "Augmented",
-                                        "description": "",
-                                        "options": []
                                     }
                                 ]
                             },
                             {
                                 "active": true,
                                 "key": "model_query_idf",
-                                "name": "Inverse document frequency for frames",
+                                "name": "Inverse document frequency for queries",
                                 "input_type": "enum",
                                 "values": [
                                     {
                                         "active": true,
-                                        "ID": "none",
-                                        "name": "No IDF",
+                                        "ID": "idf",
+                                        "name": "Basic IDF",
                                         "description": "",
                                         "options": []
                                     },
                                     {
                                         "active": true,
-                                        "ID": "idf",
-                                        "name": "Basic IDF",
+                                        "ID": "none",
+                                        "name": "No IDF",
                                         "description": "",
                                         "options": []
                                     }
@@ -294,7 +294,7 @@
                                 "min": 0,
                                 "max": 1,
                                 "step": 0.0001,
-                                "default": 0.01
+                                "default": 0.0
                             }
                         ]
                     }
@@ -307,6 +307,12 @@
                 "input_type": "enum",
                 "values": [
                     {
+                        "ID": "linear_01",
+                        "name": "Linear scale to [0, 1]",
+                        "description": "",
+                        "options": []
+                    },
+                    {
                         "ID": "no_transform",
                         "name": "No transform",
                         "description": "",
@@ -315,12 +321,6 @@
                     {
                         "ID": "softmax",
                         "name": "Softmax",
-                        "description": "",
-                        "options": []
-                    },
-                    {
-                        "ID": "linear_01",
-                        "name": "Linear scale to [0, 1]",
                         "description": "",
                         "options": []
                     }
@@ -389,6 +389,13 @@
                 "options": [
                     {
                         "active": true,
+                        "ID": "linear_01",
+                        "name": "Linear scale to [0, 1]",
+                        "description": "",
+                        "options": []
+                    },
+                    {
+                        "active": true,
                         "ID": "no_transform",
                         "name": "No transform",
                         "description": "",
@@ -398,13 +405,6 @@
                         "active": true,
                         "ID": "softmax",
                         "name": "Softmax",
-                        "description": "",
-                        "options": []
-                    },
-                    {
-                        "active": true,
-                        "ID": "linear_01",
-                        "name": "Linear scale to [0, 1]",
                         "description": "",
                         "options": []
                     }
