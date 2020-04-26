@@ -272,6 +272,7 @@
     <ClCompile Include="src\KeywordsContainer.cpp" />
     <ClCompile Include="src\ranking_models\MultSumMaxModel.cpp" />
     <ClCompile Include="src\SimUser.cpp" />
+    <ClCompile Include="src\transformations\NoTransform.cpp" />
     <ClCompile Include="src\transformations\BaseVectorTransform.cpp" />
     <ClCompile Include="src\transformations\TransformationLinear.cpp" />
     <ClCompile Include="src\transformations\TransformationSoftmax.cpp" />
@@ -291,6 +292,7 @@
     <ClInclude Include="src\ranking_models\ranking_models.h" />
     <ClInclude Include="src\ranking_models\MultSumMaxModel.h" />
     <ClInclude Include="src\SimUser.h" />
+    <ClInclude Include="src\transformations\NoTransform.h" />
     <ClInclude Include="src\transformations\BaseVectorTransform.h" />
     <ClInclude Include="src\FileParser.h" />
     <ClInclude Include="src\data_packs\VIRET_based\ViretDataPack.h" />

@@ -29,7 +29,7 @@ ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset
   });
   std::thread t3([this]() {
     _transforms.emplace(enum_label(eTransformationIds::NO_TRANSFORM).first,
-                        std::make_unique<BaseVectorTransform>(_presoftmax_data_raw, _presoftmax_data_raw));
+                        std::make_unique<NoTransform>(_keywords, _presoftmax_data_raw));
   });
 
   // Instantiate all wanted models

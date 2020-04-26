@@ -147,19 +147,33 @@ int main()
   std::cout << "Vector space model: " << std::endl;
   std::cout << "--------------" << std::endl;
 
-  std::string m3_opts =
-      "model=vector_space;transform=linear_01;model_dist_fn=euclid;model_term_tf=natural;model_term_idf=no;model_query_tf=natural;model_query_idf=no;"s;
-  auto r3 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", m3_opts);
-  auto r3_area = calc_chart_area(r3);
-  std::cout << m3_opts << std::endl;
-  std::cout << "\t" << r3_area << std::endl;
+  // std::string m3_opts =
+  //    "model=vector_space;transform=linear_01;model_dist_fn=cosine;model_term_tf=natural;model_term_idf=no;model_query_tf=natural;model_query_idf=none;"s;
+  // auto r3 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", m3_opts);
+  // auto r3_area = calc_chart_area(r3);
+  // std::cout << m3_opts << std::endl;
+  // std::cout << "\t" << r3_area << std::endl;
 
-  std::string m4_opts =
-      "model=vector_space;transform=linear_01;model_dist_fn=euclid;model_term_tf=natural;model_term_idf=idf;model_query_tf=augmented;model_query_idf=idf;"s;
-  auto r4 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", m4_opts);
-  auto r4_area = calc_chart_area(r4);
-  std::cout << m4_opts << std::endl;
-  std::cout << "\t" << r4_area << std::endl;
+  // std::string m4_opts =
+  //    "model=vector_space;transform=linear_01;model_dist_fn=cosine;model_term_tf=natural;model_term_idf=idf;model_query_tf=augmented;model_query_idf=idf;"s;
+  // auto r4 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", m4_opts);
+  // auto r4_area = calc_chart_area(r4);
+  // std::cout << m4_opts << std::endl;
+  // std::cout << "\t" << r4_area << std::endl;
+
+  std::string m5_opts =
+      "model=vector_space;transform=linear_01;model_dist_fn=manhattan;model_term_tf=natural;model_term_idf=none;model_query_tf=augmented;model_query_idf=none;model_true_threshold=0.000698001;"s;
+  auto r5 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", m5_opts);
+  auto r5_area = calc_chart_area(r5);
+  std::cout << m5_opts << std::endl;
+  std::cout << "\t" << r5_area << std::endl;
+
+  std::string m6_opts =
+      "model=vector_space;transform=linear_01;model_dist_fn=cosine;model_term_tf=natural;model_term_idf=none;model_query_tf=augmented;model_query_idf=none;model_true_threshold=0.000698001;"s;
+  auto r6 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", m6_opts);
+  auto r6_area = calc_chart_area(r6);
+  std::cout << m6_opts << std::endl;
+  std::cout << "\t" << r6_area << std::endl;
 
 #endif
 

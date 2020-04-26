@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+#include <map>
 #include <vector>
 
 #include "common.h"
@@ -7,6 +9,8 @@
 namespace image_ranker
 {
 class KeywordsContainer;
+
+using TfidfCacheKey = std::pair<eTermFrequency, eInvDocumentFrequency>;
 
 /**
  * Applies provided transformation on the given input data and returns new instance of transformed data.
@@ -24,7 +28,7 @@ enum class HyperAccumType
   _COUNT
 };
 
-[[nodiscard]] Matrix<float> accumulate_hypernyms(const KeywordsContainer& keywords, Matrix<float>&& data,
+[[nodiscard]] std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer& keywords, Matrix<float>&& data,
                                                  HyperAccumType type, bool normalize = true);
 
 /**
@@ -34,18 +38,29 @@ enum class HyperAccumType
 class BaseVectorTransform
 {
  public:
-  BaseVectorTransform(const Matrix<float>& data_sum_mat, const Matrix<float>& data_max_mat)
-      : _data_sum_mat(data_sum_mat), _data_max_mat(data_max_mat)
+  BaseVectorTransform(const std::pair<Matrix<float>, const DataInfo>& data_sum_mat,const std::pair<Matrix<float>,DataInfo>& data_max_mat)
+      : _data_sum_mat(data_sum_mat.first),
+        _data_max_mat(data_max_mat.first),
+        _data_sum_mat_info(data_sum_mat.second),
+        _data_max_mat_info(data_max_mat.second)
   {
   }
-  BaseVectorTransform(Matrix<float>&& data_sum_mat, Matrix<float>&& data_max_mat)
-      : _data_sum_mat(std::move(data_sum_mat)), _data_max_mat(std::move(data_max_mat))
+  BaseVectorTransform(std::pair<Matrix<float>, DataInfo>&& data_sum_mat, std::pair<Matrix<float>, DataInfo>&& data_max_mat)
+      : _data_sum_mat(std::move(data_sum_mat.first)),
+        _data_max_mat(std::move(data_max_mat.first)),
+        _data_sum_mat_info(std::move(data_sum_mat.second)),
+        _data_max_mat_info(std::move(data_max_mat.second))
   {
   }
 
   [[nodiscard]] virtual const Matrix<float>& data_max() const { return _data_max_mat; }
+  [[nodiscard]] virtual const DataInfo& data_max_info() const { return _data_max_mat_info; }
   [[nodiscard]] virtual const Matrix<float>& data_sum() const { return _data_sum_mat; }
-  
+  [[nodiscard]] virtual const DataInfo& data_sum_info() const { return _data_sum_mat_info; }
+
+  [[nodiscard]] virtual const Matrix<float>& data_sum_tfidf(eTermFrequency tf_ID, eInvDocumentFrequency idf_ID, float true_t) const;
+  [[nodiscard]] virtual const Vector<float>& data_idfs(float true_threshold) const;
+
   [[nodiscard]] virtual size_t num_frames() const { return _data_sum_mat.size(); }
   [[nodiscard]] virtual size_t num_dims() const { return _data_sum_mat.at(0).size(); }
 
@@ -53,9 +68,16 @@ class BaseVectorTransform
   /** Data with precomputed hypernyms as a sum of all hyponyms
    *  Used for models with SUM inner operation. */
   Matrix<float> _data_sum_mat;
+  DataInfo _data_sum_mat_info;
+
+  
+
+  mutable std::unordered_map<float, Vector<float>> _data_idfs;
+  mutable std::map<TfidfCacheKey, Matrix<float>> _transformed_data_cache;
 
   /** Data with precomputed hypernyms as a max of all hyponyms.
    *  Used for models with MAX inner operation. */
   Matrix<float> _data_max_mat;
+  DataInfo _data_max_mat_info;
 };
 }  // namespace image_ranker

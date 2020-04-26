@@ -28,7 +28,7 @@ Matrix<float> TransformationLinear01::apply(const Matrix<float>& data, const std
     // Transform the row
     for (auto&& cell : row)
     {
-      new_row.emplace_back((cell - min) / max);
+      new_row.emplace_back((cell - min) / std::abs(max - min));
     }
 
     result_mat.emplace_back(std::move(new_row));

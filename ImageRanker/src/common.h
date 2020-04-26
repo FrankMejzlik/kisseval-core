@@ -136,6 +136,7 @@ inline const std::pair<std::string, std::string>& enum_label(eModelOptsKeys val)
 }
 
 using ModelKeyValOption = std::pair<std::string, std::string>;
+
 /**********************************************
  **********************************************
  ***********************************************/
@@ -175,6 +176,12 @@ constexpr T ERR_VAL()
 {
   return std::numeric_limits<T>::max();
 }
+
+struct DataInfo
+{
+  Vector<float> mins;
+  Vector<float> maxes;
+};
 
 /**
  * Base class for all usable data packs.

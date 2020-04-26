@@ -344,6 +344,19 @@ inline Vector<float> normalize(const Vector<float>& left)
   return res;
 }
 
+inline float length(const Vector<float>& left)
+{
+  Vector<float> res(left.size(), 0.0F);
+
+  float sum{0.0F};
+
+  for (size_t i{0_z}; i < left.size(); ++i)
+  {
+    sum += left[i];
+  }
+  return sqrtf(sum);
+}
+
 inline float dist_manhattan(const Vector<float>& left, const Vector<float>& right)
 {
   float res{0.0F};
@@ -408,5 +421,72 @@ inline std::function<float(const Vector<float>&, const Vector<float>&)> get_dist
       LOG_WARN("Uknown distance function type: " + std::to_string(int(fn_type)) +
                "\n\tUsing default one: " + std::to_string(int(eDistFunction::MANHATTAN)));
       return dist_manhattan;
+  }
+}
+
+template <typename CountType>
+inline float tf_scheme_fn_natural(CountType freq_i, CountType max_freq)
+{
+  return float(freq_i) / max_freq;
+}
+
+template <typename CountType>
+inline float tf_scheme_fn_logarithmic(CountType freq_i, CountType max_freq)
+{
+  return log(1.0F + (float(freq_i) / max_freq));
+}
+
+template <typename CountType>
+inline float tf_scheme_fn_augmented(CountType freq_i, CountType max_freq)
+{
+  return 0.5F + 0.5F * (float(freq_i) / max_freq);
+}
+
+inline std::function<float(float, float)> pick_tf_scheme_fn(eTermFrequency tf_scheme_ID)
+{
+  switch (tf_scheme_ID)
+  {
+    case eTermFrequency::NATURAL:
+      return tf_scheme_fn_natural<float>;
+
+    case eTermFrequency::LOGARIGHMIC:
+      return tf_scheme_fn_logarithmic<float>;
+
+    case eTermFrequency::AUGMENTED:
+      return tf_scheme_fn_augmented<float>;
+
+    default:
+      LOG_WARN("Unsupported scheme ID: " + std::to_string(int(tf_scheme_ID)) +
+               "\n\t Using default: " + std::to_string(int(eTermFrequency::NATURAL)));
+      return tf_scheme_fn_natural<float>;
+  }
+}
+
+template <typename CountType>
+inline float idf_scheme_fn_none(CountType n_i, CountType N)
+{
+  return 1.0F;
+}
+
+template <typename CountType>
+inline float idf_scheme_fn_IDF(CountType n_i, CountType N)
+{
+  return log(float(N) / n_i);
+}
+
+inline std::function<float(float, float)> pick_idf_scheme_fn(eInvDocumentFrequency idf_scheme_ID)
+{
+  switch (idf_scheme_ID)
+  {
+    case eInvDocumentFrequency::NONE:
+      return idf_scheme_fn_none<float>;
+
+    case eInvDocumentFrequency::IDF:
+      return idf_scheme_fn_IDF<float>;
+
+    default:
+      LOG_WARN("Unsupported scheme ID: " + std::to_string(int(idf_scheme_ID)) +
+               "\n\t Using default: " + std::to_string(int(eInvDocumentFrequency::NONE)));
+      return idf_scheme_fn_none<float>;
   }
 }
