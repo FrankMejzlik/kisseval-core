@@ -9,7 +9,7 @@ using namespace image_ranker;
 
 FileParser::FileParser(ImageRanker* pRanker) : _pRanker(pRanker) {}
 
-std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string& filepath, uint32_t row_dim,
+std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string& filepath, size_t row_dim,
                                                                size_t begin_offset)
 {
   // Open file for reading as binary from the end side
@@ -28,7 +28,7 @@ std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string
   ifs.seekg(0, std::ios::beg);
 
   // Compute size of file
-  auto size = std::uint32_t(end - ifs.tellg());
+  auto size = std::size_t(end - ifs.tellg());
 
   // If emtpy file
   if (size == 0)
@@ -37,7 +37,7 @@ std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string
   }
 
   // Calculate byte length of each row (dim_N * sizeof(float))
-  uint32_t row_byte_len = row_dim * sizeof(float);
+  size_t row_byte_len = row_dim * sizeof(float);
 
   // Create line buffer
   std::vector<std::byte> line_byte_buffer;
@@ -56,10 +56,10 @@ std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string
     std::vector<float> features_vector;
     features_vector.reserve(row_dim);
 
-    uint32_t curr_offset = 0;
+    size_t curr_offset = 0;
 
     // Iterate through all floats in a row
-    for (uint32_t i{0ULL}; i < row_dim; ++i)
+    for (size_t i{0ULL}; i < row_dim; ++i)
     {
       // ParseFloatLE(&lineBuffer[currOffset])
       float feature_value = ParseFloatLE(&line_byte_buffer[curr_offset]);
@@ -77,7 +77,7 @@ std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string
   return result_features;
 }
 
-std::vector<float> FileParser::parse_float_vector(const std::string& filepath, uint32_t dim, uint32_t begin_offset)
+std::vector<float> FileParser::parse_float_vector(const std::string& filepath, size_t dim, size_t begin_offset)
 {
   // Open file for reading as binary from the end side
   std::ifstream ifs(filepath, std::ios::binary | std::ios::ate);
@@ -95,7 +95,7 @@ std::vector<float> FileParser::parse_float_vector(const std::string& filepath, u
   ifs.seekg(0, std::ios::beg);
 
   // Compute size of file
-  auto size = std::uint32_t(end - ifs.tellg());
+  auto size = std::size_t(end - ifs.tellg());
 
   // If emtpy file
   if (size == 0)
@@ -104,7 +104,7 @@ std::vector<float> FileParser::parse_float_vector(const std::string& filepath, u
   }
 
   // Calculate byte length of each row (dim_N * sizeof(float))
-  uint32_t row_byte_len = dim * sizeof(float);
+  size_t row_byte_len = dim * sizeof(float);
 
   // Create line buffer
   std::vector<std::byte> line_byte_buffer;
@@ -120,10 +120,10 @@ std::vector<float> FileParser::parse_float_vector(const std::string& filepath, u
   // Read binary "lines" until EOF
   while (ifs.read((char*)line_byte_buffer.data(), row_byte_len))
   {
-    uint32_t curr_offset = 0;
+    size_t curr_offset = 0;
 
     // Iterate through all floats in a row
-    for (uint32_t i{0ULL}; i < dim; ++i)
+    for (size_t i{0ULL}; i < dim; ++i)
     {
       float feature_value = ParseFloatLE(&line_byte_buffer[curr_offset]);
 
@@ -140,9 +140,9 @@ std::vector<float> FileParser::parse_float_vector(const std::string& filepath, u
   return features_vector;
 }
 
-std::map<std::string, uint32_t> FileParser::parse_w2vv_word_to_idx_file(const std::string& filepath)
+std::map<std::string, size_t> FileParser::parse_w2vv_word_to_idx_file(const std::string& filepath)
 {
-  std::map<std::string, uint32_t> result_map;
+  std::map<std::string, size_t> result_map;
 
   // Open file with list of files in  images dir
   std::ifstream inFile(filepath.data(), std::ios::in);
@@ -170,7 +170,7 @@ std::map<std::string, uint32_t> FileParser::parse_w2vv_word_to_idx_file(const st
     // Tokenize line with ':' separator
     {
       std::string token;
-      uint32_t i = 0;
+      size_t i = 0;
       while (std::getline(line_buffer_ss, token, ':'))
       {
         tokens.push_back(token);
@@ -182,7 +182,7 @@ std::map<std::string, uint32_t> FileParser::parse_w2vv_word_to_idx_file(const st
     std::string word(tokens[0]);
 
     std::stringstream idx_ss(tokens[1]);
-    uint32_t idx;
+    size_t idx;
     idx_ss >> idx;
 
     // Insert this record into table

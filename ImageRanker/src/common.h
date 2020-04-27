@@ -274,14 +274,25 @@ struct W2vvDataPackRef : public BaseDataPackRef
     std::string ID;
     std::string description;
     std::string keyword_synsets_fpth;
+
     std::string kw_features_fpth;
+    size_t kw_features_dim;
+    size_t kw_features_data_offset;
+
     std::string kw_bias_vec_fpth;
+    size_t kw_bias_vec_dim;
+    size_t kw_bias_vec_data_offset;
+
     std::string kw_PCA_mat_fpth;
+    size_t kw_PCA_mat_dim;
+    size_t kw_PCA_mat_data_offset;
   };
 
   struct ScoreData
   {
     std::string img_features_fpth;
+    size_t img_features_dim;
+    size_t img_features_offset;
   };
 
   VocabData vocabulary_data;

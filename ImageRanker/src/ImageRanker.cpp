@@ -66,7 +66,8 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
     // ...
 
     // Frame feature vectors
-    auto deep_features = FileParser::parse_float_matrix(pack.score_data.img_features_fpth, 128, 12);
+    auto deep_features = FileParser::parse_float_matrix(
+        pack.score_data.img_features_fpth, pack.score_data.img_features_dim, pack.score_data.img_features_offset);
 
     _data_packs.emplace(
         pack.ID, std::make_unique<W2vvDataPack>(pack.ID, pack.target_imageset, pack.model_options, pack.description,

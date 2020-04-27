@@ -30,7 +30,7 @@ class FileParser
    *    - each line is dim_N * 4B floats
    *    - number of lines is number of selected frames
    */
-  static std::vector<std::vector<float>> parse_float_matrix(const std::string& filepath, uint32_t row_dim,
+  static std::vector<std::vector<float>> parse_float_matrix(const std::string& filepath, size_t row_dim,
                                                             size_t begin_offset = 0_z);
 
   /**
@@ -39,9 +39,9 @@ class FileParser
    *    - each line is dim_N * 4B floats
    *    - number of lines is number of selected frames
    */
-  static std::vector<float> parse_float_vector(const std::string& filepath, uint32_t dim, uint32_t begin_offset = 0);
+  static std::vector<float> parse_float_vector(const std::string& filepath, size_t dim, size_t begin_offset = 0);
 
-  static std::map<std::string, uint32_t> parse_w2vv_word_to_idx_file(const std::string& filepath);
+  static std::map<std::string, size_t> parse_w2vv_word_to_idx_file(const std::string& filepath);
 
   static std::pair<std::vector<std::vector<float>>, std::vector<std::vector<std::pair<FrameId, float>>>>
   ParseRawScoringData_ViretFormat(const std::string& inputFilepath);
