@@ -128,9 +128,9 @@ enum class eModelOptsKeys
 const std::array<std::pair<std::string, std::string>, size_t(eModelOptsKeys::_COUNT)> eModelOptsKeys_labels = {
     {std::pair("model", ""), std::pair("transform", ""), std::pair("sim_user", ""), std::pair("sim_user_type", ""),
      std::pair("model_operations", ""), std::pair("model_inner_op", ""), std::pair("model_outter_op", ""),
-     std::pair("model_ignore_treshold", ""), std::pair("model_true_threshold", ""), std::pair("model_idf_coef", ""),
-     std::pair("model_dist_fn", ""), std::pair("model_term_tf", ""), std::pair("model_term_idf", ""),
-     std::pair("model_query_tf", ""), std::pair("model_query_idf", "")}};
+     std::pair("model_ignore_treshold", ""), std::pair("model_true_threshold", ""),
+     std::pair("model_IDF_type_idf_coef", ""), std::pair("model_dist_fn", ""), std::pair("model_term_tf", ""),
+     std::pair("model_term_idf", ""), std::pair("model_query_tf", ""), std::pair("model_query_idf", "")}};
 
 inline const std::pair<std::string, std::string>& enum_label(eModelOptsKeys val)
 {

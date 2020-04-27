@@ -32,11 +32,15 @@ VectorSpaceModel::Options VectorSpaceModel::parse_options(const std::vector<Mode
         LOG_WARN("Unknown model option val '" + val + "'");
       }
     }
-    else if (key == enum_label(eModelOptsKeys::MODEL_TRUE_THRESHOLD).first)
+    else if (key == "model_IDF_method")
+    {
+
+    }
+    else if (key == "model_IDF_method_true_threshold")
     {
       res.true_threshold = strTo<float>(val);
     }
-    else if (key == enum_label(eModelOptsKeys::MODEL_IDF_COEF).first)
+    else if (key == "model_IDF_method_idf_coef")
     {
       res.idf_coef = strTo<float>(val);
     }
@@ -238,7 +242,7 @@ ModelTestResult VectorSpaceModel::test_model(const BaseVectorTransform& transfor
   size_t i{0_z};
   for (auto&& [query, target_frame_ID] : test_user_queries)
   {
-    if (i % 100 == 0) LOG("i = " + std::to_string(i));
+    //if (i % 100 == 0) LOG("i = " + std::to_string(i));
 
     auto res = rank_frames(transformed_data, keywords, query, 0, opts, target_frame_ID);
 
