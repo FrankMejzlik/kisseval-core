@@ -48,7 +48,7 @@ class Keyword
   // ==================================
 
   bool IsHypernym() const { return !m_hyponyms.empty(); };
-  bool IsInBinVector() const { return m_vectorIndex == SIZE_T_ERROR_VALUE; };
+  bool IsInBinVector() const { return m_vectorIndex == ERR_VAL<size_t>(); };
   bool IsLeafKeyword() const { return (IsHypernym() && IsInBinVector()); }
 
   size_t m_wordnetId;
@@ -279,7 +279,7 @@ class KeywordsContainer
                                  });
     if (item == _keywords.cend())
     {
-      LOG_ERROR("This keyword not found.");
+      LOGE("This keyword not found.");
     }
 
     return item->get();

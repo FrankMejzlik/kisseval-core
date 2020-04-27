@@ -23,13 +23,13 @@ const std::string& W2vvDataPack::get_vocab_description() const { return _keyword
 
 std::string W2vvDataPack::humanize_and_query(const std::string& and_query) const 
 {
-  LOG_WARN("Not implemented!");
+  LOGW("Not implemented!");
   return ""s;
 }
 
 std::vector<Keyword*> W2vvDataPack::top_frame_keywords(FrameId frame_ID) const
 {
-  LOG_WARN("Not implemented!");
+  LOGW("Not implemented!");
 
   return std::vector({
       _keywords.GetKeywordPtrByVectorIndex(0),
@@ -80,7 +80,7 @@ RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_quer
   auto iter_m = _models.find(model_ID);
   if (iter_m == _models.end())
   {
-    LOG_ERROR("Uknown model_ID: '" + model_ID + "'.");
+    LOGE("Uknown model_ID: '" + model_ID + "'.");
     return RankingResult{};
   }
   const auto& ranking_model = *(iter_m->second);
@@ -89,7 +89,7 @@ RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_quer
   auto iter_t = _transforms.find(transform_ID);
   if (iter_t == _transforms.end())
   {
-    LOG_ERROR("Uknown transform_ID: '" + transform_ID + "'.");
+    LOGE("Uknown transform_ID: '" + transform_ID + "'.");
     return RankingResult{};
   }
   const auto& transform = *(iter_t->second);
@@ -318,7 +318,7 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   auto iter_m = _models.find(model_ID);
   if (iter_m == _models.end())
   {
-    LOG_ERROR("Uknown model_ID: '" + model_ID + "'.");
+    LOGE("Uknown model_ID: '" + model_ID + "'.");
     return ModelTestResult{};
   }
   const auto& ranking_model = *(iter_m->second);
@@ -327,7 +327,7 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   auto iter_t = _transforms.find(transform_ID);
   if (iter_t == _transforms.end())
   {
-    LOG_ERROR("Uknown transform_ID: '" + transform_ID + "'.");
+    LOGE("Uknown transform_ID: '" + transform_ID + "'.");
     return ModelTestResult{};
   }
   const auto& transform = *(iter_t->second);
@@ -336,7 +336,7 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   auto iter_su = _sim_users.find(sim_user_ID);
   if (iter_su == _sim_users.end())
   {
-    LOG_WARN("sim_user_ID not found: '" + sim_user_ID + "'. Using default: " + enum_label(eSimUserIds::NO_SIM).first);
+    LOGW("sim_user_ID not found: '" + sim_user_ID + "'. Using default: " + enum_label(eSimUserIds::NO_SIM).first);
 
     iter_su = _sim_users.find(enum_label(eSimUserIds::NO_SIM).first);
   }

@@ -2,6 +2,15 @@
 
 #include <stdint.h>
 
+/*============================================
+ * Logging config
+ *============================================/
+/** Will throw exception on LOG_ERROR */
+#define THROW_ON_ERROR 1  // NOLINT
+
+/** Logging level */
+#define LOG_LEVEL 5  // NOLINT
+
 constexpr size_t NUM_MODEL_TEST_RESULT_POINTS = 100;
 
 /********************************************************

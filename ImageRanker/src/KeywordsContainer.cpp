@@ -207,7 +207,7 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywords(size_t wordnetId) const
 
   if (wordnetIdKeywordPair == _wordnetIdToKeywords.end())
   {
-    LOG_ERROR("Keyword not found!");
+    LOGE("Keyword not found!");
 
     return std::vector<size_t>();
   }
@@ -215,7 +215,7 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywords(size_t wordnetId) const
   Keyword* pRootKeyword = wordnetIdKeywordPair->second;
 
   // It not vector keyword
-  if (pRootKeyword->m_vectorIndex == SIZE_T_ERROR_VALUE)
+  if (pRootKeyword->m_vectorIndex == ERR_VAL<size_t>())
   {
     std::vector<size_t> result;
 
@@ -241,7 +241,7 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywordsIndices(size_t wordnetId
 
   if (wordnetIdKeywordPair == _wordnetIdToKeywords.end())
   {
-    LOG_ERROR("Keyword not found!");
+    LOGE("Keyword not found!");
 
     return std::vector<size_t>();
   }
@@ -249,7 +249,7 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywordsIndices(size_t wordnetId
   Keyword* pRootKeyword = wordnetIdKeywordPair->second;
 
   // It not vector keyword
-  if (pRootKeyword->m_vectorIndex == SIZE_T_ERROR_VALUE)
+  if (pRootKeyword->m_vectorIndex == ERR_VAL<size_t>())
   {
     std::vector<size_t> result;
 
@@ -276,7 +276,7 @@ const Keyword* KeywordsContainer::GetKeywordConstPtrByWordnetId(size_t wordnetId
   // If this key was not found
   if (pairIt == _wordnetIdToKeywords.end())
   {
-    LOG_ERROR("Keyword with ID "s + std::to_string(wordnetId) + " not found!");
+    LOGE("Keyword with ID "s + std::to_string(wordnetId) + " not found!");
     return nullptr;
   }
 
@@ -291,7 +291,7 @@ Keyword* KeywordsContainer::GetKeywordPtrByWordnetId(size_t wordnetId) const
   // If this key was not found
   if (pairIt == _wordnetIdToKeywords.end())
   {
-    LOG_ERROR("Keyword with ID "s + std::to_string(wordnetId) + " not found!");
+    LOGE("Keyword with ID "s + std::to_string(wordnetId) + " not found!");
     return nullptr;
   }
 
@@ -372,7 +372,7 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool s
     }
     else
     {
-      LOG_ERROR("Parsing query failed");
+      LOGE("Parsing query failed");
     }
   }
 
@@ -413,7 +413,7 @@ std::vector<size_t> KeywordsContainer::GetCanonicalQueryNoRecur(const std::strin
     }
     else
     {
-      LOG_ERROR("Parsing query failed");
+      LOGE("Parsing query failed");
     }
   }
 
@@ -875,7 +875,7 @@ bool KeywordsContainer::PushKeywordsToDatabase(Database& db)
       query.append(std::to_string(pKeyword->m_wordnetId));
       query.append(", ");
 
-      if (pKeyword->m_vectorIndex == SIZE_T_ERROR_VALUE)
+      if (pKeyword->m_vectorIndex == ERR_VAL<size_t>())
       {
         query.append("NULL");
       }

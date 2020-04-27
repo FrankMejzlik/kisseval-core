@@ -17,7 +17,7 @@ BooleanModel::Options BooleanModel::parse_options(const std::vector<ModelKeyValO
       res.true_threshold = strTo<float>(val);
     }
     else {
-      LOG_WARN("Unknown model option key '" + key + "'");
+      LOGW("Unknown model option key '" + key + "'");
     }
   }
 
@@ -30,7 +30,7 @@ RankingResult BooleanModel::rank_frames(const BaseVectorTransform& transformed_d
 {
   if (user_query.empty())
   {
-    LOG_WARN("Empty query");
+    LOGW("Empty query");
     return RankingResult{};
   }
 
@@ -413,7 +413,7 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
       size_t targetImageId) const override
   {
     // If want all results
-    if (numResults == SIZE_T_ERROR_VALUE)
+    if (numResults == ERR_VAL<size_t>())
     {
       numResults = images.size();
     }

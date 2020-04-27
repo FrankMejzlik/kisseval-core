@@ -14,7 +14,7 @@ DataManager::DataManager(ImageRanker* p_owner)
   auto result = _db.EstablishConnection();
   if (result != 0)
   {
-    LOG_ERROR("Connecting to primary DB failed.");
+    LOGE("Connecting to primary DB failed.");
   }
 }
 
@@ -58,8 +58,8 @@ void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, co
   auto result = _db.NoResultQuery(sql_query);
   if (result != 0)
   {
-    LOG_ERROR("SQL query result: "s + sql_query + "\n\t Inserting queries into DB failed with error code: "s +
-              std::to_string(result));
+    LOGE("SQL query result: "s + sql_query + "\n\t Inserting queries into DB failed with error code: "s +
+         std::to_string(result));
   }
 }
 
@@ -91,7 +91,7 @@ std::vector<UserTestQuery> DataManager::fetch_user_test_queries(eUserQueryOrigin
 
   if (res != 0)
   {
-    LOG_ERROR("Error fetching user queries from the DB. \n\n Error code: "s + std::to_string(res));
+    LOGE("Error fetching user queries from the DB. \n\n Error code: "s + std::to_string(res));
   }
 
   // Parse DB results

@@ -8,15 +8,16 @@
 
 using namespace image_ranker;
 
-GoogleVisionDataPack::GoogleVisionDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
-                             const std::string& description, const GoogleDataPackRef::VocabData& vocab_data_refs,
-                             std::vector<std::vector<float>>&& presoft)
+GoogleVisionDataPack::GoogleVisionDataPack(const StringId& ID, const StringId& target_imageset_ID,
+                                           const std::string& model_options, const std::string& description,
+                                           const GoogleDataPackRef::VocabData& vocab_data_refs,
+                                           std::vector<std::vector<float>>&& presoft)
     : BaseDataPack(ID, target_imageset_ID, model_options, description),
       _presoftmax_data_raw(std::move(presoft)),
       _keywords(vocab_data_refs)
 {
   // Instantiate all wanted transforms
-  
+
   std::thread t2([this]() {
     _transforms.emplace(enum_label(eTransformationIds::LINEAR_01).first,
                         std::make_unique<TransformationLinear01GoogleVision>(_keywords, _presoftmax_data_raw));
@@ -35,7 +36,8 @@ GoogleVisionDataPack::GoogleVisionDataPack(const StringId& ID, const StringId& t
   _sim_users.emplace(enum_label(eSimUserIds::NO_SIM).first, std::make_unique<SimUserNoSim>());
   _sim_users.emplace(enum_label(eSimUserIds::SIM_SINGLE_QUERIES).first, std::make_unique<SimUserSingleQueries>());
   _sim_users.emplace(enum_label(eSimUserIds::SIM_TEMPORAL_QUERIES).first, std::make_unique<SimUserTempQueries>());
-  _sim_users.emplace(enum_label(eSimUserIds::AUGMENT_USER_WITH_TEMP).first, std::make_unique<SimUserAugmentRealWithTemp>());
+  _sim_users.emplace(enum_label(eSimUserIds::AUGMENT_USER_WITH_TEMP).first,
+                     std::make_unique<SimUserAugmentRealWithTemp>());
 
   t2.join();
   t3.join();
@@ -47,14 +49,14 @@ const std::string& GoogleVisionDataPack::get_vocab_description() const { return 
 
 std::string GoogleVisionDataPack::humanize_and_query(const std::string& and_query) const
 {
-  LOG_WARN("Not implemented!");
+  LOGW("Not implemented!");
 
   return "I am just dummy query!"s;
 }
 
 std::vector<Keyword*> GoogleVisionDataPack::top_frame_keywords(FrameId frame_ID) const
 {
-  LOG_WARN("Not implemented!");
+  LOGW("Not implemented!");
 
   return std::vector({
       _keywords.GetKeywordPtrByVectorIndex(0),
@@ -63,8 +65,9 @@ std::vector<Keyword*> GoogleVisionDataPack::top_frame_keywords(FrameId frame_ID)
   });
 }
 
-RankingResult GoogleVisionDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, PackModelCommands model_commands,
-                                         size_t result_size, FrameId target_image_ID) const
+RankingResult GoogleVisionDataPack::rank_frames(const std::vector<CnfFormula>& user_queries,
+                                                PackModelCommands model_commands, size_t result_size,
+                                                FrameId target_image_ID) const
 {
   // Expand query to vector indices
   std::vector<CnfFormula> idx_queries;
@@ -105,7 +108,7 @@ RankingResult GoogleVisionDataPack::rank_frames(const std::vector<CnfFormula>& u
   auto iter_m = _models.find(model_ID);
   if (iter_m == _models.end())
   {
-    LOG_ERROR("Uknown model_ID: '" + model_ID + "'.");
+    LOGE("Uknown model_ID: '" + model_ID + "'.");
     return RankingResult{};
   }
   const auto& ranking_model = *(iter_m->second);
@@ -114,7 +117,7 @@ RankingResult GoogleVisionDataPack::rank_frames(const std::vector<CnfFormula>& u
   auto iter_t = _transforms.find(transform_ID);
   if (iter_t == _transforms.end())
   {
-    LOG_ERROR("Uknown transform_ID: '" + transform_ID + "'.");
+    LOGE("Uknown transform_ID: '" + transform_ID + "'.");
     return RankingResult{};
   }
   const auto& transform = *(iter_t->second);
@@ -124,7 +127,7 @@ RankingResult GoogleVisionDataPack::rank_frames(const std::vector<CnfFormula>& u
 }
 
 ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery>& test_queries,
-                                          PackModelCommands model_commands, size_t num_points) const
+                                                 PackModelCommands model_commands, size_t num_points) const
 {
   // Expand query to vector indices
   std::vector<UserTestQuery> idx_test_queries;
@@ -178,8 +181,16 @@ ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery
   auto iter_m = _models.find(model_ID);
   if (iter_m == _models.end())
   {
-    LOG_ERROR("Uknown model_ID: '" + model_ID + "'.");
-    return ModelTestResult{};
+    if (!_models.empty())
+    {
+      iter_m = _models.begin();
+      LOGW("Uknown model_ID: '" + model_ID + "'. Falling back to: " + iter_m->first);
+    }
+    else
+    {
+      LOGE("Uknown models!");
+      return ModelTestResult{};
+    }
   }
   const auto& ranking_model = *(iter_m->second);
 
@@ -187,8 +198,16 @@ ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery
   auto iter_t = _transforms.find(transform_ID);
   if (iter_t == _transforms.end())
   {
-    LOG_ERROR("Uknown transform_ID: '" + transform_ID + "'.");
-    return ModelTestResult{};
+    if (!_transforms.empty())
+    {
+      iter_t = _transforms.begin();
+      LOGW("Uknown transform_ID: '" + transform_ID + "'. Falling back to: " + iter_t->first);
+    }
+    else
+    {
+      LOGE("No transformations!");
+      return ModelTestResult{};
+    }
   }
   const auto& transform = *(iter_t->second);
 
@@ -196,9 +215,16 @@ ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery
   auto iter_su = _sim_users.find(sim_user_ID);
   if (iter_su == _sim_users.end())
   {
-    LOG_WARN("sim_user_ID not found: '" + sim_user_ID + "'. Using default: " + enum_label(eSimUserIds::NO_SIM).first);
-
-    iter_su = _sim_users.find(enum_label(eSimUserIds::NO_SIM).first);
+    if (!_sim_users.empty())
+    {
+      iter_su = _sim_users.begin();
+      LOGW("Uknown sim_user_ID: '" + sim_user_ID + "'. Falling back to: " + iter_su->first);
+    }
+    else
+    {
+      LOGE("No sim users!");
+      return ModelTestResult{};
+    }
   }
   const auto& sim_user = *(iter_su->second);
 
@@ -208,8 +234,9 @@ ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery
   return ranking_model.test_model(transform, _keywords, idx_test_queries, opt_key_vals, num_points);
 }
 
-AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,
-                                                                bool with_example_image) const
+AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std::string& query_prefix,
+                                                                       size_t result_size,
+                                                                       bool with_example_image) const
 {
   return {_keywords.GetNearKeywordsPtrs(query_prefix, result_size)};
 }

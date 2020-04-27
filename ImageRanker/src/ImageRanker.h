@@ -247,7 +247,7 @@ class ImageRanker
     std::tuple<float, std::vector<std::pair<size_t, size_t>>> TrecvidGetRelevantShots(
       DataId data_ID, const std::vector<std::string>& queriesEncodedPlaintext, size_t numResults,
       InputDataTransformId aggId, RankingModelId modelId, const RankingModelSettings& modelSettings,
-      const InputDataTransformSettings& aggSettings, float elapsedTime, size_t imageId = SIZE_T_ERROR_VALUE);
+      const InputDataTransformSettings& aggSettings, float elapsedTime, size_t imageId = ERR_VAL<size_t>());
 
 #endif
     std::vector<std::vector<UserImgQuery>> GetSimulatedQueries(DataId data_ID, UserDataSourceId dataSource,

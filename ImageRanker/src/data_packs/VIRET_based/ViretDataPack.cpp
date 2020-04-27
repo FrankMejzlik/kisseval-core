@@ -41,7 +41,8 @@ ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset
   _sim_users.emplace(enum_label(eSimUserIds::NO_SIM).first, std::make_unique<SimUserNoSim>());
   _sim_users.emplace(enum_label(eSimUserIds::SIM_SINGLE_QUERIES).first, std::make_unique<SimUserSingleQueries>());
   _sim_users.emplace(enum_label(eSimUserIds::SIM_TEMPORAL_QUERIES).first, std::make_unique<SimUserTempQueries>());
-  _sim_users.emplace(enum_label(eSimUserIds::AUGMENT_USER_WITH_TEMP).first, std::make_unique<SimUserAugmentRealWithTemp>());
+  _sim_users.emplace(enum_label(eSimUserIds::AUGMENT_USER_WITH_TEMP).first,
+                     std::make_unique<SimUserAugmentRealWithTemp>());
 
   t1.join();
   t2.join();
@@ -54,14 +55,14 @@ const std::string& ViretDataPack::get_vocab_description() const { return _keywor
 
 [[nodiscard]] std::string ViretDataPack::humanize_and_query(const std::string& and_query) const
 {
-  LOG_WARN("Not implemented!");
+  LOGW("Not implemented!");
 
   return "I am just dummy query!"s;
 }
 
 [[nodiscard]] std::vector<Keyword*> ViretDataPack::top_frame_keywords(FrameId frame_ID) const
 {
-  LOG_WARN("Not implemented!");
+  LOGW("Not implemented!");
 
   return std::vector({
       _keywords.GetKeywordPtrByVectorIndex(0),
@@ -112,7 +113,7 @@ RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_que
   auto iter_m = _models.find(model_ID);
   if (iter_m == _models.end())
   {
-    LOG_ERROR("Uknown model_ID: '" + model_ID + "'.");
+    LOGE("Uknown model_ID: '" + model_ID + "'.");
     return RankingResult{};
   }
   const auto& ranking_model = *(iter_m->second);
@@ -121,7 +122,7 @@ RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_que
   auto iter_t = _transforms.find(transform_ID);
   if (iter_t == _transforms.end())
   {
-    LOG_ERROR("Uknown transform_ID: '" + transform_ID + "'.");
+    LOGE("Uknown transform_ID: '" + transform_ID + "'.");
     return RankingResult{};
   }
   const auto& transform = *(iter_t->second);
@@ -185,8 +186,16 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
   auto iter_m = _models.find(model_ID);
   if (iter_m == _models.end())
   {
-    LOG_ERROR("Uknown model_ID: '" + model_ID + "'.");
-    return ModelTestResult{};
+    if (!_models.empty())
+    {
+      iter_m = _models.begin();
+      LOGW("Uknown model_ID: '" + model_ID + "'. Falling back to: " + iter_m->first);
+    }
+    else
+    {
+      LOGE("Uknown models!");
+      return ModelTestResult{};
+    }
   }
   const auto& ranking_model = *(iter_m->second);
 
@@ -194,8 +203,16 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
   auto iter_t = _transforms.find(transform_ID);
   if (iter_t == _transforms.end())
   {
-    LOG_ERROR("Uknown transform_ID: '" + transform_ID + "'.");
-    return ModelTestResult{};
+    if (!_transforms.empty())
+    {
+      iter_t = _transforms.begin();
+      LOGW("Uknown transform_ID: '" + transform_ID + "'. Falling back to: " + iter_t->first);
+    }
+    else
+    {
+      LOGE("No transformations!");
+      return ModelTestResult{};
+    }
   }
   const auto& transform = *(iter_t->second);
 
@@ -203,9 +220,16 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
   auto iter_su = _sim_users.find(sim_user_ID);
   if (iter_su == _sim_users.end())
   {
-    LOG_WARN("sim_user_ID not found... Using default:'" + sim_user_ID + "'.");
-
-    iter_su = _sim_users.find(enum_label(eSimUserIds::NO_SIM).first);
+    if (!_sim_users.empty())
+    {
+      iter_su = _sim_users.begin();
+      LOGW("Uknown sim_user_ID: '" + sim_user_ID + "'. Falling back to: " + iter_su->first);
+    }
+    else
+    {
+      LOGE("No sim users!");
+      return ModelTestResult{};
+    }
   }
   const auto& sim_user = *(iter_su->second);
 

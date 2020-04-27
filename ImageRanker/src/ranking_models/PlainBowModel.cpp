@@ -20,7 +20,7 @@ PlainBowModel::Options PlainBowModel::parse_options(const std::vector<ModelKeyVa
       }
     }
     else {
-      LOG_WARN("Unknown model option key '" + key + "'");
+      LOGW("Unknown model option key '" + key + "'");
     }
   }
 
@@ -33,7 +33,7 @@ RankingResult PlainBowModel::rank_frames(const BaseVectorTransform& transformed_
 {
   if (user_query.empty())
   {
-    LOG_WARN("Empty query");
+    LOGW("Empty query");
     return RankingResult{};
   }
 
@@ -416,7 +416,7 @@ ModelTestResult PlainBowModel::test_model(const BaseVectorTransform& transformed
       size_t targetImageId) const override
   {
     // If want all results
-    if (numResults == SIZE_T_ERROR_VALUE)
+    if (numResults == ERR_VAL<size_t>())
     {
       numResults = images.size();
     }
@@ -630,7 +630,7 @@ ModelTestResult PlainBowModel::test_model(const BaseVectorTransform& transformed
 float PlainBowModel::rank_frame(const Vector<float>& frame_data, const CnfFormula& single_query,
                              const Options& options) const
 {
-  LOG_WARN("NOT IMPL!");
+  LOGW("NOT IMPL!");
 
   float frame_ranking{1.0F};
 

@@ -35,7 +35,7 @@ MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelK
         res.scoring_operations = eScoringOperations::cMaxMax;
       }
       else {
-        LOG_WARN("Unknown model option value for key '" + key + "' -> '" + val + "'");
+        LOGW("Unknown model option value for key '" + key + "' -> '" + val + "'");
       }
     }
     else if (key == enum_label(eModelOptsKeys::MODEL_INNER_OP).first)
@@ -53,7 +53,7 @@ MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelK
         res.succ_aggregation = eSuccesorAggregation::cProduct;
       }
       else {
-        LOG_WARN("Unknown model option value for key '" + key + "' -> '" + val + "'");
+        LOGW("Unknown model option value for key '" + key + "' -> '" + val + "'");
       }
     }
     else if (key == enum_label(eModelOptsKeys::MODEL_OUTTER_OP).first)
@@ -67,7 +67,7 @@ MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelK
         res.main_temp_aggregation = eMainTempRankingAggregation::cProduct;
       }
       else {
-        LOG_WARN("Unknown model option value for key '" + key + "' -> '" + val + "'");
+        LOGW("Unknown model option value for key '" + key + "' -> '" + val + "'");
       }
     }
     else if (key == enum_label(eModelOptsKeys::MODEL_IGNORE_THRESHOLD).first)
@@ -75,7 +75,7 @@ MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelK
       res.ignore_below_threshold = strTo<float>(val);
     }
     else {
-      LOG_WARN("Unknown model option key '" + key + "'");
+      LOGW("Unknown model option key '" + key + "'");
     }
   }
 
@@ -88,7 +88,7 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
 {
   if (user_query.empty())
   {
-    LOG_WARN("Empty query");
+    LOGW("Empty query");
     return RankingResult{};
   }
 
@@ -136,7 +136,7 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
       break;
 
     default:
-      LOG_ERROR("Unknown scoring operation.");
+      LOGE("Unknown scoring operation.");
       return RankingResult{};
   }
 
@@ -491,7 +491,7 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
       size_t targetImageId) const override
   {
     // If want all results
-    if (numResults == SIZE_T_ERROR_VALUE)
+    if (numResults == ERR_VAL<size_t>())
     {
       numResults = images.size();
     }
@@ -724,7 +724,7 @@ float MultSumMaxModel::rank_frame(const Vector<float>& frame_data, const CnfForm
       break;
 
     default:
-      LOG_ERROR("Unknown scoring operation optaion: '"s + std::to_string(int(options.scoring_operations)) + "'."s);
+      LOGE("Unknown scoring operation optaion: '"s + std::to_string(int(options.scoring_operations)) + "'."s);
   }
 
   for (auto&& clause : single_query)
@@ -760,7 +760,7 @@ float MultSumMaxModel::rank_frame(const Vector<float>& frame_data, const CnfForm
           break;
 
         default:
-          LOG_ERROR("Unknown query operation "s + std::to_string(int(options.scoring_operations)) + "."s);
+          LOGE("Unknown query operation "s + std::to_string(int(options.scoring_operations)) + "."s);
       }
     }
 
@@ -793,7 +793,7 @@ float MultSumMaxModel::rank_frame(const Vector<float>& frame_data, const CnfForm
       break;
 
       default:
-        LOG_ERROR("Unknown query scoring operation: '"s + std::to_string(int(options.scoring_operations)) + "'."s);
+        LOGE("Unknown query scoring operation: '"s + std::to_string(int(options.scoring_operations)) + "'."s);
     }
   }
 

@@ -250,7 +250,7 @@ std::vector<ImageIdFilenameTuple> FileParser::GetImageFilenames(const std::strin
   // If failed to open file
   if (!inFile)
   {
-    LOG_ERROR(std::string("Error opening file: ") + _imageToIdMapFilepath);
+    LOGE(std::string("Error opening file: ") + _imageToIdMapFilepath);
   }
 
   std::vector<ImageIdFilenameTuple> result;
@@ -301,8 +301,8 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
   //
 
   // Initialize video ID counter
-  size_t prevVideoId{SIZE_T_ERROR_VALUE};
-  size_t prevShotId{SIZE_T_ERROR_VALUE};
+  size_t prevVideoId{ERR_VAL<size_t>()};
+  size_t prevShotId{ERR_VAL<size_t>()};
   std::stack<SelFrame*> videoFrames;
 
   // Iterate over all images in ASC order by their IDs
@@ -365,7 +365,7 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, boo
   // If failed to open file
   if (!inFile)
   {
-    LOG_ERROR(std::string("Error opening file :") + filepath);
+    LOGE(std::string("Error opening file :") + filepath);
   }
 
   // Declare return variables
@@ -414,7 +414,7 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, boo
     // If pure hypernym
     if (tokens[0] == "H")
     {
-      vectorIndex = SIZE_T_ERROR_VALUE;
+      vectorIndex = ERR_VAL<size_t>();
     }
     else
     {
@@ -503,7 +503,7 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
   // If failed to open file
   if (!ifs)
   {
-    LOG_ERROR("Error opening file: "s + inputFilepath);
+    LOGE("Error opening file: "s + inputFilepath);
   }
 
   // Get end of file
@@ -518,7 +518,7 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
   // If emtpy file
   if (size == 0)
   {
-    LOG_ERROR("Empty file opened!");
+    LOGE("Empty file opened!");
   }
 
   // Create 4B buffer
@@ -533,7 +533,7 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
   // If something happened
   if (!ifs)
   {
-    LOG_ERROR("Error reading file: "s + inputFilepath);
+    LOGE("Error reading file: "s + inputFilepath);
   }
 
   // Parse number of present floats in every row
@@ -546,8 +546,8 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
   size_t currOffset = 40ULL;
 
   // Initialize video ID counter
-  size_t prevVideoId{SIZE_T_ERROR_VALUE};
-  size_t prevShotId{SIZE_T_ERROR_VALUE};
+  size_t prevVideoId{ERR_VAL<size_t>()};
+  size_t prevShotId{ERR_VAL<size_t>()};
 
   // Create line buffer
   std::vector<std::byte> lineBuffer;
@@ -657,7 +657,7 @@ std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(cons
   // If failed to open file
   if (!ifs)
   {
-    LOG_ERROR("Error opening file: "s + inputFilepath);
+    LOGE("Error opening file: "s + inputFilepath);
   }
 
   // Get end of file
@@ -672,7 +672,7 @@ std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(cons
   // If emtpy file
   if (size == 0)
   {
-    LOG_ERROR("Empty file opened!");
+    LOGE("Empty file opened!");
   }
 
   // Create 4B buffer
@@ -687,7 +687,7 @@ std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(cons
   // If something happened
   if (!ifs)
   {
-    LOG_ERROR("Error reading file: "s + inputFilepath);
+    LOGE("Error reading file: "s + inputFilepath);
   }
 
   // Parse number of present floats in every row
@@ -700,8 +700,8 @@ std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(cons
   size_t currOffset = 40ULL;
 
   // Initialize video ID counter
-  size_t prevVideoId{SIZE_T_ERROR_VALUE};
-  size_t prevShotId{SIZE_T_ERROR_VALUE};
+  size_t prevVideoId{ERR_VAL<size_t>()};
+  size_t prevShotId{ERR_VAL<size_t>()};
 
   // Create line buffer
   std::vector<std::byte> lineBuffer;
@@ -786,7 +786,7 @@ Matrix<float> FileParser::ParseRawScoringData_GoogleAiVisionFormat(const std::st
   // If failed to open file
   if (!ifs)
   {
-    LOG_ERROR("Error opening file: "s + inputFilepath);
+    LOGE("Error opening file: "s + inputFilepath);
   }
 
   // Get end of file
@@ -801,7 +801,7 @@ Matrix<float> FileParser::ParseRawScoringData_GoogleAiVisionFormat(const std::st
   // If emtpy file
   if (size == 0)
   {
-    LOG_ERROR("Empty file opened!");
+    LOGE("Empty file opened!");
   }
 
   // Create 4B buffer
@@ -810,7 +810,7 @@ Matrix<float> FileParser::ParseRawScoringData_GoogleAiVisionFormat(const std::st
   // If something happened
   if (!ifs)
   {
-    LOG_ERROR("Error reading file: "s + inputFilepath);
+    LOGE("Error reading file: "s + inputFilepath);
   }
 
   // Read number of items in each vector per image

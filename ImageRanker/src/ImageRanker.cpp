@@ -198,7 +198,7 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
   auto res = _data_packs.find(data_pack_ID);
   if (res == _data_packs.end())
   {
-    LOG_WARN("Accessing non-existent data pack '" << data_pack_ID << "'");
+    LOGW("Accessing non-existent data pack '" << data_pack_ID << "'");
     return std::vector<GameSessionQueryResult>();
   }
 
@@ -2651,7 +2651,7 @@ std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatist
       auto kw{ _pViretKws->GetWholeKeywordByWordnetId(wordnetId) };
 
       // If is non-hyper
-      if (kw->m_vectorIndex != SIZE_T_ERROR_VALUE)
+      if (kw->m_vectorIndex != ERR_VAL<size_t>())
       {
 
         const auto& rankVec{ pImg->_rawImageScoringDataSorted };
@@ -2988,7 +2988,7 @@ void ImageRanker::GenerateBestHypernymsForImages()
     {
 
       // If has some hyponyms
-      if (pKw->m_vectorIndex == SIZE_T_ERROR_VALUE)
+      if (pKw->m_vectorIndex == ERR_VAL<size_t>())
       {
         float totalRank{ 0.0f };
         for (auto&& kwIndex : pKw->m_hyponymBinIndices)

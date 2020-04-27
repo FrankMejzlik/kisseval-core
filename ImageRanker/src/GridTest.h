@@ -33,8 +33,8 @@ class GridTest
         break;
       }
 
-      LOG("Test progress is "s + std::to_string(GridTest::numCompletedTests) + "/"s +
-          std::to_string(m_testSettings.size()));
+      LOGI("Test progress is "s + std::to_string(GridTest::numCompletedTests) + "/"s +
+           std::to_string(m_testSettings.size()));
 
       std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     }

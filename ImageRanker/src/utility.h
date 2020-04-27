@@ -293,7 +293,7 @@ inline T strTo(const std::string& str)
   // If failed
   else
   {
-    LOG_ERROR("Conversion of string '"s + str + "' failed with error code "s + std::to_string((int)ec) + ".");
+    LOGE("Conversion of string '"s + str + "' failed with error code "s + std::to_string((int)ec) + ".");
     return T();
   }
 }
@@ -453,7 +453,7 @@ inline std::function<float(const Vector<float>&, const Vector<float>&)> get_dist
       return dist_manhattan;
 
     default:
-      LOG_WARN("Uknown distance function type: " + std::to_string(int(fn_type)) +
+      LOGW("Uknown distance function type: " + std::to_string(int(fn_type)) +
                "\n\tUsing default one: " + std::to_string(int(eDistFunction::MANHATTAN)));
       return dist_manhattan;
   }
@@ -491,7 +491,7 @@ inline std::function<float(float, float)> pick_tf_scheme_fn(eTermFrequency tf_sc
       return tf_scheme_fn_augmented<float>;
 
     default:
-      LOG_WARN("Unsupported scheme ID: " + std::to_string(int(tf_scheme_ID)) +
+      LOGW("Unsupported scheme ID: " + std::to_string(int(tf_scheme_ID)) +
                "\n\t Using default: " + std::to_string(int(eTermFrequency::NATURAL)));
       return tf_scheme_fn_natural<float>;
   }
@@ -520,7 +520,7 @@ inline std::function<float(float, float)> pick_idf_scheme_fn(eInvDocumentFrequen
       return idf_scheme_fn_IDF<float>;
 
     default:
-      LOG_WARN("Unsupported scheme ID: " + std::to_string(int(idf_scheme_ID)) +
+      LOGW("Unsupported scheme ID: " + std::to_string(int(idf_scheme_ID)) +
                "\n\t Using default: " + std::to_string(int(eInvDocumentFrequency::NONE)));
       return idf_scheme_fn_none<float>;
   }

@@ -29,7 +29,7 @@ VectorSpaceModel::Options VectorSpaceModel::parse_options(const std::vector<Mode
       }
       else
       {
-        LOG_WARN("Unknown model option val '" + val + "'");
+        LOGW("Unknown model option val '" + val + "'");
       }
     }
     else if (key == "model_IDF_method")
@@ -61,7 +61,7 @@ VectorSpaceModel::Options VectorSpaceModel::parse_options(const std::vector<Mode
       }
       else
       {
-        LOG_WARN("Unknown model option val '" + val + "'");
+        LOGW("Unknown model option val '" + val + "'");
       }
     }
     // Weighing TERM term frequency
@@ -77,7 +77,7 @@ VectorSpaceModel::Options VectorSpaceModel::parse_options(const std::vector<Mode
       }
       else
       {
-        LOG_WARN("Unknown model option val '" + val + "'");
+        LOGW("Unknown model option val '" + val + "'");
       }
     }
     // Weighing TERM term frequency
@@ -97,7 +97,7 @@ VectorSpaceModel::Options VectorSpaceModel::parse_options(const std::vector<Mode
       }
       else
       {
-        LOG_WARN("Unknown model option val '" + val + "'");
+        LOGW("Unknown model option val '" + val + "'");
       }
     }
     // Weighing TERM term frequency
@@ -113,12 +113,12 @@ VectorSpaceModel::Options VectorSpaceModel::parse_options(const std::vector<Mode
       }
       else
       {
-        LOG_WARN("Unknown model option val '" + val + "'");
+        LOGW("Unknown model option val '" + val + "'");
       }
     }
     else
     {
-      LOG_WARN("Unknown model option key '" + key + "'");
+      LOGW("Unknown model option key '" + key + "'");
     }
   }
 
@@ -133,7 +133,7 @@ RankingResult VectorSpaceModel::rank_frames(const BaseVectorTransform& transform
 {
   if (user_query.empty())
   {
-    LOG_WARN("Empty query");
+    LOGW("Empty query");
     return RankingResult{};
   }
 
@@ -611,7 +611,7 @@ Vector<float> VectorSpaceModel::create_user_query_vector(const CnfFormula& singl
       size_t targetImageId) const override
   {
     // If want all results
-    if (numResults == SIZE_T_ERROR_VALUE)
+    if (numResults == ERR_VAL<size_t>())
     {
       numResults = images.size();
     }
