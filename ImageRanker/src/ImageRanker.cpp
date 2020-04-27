@@ -13,6 +13,122 @@ using json = nlohmann::json;
 
 using namespace image_ranker;
 
+ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::string& filepath,
+                                                        const std::string& data_dir)
+{
+  // Read the JSON cfg file
+  std::ifstream i(filepath);
+  json json_data;
+  i >> json_data;
+
+  auto is1 = json_data["imagesets"][0];
+
+  // NASNet
+  auto dp1 = json_data["data_packs"]["VIRET_based"][0];
+  // GoogLeNet
+  auto dp2 = json_data["data_packs"]["VIRET_based"][1];
+
+  // Google Vision AI 2019
+  auto dp3 = json_data["data_packs"]["Google_based"][0];
+
+  // W2VV BoW 2019
+  auto dp30 = json_data["data_packs"]["W2VV_based"][0];
+
+  // Imagesets
+  std::vector<DatasetDataPackRef> imagesets;
+  for (auto&& is1 : json_data["imagesets"])
+  {
+    // Skip inactive
+    if (!is1["active"].get<bool>())
+    {
+      continue;
+    }
+
+    imagesets.emplace_back(DatasetDataPackRef{
+        is1["ID"].get<std::string>(), is1["description"].get<std::string>(), is1["ID"].get<std::string>(),
+        data_dir + is1["frames_dir"].get<std::string>(), data_dir + is1["ID_to_frame_fpth"].get<std::string>()});
+  }
+
+  // VIRET data packs
+  std::vector<ViretDataPackRef> VIRET_data_packs;
+  for (auto&& dp1 : json_data["data_packs"]["VIRET_based"])
+  {
+    // Skip inactive
+    if (!is1["active"].get<bool>())
+    {
+      continue;
+    }
+
+    VIRET_data_packs.emplace_back(ViretDataPackRef{
+        dp1["ID"].get<std::string>(), dp1["description"].get<std::string>(), dp1["model_options"].get<std::string>(),
+        dp1["data"]["target_dataset"].get<std::string>(),
+
+        dp1["vocabulary"]["ID"].get<std::string>(), dp1["vocabulary"]["description"].get<std::string>(),
+        data_dir + dp1["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
+
+        data_dir + dp1["data"]["presoftmax_scorings_fpth"].get<std::string>(),
+        data_dir + dp1["data"]["softmax_scorings_fpth"].get<std::string>(),
+        data_dir + dp1["data"]["deep_features_fpth"].get<std::string>()});
+  }
+
+  // Google data packs
+  std::vector<GoogleDataPackRef> Google_data_packs;
+  for (auto&& dp3 : json_data["data_packs"]["Google_based"])
+  {
+    // Skip inactive
+    if (!is1["active"].get<bool>())
+    {
+      continue;
+    }
+
+    Google_data_packs.emplace_back(GoogleDataPackRef{
+        dp3["ID"].get<std::string>(), dp3["description"].get<std::string>(), dp3["model_options"].get<std::string>(),
+        dp3["data"]["target_dataset"].get<std::string>(),
+
+        dp3["vocabulary"]["ID"].get<std::string>(), dp3["vocabulary"]["description"].get<std::string>(),
+        data_dir + dp3["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
+
+        data_dir + dp3["data"]["presoftmax_scorings_fpth"].get<std::string>()});
+  }
+
+  // W2VV data packs
+  std::vector<W2vvDataPackRef> W2VV_data_packs;
+  for (auto&& dp3 : json_data["data_packs"]["W2VV_based"])
+  {
+    // Skip inactive
+    if (!is1["active"].get<bool>())
+    {
+      continue;
+    }
+
+    W2VV_data_packs.emplace_back(W2vvDataPackRef{
+        dp3["ID"].get<std::string>(), dp3["description"].get<std::string>(), dp3["model_options"].get<std::string>(),
+        dp3["data"]["target_dataset"].get<std::string>(),
+
+        dp3["vocabulary"]["ID"].get<std::string>(), dp3["vocabulary"]["description"].get<std::string>(),
+
+        data_dir + dp3["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
+
+        data_dir + dp3["vocabulary"]["keyword_features_fpth"].get<std::string>(),
+        dp3["vocabulary"]["keyword_features_dim"].get<size_t>(),
+        dp3["vocabulary"]["keyword_features_data_offset"].get<size_t>(),
+
+        data_dir + dp3["vocabulary"]["keyword_bias_vec_fpth"].get<std::string>(),
+        dp3["vocabulary"]["keyword_bias_vec_dim"].get<size_t>(),
+        dp3["vocabulary"]["keyword_bias_vec_data_offset"].get<size_t>(),
+
+        data_dir + dp3["vocabulary"]["keyword_PCA_mat_fpth"].get<std::string>(),
+        dp3["vocabulary"]["keyword_PCA_mat_dim"].get<size_t>(),
+        dp3["vocabulary"]["keyword_PCA_mat_data_offset"].get<size_t>(),
+
+        data_dir + dp3["data"]["deep_features_fpth"].get<std::string>(), dp3["data"]["deep_features_dim"].get<size_t>(),
+        dp3["data"]["deep_features_data_offset"].get<size_t>()
+
+    });
+  }
+
+  return {ImageRanker::eMode::cFullAnalytical, imagesets, VIRET_data_packs, Google_data_packs, W2VV_data_packs};
+}
 ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _fileParser(this), _data_manager(this)
 {
   /*

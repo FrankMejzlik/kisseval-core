@@ -58,6 +58,8 @@ class ImageRanker
    * Methods
    ****************************/
  public:
+  static Config parse_data_config_file(eMode mode, const std::string& cfg_filepath, const std::string& data_dir);
+
   ImageRanker() = delete;
 
   ImageRanker(const ImageRanker::Config& cfg);

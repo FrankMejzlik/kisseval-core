@@ -257,6 +257,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ranking_models\PlainBowModel.cpp" />
+    <ClCompile Include="src\ranking_models\BaseW2vvModel.cpp" />
     <ClCompile Include="src\data_packs\Google_based\GoogleVisionDataPack.cpp" />
     <ClCompile Include="src\data_packs\W2VV_based\W2vvDataPack.cpp" />
     <ClCompile Include="src\ranking_models\VectorSpaceModel.cpp" />
@@ -280,6 +282,8 @@
     <ClCompile Include="src\transformations\TransformationSoftmax.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ranking_models\PlainBowModel.h" />
+    <ClInclude Include="src\ranking_models\BaseW2vvModel.h" />
     <ClInclude Include="src\data_packs\Google_based\GoogleVisionDataPack.h" />
     <ClInclude Include="src\data_packs\W2VV_based\W2vvDataPack.h" />
     <ClInclude Include="src\ranking_models\VectorSpaceModel.h" />

@@ -17,71 +17,8 @@ using namespace image_ranker;
 
 int main()
 {
-  auto json_data = parse_data_config_file(DATA_INFO_FPTH);
-
-  auto is1 = json_data["imagesets"][0];
-
-  // NASNet
-  auto dp1 = json_data["data_packs"]["VIRET_based"][0];
-  // GoogLeNet
-  auto dp2 = json_data["data_packs"]["VIRET_based"][1];
-
-  // Google Vision AI 2019
-  auto dp3 = json_data["data_packs"]["Google_based"][0];
-
-  // W2VV BoW 2019
-  auto dp30 = json_data["data_packs"]["W2VV_based"][0];
-
-  // V3C1 20k subset
-  std::vector<DatasetDataPackRef> datasets{
-      {is1["ID"].get<std::string>(), is1["description"].get<std::string>(), is1["ID"].get<std::string>(),
-       DATA_DIR + is1["frames_dir"].get<std::string>(), DATA_DIR + is1["ID_to_frame_fpth"].get<std::string>()}};
-
-  std::vector<ViretDataPackRef> VIRET_data_packs{
-      // NasNet
-      {dp1["ID"].get<std::string>(), dp1["description"].get<std::string>(), dp1["model_options"].get<std::string>(),
-       dp1["data"]["target_dataset"].get<std::string>(),
-
-       dp1["vocabulary"]["ID"].get<std::string>(), dp1["vocabulary"]["description"].get<std::string>(),
-       DATA_DIR + dp1["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
-
-       DATA_DIR + dp1["data"]["presoftmax_scorings_fpth"].get<std::string>(),
-       DATA_DIR + dp1["data"]["softmax_scorings_fpth"].get<std::string>(),
-       DATA_DIR + dp1["data"]["deep_features_fpth"].get<std::string>()},
-      // GoogLeNet
-      {dp2["ID"].get<std::string>(), dp2["description"].get<std::string>(), dp2["model_options"].get<std::string>(),
-       dp2["data"]["target_dataset"].get<std::string>(),
-
-       dp2["vocabulary"]["ID"].get<std::string>(), dp2["vocabulary"]["description"].get<std::string>(),
-       DATA_DIR + dp2["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
-
-       DATA_DIR + dp2["data"]["presoftmax_scorings_fpth"].get<std::string>(),
-       DATA_DIR + dp2["data"]["softmax_scorings_fpth"].get<std::string>(),
-       DATA_DIR + dp2["data"]["deep_features_fpth"].get<std::string>()},
-  };
-
-  std::vector<GoogleDataPackRef> Google_data_packs{
-      // Google Vision AI
-      {dp3["ID"].get<std::string>(), dp3["description"].get<std::string>(), dp3["model_options"].get<std::string>(),
-       dp3["data"]["target_dataset"].get<std::string>(),
-
-       dp3["vocabulary"]["ID"].get<std::string>(), dp3["vocabulary"]["description"].get<std::string>(),
-       DATA_DIR + dp3["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
-
-       DATA_DIR + dp3["data"]["presoftmax_scorings_fpth"].get<std::string>()}};
-
-  std::vector<W2vvDataPackRef> W2VV_data_packs{
-      // Google Vision AI
-      {dp30["ID"].get<std::string>(), dp30["description"].get<std::string>(), dp30["model_options"].get<std::string>(),
-       dp30["data"]["target_dataset"].get<std::string>(),
-
-       dp30["vocabulary"]["ID"].get<std::string>(), dp30["vocabulary"]["description"].get<std::string>(),
-       DATA_DIR + dp30["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
-
-       DATA_DIR + dp30["data"]["presoftmax_scorings_fpth"].get<std::string>()}};
-
-  ImageRanker::Config cfg{ImageRanker::eMode::cFullAnalytical, datasets, VIRET_data_packs, Google_data_packs,
-                          W2VV_data_packs};
+  ImageRanker::Config cfg =
+      ImageRanker::parse_data_config_file(ImageRanker::eMode::cFullAnalytical, DATA_INFO_FPTH, DATA_DIR);
 
   ImageRanker ranker(cfg);
 

@@ -57,15 +57,6 @@ inline float calc_chart_area(const ModelTestResult& chart_data)
   return area;
 }
 
-inline json parse_data_config_file(const std::string& filepath)
-{
-  // read a JSON file
-  std::ifstream i(filepath);
-  json j;
-  i >> j;
-
-  return j;
-}
 /**
  * Parses string representation of tree CNF formula.
  *

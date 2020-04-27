@@ -800,14 +800,14 @@
                                 "input_type": "enum",
                                 "values": [
                                     {
-                                        "ID": "yes",
-                                        "name": "Yes",
+                                        "ID": "true",
+                                        "name": "False",
                                         "description": "",
                                         "options": []
                                     },
                                     {
-                                        "ID": "no",
-                                        "name": "No",
+                                        "ID": "false",
+                                        "name": "False",
                                         "description": "",
                                         "options": []
                                     }
