@@ -26,8 +26,11 @@ int main()
   // GoogLeNet
   auto dp2 = json_data["data_packs"]["VIRET_based"][1];
 
-  // Google Vision AI
+  // Google Vision AI 2019
   auto dp3 = json_data["data_packs"]["Google_based"][0];
+
+  // W2VV BoW 2019
+  auto dp30 = json_data["data_packs"]["W2VV_based"][0];
 
   // V3C1 20k subset
   std::vector<DatasetDataPackRef> datasets{
@@ -67,8 +70,18 @@ int main()
 
        DATA_DIR + dp3["data"]["presoftmax_scorings_fpth"].get<std::string>()}};
 
+  std::vector<W2vvDataPackRef> W2VV_data_packs{
+      // Google Vision AI
+      {dp30["ID"].get<std::string>(), dp30["description"].get<std::string>(), dp30["model_options"].get<std::string>(),
+       dp30["data"]["target_dataset"].get<std::string>(),
+
+       dp30["vocabulary"]["ID"].get<std::string>(), dp30["vocabulary"]["description"].get<std::string>(),
+       DATA_DIR + dp30["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
+
+       DATA_DIR + dp30["data"]["presoftmax_scorings_fpth"].get<std::string>()}};
+
   ImageRanker::Config cfg{ImageRanker::eMode::cFullAnalytical, datasets, VIRET_data_packs, Google_data_packs,
-                          std::vector<BowDataPackRef>()};
+                          W2VV_data_packs};
 
   ImageRanker ranker(cfg);
 

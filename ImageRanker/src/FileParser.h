@@ -23,6 +23,26 @@ class ImageRanker;
 class FileParser
 {
  public:
+  /**
+   * Parses float matrix from a binary file that is written in row-major format and starts at `begin_offset` offset.k
+   * FORMAT:
+   *    Matrix of 4B floats, row - major:
+   *    - each line is dim_N * 4B floats
+   *    - number of lines is number of selected frames
+   */
+  static std::vector<std::vector<float>> parse_float_matrix(const std::string& filepath, uint32_t row_dim,
+                                                            size_t begin_offset = 0_z);
+
+  /**
+   * FORMAT:
+   *    Matrix of 4B floats:
+   *    - each line is dim_N * 4B floats
+   *    - number of lines is number of selected frames
+   */
+  static std::vector<float> parse_float_vector(const std::string& filepath, uint32_t dim, uint32_t begin_offset = 0);
+
+  static std::map<std::string, uint32_t> parse_w2vv_word_to_idx_file(const std::string& filepath);
+
   static std::pair<std::vector<std::vector<float>>, std::vector<std::vector<std::pair<FrameId, float>>>>
   ParseRawScoringData_ViretFormat(const std::string& inputFilepath);
   static std::vector<std::vector<float>> ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath);
@@ -31,7 +51,7 @@ class FileParser
   static std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
                     std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>,
                     std::map<KeywordId, Keyword*>>
-  ParseKeywordClassesFile_ViretFormat(const std::string& filepath);
+  ParseKeywordClassesFile_ViretFormat(const std::string& filepath, bool first_col_is_ID = false);
 
   FileParser(ImageRanker* pRanker);
 

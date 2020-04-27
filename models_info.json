@@ -792,7 +792,28 @@
                         "ID": "bow_vbs2020",
                         "name": "BoW VBS2020",
                         "description": "We embedd text query into the space and find the nearest frames.",
-                        "options": []
+                        "options": [
+                            {
+                                "key": "bias_text_query",
+                                "name": "Substitute txt bias vector",
+                                "description": "",
+                                "input_type": "enum",
+                                "values": [
+                                    {
+                                        "ID": "yes",
+                                        "name": "Yes",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "ID": "no",
+                                        "name": "No",
+                                        "description": "",
+                                        "options": []
+                                    }
+                                ]
+                            }
+                        ]
                     }
                 ]
             }

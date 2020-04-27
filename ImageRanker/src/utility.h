@@ -20,6 +20,26 @@ using json = nlohmann::json;
 
 using namespace image_ranker;
 
+inline bool is_arch_LE()
+{
+  if (sizeof(char) >= sizeof(uint32_t))
+  {
+    throw std::runtime_error(
+        "This test assumes char type "
+        "smaller than uint32_t.");
+  }
+
+  uint32_t num{1ULL};
+  if (*(reinterpret_cast<char*>(&num)) == 1)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
 /**
  * Computes outer sum of discrete function defined by given chart data
  */

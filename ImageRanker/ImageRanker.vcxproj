@@ -258,6 +258,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\data_packs\Google_based\GoogleVisionDataPack.cpp" />
+    <ClCompile Include="src\data_packs\W2VV_based\W2vvDataPack.cpp" />
     <ClCompile Include="src\ranking_models\VectorSpaceModel.cpp" />
     <ClCompile Include="src\ranking_models\BooleanModel.cpp" />
     <ClCompile Include="src\ranking_models\BaseSpaceModel.cpp" />
@@ -280,6 +281,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\data_packs\Google_based\GoogleVisionDataPack.h" />
+    <ClInclude Include="src\data_packs\W2VV_based\W2vvDataPack.h" />
     <ClInclude Include="src\ranking_models\VectorSpaceModel.h" />
     <ClInclude Include="src\log.h" />
     <ClInclude Include="src\ranking_models\BooleanModel.h" />

@@ -5,6 +5,7 @@ using json = nlohmann::json;
 
 #include "data_packs/Google_based/GoogleVisionDataPack.h"
 #include "data_packs/VIRET_based/ViretDataPack.h"
+#include "data_packs/W2VV_based/W2vvDataPack.h"
 
 #include "ImageRanker.h"
 
@@ -54,7 +55,23 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
                                                                         pack.vocabulary_data, std::move(presoft_data)));
   }
 
-  // BoW type
+  // W2VV type
+  for (auto&& pack : _settings.config.W2VV_packs)
+  {
+    // Keyword feature vectors
+    // ...
+    // Keyword mean vector
+    // ...
+    // Keyword PCA matrix (2048 -> 128)
+    // ...
+
+    // Frame feature vectors
+    auto deep_features = FileParser::parse_float_matrix(pack.score_data.img_features_fpth, 128, 12);
+
+    _data_packs.emplace(
+        pack.ID, std::make_unique<W2vvDataPack>(pack.ID, pack.target_imageset, pack.model_options, pack.description,
+                                                pack.vocabulary_data, std::move(deep_features)));
+  }
 }
 
 std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(

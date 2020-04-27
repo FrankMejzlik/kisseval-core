@@ -9,6 +9,189 @@ using namespace image_ranker;
 
 FileParser::FileParser(ImageRanker* pRanker) : _pRanker(pRanker) {}
 
+std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string& filepath, uint32_t row_dim,
+                                                               size_t begin_offset)
+{
+  // Open file for reading as binary from the end side
+  std::ifstream ifs(filepath, std::ios::binary | std::ios::ate);
+
+  // If failed to open file
+  if (!ifs)
+  {
+    throw std::runtime_error("Error opening file: " + filepath);
+  }
+
+  // Get end of file
+  auto end = ifs.tellg();
+
+  // Get iterator to begining
+  ifs.seekg(0, std::ios::beg);
+
+  // Compute size of file
+  auto size = std::uint32_t(end - ifs.tellg());
+
+  // If emtpy file
+  if (size == 0)
+  {
+    throw std::runtime_error("Empty file opened!");
+  }
+
+  // Calculate byte length of each row (dim_N * sizeof(float))
+  uint32_t row_byte_len = row_dim * sizeof(float);
+
+  // Create line buffer
+  std::vector<std::byte> line_byte_buffer;
+  line_byte_buffer.resize(row_byte_len);
+
+  // Start reading at this offset
+  ifs.ignore(begin_offset);
+
+  // Declare result structure
+  std::vector<std::vector<float>> result_features;
+
+  // Read binary "lines" until EOF
+  while (ifs.read((char*)line_byte_buffer.data(), row_byte_len))
+  {
+    // Initialize vector of floats for this row
+    std::vector<float> features_vector;
+    features_vector.reserve(row_dim);
+
+    uint32_t curr_offset = 0;
+
+    // Iterate through all floats in a row
+    for (uint32_t i{0ULL}; i < row_dim; ++i)
+    {
+      // ParseFloatLE(&lineBuffer[currOffset])
+      float feature_value = ParseFloatLE(&line_byte_buffer[curr_offset]);
+
+      // Push float value in
+      features_vector.emplace_back(feature_value);
+
+      curr_offset += sizeof(float);
+    }
+
+    // Insert this row into the result
+    result_features.emplace_back(std::move(features_vector));
+  }
+
+  return result_features;
+}
+
+std::vector<float> FileParser::parse_float_vector(const std::string& filepath, uint32_t dim, uint32_t begin_offset)
+{
+  // Open file for reading as binary from the end side
+  std::ifstream ifs(filepath, std::ios::binary | std::ios::ate);
+
+  // If failed to open file
+  if (!ifs)
+  {
+    throw std::runtime_error("Error opening file: " + filepath);
+  }
+
+  // Get end of file
+  auto end = ifs.tellg();
+
+  // Get iterator to begining
+  ifs.seekg(0, std::ios::beg);
+
+  // Compute size of file
+  auto size = std::uint32_t(end - ifs.tellg());
+
+  // If emtpy file
+  if (size == 0)
+  {
+    throw std::runtime_error("Empty file opened!");
+  }
+
+  // Calculate byte length of each row (dim_N * sizeof(float))
+  uint32_t row_byte_len = dim * sizeof(float);
+
+  // Create line buffer
+  std::vector<std::byte> line_byte_buffer;
+  line_byte_buffer.resize(row_byte_len);
+
+  // Start reading at this offset
+  ifs.ignore(begin_offset);
+
+  // Initialize vector of floats for this row
+  std::vector<float> features_vector;
+  features_vector.reserve(dim);
+
+  // Read binary "lines" until EOF
+  while (ifs.read((char*)line_byte_buffer.data(), row_byte_len))
+  {
+    uint32_t curr_offset = 0;
+
+    // Iterate through all floats in a row
+    for (uint32_t i{0ULL}; i < dim; ++i)
+    {
+      float feature_value = ParseFloatLE(&line_byte_buffer[curr_offset]);
+
+      // Push float value in
+      features_vector.emplace_back(feature_value);
+
+      curr_offset += sizeof(float);
+    }
+
+    // Read just one line
+    break;
+  }
+
+  return features_vector;
+}
+
+std::map<std::string, uint32_t> FileParser::parse_w2vv_word_to_idx_file(const std::string& filepath)
+{
+  std::map<std::string, uint32_t> result_map;
+
+  // Open file with list of files in  images dir
+  std::ifstream inFile(filepath.data(), std::ios::in);
+
+  // If failed to open file
+  if (!inFile)
+  {
+    throw std::runtime_error("Error opening file: " + filepath);
+  }
+
+  std::string line_text_buffer;
+
+  // While there is something to read
+  while (std::getline(inFile, line_text_buffer))
+  {
+    if (line_text_buffer.empty())
+    {
+      continue;
+    }
+
+    std::stringstream line_buffer_ss(line_text_buffer);
+
+    std::vector<std::string> tokens;
+
+    // Tokenize line with ':' separator
+    {
+      std::string token;
+      uint32_t i = 0;
+      while (std::getline(line_buffer_ss, token, ':'))
+      {
+        tokens.push_back(token);
+
+        ++i;
+      }
+    }
+
+    std::string word(tokens[0]);
+
+    std::stringstream idx_ss(tokens[1]);
+    uint32_t idx;
+    idx_ss >> idx;
+
+    // Insert this record into table
+    result_map.emplace(word, idx);
+  }
+
+  return result_map;
+};
+
 std::tuple<VideoId, ShotId, FrameNumber> FileParser::ParseVideoFilename(const std::string& filename) const
 {
   // Extract string representing video ID
@@ -174,7 +357,7 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
 std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
            std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>,
            std::map<KeywordId, Keyword*>>
-FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath)
+FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, bool first_col_is_ID)
 {
   // Open file with list of files in images dir
   std::ifstream inFile(filepath, std::ios::in);
@@ -276,13 +459,20 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath)
     std::stringstream classnames(indexClassname);
     std::string finalWord;
 
+    // Decide what is considered ID
+    FrameId frame_ID{FrameId(iii)};
+    if (first_col_is_ID)
+    {
+      frame_ID = FrameId(vectorIndex);
+    }
+
     // Insert all synonyms as well
     while (std::getline(classnames, finalWord, SYNONYM_DELIMITER_001))
     {
       std::string description{_allDescriptions.data() + descStartIndex};
 
       // Insert this record into table
-      _keywords.emplace_back(std::make_unique<Keyword>(FrameId(iii), wordnetId, vectorIndex, std::move(finalWord),
+      _keywords.emplace_back(std::make_unique<Keyword>(FrameId(frame_ID), wordnetId, vectorIndex, std::move(finalWord),
                                                        descStartIndex, tokens[3].size(), std::move(hyperyms),
                                                        std::move(hyponyms), std::move(description)));
 
@@ -296,7 +486,7 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath)
       _vecIndexToKeyword.insert(std::make_pair(vectorIndex, _keywords.back().get()));
     }
 
-    ID_to_keyword.insert(std::make_pair(iii, _keywords.back().get()));
+    ID_to_keyword.insert(std::make_pair(frame_ID, _keywords.back().get()));
     ++iii;
   }
 

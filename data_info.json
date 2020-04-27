@@ -88,6 +88,26 @@
                 }
             }
         ],
-        "W2VV_based": []
+        "W2VV_based": [
+            {
+                "active": true,
+                "ID": "W2VV_BoW_Dec2019",
+                "name": "W2VV_BoW_Dec2019",
+                "description": "W2VV_based",
+                "model_options": "",
+                "vocabulary": {
+                    "ID": "native_language",
+                    "description": "Supported ~12k words.",
+                    "keyword_synsets_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/keyword_classes.bow2019.txt",
+                    "keyword_features_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/txt_weight-11147x2048floats.npy",
+                    "keyword_bias_vec_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/txt_bias-2048floats.npy",
+                    "keyword_PCA_mat_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/keyword_PCA_matrix.resnext152_resnext101.w2vv_bow.bin"
+                },
+                "data": {
+                    "target_dataset": "V3C1_20k",
+                    "deep_features_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/frame_features.resnext152_resnext101.w2vv_bow.bin"
+                }
+            }
+        ]
     }
 }

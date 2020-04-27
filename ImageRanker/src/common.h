@@ -54,7 +54,7 @@ enum class eModelIds
   VECTOR_SPACE,
   MULT_SUM_MAX,
   BOOLEAN_BUCKET,
-  BOW_VBS2020,
+  W2VV_BOW_VBS2020,
   _COUNT
 };
 
@@ -63,7 +63,7 @@ const std::array<std::pair<std::string, std::string>, size_t(eModelIds::_COUNT)>
     std::pair("vector_space", ""),
     std::pair("mult-sum-max", ""),
     std::pair("boolean_bucket", ""),
-    std::pair("bow_vbs2020", "BoW model by Xirong."),
+    std::pair("w2vv_bow_vbs2020", "BoW model by Xirong."),
 }};
 
 inline const std::pair<std::string, std::string>& enum_label(eModelIds val) { return eModelIds_labels[size_t(val)]; }
@@ -265,14 +265,15 @@ struct GoogleDataPackRef : public BaseDataPackRef
 };
 
 /**
- * Represents input data for 'BoW/W2V++' based models.
+ * Represents input data for 'W2VV++' based models.
  */
-struct BowDataPackRef : public BaseDataPackRef
+struct W2vvDataPackRef : public BaseDataPackRef
 {
   struct VocabData
   {
     std::string ID;
-    std::string word_to_idx_fpth;
+    std::string description;
+    std::string keyword_synsets_fpth;
     std::string kw_features_fpth;
     std::string kw_bias_vec_fpth;
     std::string kw_PCA_mat_fpth;

@@ -45,7 +45,7 @@ class ImageRanker
 
     std::vector<ViretDataPackRef> VIRET_packs;
     std::vector<GoogleDataPackRef> Google_packs;
-    std::vector<BowDataPackRef> BoW_packs;
+    std::vector<W2vvDataPackRef> W2VV_packs;
   };
 
   struct Settings
