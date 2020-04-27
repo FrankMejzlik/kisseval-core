@@ -14,8 +14,7 @@ class BaseDataPack
                const std::string& description)
       : _ID(ID), _description(description), _model_options(model_options), _target_imageset_ID(target_imageset_ID)
   {
-    std::cout << "desc = " << description << std::endl;
-    std::cout << "model_options = " << model_options << std::endl;
+    LOG("Loaded data pack: " << ID << std::endl << "\tdescription:" << description << std::endl << "\tdefault_options: " << model_options << std::endl);
   }
 
   [[nodiscard]] virtual RankingResult rank_frames(const std::vector<CnfFormula>& user_queries,

@@ -27,6 +27,7 @@ class FileParser
   ParseRawScoringData_ViretFormat(const std::string& inputFilepath);
   static std::vector<std::vector<float>> ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath);
   static std::vector<std::vector<float>> ParseDeepFeasBinFile_ViretFormat(const std::string& inputFilepath);
+  static Matrix<float> ParseRawScoringData_GoogleAiVisionFormat(const std::string& inputFilepath);
   static std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
                     std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>,
                     std::map<KeywordId, Keyword*>>

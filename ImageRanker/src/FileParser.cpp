@@ -458,6 +458,7 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
 
 std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath)
 {
+  // \todo Make dynamic
   std::vector<std::vector<float>> result{20000};
 
   // Open file for reading as binary from the end side
@@ -581,8 +582,125 @@ std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(cons
 
 std::vector<std::vector<float>> FileParser::ParseDeepFeasBinFile_ViretFormat(const std::string& inputFilepath)
 {
-  LOG_WARN("Not implemented.");
   return std::vector<std::vector<float>>();
+}
+
+Matrix<float> FileParser::ParseRawScoringData_GoogleAiVisionFormat(const std::string& inputFilepath)
+{
+  // \todo Make dynamic
+  std::vector<std::vector<float>> result{20000};
+
+  // Open file for reading as binary from the end side
+  std::ifstream ifs(inputFilepath, std::ios::binary | std::ios::ate);
+
+  // If failed to open file
+  if (!ifs)
+  {
+    LOG_ERROR("Error opening file: "s + inputFilepath);
+  }
+
+  // Get end of file
+  auto end = ifs.tellg();
+
+  // Get iterator to begining
+  ifs.seekg(0, std::ios::beg);
+
+  // Compute size of file
+  auto size = std::size_t(end - ifs.tellg());
+
+  // If emtpy file
+  if (size == 0)
+  {
+    LOG_ERROR("Empty file opened!");
+  }
+
+  // Create 4B buffer
+  std::array<std::byte, sizeof(uint32_t)> smallBuffer;
+
+  // If something happened
+  if (!ifs)
+  {
+    LOG_ERROR("Error reading file: "s + inputFilepath);
+  }
+
+  // Read number of items in each vector per image
+  ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
+  // Parse number of present floats in every row
+  uint32_t numRecords = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
+
+  // Read number of unique kws in annotation
+  ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
+  uint32_t numKeywords = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
+
+  float sum{0.0f};
+  float min{std::numeric_limits<float>::max()};
+  float max{-std::numeric_limits<float>::max()};
+
+  for (size_t i{0_z}; i < numRecords; ++i)
+  {
+    std::vector<float> scoringData;
+    scoringData.resize(numKeywords, GOOGLE_AI_NO_LABEL_SCORE);
+
+    ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
+    uint32_t ID = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
+
+    ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
+    uint32_t numLabels = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
+
+    auto cmp = [](const std::pair<size_t, float>& left, const std::pair<size_t, float>& right) {
+      return left.second < right.second;
+    };
+
+    // Reserve enough space in container
+    std::vector<std::pair<size_t, float>> container;
+
+    std::priority_queue<std::pair<size_t, float>, std::vector<std::pair<size_t, float>>, decltype(cmp)> maxHeap(
+        cmp, std::move(container));
+
+    for (size_t iLabel{0_z}; iLabel < numLabels; ++iLabel)
+    {
+      ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
+      uint32_t kwId = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
+
+      ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
+      float score = ParseFloatLE(smallBuffer.data());
+
+      // Update this value
+      scoringData[kwId] = score;
+
+      // Update min
+      if (score < min)
+      {
+        min = score;
+      }
+      // Update max
+      if (score > max)
+      {
+        max = score;
+      }
+
+      // Add to sum
+      sum += score;
+
+      maxHeap.push(std::pair(kwId, score));
+    }
+
+    // Calculate mean value
+    float mean{sum / numLabels};
+
+    // Calculate variance
+    float varSum{0.0f};
+    for (auto&& val : scoringData)
+    {
+      float tmp{val - mean};
+      varSum += (tmp * tmp);
+    }
+    float variance = sqrtf((float)1 / (numLabels - 1) * varSum);
+
+    result[ID] = std::move(scoringData);
+  }
+
+  return result;
 }
 
 #if 0
@@ -721,149 +839,7 @@ bool FileParser::ParseSoftmaxBinFile_GoogleAiVisionFormat(std::vector<std::uniqu
   return false;
 }
 
-bool FileParser::ParseRawScoringData_GoogleAiVisionFormat(std::vector<std::unique_ptr<Image>>& imagesCont,
-                                                          DataId data_ID,
-                                                          const std::string& inputFilepath) const
-{
-  // Open file for reading as binary from the end side
-  std::ifstream ifs(inputFilepath, std::ios::binary | std::ios::ate);
 
-  // If failed to open file
-  if (!ifs)
-  {
-    LOG_ERROR("Error opening file: "s + inputFilepath);
-  }
-
-  // Get end of file
-  auto end = ifs.tellg();
-
-  // Get iterator to begining
-  ifs.seekg(0, std::ios::beg);
-
-  // Compute size of file
-  auto size = std::size_t(end - ifs.tellg());
-
-  // If emtpy file
-  if (size == 0)
-  {
-    LOG_ERROR("Empty file opened!");
-  }
-
-  // Create 4B buffer
-  std::array<std::byte, sizeof(uint32_t)> smallBuffer;
-
-  // Discard first 36B of data
-  // ifs.ignore(36ULL);
-
-  // If something happened
-  if (!ifs)
-  {
-    LOG_ERROR("Error reading file: "s + inputFilepath);
-  }
-
-  // Read number of items in each vector per image
-  ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
-  // Parse number of present floats in every row
-  uint32_t numRecords = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
-
-  // Read number of unique kws in annotation
-  ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
-  uint32_t numKeywords = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
-
-  float sum{0.0f};
-  float min{std::numeric_limits<float>::max()};
-  float max{-std::numeric_limits<float>::max()};
-
-  for (size_t i{0_z}; i < numRecords; ++i)
-  {
-    std::vector<float> scoringData;
-    scoringData.resize(numKeywords, GOOGLE_AI_NO_LABEL_SCORE);
-
-    ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
-    uint32_t imageId = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
-
-    ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
-    uint32_t numLabels = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
-
-    auto cmp = [](const std::pair<size_t, float>& left, const std::pair<size_t, float>& right) {
-      return left.second < right.second;
-    };
-
-    // Reserve enough space in container
-    std::vector<std::pair<size_t, float>> container;
-
-    std::priority_queue<std::pair<size_t, float>, std::vector<std::pair<size_t, float>>, decltype(cmp)> maxHeap(
-        cmp, std::move(container));
-
-    for (size_t iLabel{0_z}; iLabel < numLabels; ++iLabel)
-    {
-      ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
-      uint32_t kwId = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
-
-      ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
-      float score = ParseFloatLE(smallBuffer.data());
-
-      // Update this value
-      scoringData[kwId] = score;
-
-      // Update min
-      if (score < min)
-      {
-        min = score;
-      }
-      // Update max
-      if (score > max)
-      {
-        max = score;
-      }
-
-      // Add to sum
-      sum += score;
-
-      maxHeap.push(std::pair(kwId, score));
-    }
-
-    // Calculate mean value
-    float mean{sum / numLabels};
-
-    // Calculate variance
-    float varSum{0.0f};
-    for (auto&& val : scoringData)
-    {
-      float tmp{val - mean};
-      varSum += (tmp * tmp);
-    }
-    float variance = sqrtf((float)1 / (numLabels - 1) * varSum);
-
-    Image* pImg{imagesCont[imageId].get()};
-
-    std::vector<std::tuple<Keyword*, float>> topKeywords;
-    topKeywords.reserve(NUM_TOP_KEYWORDS);
-
-    for (size_t ii{0_z}; ii < NUM_TOP_KEYWORDS; ++ii)
-    {
-      if (maxHeap.size() <= 0) break;
-
-      std::pair<size_t, float> pair{maxHeap.top()};
-      maxHeap.pop();
-
-      auto pKw{_pRanker->GetKeywordByVectorIndex(data_ID, pair.first)};
-
-      topKeywords.emplace_back(pKw, pair.second);
-    }
-
-    // Push top keywpords
-    pImg->_topKeywords.emplace(data_ID, std::move(topKeywords));
-
-    // Push parsed data into the Image instance
-    pImg->_rawImageScoringData.emplace(data_ID, std::move(scoringData));
-
-    // Push parsed data info into the Image instance
-    pImg->_rawImageScoringDataInfo.emplace(data_ID, Image::ScoringDataInfo{min, max, mean, variance});
-  }
-
-  return true;
-}
 
 //
 // bool FileParser::ParseSoftmaxBinFile_ViretFormat(

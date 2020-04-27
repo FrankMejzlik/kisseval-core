@@ -43,3 +43,16 @@ TransformationLinear01::TransformationLinear01(const KeywordsContainer& keywords
                           accumulate_hypernyms(keywords, apply(data_mat), HyperAccumType::MAX))
 {
 }
+
+Matrix<float> TransformationLinear01GoogleVision::apply(const Matrix<float>& data,
+                                                        [[maybe_unused]] const std::string& options)
+{
+  return data;
+}
+
+TransformationLinear01GoogleVision::TransformationLinear01GoogleVision(const KeywordsContainer& keywords,
+                                                                       const Matrix<float>& data_mat,
+                                                                       const std::string& options)
+    : BaseVectorTransform(calc_stats(keywords, apply(data_mat)), std::pair<Matrix<float>, DataInfo>())
+{
+}

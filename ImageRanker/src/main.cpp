@@ -6,7 +6,7 @@
 #include <thread>
 
 #define DATA_DIR "data/"
-#define DATA_INFO_FPTH R"(c:\Users\devwe\data\data_info.json)"
+#define DATA_INFO_FPTH R"(c:\Users\devwe\source\repos\ImageRanker\data_info.json)"
 
 #include "common.h"
 #include "utility.h"
@@ -20,8 +20,14 @@ int main()
   auto json_data = parse_data_config_file(DATA_INFO_FPTH);
 
   auto is1 = json_data["imagesets"][0];
+
+  // NASNet
   auto dp1 = json_data["data_packs"]["VIRET_based"][0];
+  // GoogLeNet
   auto dp2 = json_data["data_packs"]["VIRET_based"][1];
+
+  // Google Vision AI
+  auto dp3 = json_data["data_packs"]["Google_based"][0];
 
   // V3C1 20k subset
   std::vector<DatasetDataPackRef> datasets{
@@ -51,8 +57,18 @@ int main()
        DATA_DIR + dp2["data"]["deep_features_fpth"].get<std::string>()},
   };
 
-  ImageRanker::Config cfg{ImageRanker::eMode::cFullAnalytical, datasets, VIRET_data_packs,
-                          std::vector<GoogleDataPackRef>(), std::vector<BowDataPackRef>()};
+  std::vector<GoogleDataPackRef> Google_data_packs{
+      // Google Vision AI
+      {dp3["ID"].get<std::string>(), dp3["description"].get<std::string>(), dp3["model_options"].get<std::string>(),
+       dp3["data"]["target_dataset"].get<std::string>(),
+
+       dp3["vocabulary"]["ID"].get<std::string>(), dp3["vocabulary"]["description"].get<std::string>(),
+       DATA_DIR + dp3["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
+
+       DATA_DIR + dp3["data"]["presoftmax_scorings_fpth"].get<std::string>()}};
+
+  ImageRanker::Config cfg{ImageRanker::eMode::cFullAnalytical, datasets, VIRET_data_packs, Google_data_packs,
+                          std::vector<BowDataPackRef>()};
 
   ImageRanker ranker(cfg);
 
@@ -61,9 +77,11 @@ int main()
 #define TEST_get_autocomplete_results 0
 #define TEST_get_loaded_imagesets_info 0
 #define TEST_rank_frames 0
-#define TEST_run_model_test 1
-#define TEST_run_model_vec_space 1
+#define TEST_run_model_test 0
+#define TEST_run_model_vec_space 0
 #define TEST_boolean_grid_test_threshold 0
+#define TEST_run_model_test_Google 0
+#define TEST_boolean_grid_test_threshold_Google 1
 
   // TEST: `submit_annotator_user_queries`
 #if TEST_submit_annotator_user_queries
@@ -199,6 +217,71 @@ int main()
   {
     auto res =
         ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+                              "model=boolean;model_true_threshold=" + std::to_string(param) + ";transform=linear_01;");
+
+    float area{calc_chart_area(res)};
+
+    if (area > max_area)
+    {
+      std::cout << "New max found... p = " << param << ", i = " << i << std::endl;
+      std::cout << "\t area = " << area << std::endl;
+      max_area = area;
+      max_p_val = param;
+    }
+    std::cout << "i = " << i << std::endl;
+    std::cout << "\t area = " << area << std::endl;
+  }
+
+#endif
+
+#if TEST_run_model_test_Google
+
+  std::cout << "===============================" << std::endl;
+  std::cout << "===============================" << std::endl;
+  std::cout << "Google: " << std::endl;
+  std::cout << "===============================" << std::endl;
+  std::cout << "===============================" << std::endl;
+
+  std::string m1_opts =
+      "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=no_sim_user;"s;
+  auto r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m1_opts);
+  auto r1_area = calc_chart_area(r1);
+  std::cout << "========================================" << std::endl;
+  std::cout << m1_opts << std::endl;
+  std::cout << "\t" << r1_area << std::endl;
+
+  std::string m2_opts = "sim_user=no_sim_user;model=boolean;model_true_threshold=0.000598001;transform=linear_01;"s;
+  auto r2 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m2_opts);
+  auto r2_area = calc_chart_area(r2);
+  std::cout << "========================================" << std::endl;
+  std::cout << m2_opts << std::endl;
+  std::cout << "\t" << r2_area << std::endl;
+
+  std::string m5_opts =
+      "sim_user=no_sim_user;model=vector_space;transform=linear_01;model_dist_fn=cosine;model_term_tf=natural;model_term_idf=idf;model_query_tf=log;model_query_idf=none;model_IDF_method_idf_coef=6.0f"s;
+  auto r5 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m5_opts);
+  auto r5_area = calc_chart_area(r5);
+  std::cout << "========================================" << std::endl;
+  std::cout << m5_opts << std::endl;
+  std::cout << "\t" << r5_area << std::endl;
+
+#endif
+
+#if TEST_boolean_grid_test_threshold_Google
+
+  constexpr size_t num_iters{100_z};
+  constexpr float p_from{0.0001F};
+  constexpr float p_to{0.001F};
+
+  constexpr float delta_it{(p_to - p_from) / num_iters};
+
+  float max_area{0.0F};
+  float max_p_val{std::numeric_limits<float>::quiet_NaN()};
+
+  for (auto [param, i] = std::tuple{p_from, 0_z}; param <= p_to; param += delta_it, ++i)
+  {
+    auto res =
+        ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019",
                               "model=boolean;model_true_threshold=" + std::to_string(param) + ";transform=linear_01;");
 
     float area{calc_chart_area(res)};

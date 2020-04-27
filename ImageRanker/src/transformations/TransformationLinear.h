@@ -22,4 +22,18 @@ class TransformationLinear01 : public BaseVectorTransform
   TransformationLinear01(const KeywordsContainer& keywords, const Matrix<float>& data_mat,
                          const std::string& options = "");
 };
+
+class TransformationLinear01GoogleVision : public BaseVectorTransform
+{
+ public:
+  struct Options
+  {
+  };
+
+ public:
+   [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, const std::string& options = "");
+
+  TransformationLinear01GoogleVision(const KeywordsContainer& keywords, const Matrix<float>& data_mat,
+                         const std::string& options = "");
+};
 }  // namespace image_ranker

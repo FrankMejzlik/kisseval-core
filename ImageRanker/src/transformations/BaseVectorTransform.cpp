@@ -64,6 +64,51 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
   return std::pair(std::move(result_data), std::move(di));
 }
 
+std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords, Matrix<float>&& data, bool normalize)
+{
+  Matrix<float> result_data;
+  result_data.reserve(data.size());
+  DataInfo di;
+
+  for (auto&& row : data)
+  {
+    Vector<float> new_row;
+    new_row.reserve(row.size());
+
+    float row_sum{0.0F};
+    float row_max{-99999999.0F};
+    float row_min{std::numeric_limits<float>::max()};
+
+    // Iterate over all bins in this vector
+    for (auto&& [it, i]{std::tuple(row.begin(), size_t{0})}; it != row.end(); ++it, ++i)
+    {
+      auto& bin{*it};
+      auto pKw{keywords.GetKeywordConstPtrByVectorIndex(i)};
+
+      row_sum += bin;
+      row_max = std::max(row_max, bin);
+      row_min = std::min(row_min, bin);
+
+      new_row.emplace_back(bin);
+    }
+
+    if (normalize)
+    {
+      std::transform(new_row.begin(), new_row.end(), new_row.begin(), [row_sum](float x) { return x / row_sum; });
+
+      row_max /= row_sum;
+      row_min /= row_sum;
+    }
+
+    di.maxes.emplace_back(row_max);
+    di.mins.emplace_back(row_min);
+
+    result_data.emplace_back(std::move(new_row));
+  }
+
+  return std::pair(std::move(result_data), std::move(di));
+}
+
 const Vector<float>& BaseVectorTransform::data_idfs(float true_threshold, float idf_coef) const
 {
   // Look into the cache first

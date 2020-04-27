@@ -78,6 +78,7 @@ class KeywordsContainer
  public:
   KeywordsContainer() = delete;
   KeywordsContainer(const ViretDataPackRef::VocabData& vocab_data_refs);
+  KeywordsContainer(const GoogleDataPackRef::VocabData& vocab_data_refs);
 
   const std::string& get_ID() const { return _ID; }
   const std::string& get_description() const { return _description; }

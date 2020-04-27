@@ -8,7 +8,11 @@
 
 # TBA
 
-@page building_syengine Building SYEngine
+@section Future improvements
+- Use transparent sparse matrix representation for Google data
+- Better dynamic caching mechanism for data loading
+
+@page build How to build
 
 @note
     TBA

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <unordered_map>
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 #include "common.h"
@@ -28,8 +28,12 @@ enum class HyperAccumType
   _COUNT
 };
 
-[[nodiscard]] std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer& keywords, Matrix<float>&& data,
-                                                 HyperAccumType type, bool normalize = true);
+[[nodiscard]] std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer& keywords,
+                                                                      Matrix<float>&& data, HyperAccumType type,
+                                                                      bool normalize = true);
+
+[[nodiscard]] std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords, Matrix<float>&& data,
+                                                            bool normalize = true);
 
 /**
  * Class representing transformed data matrix, but this serves mainly as base class and theferoe is "no_transform"
@@ -38,14 +42,16 @@ enum class HyperAccumType
 class BaseVectorTransform
 {
  public:
-  BaseVectorTransform(const std::pair<Matrix<float>, const DataInfo>& data_sum_mat,const std::pair<Matrix<float>,DataInfo>& data_max_mat)
+  BaseVectorTransform(const std::pair<Matrix<float>, const DataInfo>& data_sum_mat,
+                      const std::pair<Matrix<float>, DataInfo>& data_max_mat)
       : _data_sum_mat(data_sum_mat.first),
         _data_max_mat(data_max_mat.first),
         _data_sum_mat_info(data_sum_mat.second),
         _data_max_mat_info(data_max_mat.second)
   {
   }
-  BaseVectorTransform(std::pair<Matrix<float>, DataInfo>&& data_sum_mat, std::pair<Matrix<float>, DataInfo>&& data_max_mat)
+  BaseVectorTransform(std::pair<Matrix<float>, DataInfo>&& data_sum_mat,
+                      std::pair<Matrix<float>, DataInfo>&& data_max_mat)
       : _data_sum_mat(std::move(data_sum_mat.first)),
         _data_max_mat(std::move(data_max_mat.first)),
         _data_sum_mat_info(std::move(data_sum_mat.second)),
@@ -58,7 +64,8 @@ class BaseVectorTransform
   [[nodiscard]] virtual const Matrix<float>& data_sum() const { return _data_sum_mat; }
   [[nodiscard]] virtual const DataInfo& data_sum_info() const { return _data_sum_mat_info; }
 
-  [[nodiscard]] virtual const Matrix<float>& data_sum_tfidf(eTermFrequency tf_ID, eInvDocumentFrequency idf_ID, float true_t, float idf_coef) const;
+  [[nodiscard]] virtual const Matrix<float>& data_sum_tfidf(eTermFrequency tf_ID, eInvDocumentFrequency idf_ID,
+                                                            float true_t, float idf_coef) const;
   [[nodiscard]] virtual const Vector<float>& data_idfs(float true_threshold, float idf_coef) const;
 
   [[nodiscard]] virtual size_t num_frames() const { return _data_sum_mat.size(); }
@@ -69,8 +76,6 @@ class BaseVectorTransform
    *  Used for models with SUM inner operation. */
   Matrix<float> _data_sum_mat;
   DataInfo _data_sum_mat_info;
-
-  
 
   mutable std::unordered_map<float, Vector<float>> _data_idfs;
   mutable std::map<TfidfCacheKey, Matrix<float>> _transformed_data_cache;

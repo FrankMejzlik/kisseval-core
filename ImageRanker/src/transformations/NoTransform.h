@@ -26,4 +26,18 @@ class NoTransform : public BaseVectorTransform
   NoTransform(const KeywordsContainer& keywords, Matrix<float>& data_mat,
                         [[maybe_unused]] const std::string& options = "");
 };
+
+class NoTransformGoogleVision : public BaseVectorTransform
+{
+ public:
+  struct Options
+  {
+  };
+
+ public:
+  [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, [[maybe_unused]] const std::string& options = "");
+
+  NoTransformGoogleVision(const KeywordsContainer& keywords, Matrix<float>& data_mat,
+                        [[maybe_unused]] const std::string& options = "");
+};
 }  // namespace image_ranker

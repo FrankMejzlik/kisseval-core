@@ -95,6 +95,39 @@ KeywordsContainer::KeywordsContainer(const ViretDataPackRef::VocabData& vocab_da
   }
 }
 
+KeywordsContainer::KeywordsContainer(const GoogleDataPackRef::VocabData& vocab_data_refs)
+    : _ID(vocab_data_refs.ID),
+      _description(vocab_data_refs.description),
+      _kw_classes_fpth(vocab_data_refs.keyword_synsets_fpth)
+{
+  auto res = FileParser::ParseKeywordClassesFile_ViretFormat(_kw_classes_fpth);
+
+  // Store results
+  _allDescriptions = std::move(std::get<0>(res));
+  _vecIndexToKeyword = std::move(std::get<1>(res));
+  _wordnetIdToKeywords = std::move(std::get<2>(res));
+  _descIndexToKeyword = std::move(std::get<3>(res));
+  _keywords = std::move(std::get<4>(res));
+  _ID_to_keyword = std::move(std::get<5>(res));
+
+  // Sort keywords
+  std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
+
+  for (auto&& kw : _keywords)
+  {
+    std::unordered_set<size_t> accum_indices;
+    // Add self
+    accum_indices.emplace(kw->m_vectorIndex);
+
+    for (auto&& hypo_wordnet_ID : kw->m_hyponyms)
+    {
+      GetVectorKeywordsIndicesSet(accum_indices, hypo_wordnet_ID);
+    }
+
+    kw->m_hyponymBinIndices = std::move(accum_indices);
+  }
+}
+
 KeywordData KeywordsContainer::GetKeywordByVectorIndex(size_t index) const
 {
   auto result = _vecIndexToKeyword.find(index);

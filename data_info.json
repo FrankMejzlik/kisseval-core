@@ -73,22 +73,21 @@
         "Google_based": [
             {
                 "active": true,
-                "ID": "GoogLeNet2019",
-                "name": "GoogLeNet2019",
+                "ID": "GoogleVisionAi_Sep2019",
+                "name": "GoogleVisionAi_Sep2019",
                 "description": "Google_based",
                 "model_options": "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0",
                 "vocabulary": {
                     "ID": "Google_AI_2019",
                     "description": "With ~5000 phrases.",
-                    "keyword_synsets_fpth": "./imageset_V3C1_20k/Google/keyword_classes.google.txt"
+                    "keyword_synsets_fpth": "./imageset_V3C1_20k/Google/keyword_classes.google_vision_ai.txt"
                 },
                 "data": {
                     "target_dataset": "V3C1_20k",
-                    "scoring_files_dir": "./imageset_V3C1_20k/Google/extracted_sep_2019/google_labels/",
-                    "scoring_files_list_fpth": "./imageset_V3C1_20k/Google/extracted_sep_2019/files.google.txt"
+                    "presoftmax_scorings_fpth": "./imageset_V3C1_20k/Google/extracted_sep_2019/scorings.google_vision_ai.bin"
                 }
             }
         ],
-        "BoW_based": []
+        "W2VV_based": []
     }
 }

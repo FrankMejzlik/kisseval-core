@@ -258,8 +258,6 @@ struct GoogleDataPackRef : public BaseDataPackRef
   struct ScoreData
   {
     std::string presoftmax_scorings_fpth;
-    std::string softmax_scorings_fpth;
-    std::string deep_features_fpth;
   };
 
   VocabData vocabulary_data;

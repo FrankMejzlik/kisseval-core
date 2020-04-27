@@ -72,6 +72,9 @@
     <ClCompile Include="src\transformations\NoTransform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\data_packs\Google_based\GoogleVisionDataPack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\config.h">
@@ -165,6 +168,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\transformations\NoTransform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\data_packs\Google_based\GoogleVisionDataPack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

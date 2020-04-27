@@ -3,6 +3,7 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
+#include "data_packs/Google_based/GoogleVisionDataPack.h"
 #include "data_packs/VIRET_based/ViretDataPack.h"
 
 #include "ImageRanker.h"
@@ -42,6 +43,16 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
   }
 
   // Google type
+  for (auto&& pack : _settings.config.Google_packs)
+  {
+    // Initialize all images
+    // \todo Use transparent sparse matrix representation for Google data
+    auto presoft_data = FileParser::ParseRawScoringData_GoogleAiVisionFormat(pack.score_data.presoftmax_scorings_fpth);
+
+    _data_packs.emplace(pack.ID, std::make_unique<GoogleVisionDataPack>(pack.ID, pack.target_imageset,
+                                                                        pack.model_options, pack.description,
+                                                                        pack.vocabulary_data, std::move(presoft_data)));
+  }
 
   // BoW type
 }
