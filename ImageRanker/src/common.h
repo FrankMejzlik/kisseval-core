@@ -122,7 +122,7 @@ enum class eModelOptsKeys
   MODEL_TERM_IDF,
   MODEL_QUERY_TF,
   MODEL_QUERY_IDF,
-  MODEL_BIAS_TEXT_QUERY,
+  MODEL_SUB_PCA_MEAN,
   _COUNT
 };
 
@@ -132,7 +132,7 @@ const std::array<std::pair<std::string, std::string>, size_t(eModelOptsKeys::_CO
      std::pair("model_ignore_treshold", ""), std::pair("model_true_threshold", ""),
      std::pair("model_IDF_type_idf_coef", ""), std::pair("model_dist_fn", ""), std::pair("model_term_tf", ""),
      std::pair("model_term_idf", ""), std::pair("model_query_tf", ""), std::pair("model_query_idf", ""),
-     std::pair("bias_text_query", "")}};
+     std::pair("sub_PCA_mean", "")}};
 
 inline const std::pair<std::string, std::string>& enum_label(eModelOptsKeys val)
 {
@@ -288,6 +288,10 @@ struct W2vvDataPackRef : public BaseDataPackRef
     std::string kw_PCA_mat_fpth;
     size_t kw_PCA_mat_dim;
     size_t kw_PCA_mat_data_offset;
+
+    std::string kw_PCA_mean_vec_fpth;
+    size_t kw_PCA_mean_vec_dim;
+    size_t kw_PCA_mean_vec_data_offset;
   };
 
   struct ScoreData

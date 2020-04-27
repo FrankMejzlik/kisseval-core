@@ -794,8 +794,8 @@
                         "description": "We embedd text query into the space and find the nearest frames.",
                         "options": [
                             {
-                                "key": "bias_text_query",
-                                "name": "Substitute txt bias vector",
+                                "key": "sub_PCA_mean",
+                                "name": "Substitute PCA mean vector",
                                 "description": "",
                                 "input_type": "enum",
                                 "values": [

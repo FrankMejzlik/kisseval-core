@@ -108,7 +108,10 @@
                     "keyword_bias_vec_data_offset": 0,
                     "keyword_PCA_mat_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/keyword_PCA_matrix.resnext152_resnext101.w2vv_bow.bin",
                     "keyword_PCA_mat_dim": 2048,
-                    "keyword_PCA_mat_data_offset": 0
+                    "keyword_PCA_mat_data_offset": 0,
+                    "keyword_PCA_mean_vec_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/keyword_PCA_mean.resnext152_resnext101.w2vv_bow.bin",
+                    "keyword_PCA_mean_vec_dim": 2048,
+                    "keyword_PCA_mean_vec_offset": 0
                 },
                 "data": {
                     "target_dataset": "V3C1_20k",

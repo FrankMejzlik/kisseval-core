@@ -101,30 +101,36 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
       continue;
     }
 
-    W2VV_data_packs.emplace_back(W2vvDataPackRef{
-        dp3["ID"].get<std::string>(), dp3["description"].get<std::string>(), dp3["model_options"].get<std::string>(),
-        dp3["data"]["target_dataset"].get<std::string>(),
+    W2VV_data_packs.emplace_back(
+        W2vvDataPackRef{dp3["ID"].get<std::string>(),
+                        dp3["description"].get<std::string>(),
+                        dp3["model_options"].get<std::string>(),
+                        dp3["data"]["target_dataset"].get<std::string>(),
 
-        dp3["vocabulary"]["ID"].get<std::string>(), dp3["vocabulary"]["description"].get<std::string>(),
+                        dp3["vocabulary"]["ID"].get<std::string>(),
+                        dp3["vocabulary"]["description"].get<std::string>(),
 
-        data_dir + dp3["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
+                        data_dir + dp3["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
 
-        data_dir + dp3["vocabulary"]["keyword_features_fpth"].get<std::string>(),
-        dp3["vocabulary"]["keyword_features_dim"].get<size_t>(),
-        dp3["vocabulary"]["keyword_features_data_offset"].get<size_t>(),
+                        data_dir + dp3["vocabulary"]["keyword_features_fpth"].get<std::string>(),
+                        dp3["vocabulary"]["keyword_features_dim"].get<size_t>(),
+                        dp3["vocabulary"]["keyword_features_data_offset"].get<size_t>(),
 
-        data_dir + dp3["vocabulary"]["keyword_bias_vec_fpth"].get<std::string>(),
-        dp3["vocabulary"]["keyword_bias_vec_dim"].get<size_t>(),
-        dp3["vocabulary"]["keyword_bias_vec_data_offset"].get<size_t>(),
+                        data_dir + dp3["vocabulary"]["keyword_bias_vec_fpth"].get<std::string>(),
+                        dp3["vocabulary"]["keyword_bias_vec_dim"].get<size_t>(),
+                        dp3["vocabulary"]["keyword_bias_vec_data_offset"].get<size_t>(),
 
-        data_dir + dp3["vocabulary"]["keyword_PCA_mat_fpth"].get<std::string>(),
-        dp3["vocabulary"]["keyword_PCA_mat_dim"].get<size_t>(),
-        dp3["vocabulary"]["keyword_PCA_mat_data_offset"].get<size_t>(),
+                        data_dir + dp3["vocabulary"]["keyword_PCA_mat_fpth"].get<std::string>(),
+                        dp3["vocabulary"]["keyword_PCA_mat_dim"].get<size_t>(),
+                        dp3["vocabulary"]["keyword_PCA_mat_data_offset"].get<size_t>(),
 
-        data_dir + dp3["data"]["deep_features_fpth"].get<std::string>(), dp3["data"]["deep_features_dim"].get<size_t>(),
-        dp3["data"]["deep_features_data_offset"].get<size_t>()
+                        data_dir + dp3["vocabulary"]["keyword_PCA_mean_vec_fpth"].get<std::string>(),
+                        dp3["vocabulary"]["keyword_PCA_mean_vec_dim"].get<size_t>(),
+                        dp3["vocabulary"]["keyword_PCA_mean_vec_offset"].get<size_t>(),
 
-    });
+                        data_dir + dp3["data"]["deep_features_fpth"].get<std::string>(),
+                        dp3["data"]["deep_features_dim"].get<size_t>(),
+                        dp3["data"]["deep_features_data_offset"].get<size_t>()});
   }
 
   return {ImageRanker::eMode::cFullAnalytical, imagesets, VIRET_data_packs, Google_data_packs, W2VV_data_packs};
@@ -175,19 +181,30 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
   for (auto&& pack : _settings.config.W2VV_packs)
   {
     // Keyword feature vectors
-    // ...
-    // Keyword mean vector
-    // ...
+    auto kw_features =
+        FileParser::parse_float_matrix(pack.vocabulary_data.kw_features_fpth, pack.vocabulary_data.kw_features_dim,
+                                       pack.vocabulary_data.kw_features_data_offset);
+    // Keyword bias vector
+    auto bias_vec_transposed =
+        FileParser::parse_float_vector(pack.vocabulary_data.kw_bias_vec_fpth, pack.vocabulary_data.kw_bias_vec_dim,
+                                       pack.vocabulary_data.kw_bias_vec_data_offset);
+
     // Keyword PCA matrix (2048 -> 128)
-    // ...
+    auto PCA_mat =
+        FileParser::parse_float_matrix(pack.vocabulary_data.kw_PCA_mat_fpth, pack.vocabulary_data.kw_PCA_mat_dim,
+                                       pack.vocabulary_data.kw_PCA_mat_data_offset);
+    auto PCA_mean_vec = FileParser::parse_float_vector(pack.vocabulary_data.kw_PCA_mean_vec_fpth,
+                                                       pack.vocabulary_data.kw_PCA_mean_vec_dim,
+                                                       pack.vocabulary_data.kw_PCA_mean_vec_data_offset);
 
     // Frame feature vectors
     auto deep_features = FileParser::parse_float_matrix(
         pack.score_data.img_features_fpth, pack.score_data.img_features_dim, pack.score_data.img_features_offset);
 
-    _data_packs.emplace(
-        pack.ID, std::make_unique<W2vvDataPack>(pack.ID, pack.target_imageset, pack.model_options, pack.description,
-                                                pack.vocabulary_data, std::move(deep_features)));
+    _data_packs.emplace(pack.ID, std::make_unique<W2vvDataPack>(
+                                     pack.ID, pack.target_imageset, pack.model_options, pack.description,
+                                     pack.vocabulary_data, std::move(deep_features), std::move(kw_features),
+                                     std::move(bias_vec_transposed), std::move(PCA_mat), std::move(PCA_mean_vec)));
   }
 }
 

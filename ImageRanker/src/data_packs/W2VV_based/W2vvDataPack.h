@@ -8,8 +8,7 @@
 
 #include "data_packs/BaseDataPack.h"
 
-#include "BaseClassificationModel.h"
-#include "BaseVectorTransform.h"
+#include "BaseW2vvModel.h"
 #include "SimUser.h"
 
 namespace image_ranker
@@ -18,8 +17,9 @@ class W2vvDataPack : public BaseDataPack
 {
  public:
   W2vvDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
-                const std::string& description, const W2vvDataPackRef::VocabData& vocab_data_refs,
-                std::vector<std::vector<float>>&& presoft);
+               const std::string& description, const W2vvDataPackRef::VocabData& vocab_data_refs,
+               std::vector<std::vector<float>>&& frame_features, Matrix<float>&& kw_features, Vector<float>&& kw_bias_vec,
+               Matrix<float>&& kw_PCA_mat, Vector<float>&& kw_PCA_mean_vec);
 
   [[nodiscard]] virtual RankingResult rank_frames(const std::vector<CnfFormula>& user_queries,
                                                   PackModelCommands model_commands, size_t result_size,
@@ -27,10 +27,6 @@ class W2vvDataPack : public BaseDataPack
 
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
                                                    PackModelCommands model_commands, size_t num_points) const override;
-
-  [[nodiscard]] std::vector<UserTestQuery> process_sim_user(const BaseVectorTransform& transformed_data,
-                                                            const KeywordsContainer& keywords,
-                                                            const std::vector<UserTestQuery>& test_user_queries) const;
 
   [[nodiscard]] virtual const std::string& get_vocab_ID() const override;
   [[nodiscard]] virtual const std::string& get_vocab_description() const override;
@@ -51,13 +47,15 @@ class W2vvDataPack : public BaseDataPack
  private:
   KeywordsContainer _keywords;
 
-  std::vector<std::vector<float>> _presoftmax_data_raw;
+  Matrix<float> _kw_features;
+  Vector<float> _kw_bias_vec;
+  Matrix<float> _kw_PCA_mat;
+  Vector<float> _kw_PCA_mean_vec;
+
+  Matrix<float> _features_of_frames;
 
   /** Models for this data pack - only classification ones */
-  std::unordered_map<std::string, std::unique_ptr<BaseClassificationModel>> _models;
-
-  /** Transformations for this data pack - only classification ones */
-  std::unordered_map<std::string, std::unique_ptr<BaseVectorTransform>> _transforms;
+  std::unordered_map<std::string, std::unique_ptr<BaseW2vvModel>> _models;
 
   std::unordered_map<std::string, std::unique_ptr<BaseSimUser>> _sim_users;
 };

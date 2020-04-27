@@ -10,10 +10,15 @@ using namespace image_ranker;
 
 W2vvDataPack::W2vvDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
                            const std::string& description, const W2vvDataPackRef::VocabData& vocab_data_refs,
-                           std::vector<std::vector<float>>&& presoft)
+                           std::vector<std::vector<float>>&& frame_features, Matrix<float>&& kw_features,
+                           Vector<float>&& kw_bias_vec, Matrix<float>&& kw_PCA_mat, Vector<float>&& kw_PCA_mean_vec)
     : BaseDataPack(ID, target_imageset_ID, model_options, description),
-      _presoftmax_data_raw(std::move(presoft)),
-      _keywords(vocab_data_refs)
+      _features_of_frames(std::move(frame_features)),
+      _keywords(vocab_data_refs),
+      _kw_features(std::move(kw_features)),
+      _kw_bias_vec(std::move(kw_bias_vec)),
+      _kw_PCA_mat(std::move(kw_PCA_mat)),
+      _kw_PCA_mean_vec(std::move(kw_PCA_mean_vec))
 {
 }
 
@@ -21,7 +26,7 @@ const std::string& W2vvDataPack::get_vocab_ID() const { return _keywords.get_ID(
 
 const std::string& W2vvDataPack::get_vocab_description() const { return _keywords.get_description(); }
 
-std::string W2vvDataPack::humanize_and_query(const std::string& and_query) const 
+std::string W2vvDataPack::humanize_and_query(const std::string& and_query) const
 {
   LOGW("Not implemented!");
   return ""s;
@@ -85,17 +90,8 @@ RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_quer
   }
   const auto& ranking_model = *(iter_m->second);
 
-  // Choose desired transform
-  auto iter_t = _transforms.find(transform_ID);
-  if (iter_t == _transforms.end())
-  {
-    LOGE("Uknown transform_ID: '" + transform_ID + "'.");
-    return RankingResult{};
-  }
-  const auto& transform = *(iter_t->second);
-
   // Run this model
-  return ranking_model.rank_frames(transform, _keywords, idx_queries, result_size, opt_key_vals, target_image_ID);
+  return ranking_model.rank_frames(_features_of_frames, _keywords, idx_queries, result_size, opt_key_vals, target_image_ID);
 }
 
 #if 0
@@ -287,7 +283,6 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   std::vector<ModelKeyValOption> opt_key_vals;
 
   std::string model_ID;
-  std::string transform_ID;
   std::string sim_user_ID;
 
   for (auto&& tok : tokens)
@@ -298,10 +293,6 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
     if (key_val[0] == enum_label(eModelOptsKeys::MODEL_ID).first)
     {
       model_ID = key_val[1];
-    }
-    else if (key_val[0] == enum_label(eModelOptsKeys::TRANSFORM_ID).first)
-    {
-      transform_ID = key_val[1];
     }
     else if (key_val[0] == enum_label(eModelOptsKeys::SIM_USER_ID).first)
     {
@@ -323,15 +314,6 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   }
   const auto& ranking_model = *(iter_m->second);
 
-  // Choose desired transform
-  auto iter_t = _transforms.find(transform_ID);
-  if (iter_t == _transforms.end())
-  {
-    LOGE("Uknown transform_ID: '" + transform_ID + "'.");
-    return ModelTestResult{};
-  }
-  const auto& transform = *(iter_t->second);
-
   // Choose desired simulated user
   auto iter_su = _sim_users.find(sim_user_ID);
   if (iter_su == _sim_users.end())
@@ -342,10 +324,10 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   }
   const auto& sim_user = *(iter_su->second);
 
-  // Process sim user
-  idx_test_queries = sim_user.process_sim_user(transform, _keywords, idx_test_queries, opt_key_vals);
+  // Process sim user \todo
+  //idx_test_queries = sim_user.process_sim_user(_frames_features, _keywords, idx_test_queries, opt_key_vals);
 
-  return ranking_model.test_model(transform, _keywords, idx_test_queries, opt_key_vals, num_points);
+  return ranking_model.test_model(_features_of_frames, _keywords, idx_test_queries, opt_key_vals, num_points);
 }
 
 AutocompleteInputResult W2vvDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,

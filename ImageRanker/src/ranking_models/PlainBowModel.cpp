@@ -12,11 +12,11 @@ PlainBowModel::Options PlainBowModel::parse_options(const std::vector<ModelKeyVa
 
   for (auto&& [key, val] : option_key_val_pairs)
   {
-    if (key == enum_label(eModelOptsKeys::MODEL_BIAS_TEXT_QUERY).first)
+    if (key == enum_label(eModelOptsKeys::MODEL_SUB_PCA_MEAN).first)
     {
       if (val == "true")
       {
-        res.bias_text_query_vector = true;
+        res.sub_PCA_mean = true;
       }
     }
     else {
@@ -27,7 +27,7 @@ PlainBowModel::Options PlainBowModel::parse_options(const std::vector<ModelKeyVa
   return res;
 }
 
-RankingResult PlainBowModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+RankingResult PlainBowModel::rank_frames(const Matrix<float>& transformed_data, const KeywordsContainer& keywords,
                                       const std::vector<CnfFormula>& user_query, size_t result_size,
                                       const std::vector<ModelKeyValOption>& options, FrameId target_frame_ID) const
 {
@@ -43,7 +43,7 @@ RankingResult PlainBowModel::rank_frames(const BaseVectorTransform& transformed_
   return rank_frames(transformed_data, keywords, user_query, result_size, opts, target_frame_ID);
 }
 
-RankingResult PlainBowModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+RankingResult PlainBowModel::rank_frames(const Matrix<float>& data_mat, const KeywordsContainer& keywords,
                                       const std::vector<CnfFormula>& user_query, size_t result_size,
                                       const Options& opts, FrameId target_frame_ID) const
 {
@@ -54,7 +54,7 @@ RankingResult PlainBowModel::rank_frames(const BaseVectorTransform& transformed_
 
   // Create inner container for the queue
   std::vector<FramePair> queue_cont;
-  queue_cont.reserve(transformed_data.num_frames());
+  queue_cont.reserve(data_mat.size());
 
   // Construct prioprity queue
   std::priority_queue<FramePair, std::vector<FramePair>, decltype(frame_pair_cmptor)> max_prio_queue(
@@ -64,7 +64,6 @@ RankingResult PlainBowModel::rank_frames(const BaseVectorTransform& transformed_
   result.target = target_frame_ID;
   result.m_frames.reserve(result_size);
 
-  const Matrix<float>& data_mat = transformed_data.data_sum();
 
   {
     size_t i{0};
@@ -104,12 +103,12 @@ RankingResult PlainBowModel::rank_frames(const BaseVectorTransform& transformed_
 }
 
 
-ModelTestResult PlainBowModel::test_model(const BaseVectorTransform& transformed_data,
+ModelTestResult PlainBowModel::test_model(const Matrix<float>& transformed_data,
                                           const KeywordsContainer& keywords,
                                           const std::vector<UserTestQuery>& test_user_queries,
                                           const std::vector<ModelKeyValOption>& options, size_t num_points) const
 {
-  size_t imageset_size{transformed_data.num_frames()};
+  size_t imageset_size{transformed_data.size()};
   float divisor{float(imageset_size) / num_points};
 
   // Prefil result [x,f(x)] values
