@@ -766,42 +766,6 @@
                         "options": []
                     }
                 ]
-            },
-            {
-                "key": "sim_user",
-                "name": "sim_user",
-                "description": "",
-                "input_type": "enum",
-                "values": [
-                    {
-                        "active": true,
-                        "ID": "no_sim_user",
-                        "name": "No simulated user",
-                        "description": "",
-                        "options": []
-                    },
-                    {
-                        "active": true,
-                        "ID": "sim_single_queries",
-                        "name": "Simulate single queries",
-                        "description": "",
-                        "options": []
-                    },
-                    {
-                        "active": true,
-                        "ID": "sim_temp_queries",
-                        "name": "Simulate temporal queries",
-                        "description": "",
-                        "options": []
-                    },
-                    {
-                        "active": true,
-                        "ID": "augment_real_with_temp_queries",
-                        "name": "Augment real with simulated temporal",
-                        "description": "",
-                        "options": []
-                    }
-                ]
             }
         ]
     },

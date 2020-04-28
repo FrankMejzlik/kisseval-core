@@ -51,6 +51,7 @@ std::vector<UserTestQuery> SimUserXToP::generate_single_queries(const BaseImages
                                                                 const Options& options, size_t num_queries) const
 {
   LOGW("Not implemented!");
+  throw NotSuportedModelOption("Single queries generation not suported for this options combinations.");
   return test_user_queries;
 }
 
@@ -61,5 +62,6 @@ std::vector<UserTestQuery> SimUserXToP::augment_with_temp_queries(const BaseImag
                                                                   const Options& options) const
 {
   LOGW("Not implemented!");
+  throw NotSuportedModelOption("Single queries generation not suported for this options combinations.");
   return test_user_queries;
 }

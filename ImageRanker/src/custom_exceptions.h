@@ -14,4 +14,10 @@ class UnableToCreateFileExcept : public std::runtime_error
   UnableToCreateFileExcept(const std::string& msg) : std::runtime_error(msg) {}
 };
 
+class NotSuportedModelOption : public std::runtime_error
+{
+ public:
+  NotSuportedModelOption(const std::string& msg) : std::runtime_error(msg) {}
+};
+
 #endif  // _IR_CUSTOM_EXCEPTIONS_H_
