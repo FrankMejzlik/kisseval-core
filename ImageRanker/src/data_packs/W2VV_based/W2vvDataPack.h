@@ -24,8 +24,13 @@ class W2vvDataPack : public BaseDataPack
   [[nodiscard]] virtual RankingResult rank_frames(const std::vector<CnfFormula>& user_queries,
                                                   PackModelCommands model_commands, size_t result_size,
                                                   FrameId target_image_ID = ERR_VAL<FrameId>()) const override;
+  [[nodiscard]] virtual RankingResult rank_frames(const std::vector<std::string>& user_native_queries,
+                                                  PackModelCommands model_commands, size_t result_size,
+                                                  FrameId target_image_ID = ERR_VAL<FrameId>()) const override;
 
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
+                                                   PackModelCommands model_commands, size_t num_points) const override;
+  [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestNativeQuery>& test_native_queries,
                                                    PackModelCommands model_commands, size_t num_points) const override;
 
   [[nodiscard]] virtual const std::string& get_vocab_ID() const override;

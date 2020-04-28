@@ -21,6 +21,8 @@ class DataManager
                                                      const StringId& data_pack_ID = ""s,
                                                      const StringId& model_options = ""s) const;
 
+  std::vector<UserTestNativeQuery> fetch_user_native_test_queries(eUserQueryOrigin queries_origin) const;
+
  private:
  private:
   ImageRanker* _p_owner;

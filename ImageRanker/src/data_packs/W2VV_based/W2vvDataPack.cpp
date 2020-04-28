@@ -20,6 +20,8 @@ W2vvDataPack::W2vvDataPack(const StringId& ID, const StringId& target_imageset_I
       _kw_PCA_mat(std::move(kw_PCA_mat)),
       _kw_PCA_mean_vec(std::move(kw_PCA_mean_vec))
 {
+  // Instantiate all wanted models
+  _models.emplace(enum_label(eModelIds::W2VV_BOW_VBS2020).first, std::make_unique<PlainBowModel>());
 }
 
 const std::string& W2vvDataPack::get_vocab_ID() const { return _keywords.get_ID(); }
@@ -93,6 +95,15 @@ RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_quer
   // Run this model
   return ranking_model.rank_frames(_features_of_frames, _keywords, idx_queries, result_size, opt_key_vals, target_image_ID);
 }
+
+RankingResult W2vvDataPack::rank_frames(const std::vector<std::string>& user_native_queries,
+                                                  PackModelCommands model_commands, size_t result_size,
+                                                  FrameId target_image_ID) const
+  {
+    // Convert native queries into CNF queries containing only supported words
+    LOGW("Not implemented");
+    return RankingResult();
+  };
 
 #if 0
 void do_test20()
@@ -329,6 +340,14 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
 
   return ranking_model.test_model(_features_of_frames, _keywords, idx_test_queries, opt_key_vals, num_points);
 }
+
+ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestNativeQuery>& test_native_queries,
+                                                   PackModelCommands model_commands, size_t num_points) const
+  {
+    // Convert native queries into CNF queries containing only supported words
+    LOGW("Not implemented");
+    return ModelTestResult();
+  };
 
 AutocompleteInputResult W2vvDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,
                                                                bool with_example_image) const

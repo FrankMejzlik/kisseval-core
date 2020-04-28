@@ -10,3 +10,4 @@
 #include "BooleanModel.h"
 #include "VectorSpaceModel.h"
 #include "MultSumMaxModel.h"
+#include "PlainBowModel.h"

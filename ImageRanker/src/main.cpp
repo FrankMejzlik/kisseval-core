@@ -31,7 +31,7 @@ int main()
 #define TEST_run_model_vec_space 0
 #define TEST_boolean_grid_test_threshold 0
 #define TEST_run_model_test_Google 0
-#define TEST_boolean_grid_test_threshold_Google 1
+#define TEST_boolean_grid_test_threshold_Google 0
 
   // TEST: `submit_annotator_user_queries`
 #if TEST_submit_annotator_user_queries
@@ -246,6 +246,39 @@ int main()
     std::cout << "i = " << i << std::endl;
     std::cout << "\t area = " << area << std::endl;
   }
+
+#endif
+
+#if TEST_run_model_test_Google
+
+  std::cout << "===============================" << std::endl;
+  std::cout << "===============================" << std::endl;
+  std::cout << "W2VV: " << std::endl;
+  std::cout << "===============================" << std::endl;
+  std::cout << "===============================" << std::endl;
+
+  std::string m1_opts =
+      "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=no_sim_user;"s;
+  auto r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m1_opts);
+  auto r1_area = calc_chart_area(r1);
+  std::cout << "========================================" << std::endl;
+  std::cout << m1_opts << std::endl;
+  std::cout << "\t" << r1_area << std::endl;
+
+  std::string m2_opts = "sim_user=no_sim_user;model=boolean;model_true_threshold=0.000598001;transform=linear_01;"s;
+  auto r2 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m2_opts);
+  auto r2_area = calc_chart_area(r2);
+  std::cout << "========================================" << std::endl;
+  std::cout << m2_opts << std::endl;
+  std::cout << "\t" << r2_area << std::endl;
+
+  std::string m5_opts =
+      "sim_user=no_sim_user;model=vector_space;transform=linear_01;model_dist_fn=cosine;model_term_tf=natural;model_term_idf=idf;model_query_tf=log;model_query_idf=none;model_IDF_method_idf_coef=6.0f"s;
+  auto r5 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m5_opts);
+  auto r5_area = calc_chart_area(r5);
+  std::cout << "========================================" << std::endl;
+  std::cout << m5_opts << std::endl;
+  std::cout << "\t" << r5_area << std::endl;
 
 #endif
 

@@ -66,10 +66,12 @@ class ImageRanker
 
   [[nodiscard]] RankingResult rank_frames(const std::vector<std::string>& user_queries, const DataPackId& data_pack_ID,
                                           const PackModelCommands& model_commands, size_t result_size,
+                                          bool native_lang_queries = false,
                                           FrameId target_image_ID = ERR_VAL<FrameId>()) const;
 
   [[nodiscard]] virtual ModelTestResult run_model_test(eUserQueryOrigin queries_origin, const DataPackId& data_pack_ID,
                                                        const PackModelCommands& model_commands,
+                                                       bool native_lang_queries,
                                                        size_t num_points = NUM_MODEL_TEST_RESULT_POINTS) const;
 
   /*!

@@ -789,7 +789,7 @@
                 "options": [
                     {
                         "active": true,
-                        "ID": "bow_vbs2020",
+                        "ID": "w2vv_bow_plain",
                         "name": "BoW VBS2020",
                         "description": "We embedd text query into the space and find the nearest frames.",
                         "options": [

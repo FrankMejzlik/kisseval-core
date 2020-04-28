@@ -108,3 +108,33 @@ std::vector<UserTestQuery> DataManager::fetch_user_test_queries(eUserQueryOrigin
 
   return result;
 }
+
+std::vector<UserTestNativeQuery> DataManager::fetch_user_native_test_queries(eUserQueryOrigin queries_origin) const
+{
+  std::vector<UserTestNativeQuery> result;
+
+  std::stringstream SQL_query_ss;
+  SQL_query_ss << "SELECT `target_frame_ID`, `user_query` FROM `" << _db.GetDbName() << "`.`" << queries_table_name
+               << "` ";
+  SQL_query_ss << "WHERE (`user_level` = " << int(queries_origin) << " AND `vocabulary_ID` = 'native_language');";
+
+  auto [res, db_rows] = _db.ResultQuery(SQL_query_ss.str());
+
+  if (res != 0)
+  {
+    LOGE("Error fetching user queries from the DB. \n\n Error code: "s + std::to_string(res));
+  }
+
+  // Parse DB results
+  for (auto&& row : db_rows)
+  {
+    FrameId target_frame_ID{strTo<FrameId>(row[0])};
+
+    std::vector<std::string> query;
+    query.emplace_back(row[1]);
+
+    result.emplace_back(query, target_frame_ID);
+  }
+
+  return result;
+}

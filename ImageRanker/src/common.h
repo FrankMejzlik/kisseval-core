@@ -63,7 +63,7 @@ const std::array<std::pair<std::string, std::string>, size_t(eModelIds::_COUNT)>
     std::pair("vector_space", ""),
     std::pair("mult-sum-max", ""),
     std::pair("boolean_bucket", ""),
-    std::pair("w2vv_bow_vbs2020", "BoW model by Xirong."),
+    std::pair("w2vv_bow_plain", "BoW model by Xirong."),
 }};
 
 inline const std::pair<std::string, std::string>& enum_label(eModelIds val) { return eModelIds_labels[size_t(val)]; }
@@ -174,6 +174,7 @@ using Matrix = std::vector<Vector<T>>;
 /** User query for testing models.
  *  FORMAT: (user_query, target_frame_ID) */
 using UserTestQuery = std::pair<std::vector<CnfFormula>, FrameId>;
+using UserTestNativeQuery = std::pair<std::vector<std::string>, FrameId>;
 
 template <typename T>
 constexpr T ERR_VAL()

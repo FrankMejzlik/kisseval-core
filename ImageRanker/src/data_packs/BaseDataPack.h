@@ -14,15 +14,32 @@ class BaseDataPack
                const std::string& description)
       : _ID(ID), _description(description), _model_options(model_options), _target_imageset_ID(target_imageset_ID)
   {
-    LOGI("Loaded data pack: " << ID << std::endl << "\tdescription:" << description << std::endl << "\tdefault_options: " << model_options << std::endl);
+    LOGI("Loaded data pack: " << ID << std::endl
+                              << "\tdescription:" << description << std::endl
+                              << "\tdefault_options: " << model_options << std::endl);
   }
 
   [[nodiscard]] virtual RankingResult rank_frames(const std::vector<CnfFormula>& user_queries,
                                                   PackModelCommands model_commands, size_t result_size,
                                                   FrameId target_image_ID = ERR_VAL<FrameId>()) const = 0;
+  [[nodiscard]] virtual RankingResult rank_frames(const std::vector<std::string>& user_native_queries,
+                                                  PackModelCommands model_commands, size_t result_size,
+                                                  FrameId target_image_ID = ERR_VAL<FrameId>()) const
+  {
+    // Datapacks do not have to support this
+    LOGE("Unsupported data pack feature requested.");
+    throw std::runtime_error("This data pack does not support this.");
+  };
 
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
-                                                  PackModelCommands model_commands, size_t num_points) const = 0;
+                                                   PackModelCommands model_commands, size_t num_points) const = 0;
+  [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestNativeQuery>& test_native_queries,
+                                                   PackModelCommands model_commands, size_t num_points) const
+  {
+    // Datapacks do not have to support this
+    LOGE("Unsupported data pack feature requested.");
+    throw std::runtime_error("This data pack does not support this.");
+  };
 
   [[nodiscard]] virtual const std::string& get_vocab_ID() const = 0;
   [[nodiscard]] virtual const std::string& get_vocab_description() const = 0;

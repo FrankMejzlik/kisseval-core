@@ -21,25 +21,12 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
   json json_data;
   i >> json_data;
 
-  auto is1 = json_data["imagesets"][0];
-
-  // NASNet
-  auto dp1 = json_data["data_packs"]["VIRET_based"][0];
-  // GoogLeNet
-  auto dp2 = json_data["data_packs"]["VIRET_based"][1];
-
-  // Google Vision AI 2019
-  auto dp3 = json_data["data_packs"]["Google_based"][0];
-
-  // W2VV BoW 2019
-  auto dp30 = json_data["data_packs"]["W2VV_based"][0];
-
   // Imagesets
   std::vector<DatasetDataPackRef> imagesets;
   for (auto&& is1 : json_data["imagesets"])
   {
     // Skip inactive
-    if (!is1["active"].get<bool>())
+    if (!is1["active"].get<bool>() || is1.is_null())
     {
       continue;
     }
@@ -54,7 +41,7 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
   for (auto&& dp1 : json_data["data_packs"]["VIRET_based"])
   {
     // Skip inactive
-    if (!is1["active"].get<bool>())
+    if (!dp1["active"].get<bool>() || dp1.is_null())
     {
       continue;
     }
@@ -76,7 +63,7 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
   for (auto&& dp3 : json_data["data_packs"]["Google_based"])
   {
     // Skip inactive
-    if (!is1["active"].get<bool>())
+    if (!dp3["active"].get<bool>() || dp3.is_null())
     {
       continue;
     }
@@ -96,7 +83,7 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
   for (auto&& dp3 : json_data["data_packs"]["W2VV_based"])
   {
     // Skip inactive
-    if (!is1["active"].get<bool>())
+    if (!dp3["active"].get<bool>() || dp3.is_null())
     {
       continue;
     }
@@ -343,7 +330,7 @@ LoadedDataPacksInfo ImageRanker::get_loaded_data_packs_info() const
 
 RankingResult ImageRanker::rank_frames(const std::vector<std::string>& user_queries, const DataPackId& data_pack_ID,
                                        const PackModelCommands& model_commands, size_t result_size,
-                                       FrameId target_image_ID) const
+                                       bool native_lang_queries, FrameId target_image_ID) const
 {
   const BaseDataPack& dp{data_pack(data_pack_ID)};
 
@@ -355,18 +342,38 @@ RankingResult ImageRanker::rank_frames(const std::vector<std::string>& user_quer
     cnf_user_query.emplace_back(parse_cnf_string(single_query));
   }
 
-  return dp.rank_frames(cnf_user_query, model_commands, result_size, target_image_ID);
+  // Decide if native or ID based version wanted
+  if (native_lang_queries)
+  {
+    return dp.rank_frames(user_queries, model_commands, result_size, target_image_ID);
+  }
+  else
+  {
+    return dp.rank_frames(cnf_user_query, model_commands, result_size, target_image_ID);
+  }
 }
 
 ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, const DataPackId& data_pack_ID,
-                                            const PackModelCommands& model_commands, size_t num_points) const
+                                            const PackModelCommands& model_commands, bool native_lang_queries,
+                                            size_t num_points) const
 {
   const auto& dp{data_pack(data_pack_ID)};
 
-  // Fetch queries from the DB
-  auto test_queries{_data_manager.fetch_user_test_queries(queries_origin, dp.get_vocab_ID())};
+  // Decide if native or ID based version wanted
+  if (native_lang_queries)
+  {
+    // Fetch queries from the DB
+    auto native_test_queries{_data_manager.fetch_user_native_test_queries(queries_origin)};
 
-  return dp.test_model(test_queries, model_commands, num_points);
+    return dp.test_model(native_test_queries, model_commands, num_points);
+  }
+  else
+  {
+    // Fetch queries from the DB
+    auto test_queries{_data_manager.fetch_user_test_queries(queries_origin, dp.get_vocab_ID())};
+
+    return dp.test_model(test_queries, model_commands, num_points);
+  }
 }
 
 // =====================================
