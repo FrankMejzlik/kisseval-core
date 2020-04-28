@@ -71,8 +71,9 @@ class ImageRanker
 
   [[nodiscard]] virtual ModelTestResult run_model_test(eUserQueryOrigin queries_origin, const DataPackId& data_pack_ID,
                                                        const PackModelCommands& model_commands,
-                                                       bool native_lang_queries,
-                                                       size_t num_points = NUM_MODEL_TEST_RESULT_POINTS) const;
+                                                       bool native_lang_queries = false,
+                                                       size_t num_points = NUM_MODEL_TEST_RESULT_POINTS,
+                                                       bool normalize_y = true) const;
 
   /*!
    * This processes input queries that come from users, generates results and sends them back

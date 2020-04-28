@@ -786,7 +786,7 @@
                 "name": "Model",
                 "description": "",
                 "input_type": "enum",
-                "options": [
+                "values": [
                     {
                         "active": true,
                         "ID": "w2vv_bow_plain",

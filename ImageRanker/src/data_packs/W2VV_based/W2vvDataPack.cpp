@@ -48,14 +48,6 @@ std::vector<Keyword*> W2vvDataPack::top_frame_keywords(FrameId frame_ID) const
 RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, PackModelCommands model_commands,
                                         size_t result_size, FrameId target_image_ID) const
 {
-  // Expand query to vector indices
-  std::vector<CnfFormula> idx_queries;
-  idx_queries.reserve(user_queries.size());
-  for (auto&& q : user_queries)
-  {
-    idx_queries.emplace_back(keyword_IDs_to_vector_indices(q));
-  }
-
   std::vector<std::string> tokens = split(model_commands, ';');
 
   std::vector<ModelKeyValOption> opt_key_vals;
@@ -93,201 +85,26 @@ RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_quer
   const auto& ranking_model = *(iter_m->second);
 
   // Run this model
-  return ranking_model.rank_frames(_features_of_frames, _keywords, idx_queries, result_size, opt_key_vals, target_image_ID);
+  return ranking_model.rank_frames(_features_of_frames, 
+    _kw_features, _kw_bias_vec, _kw_PCA_mat, _kw_PCA_mean_vec, _keywords, user_queries, result_size, opt_key_vals, target_image_ID);
 }
 
 RankingResult W2vvDataPack::rank_frames(const std::vector<std::string>& user_native_queries,
                                                   PackModelCommands model_commands, size_t result_size,
                                                   FrameId target_image_ID) const
   {
-    // Convert native queries into CNF queries containing only supported words
-    LOGW("Not implemented");
-    return RankingResult();
+    std::vector<CnfFormula> cnf_queries;
+    for (auto&& nat_q : user_native_queries)
+    {
+      cnf_queries.emplace_back(native_query_to_CNF_formula(nat_q));
+    }
+
+    return rank_frames(cnf_queries, model_commands, result_size, target_image_ID);
   };
-
-#if 0
-void do_test20()
-{
-#define IMG_FEATURES_20K \
-  R"(c:\Users\Frank Mejzlik\data\imageset2_V3C1_VBS2020\subset_20\vis_vecs_bow-20000x2048floats.bin)"
-
-#define EMBEDDED_QUERY_VECS_20K \
-  R"(c:\Users\Frank Mejzlik\data\imageset2_V3C1_VBS2020\subset_20\txt_vecs_bow-202x2048floats.bin)"
-
-#define TEST_FILEPATH_20 \
-  R"(c:\Users\Frank Mejzlik\data\imageset2_V3C1_VBS2020\subset_20\user_annotator_queries.native.csv)"
-
-#if DO_PCA
-
-  auto img_features = Parser::parse_float_matrix(PATH_IMG_FEATURES_W2VV, 128, 12);
-#else
-  auto img_features = Parser::parse_float_matrix(IMG_FEATURES_20K, 2048, 0);
-#endif
-
-  auto embedded_sent_vecs = Parser::parse_float_matrix(EMBEDDED_QUERY_VECS_20K, 2048, 0);
-
-  std::cout << "====================================================" << std::endl;
-  std::cout << "=========== EMBEDDED BY TOMAS 20K : ==============" << std::endl;
-  for (auto&& vec : embedded_sent_vecs)
-  {
-    for (auto&& val : vec)
-    {
-      std::cout << val << "\t ";
-    }
-    std::cout << std::endl;
-    break;
-  }
-  std::cout << "====================================================" << std::endl;
-
-  auto kw_features = Parser::parse_float_matrix(KW_SCORES_MAT_FILE, 2048, 0);
-  auto dictionary = Parser::parse_w2vv_word_to_idx_file(W2VV_WORD_TO_IDX_FILEPATH);
-  auto bias_vec_transposed = Parser::parse_float_vector(KW_BIAS_VEC_FILE, 2048, 0);
-
-  auto PCA_mean_vec_transposed = Parser::parse_float_vector(KW_PCA_MEAN_VEC_FILE, 2048, 0);
-  auto PCA_mat = Parser::parse_float_matrix(KW_PCA_MAT_FILE, 2048, 0);
-
-  KwRanker ranker(std::move(img_features), std::move(kw_features), std::move(dictionary),
-                  std::move(bias_vec_transposed), std::move(PCA_mat), std::move(PCA_mean_vec_transposed));
-
-  constexpr uint32_t num_imgs = 20000;
-
-  std::ifstream if_test_queries;
-  if_test_queries.open(TEST_FILEPATH_20);
-
-  if (!if_test_queries.is_open()) throw std::runtime_error("error openin file");
-
-  std::vector<std::pair<uint32_t, std::vector<std::string>>> test_queries;
-
-  std::string line;
-  while (std::getline(if_test_queries, line))
-  {
-    std::stringstream line_ss(line);
-
-    std::string token1;
-    std::getline(line_ss, token1, ',');
-    std::string token2;
-    std::getline(line_ss, token2, ',');
-
-    std::string query_str;
-    std::getline(line_ss, query_str);
-
-    std::stringstream id_ss(token1);
-    uint32_t target_ID;
-    id_ss >> target_ID;
-
-    // Make first and last quotes space
-    query_str[0] = ' ';
-    query_str[query_str.length() - 1] = ' ';
-
-    // Remove all unwanted charactes
-    std::string illegal_chars = "\\/?!,.'\"";
-    std::transform(query_str.begin(), query_str.end(), query_str.begin(), [&illegal_chars](char c) {
-      // If found in illegal, make it space
-      if (illegal_chars.find(c) != std::string::npos) return ' ';
-
-      return c;
-    });
-
-    std::stringstream query_ss(query_str);
-
-    std::string token_str;
-    std::vector<std::string> query;
-    while (query_ss >> token_str)
-    {
-      query.emplace_back(token_str);
-    }
-
-    test_queries.emplace_back(target_ID, std::move(query));
-  }
-  if_test_queries.close();
-
-  uint32_t num_points = 100;
-  uint32_t imgs_per_point = num_imgs / num_points;
-
-  std::vector<uint32_t> chart_data;
-  chart_data.resize(num_points + 1);
-
-  uint32_t sum_rank = 0;
-
-  uint32_t total_miss_kws = 0;
-  uint32_t progress_i = 0;
-  uint32_t ijj = 0;
-  for (auto&& [target_ID, query] : test_queries)
-  {
-    // auto res = ranker.rank_query(query, num_imgs, total_miss_kws);
-
-    auto res = ranker.rank_query_no_embed(query, num_imgs, total_miss_kws, embedded_sent_vecs[ijj]);
-    ++ijj;
-
-    uint32_t i_rank = 0;
-    for (auto&& img_ID : res)
-    {
-#if REDUCED_DATASET
-      if ((img_ID * REDUCTION_COEF) == target_ID)
-#else
-      if (img_ID == target_ID)
-#endif
-      {
-        uint32_t rank = i_rank * REDUCTION_COEF;
-
-        uint32_t rank_scaled = rank / (imgs_per_point * REDUCTION_COEF);
-
-        ++chart_data[rank_scaled];
-
-        sum_rank += rank;
-
-        break;
-      }
-
-      ++i_rank;
-    }
-    ++progress_i;
-    {
-      std::cout << ">> " << progress_i << "/" << test_queries.size() << std::endl;
-    }
-  }
-
-  // Accumuate results
-  uint32_t accum = 0;
-  uint32_t i = 0;
-  for (auto&& val : chart_data)
-  {
-    std::cout << i * (imgs_per_point * REDUCTION_COEF) << "," << accum << std::endl;
-    accum += val;
-    ++i;
-  }
-  std::cout << num_imgs << "," << accum << std::endl;
-
-  float avg_rank = float(sum_rank) / test_queries.size();
-  float avg_miss = float(total_miss_kws) / test_queries.size();
-
-  std::cout << "++++++++++++++++++++" << std::endl;
-  std::cout << "avg_rank = " << avg_rank << std::endl;
-  std::cout << "avg_kw_miss = " << avg_miss << std::endl;
-  std::cout << "++++++++++++++++++++" << std::endl;
-  std::cout << "++++++++++++++++++++" << std::endl;
-}
-
-#endif
 
 ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_queries,
                                          PackModelCommands model_commands, size_t num_points) const
 {
-  // Expand query to vector indices
-  std::vector<UserTestQuery> idx_test_queries;
-  idx_test_queries.reserve(test_queries.size());
-
-  for (auto&& [test_query, target_ID] : test_queries)
-  {
-    std::vector<CnfFormula> idx_query;
-    idx_query.reserve(test_query.size());
-    for (auto&& q : test_query)
-    {
-      idx_query.emplace_back(keyword_IDs_to_vector_indices(q));
-    }
-    idx_test_queries.emplace_back(std::move(idx_query), target_ID);
-  }
-
   // Parse model & transformation
   std::vector<std::string> tokens = split(model_commands, ';');
 
@@ -336,17 +153,28 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   const auto& sim_user = *(iter_su->second);
 
   // Process sim user \todo
-  //idx_test_queries = sim_user.process_sim_user(_frames_features, _keywords, idx_test_queries, opt_key_vals);
+  //test_queries = sim_user.process_sim_user(_frames_features, _keywords, test_queries, opt_key_vals);
 
-  return ranking_model.test_model(_features_of_frames, _keywords, idx_test_queries, opt_key_vals, num_points);
+  return ranking_model.test_model(_features_of_frames, _kw_features, _kw_bias_vec, _kw_PCA_mat, _kw_PCA_mean_vec, _keywords, test_queries, opt_key_vals, num_points);
 }
 
 ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestNativeQuery>& test_native_queries,
                                                    PackModelCommands model_commands, size_t num_points) const
   {
-    // Convert native queries into CNF queries containing only supported words
-    LOGW("Not implemented");
-    return ModelTestResult();
+    std::vector<UserTestQuery> test_cnf_queries;
+    test_cnf_queries.reserve(test_native_queries.size());
+
+    for (auto&& [nat_q, target_ID] : test_native_queries)
+    {
+      std::vector<CnfFormula> cnf_query;
+      for (auto&& single_nat_q : nat_q)
+      {
+        cnf_query.emplace_back(native_query_to_CNF_formula(single_nat_q));
+      }
+      test_cnf_queries.emplace_back(std::move(cnf_query), target_ID);
+    }
+
+    return test_model(test_cnf_queries, model_commands, num_points);
   };
 
 AutocompleteInputResult W2vvDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,
@@ -361,8 +189,43 @@ DataPackInfo W2vvDataPack::get_info() const
                       _keywords.get_ID(), _keywords.get_description()};
 }
 
-CnfFormula W2vvDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) const
+CnfFormula W2vvDataPack::native_query_to_CNF_formula(const std::string& native_query) const
 {
-  // Google vocabulary has no hypernyms
-  return ID_query;
+  std::vector<Clause> res;
+  std::string nat_query(native_query);
+
+
+  // Remove all unwanted charactes
+  std::string illegal_chars = "\\/?!,.'\"";
+  std::transform(native_query.begin(), native_query.end(), nat_query.begin(), [&illegal_chars](char c) {
+    // If found in illegal, make it space
+    if (illegal_chars.find(c) != std::string::npos) return ' ';
+
+    return char(std::tolower(c));
+  });
+
+  std::stringstream query_ss(nat_query);
+
+  // Tokenize this string
+  std::string token_str;
+  std::vector<std::string> query;
+  size_t ignore_cnt{0_z};
+  while (query_ss >> token_str)
+  {
+    auto p_kw = _keywords.GetKeywordByWord(token_str);
+    if (!p_kw) 
+    {
+      ++ignore_cnt;
+      continue;
+    }
+
+    Clause c;
+    c.emplace_back(Literal<KeywordId>{p_kw->ID, false});
+    
+    res.emplace_back(std::move(c));
+  }
+
+  
+
+  return res;
 }

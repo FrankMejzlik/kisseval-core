@@ -19,7 +19,27 @@ PlainBowModel::Options PlainBowModel::parse_options(const std::vector<ModelKeyVa
         res.sub_PCA_mean = true;
       }
     }
-    else {
+    if (key == enum_label(eModelOptsKeys::MODEL_DIST_FN).first)
+    {
+      if (val == "cosine")
+      {
+        res.dist_fn = eDistFunction::COSINE_NONORM;
+      }
+      else if (val == "manhattan")
+      {
+        res.dist_fn = eDistFunction::MANHATTAN;
+      }
+      else if (val == "euclid")
+      {
+        res.dist_fn = eDistFunction::EUCLID;
+      }
+      else
+      {
+        LOGW("Unknown model option value '" + val + "'");
+      }
+    }
+    else
+    {
       LOGW("Unknown model option key '" + key + "'");
     }
   }
@@ -27,9 +47,11 @@ PlainBowModel::Options PlainBowModel::parse_options(const std::vector<ModelKeyVa
   return res;
 }
 
-RankingResult PlainBowModel::rank_frames(const Matrix<float>& transformed_data, const KeywordsContainer& keywords,
-                                      const std::vector<CnfFormula>& user_query, size_t result_size,
-                                      const std::vector<ModelKeyValOption>& options, FrameId target_frame_ID) const
+RankingResult PlainBowModel::rank_frames(const Matrix<float>& transformed_data, const Matrix<float>& kw_features,
+                                         const Vector<float>& kw_bias_vec, const Matrix<float>& kw_PCA_mat,
+                                         const Vector<float>& kw_PCA_mean_vec, const KeywordsContainer& keywords,
+                                         const std::vector<CnfFormula>& user_query, size_t result_size,
+                                         const std::vector<ModelKeyValOption>& options, FrameId target_frame_ID) const
 {
   if (user_query.empty())
   {
@@ -40,17 +62,63 @@ RankingResult PlainBowModel::rank_frames(const Matrix<float>& transformed_data, 
   // Parse provided options
   Options opts = parse_options(options);
 
-  return rank_frames(transformed_data, keywords, user_query, result_size, opts, target_frame_ID);
+  return rank_frames(transformed_data, kw_features, kw_bias_vec, kw_PCA_mat, kw_PCA_mean_vec, keywords, user_query,
+                     result_size, opts, target_frame_ID);
 }
 
-RankingResult PlainBowModel::rank_frames(const Matrix<float>& data_mat, const KeywordsContainer& keywords,
-                                      const std::vector<CnfFormula>& user_query, size_t result_size,
-                                      const Options& opts, FrameId target_frame_ID) const
+Vector<float> PlainBowModel::embedd_native_user_query(const Matrix<float>& kw_features,
+                                                      const Vector<float>& kw_bias_vec, const Matrix<float>& kw_PCA_mat,
+                                                      const Vector<float>& kw_PCA_mean_vec, const CnfFormula& query,
+                                                      const Options& opts) const
+{
+  // Initialize zero vector
+  std::vector<float> score_vec(kw_features.front().size(), 0.0F);
+
+  // Accumuate scores for given keywords
+  for (auto&& clause : query)
+  {
+    auto kw_ID{clause.front().atom};
+    score_vec = vec_add(score_vec, kw_features[kw_ID]);
+  }
+
+  // Add bias
+  score_vec = vec_add(score_vec, kw_bias_vec);
+
+  // Apply hyperbolic tangent function
+  std::transform(score_vec.begin(), score_vec.end(), score_vec.begin(), [](const float& score) { return tanh(score); });
+
+  if (opts.do_PCA)
+  {
+    // Normalize
+    score_vec = normalize(score_vec);
+
+    if (opts.sub_PCA_mean)
+    {
+      // Sub mean vec
+      score_vec = vec_sub(score_vec, kw_PCA_mean_vec);
+    }
+
+    // Do PCA
+    score_vec = mat_vec_prod(kw_PCA_mat, score_vec);
+  }
+
+  // Normalize
+  score_vec = normalize(score_vec);
+
+  return score_vec;
+}
+
+RankingResult PlainBowModel::rank_frames(const Matrix<float>& data_mat, const Matrix<float>& kw_features,
+
+                                         const Vector<float>& kw_bias_vec, const Matrix<float>& kw_PCA_mat,
+                                         const Vector<float>& kw_PCA_mean_vec, const KeywordsContainer& keywords,
+                                         const std::vector<CnfFormula>& user_query, size_t result_size,
+                                         const Options& opts, FrameId target_frame_ID) const
 {
   using FramePair = std::pair<float, size_t>;
 
   // Comparator for the priority queue
-  auto frame_pair_cmptor = [](const FramePair& left, const FramePair& right) { return left.first < right.first; };
+  auto frame_pair_cmptor = [](const FramePair& left, const FramePair& right) { return left.first > right.first; };
 
   // Create inner container for the queue
   std::vector<FramePair> queue_cont;
@@ -64,19 +132,28 @@ RankingResult PlainBowModel::rank_frames(const Matrix<float>& data_mat, const Ke
   result.target = target_frame_ID;
   result.m_frames.reserve(result_size);
 
+  std::vector<Vector<float>> embedded_user_queries;
+
+  for (auto&& q : user_query)
+  {
+    embedded_user_queries.emplace_back(
+        embedd_native_user_query(kw_features, kw_bias_vec, kw_PCA_mat, kw_PCA_mean_vec, q, opts));
+  }
+
+  auto dist_fn{get_dist_fn(opts.dist_fn)};
 
   {
     size_t i{0};
     for (auto&& fea_vec : data_mat)
     {
-      float prim_ranking = rank_frame(fea_vec, user_query.front(), opts);
+      // Ranking is distance in the space from the query
+      float dist{dist_fn(embedded_user_queries.front(), fea_vec)};
 
-      max_prio_queue.emplace(prim_ranking, i);
+      max_prio_queue.emplace(dist, i);
 
       // \todo Add temporal ranking
       ++i;
     }
-    
   }
 
   {
@@ -102,9 +179,9 @@ RankingResult PlainBowModel::rank_frames(const Matrix<float>& data_mat, const Ke
   return result;
 }
 
-
-ModelTestResult PlainBowModel::test_model(const Matrix<float>& transformed_data,
-                                          const KeywordsContainer& keywords,
+ModelTestResult PlainBowModel::test_model(const Matrix<float>& transformed_data, const Matrix<float>& kw_features,
+                                          const Vector<float>& kw_bias_vec, const Matrix<float>& kw_PCA_mat,
+                                          const Vector<float>& kw_PCA_mean_vec, const KeywordsContainer& keywords,
                                           const std::vector<UserTestQuery>& test_user_queries,
                                           const std::vector<ModelKeyValOption>& options, size_t num_points) const
 {
@@ -123,13 +200,18 @@ ModelTestResult PlainBowModel::test_model(const Matrix<float>& transformed_data,
   Options opts = parse_options(options);
 
   // Rank them all
+  size_t i{0_z};
   for (auto&& [query, target_frame_ID] : test_user_queries)
   {
-    auto res = rank_frames(transformed_data, keywords, query, 0, opts, target_frame_ID);
+    if (i % 100 == 0) LOGV("test progress: " << i);
+
+    auto res = rank_frames(transformed_data, kw_features, kw_bias_vec, kw_PCA_mat, kw_PCA_mean_vec, keywords, query, 0,
+                           opts, target_frame_ID);
 
     uint32_t x{uint32_t(res.target_pos / divisor)};
 
     ++(test_results[x].second);
+    ++i;
   }
 
   // Sumarize results into results
@@ -625,26 +707,3 @@ ModelTestResult PlainBowModel::test_model(const Matrix<float>& transformed_data,
   }
 
 #endif
-
-float PlainBowModel::rank_frame(const Vector<float>& frame_data, const CnfFormula& single_query,
-                             const Options& options) const
-{
-  LOGW("NOT IMPL!");
-
-  float frame_ranking{1.0F};
-
-  for (auto&& clause : single_query)
-  {
-    float clause_ranking{0.0F};
-
-    for (auto&& literal : clause)
-    {
-      float literal_ranking{frame_data[literal.atom]};
-      clause_ranking = 1.0F;
-    }
-
-    frame_ranking = std::min(frame_ranking, clause_ranking);
-  }
-
-  return frame_ranking;
-}

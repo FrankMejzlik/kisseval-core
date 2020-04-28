@@ -32,6 +32,7 @@ int main()
 #define TEST_boolean_grid_test_threshold 0
 #define TEST_run_model_test_Google 0
 #define TEST_boolean_grid_test_threshold_Google 0
+#define TEST_run_model_test_W2VV 1
 
   // TEST: `submit_annotator_user_queries`
 #if TEST_submit_annotator_user_queries
@@ -249,7 +250,15 @@ int main()
 
 #endif
 
-#if TEST_run_model_test_Google
+#if TEST_run_model_test_W2VV
+
+  auto r1 = ranker.rank_frames(
+      std::vector<std::string>{"A man wearing a black t-shirt and pants riding a bike on a concrete surface."},
+      "W2VV_BoW_Dec2019", "model=w2vv_bow_plain;", 1000, true, 498);
+
+  auto r2 =
+      ranker.rank_frames(std::vector<std::string>{"An old black car riding in a desert with a few bushes nearby."},
+                         "W2VV_BoW_Dec2019", "model=w2vv_bow_plain;", 1000, true, 16554);
 
   std::cout << "===============================" << std::endl;
   std::cout << "===============================" << std::endl;
@@ -257,13 +266,13 @@ int main()
   std::cout << "===============================" << std::endl;
   std::cout << "===============================" << std::endl;
 
-  std::string m1_opts =
-      "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=no_sim_user;"s;
-  auto r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m1_opts);
-  auto r1_area = calc_chart_area(r1);
+  std::string m11_opts = "model=w2vv_bow_plain;"s;
+  auto r11 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "W2VV_BoW_Dec2019", m11_opts, true, 100, true);
+  auto r11_area = calc_chart_area(r11);
   std::cout << "========================================" << std::endl;
-  std::cout << m1_opts << std::endl;
-  std::cout << "\t" << r1_area << std::endl;
+  std::cout << m11_opts << std::endl;
+  std::cout << "\t" << r11_area << std::endl;
+#if 0
 
   std::string m2_opts = "sim_user=no_sim_user;model=boolean;model_true_threshold=0.000598001;transform=linear_01;"s;
   auto r2 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m2_opts);
@@ -279,6 +288,7 @@ int main()
   std::cout << "========================================" << std::endl;
   std::cout << m5_opts << std::endl;
   std::cout << "\t" << r5_area << std::endl;
+#endif
 
 #endif
 

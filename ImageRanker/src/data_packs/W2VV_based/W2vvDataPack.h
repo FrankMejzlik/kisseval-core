@@ -46,8 +46,7 @@ class W2vvDataPack : public BaseDataPack
   [[nodiscard]] virtual DataPackInfo get_info() const override;
 
  private:
-  /** Converts CNF query using keyword IDs to the one using only valid vector indices */
-  CnfFormula keyword_IDs_to_vector_indices(CnfFormula ID_query) const;
+  CnfFormula native_query_to_CNF_formula(const std::string& native_query) const;
 
  private:
   KeywordsContainer _keywords;

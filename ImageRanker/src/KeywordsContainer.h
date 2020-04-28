@@ -277,9 +277,10 @@ class KeywordsContainer
 
                                    return result <= -1;
                                  });
-    if (item == _keywords.cend())
+    if (item == _keywords.cend() || item->get()->m_word != keyword)
     {
-      LOGE("This keyword not found.");
+      //LOGE("This keyword not found.");
+      return nullptr;
     }
 
     return item->get();

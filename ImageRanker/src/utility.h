@@ -3,6 +3,7 @@
 #include <string>
 using namespace std::literals;
 
+#include <algorithm>
 #include <array>
 #include <charconv>
 #include <fstream>
@@ -336,38 +337,6 @@ inline T strTo(const std::string& str)
   return result_encoded_query;
 }
 
-inline Vector<float> normalize(const Vector<float>& left)
-{
-  Vector<float> res(left.size(), 0.0F);
-
-  float sum{0.0F};
-
-  for (size_t i{0_z}; i < left.size(); ++i)
-  {
-    sum += left[i];
-  }
-
-  for (size_t i{0_z}; i < left.size(); ++i)
-  {
-    res[i] = left[i] / sum;
-  }
-
-  return res;
-}
-
-inline float length(const Vector<float>& left)
-{
-  Vector<float> res(left.size(), 0.0F);
-
-  float sum{0.0F};
-
-  for (size_t i{0_z}; i < left.size(); ++i)
-  {
-    sum += left[i];
-  }
-  return sqrtf(sum);
-}
-
 inline float dist_manhattan(const Vector<float>& left, const Vector<float>& right)
 {
   float res{0.0F};
@@ -454,7 +423,7 @@ inline std::function<float(const Vector<float>&, const Vector<float>&)> get_dist
 
     default:
       LOGW("Uknown distance function type: " + std::to_string(int(fn_type)) +
-               "\n\tUsing default one: " + std::to_string(int(eDistFunction::MANHATTAN)));
+           "\n\tUsing default one: " + std::to_string(int(eDistFunction::MANHATTAN)));
       return dist_manhattan;
   }
 }
@@ -492,7 +461,7 @@ inline std::function<float(float, float)> pick_tf_scheme_fn(eTermFrequency tf_sc
 
     default:
       LOGW("Unsupported scheme ID: " + std::to_string(int(tf_scheme_ID)) +
-               "\n\t Using default: " + std::to_string(int(eTermFrequency::NATURAL)));
+           "\n\t Using default: " + std::to_string(int(eTermFrequency::NATURAL)));
       return tf_scheme_fn_natural<float>;
   }
 }
@@ -521,7 +490,141 @@ inline std::function<float(float, float)> pick_idf_scheme_fn(eInvDocumentFrequen
 
     default:
       LOGW("Unsupported scheme ID: " + std::to_string(int(idf_scheme_ID)) +
-               "\n\t Using default: " + std::to_string(int(eInvDocumentFrequency::NONE)));
+           "\n\t Using default: " + std::to_string(int(eInvDocumentFrequency::NONE)));
       return idf_scheme_fn_none<float>;
   }
+}
+
+template <typename T>
+inline std::vector<T> vec_sub(const std::vector<T>& left, const std::vector<T>& right)
+{
+  if (left.size() != right.size())
+  {
+    throw std::runtime_error("Vectors have different sizes.");
+  }
+
+  std::vector<T> result;
+  result.resize(left.size());
+
+  uint32_t i = 0;
+  for (auto& v : result)
+  {
+    v = left[i] - right[i];
+    ++i;
+  }
+
+  return result;
+}
+
+template <typename T>
+inline std::vector<T> vec_add(const std::vector<T>& left, const std::vector<T>& right)
+{
+  if (left.size() != right.size())
+  {
+    throw std::runtime_error("Vectors have different sizes.");
+  }
+
+  std::vector<T> result;
+  result.resize(left.size());
+
+  uint32_t i = 0;
+  for (auto& v : result)
+  {
+    v = left[i] + right[i];
+    ++i;
+  }
+
+  return result;
+}
+
+template <typename T, typename S>
+inline std::vector<T> vec_mult(const std::vector<T>& left, S right)
+{
+  std::vector<T> result(left.size());
+
+  std::transform(left.begin(), left.end(), result.begin(), [right](const T& l) { return l * right; });
+
+  return result;
+}
+
+template <typename T>
+inline std::vector<T> vec_mult(const std::vector<T>& left, const std::vector<T>& right)
+{
+  if (left.size() != right.size())
+  {
+    throw std::runtime_error("Vectors have different sizes.");
+  }
+
+  std::vector<T> result;
+
+  std::transform(left.begin(), left.end(), right.begin(), std::back_inserter(result),
+                 [](const T& l, const T& r) { return l * r; });
+
+  return result;
+}
+
+template <typename T>
+inline T dot_prod(const std::vector<T>& left, const std::vector<T>& right)
+{
+  if (left.size() != right.size())
+  {
+    throw std::runtime_error("Vectors have different sizes.");
+  }
+
+  std::vector<T> sum = vec_mult<T>(left, right);
+
+  return std::accumulate(sum.begin(), sum.end(), 0.0f, std::plus<T>());
+}
+
+template <typename T>
+inline std::vector<T> mat_vec_prod(const std::vector<std::vector<T>>& mat, const std::vector<T>& vec)
+{
+  if (mat.empty() || mat[0].size() != vec.size())
+  {
+    throw std::runtime_error("Vectors have different sizes or is mat empty.");
+  }
+
+  std::vector<T> result;
+
+  for (auto&& mat_row_vec : mat)
+  {
+    result.emplace_back(dot_prod(mat_row_vec, vec));
+  }
+
+  return result;
+}
+
+template <typename T>
+inline float length(const std::vector<T>& left)
+{
+  return sqrtf(dot_prod(left, left));
+}
+
+template <typename T>
+inline std::vector<T> normalize(const std::vector<T>& left)
+{
+  float vec_size = length(left);
+
+  if (vec_size > 0.0f)
+    return vec_mult(left, (1.0f / vec_size));
+  else
+    throw std::runtime_error("Zero vec");
+}
+
+template <typename T>
+inline Matrix<T> normalize_matrix_rows(const Matrix<T>& orig_mat)
+{
+  Matrix<T> res;
+
+  std::transform(orig_mat.begin(), orig_mat.end(), std::back_inserter(res), normalize<T>);
+
+  return res;
+}
+
+template <typename T>
+inline Matrix<T> normalize_matrix_rows(Matrix<T>&& orig_mat)
+{
+  std::transform(orig_mat.begin(), orig_mat.end(), orig_mat.begin(), normalize<T>);
+
+  return orig_mat;
 }

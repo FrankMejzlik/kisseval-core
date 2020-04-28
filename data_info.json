@@ -100,10 +100,10 @@
                     "ID": "native_language",
                     "description": "Supported ~12k words.",
                     "keyword_synsets_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/keyword_classes.bow2019.txt",
-                    "keyword_features_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/txt_weight-11147x2048floats.npy",
+                    "keyword_features_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/txt_weight-11147x2048floats.bin",
                     "keyword_features_dim": 2048,
                     "keyword_features_data_offset": 0,
-                    "keyword_bias_vec_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/txt_bias-2048floats.npy",
+                    "keyword_bias_vec_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/txt_bias-2048floats.bin",
                     "keyword_bias_vec_dim": 2048,
                     "keyword_bias_vec_data_offset": 0,
                     "keyword_PCA_mat_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/keyword_PCA_matrix.resnext152_resnext101.w2vv_bow.bin",
@@ -116,8 +116,8 @@
                 "data": {
                     "target_dataset": "V3C1_20k",
                     "deep_features_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/frame_features.resnext152_resnext101.w2vv_bow.bin",
-                    "deep_features_dim": 128,
-                    "deep_features_data_offset": 12
+                    "deep_features_dim": 2048,
+                    "deep_features_data_offset": 0
                 }
             }
         ]

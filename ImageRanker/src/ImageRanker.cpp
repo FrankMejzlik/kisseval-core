@@ -187,6 +187,8 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
     // Frame feature vectors
     auto deep_features = FileParser::parse_float_matrix(
         pack.score_data.img_features_fpth, pack.score_data.img_features_dim, pack.score_data.img_features_offset);
+    // Normalize rows
+    deep_features = normalize_matrix_rows(std::move(deep_features));
 
     _data_packs.emplace(pack.ID, std::make_unique<W2vvDataPack>(
                                      pack.ID, pack.target_imageset, pack.model_options, pack.description,
@@ -334,6 +336,12 @@ RankingResult ImageRanker::rank_frames(const std::vector<std::string>& user_quer
 {
   const BaseDataPack& dp{data_pack(data_pack_ID)};
 
+  // Decide if native or ID based version wanted
+  if (native_lang_queries)
+  {
+    return dp.rank_frames(user_queries, model_commands, result_size, target_image_ID);
+  }
+
   // Parse CNF strings
   std::vector<CnfFormula> cnf_user_query;
   cnf_user_query.reserve(user_queries.size());
@@ -342,38 +350,44 @@ RankingResult ImageRanker::rank_frames(const std::vector<std::string>& user_quer
     cnf_user_query.emplace_back(parse_cnf_string(single_query));
   }
 
-  // Decide if native or ID based version wanted
-  if (native_lang_queries)
-  {
-    return dp.rank_frames(user_queries, model_commands, result_size, target_image_ID);
-  }
-  else
-  {
-    return dp.rank_frames(cnf_user_query, model_commands, result_size, target_image_ID);
-  }
+  return dp.rank_frames(cnf_user_query, model_commands, result_size, target_image_ID);
 }
 
 ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, const DataPackId& data_pack_ID,
                                             const PackModelCommands& model_commands, bool native_lang_queries,
-                                            size_t num_points) const
+                                            size_t num_points, bool normalize_y) const
 {
   const auto& dp{data_pack(data_pack_ID)};
+
+  ModelTestResult res;
+  size_t num_queries{ERR_VAL<size_t>()};
 
   // Decide if native or ID based version wanted
   if (native_lang_queries)
   {
     // Fetch queries from the DB
     auto native_test_queries{_data_manager.fetch_user_native_test_queries(queries_origin)};
+    num_queries = native_test_queries.size();
 
-    return dp.test_model(native_test_queries, model_commands, num_points);
+    res = dp.test_model(native_test_queries, model_commands, num_points);
   }
   else
   {
     // Fetch queries from the DB
     auto test_queries{_data_manager.fetch_user_test_queries(queries_origin, dp.get_vocab_ID())};
+    num_queries = test_queries.size();
 
-    return dp.test_model(test_queries, model_commands, num_points);
+    res = dp.test_model(test_queries, model_commands, num_points);
   }
+
+  if (normalize_y)
+  {
+    std::transform(res.begin(), res.end(), res.begin(), [num_queries](const std::pair<uint32_t, uint32_t>& x) {
+      return std::pair(x.first, uint32_t((float(x.second) / num_queries) * 100.0F));
+    });
+  }
+
+  return res;
 }
 
 // =====================================
