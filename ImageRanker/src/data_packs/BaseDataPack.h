@@ -7,12 +7,14 @@
 
 namespace image_ranker
 {
+class BaseImageset;
+
 class BaseDataPack
 {
  public:
-  BaseDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
+  BaseDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
                const std::string& description)
-      : _ID(ID), _description(description), _model_options(model_options), _target_imageset_ID(target_imageset_ID)
+      : _p_is(p_is), _ID(ID), _description(description), _model_options(model_options), _target_imageset_ID(target_imageset_ID)
   {
     LOGI("Loaded data pack: " << ID << std::endl
                               << "\tdescription:" << description << std::endl
@@ -54,11 +56,13 @@ class BaseDataPack
   [[nodiscard]] virtual DataPackInfo get_info() const = 0;
 
   [[nodiscard]] virtual const std::string& get_ID() const { return _ID; };
+  [[nodiscard]] virtual const BaseImageset* get_imageset_ptr() const { return _p_is; };
   [[nodiscard]] virtual const std::string& get_description() const { return _description; };
   [[nodiscard]] virtual const std::string& get_model_options() const { return _model_options; };
   [[nodiscard]] virtual const std::string& target_imageset_ID() const { return _target_imageset_ID; };
 
  private:
+  const BaseImageset* _p_is;
   StringId _ID;
   std::string _description;
   std::string _model_options;

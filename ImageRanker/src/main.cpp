@@ -120,15 +120,6 @@ int main()
 #endif
 
 #if TEST_run_model_vec_space
-  /*std::string m6_opts =
-      "model=vector_space;transform=linear_01;model_dist_fn=cosine;model_term_tf=natural;model_term_idf=idf;model_query_tf=augmented;model_query_idf=none;model_true_threshold=0.000698001;"s;*/
-
-  /*std::string m4_opts =
-      "model=vector_space;transform=linear_01;model_dist_fn=cosine;model_term_tf=natural;model_term_idf=idf;model_query_tf=augmented;model_query_idf=none;model_true_threshold=0.002;"s;
-  auto r4 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", m4_opts);
-  auto r4_area = calc_chart_area(r4);
-  std::cout << m4_opts << std::endl;
-  std::cout << "\t" << r4_area << std::endl;*/
 
   std::string m5_opts =
       "model=vector_space;transform=linear_01;model_dist_fn=cosine;model_term_tf=natural;model_term_idf=idf;model_query_tf=log;model_query_idf=none;model_idf_coef=6.0f"s;
@@ -272,23 +263,6 @@ int main()
   std::cout << "========================================" << std::endl;
   std::cout << m11_opts << std::endl;
   std::cout << "\t" << r11_area << std::endl;
-#if 0
-
-  std::string m2_opts = "sim_user=no_sim_user;model=boolean;model_true_threshold=0.000598001;transform=linear_01;"s;
-  auto r2 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m2_opts);
-  auto r2_area = calc_chart_area(r2);
-  std::cout << "========================================" << std::endl;
-  std::cout << m2_opts << std::endl;
-  std::cout << "\t" << r2_area << std::endl;
-
-  std::string m5_opts =
-      "sim_user=no_sim_user;model=vector_space;transform=linear_01;model_dist_fn=cosine;model_term_tf=natural;model_term_idf=idf;model_query_tf=log;model_query_idf=none;model_IDF_method_idf_coef=6.0f"s;
-  auto r5 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m5_opts);
-  auto r5_area = calc_chart_area(r5);
-  std::cout << "========================================" << std::endl;
-  std::cout << m5_opts << std::endl;
-  std::cout << "\t" << r5_area << std::endl;
-#endif
 
 #endif
 

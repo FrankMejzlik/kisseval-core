@@ -71,15 +71,12 @@ inline const std::pair<std::string, std::string>& enum_label(eModelIds val) { re
 enum class eSimUserIds
 {
   NO_SIM,
-  SIM_SINGLE_QUERIES,
-  SIM_TEMPORAL_QUERIES,
-  AUGMENT_USER_WITH_TEMP,
+  USER_X_TO_P,
   _COUNT
 };
 
 const std::array<std::pair<std::string, std::string>, size_t(eSimUserIds::_COUNT)> eSimUserIds_labels = {
-    {std::pair("no_sim_user", ""), std::pair("sim_single_queries", ""), std::pair("sim_temp_queries", ""),
-     std::pair("augment_real_with_temp_queries", "")}};
+    {std::pair("no_sim_user", ""), std::pair("user_model_x_to_p", "")}};
 
 inline const std::pair<std::string, std::string>& enum_label(eSimUserIds val)
 {

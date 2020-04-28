@@ -146,20 +146,24 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
     auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.softmax_scorings_fpth);
     auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.deep_features_fpth);
 
-    _data_packs.emplace(
-        pack.ID, std::make_unique<ViretDataPack>(pack.ID, pack.target_imageset, pack.model_options, pack.description,
-                                                 pack.vocabulary_data, std::move(presoft_data), std::move(soft_data),
-                                                 std::move(deep_features)));
+    const auto& is{imageset(pack.target_imageset)};
+
+    _data_packs.emplace(pack.ID,
+                        std::make_unique<ViretDataPack>(is, pack.ID, pack.target_imageset, pack.model_options,
+                                                        pack.description, pack.vocabulary_data, std::move(presoft_data),
+                                                        std::move(soft_data), std::move(deep_features)));
   }
 
   // Google type
   for (auto&& pack : _settings.config.Google_packs)
   {
+    const auto& is{imageset(pack.target_imageset)};
+
     // Initialize all images
     // \todo Use transparent sparse matrix representation for Google data
     auto presoft_data = FileParser::ParseRawScoringData_GoogleAiVisionFormat(pack.score_data.presoftmax_scorings_fpth);
 
-    _data_packs.emplace(pack.ID, std::make_unique<GoogleVisionDataPack>(pack.ID, pack.target_imageset,
+    _data_packs.emplace(pack.ID, std::make_unique<GoogleVisionDataPack>(is, pack.ID, pack.target_imageset,
                                                                         pack.model_options, pack.description,
                                                                         pack.vocabulary_data, std::move(presoft_data)));
   }
@@ -167,6 +171,8 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
   // W2VV type
   for (auto&& pack : _settings.config.W2VV_packs)
   {
+    const auto& is{imageset(pack.target_imageset)};
+
     // Keyword feature vectors
     auto kw_features =
         FileParser::parse_float_matrix(pack.vocabulary_data.kw_features_fpth, pack.vocabulary_data.kw_features_dim,
@@ -191,7 +197,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
     deep_features = normalize_matrix_rows(std::move(deep_features));
 
     _data_packs.emplace(pack.ID, std::make_unique<W2vvDataPack>(
-                                     pack.ID, pack.target_imageset, pack.model_options, pack.description,
+                                     is, pack.ID, pack.target_imageset, pack.model_options, pack.description,
                                      pack.vocabulary_data, std::move(deep_features), std::move(kw_features),
                                      std::move(bias_vec_transposed), std::move(PCA_mat), std::move(PCA_mean_vec)));
   }
@@ -226,7 +232,7 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
 
     result.session_ID = query.session_ID;
     result.human_readable_query = query.user_query_readable.at(0);
-    result.frame_filename = is[query.target_sequence_IDs.at(0)].m_filename;
+    result.frame_filename = ((*is)[query.target_sequence_IDs.at(0)]).m_filename;
 
     auto top_KWs = dp.top_frame_keywords(query.target_sequence_IDs.at(0));
 
@@ -254,7 +260,7 @@ const std::string& ImageRanker::get_frame_filename(const std::string& imageset_I
 
 const SelFrame& ImageRanker::get_frame(const std::string& imageset_ID, size_t imageId) const
 {
-  return imageset(imageset_ID)[imageId];
+  return (*imageset(imageset_ID))[imageId];
 }
 
 std::vector<const SelFrame*> ImageRanker::get_random_frame_sequence(const std::string& imageset_ID,
@@ -284,7 +290,7 @@ std::vector<const SelFrame*> ImageRanker::get_random_frame_sequence(const std::s
 
 const SelFrame* ImageRanker::get_random_frame(const std::string& imageset_ID) const
 {
-  return &(imageset(imageset_ID).random_frame());
+  return &(imageset(imageset_ID)->random_frame());
 }
 
 AutocompleteInputResult ImageRanker::get_autocomplete_results(const std::string& data_pack_ID,
@@ -358,6 +364,7 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
                                             size_t num_points, bool normalize_y) const
 {
   const auto& dp{data_pack(data_pack_ID)};
+  const auto& is{imageset(dp.target_imageset_ID())};
 
   ModelTestResult res;
   size_t num_queries{ERR_VAL<size_t>()};

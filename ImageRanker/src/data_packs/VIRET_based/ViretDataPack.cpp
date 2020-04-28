@@ -8,11 +8,11 @@
 
 using namespace image_ranker;
 
-ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
+ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
                              const std::string& description, const ViretDataPackRef::VocabData& vocab_data_refs,
                              std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
                              std::vector<std::vector<float>>&& feas_data)
-    : BaseDataPack(ID, target_imageset_ID, model_options, description),
+    : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description),
       _feas_data_raw(std::move(feas_data)),
       _presoftmax_data_raw(std::move(presoft)),
       _softmax_data_raw(std::move(softmax_data)),
@@ -39,10 +39,7 @@ ViretDataPack::ViretDataPack(const StringId& ID, const StringId& target_imageset
 
   // Simulated user models
   _sim_users.emplace(enum_label(eSimUserIds::NO_SIM).first, std::make_unique<SimUserNoSim>());
-  _sim_users.emplace(enum_label(eSimUserIds::SIM_SINGLE_QUERIES).first, std::make_unique<SimUserSingleQueries>());
-  _sim_users.emplace(enum_label(eSimUserIds::SIM_TEMPORAL_QUERIES).first, std::make_unique<SimUserTempQueries>());
-  _sim_users.emplace(enum_label(eSimUserIds::AUGMENT_USER_WITH_TEMP).first,
-                     std::make_unique<SimUserAugmentRealWithTemp>());
+  _sim_users.emplace(enum_label(eSimUserIds::USER_X_TO_P).first, std::make_unique<SimUserXToP>());
 
   t1.join();
   t2.join();
@@ -234,7 +231,7 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
   const auto& sim_user = *(iter_su->second);
 
   // Process sim user
-  idx_test_queries = sim_user.process_sim_user(transform, _keywords, idx_test_queries, opt_key_vals);
+  idx_test_queries = sim_user.process_sim_user(get_imageset_ptr(), transform, _keywords, idx_test_queries, opt_key_vals);
 
   return ranking_model.test_model(transform, _keywords, idx_test_queries, opt_key_vals, num_points);
 }

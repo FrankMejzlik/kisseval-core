@@ -17,7 +17,7 @@ namespace image_ranker
 class GoogleVisionDataPack : public BaseDataPack
 {
  public:
-  GoogleVisionDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
+  GoogleVisionDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
                 const std::string& description, const GoogleDataPackRef::VocabData& vocab_data_refs,
                 std::vector<std::vector<float>>&& presoft);
 

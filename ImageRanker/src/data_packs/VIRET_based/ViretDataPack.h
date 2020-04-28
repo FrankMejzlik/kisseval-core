@@ -17,7 +17,7 @@ namespace image_ranker
 class ViretDataPack : public BaseDataPack
 {
  public:
-  ViretDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
+  ViretDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
                 const std::string& description, const ViretDataPackRef::VocabData& vocab_data_refs,
                 std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
                 std::vector<std::vector<float>>&& feas_data);

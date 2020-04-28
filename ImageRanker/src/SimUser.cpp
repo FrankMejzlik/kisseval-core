@@ -1,9 +1,12 @@
 
 #include "SimUser.h"
 
+#include "datasets/BaseImageset.h"
+
 using namespace image_ranker;
 
-std::vector<UserTestQuery> SimUserNoSim::process_sim_user(const BaseVectorTransform& transformed_data,
+std::vector<UserTestQuery> SimUserNoSim::process_sim_user(const BaseImageset* p_is,
+                                                          const BaseVectorTransform& transformed_data,
                                                           const KeywordsContainer& keywords,
                                                           const std::vector<UserTestQuery>& test_user_queries,
                                                           const std::vector<ModelKeyValOption>& options) const
@@ -11,28 +14,52 @@ std::vector<UserTestQuery> SimUserNoSim::process_sim_user(const BaseVectorTransf
   return test_user_queries;
 }
 
-std::vector<UserTestQuery> SimUserSingleQueries::process_sim_user(const BaseVectorTransform& transformed_data,
-                                                                  const KeywordsContainer& keywords,
-                                                                  const std::vector<UserTestQuery>& test_user_queries,
-                                                                  const std::vector<ModelKeyValOption>& options) const
+std::vector<UserTestQuery> SimUserXToP::process_sim_user(const BaseImageset* p_is,
+                                                         const BaseVectorTransform& transformed_data,
+                                                         const KeywordsContainer& keywords,
+                                                         const std::vector<UserTestQuery>& test_user_queries,
+                                                         const std::vector<ModelKeyValOption>& options) const
 {
-  // \todo Implement.
+  Options opts = parse_options(options);
+
+  switch (opts.target)
+  {
+    case eSimUserTarget::SINGLE_QUERIES:
+      return generate_single_queries(p_is, transformed_data, keywords, test_user_queries, opts);
+      break;
+
+    case eSimUserTarget::TEMP_QUERIES:
+      return generate_single_queries(p_is, transformed_data, keywords, test_user_queries, opts, 2_z);
+      break;
+
+    case eSimUserTarget::AUGMENT_REAL_WITH_TEMP:
+      return augment_with_temp_queries(p_is, transformed_data, keywords, test_user_queries, opts);
+      break;
+
+    default:
+      LOGW("Unknown sim user target: " << int(opts.target));
+      break;
+  }
+
   return test_user_queries;
 }
 
-std::vector<UserTestQuery> SimUserTempQueries::process_sim_user(const BaseVectorTransform& transformed_data,
+std::vector<UserTestQuery> SimUserXToP::generate_single_queries(const BaseImageset* p_is,
+                                                                const BaseVectorTransform& transformed_data,
                                                                 const KeywordsContainer& keywords,
                                                                 const std::vector<UserTestQuery>& test_user_queries,
-                                                                const std::vector<ModelKeyValOption>& options) const
+                                                                const Options& options, size_t num_queries) const
 {
-  // \todo Implement.
+  LOGW("Not implemented!");
   return test_user_queries;
 }
 
-std::vector<UserTestQuery> SimUserAugmentRealWithTemp::process_sim_user(
-    const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-    const std::vector<UserTestQuery>& test_user_queries, const std::vector<ModelKeyValOption>& options) const
+std::vector<UserTestQuery> SimUserXToP::augment_with_temp_queries(const BaseImageset* p_is,
+                                                                  const BaseVectorTransform& transformed_data,
+                                                                  const KeywordsContainer& keywords,
+                                                                  const std::vector<UserTestQuery>& test_user_queries,
+                                                                  const Options& options) const
 {
-  // \todo Implement.
+  LOGW("Not implemented!");
   return test_user_queries;
 }

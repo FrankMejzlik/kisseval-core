@@ -95,7 +95,7 @@ class ImageRanker
   const SelFrame& get_frame(const std::string& imageset_ID, size_t imageId) const;
 
  private:
-  const BaseImageset& imageset(const std::string& imageset_ID) const { return *_imagesets.at(imageset_ID); }
+  const BaseImageset* imageset(const std::string& imageset_ID) const { return _imagesets.at(imageset_ID).get(); }
 
   const BaseDataPack& data_pack(const std::string& data_pack_ID) const { return *_data_packs.at(data_pack_ID); }
 

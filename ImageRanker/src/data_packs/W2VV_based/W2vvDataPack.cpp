@@ -8,11 +8,11 @@
 
 using namespace image_ranker;
 
-W2vvDataPack::W2vvDataPack(const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
+W2vvDataPack::W2vvDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
                            const std::string& description, const W2vvDataPackRef::VocabData& vocab_data_refs,
                            std::vector<std::vector<float>>&& frame_features, Matrix<float>&& kw_features,
                            Vector<float>&& kw_bias_vec, Matrix<float>&& kw_PCA_mat, Vector<float>&& kw_PCA_mean_vec)
-    : BaseDataPack(ID, target_imageset_ID, model_options, description),
+    : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description),
       _features_of_frames(std::move(frame_features)),
       _keywords(vocab_data_refs),
       _kw_features(std::move(kw_features)),
