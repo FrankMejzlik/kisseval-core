@@ -28,11 +28,12 @@ int main()
 #define TEST_get_loaded_imagesets_info 0
 #define TEST_rank_frames 0
 #define TEST_run_model_test 0
+#define TEST_run_model_test_with_sim 1
 #define TEST_run_model_vec_space 0
 #define TEST_boolean_grid_test_threshold 0
 #define TEST_run_model_test_Google 0
 #define TEST_boolean_grid_test_threshold_Google 0
-#define TEST_run_model_test_W2VV 1
+#define TEST_run_model_test_W2VV 0
 
   // TEST: `submit_annotator_user_queries`
 #if TEST_submit_annotator_user_queries
@@ -45,78 +46,121 @@ int main()
 
   // TEST: `get_random_frame_sequence`
 #if TEST_get_random_frame_sequence
-  auto r1 = ranker.get_random_frame_sequence(enum_label(eImagesetId::V3C1_20K).first, 3);
+  {
+    auto r1 = ranker.get_random_frame_sequence(enum_label(eImagesetId::V3C1_20K).first, 3);
+  }
 #endif
 
   // TEST: `get_autocomplete_results`
 #if TEST_get_autocomplete_results
-  auto r1 = ranker.get_autocomplete_results(enum_label(eDataPackId::NASNET_2019).first, "ca", 20, true);
-
-  if (r1.top_keywords.size() < 20)
   {
-    throw std::runtime_error("failed");
+    auto r1 = ranker.get_autocomplete_results(enum_label(eDataPackId::NASNET_2019).first, "ca", 20, true);
+
+    if (r1.top_keywords.size() < 20)
+    {
+      throw std::runtime_error("failed");
+    }
   }
 #endif
 
   // TEST: `get_loaded_imagesets_info`
 #if TEST_get_loaded_imagesets_info
-
-  auto r1 = ranker.get_loaded_imagesets_info();
-  auto r2 = ranker.get_loaded_data_packs_info();
+  {
+    auto r1 = ranker.get_loaded_imagesets_info();
+    auto r2 = ranker.get_loaded_data_packs_info();
+  }
 
 #endif
 
   // TEST: `rank_frames`
 #if TEST_rank_frames
+  {
+    std::vector<std::string> a = {"1&2", "3&4"};
+    std::vector<std::string> b{"1&2", "3&4"};
 
-  std::vector<std::string> a = {"1&2", "3&4"};
-  std::vector<std::string> b{"1&2", "3&4"};
+    /**
+     * model_ID:
+     *    "boolean"
+     *    "vector_space"
+     *    "mult-sum-max"
+     *    "boolean_bucket"
+     *
+     * transform_ID:
+     *    "no_transform"
+     *    "linear_0-1"
+     *    "softmax"
+     *
+     */
 
-  /**
-   * model_ID:
-   *    "boolean"
-   *    "vector_space"
-   *    "mult-sum-max"
-   *    "boolean_bucket"
-   *
-   * transform_ID:
-   *    "no_transform"
-   *    "linear_0-1"
-   *    "softmax"
-   *
-   */
-
-  auto r1 = ranker.rank_frames(
-      {"&-274+"}, dp1["ID"].get<std::string>(),
-      "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0", 1000, 1304);
-
+    auto r1 = ranker.rank_frames(
+        {"&-274+"}, dp1["ID"].get<std::string>(),
+        "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0", 1000, 1304);
+  }
 #endif
 
 #if TEST_run_model_test
+  {
+    std::cout << "===============================" << std::endl;
+    std::cout << "MULT-SUM-MAX model: " << std::endl;
+    std::cout << "--------------" << std::endl;
+    auto r1 = ranker.run_model_test(
+        eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op="
+        "sum;transform=linear_01;sim_user=no_sim_user;");
+    auto r1_area = calc_chart_area(r1);
+    std::cout << "transform=linear_01, model_operations=mult-sum: " << r1_area << std::endl;
 
-  std::cout << "===============================" << std::endl;
-  std::cout << "MULT-SUM-MAX model: " << std::endl;
-  std::cout << "--------------" << std::endl;
-  auto r1 = ranker.run_model_test(
-      eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
-      "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op="
-      "sum;transform=linear_01;sim_user=no_sim_user;");
-  auto r1_area = calc_chart_area(r1);
-  std::cout << "transform=linear_01, model_operations=mult-sum: " << r1_area << std::endl;
+    std::cout << "===============================" << std::endl;
+    std::cout << "Boolean model: " << std::endl;
+    std::cout << "--------------" << std::endl;
 
-  std::cout << "===============================" << std::endl;
-  std::cout << "Boolean model: " << std::endl;
-  std::cout << "--------------" << std::endl;
+    auto r2 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+                                    "model=boolean;model_true_threshold=0.000598001;transform=linear_01;");
+    auto r2_area = calc_chart_area(r2);
+    std::cout << "t = 0.000598001: " << r2_area << std::endl;
 
-  auto r2 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
-                                  "model=boolean;model_true_threshold=0.000598001;transform=linear_01;");
-  auto r2_area = calc_chart_area(r2);
-  std::cout << "t = 0.000598001: " << r2_area << std::endl;
+    std::cout << "===============================" << std::endl;
+    std::cout << "Vector space model: " << std::endl;
+    std::cout << "--------------" << std::endl;
+  }
 
-  std::cout << "===============================" << std::endl;
-  std::cout << "Vector space model: " << std::endl;
-  std::cout << "--------------" << std::endl;
+#endif
 
+#if TEST_run_model_test_with_sim
+  {
+    std::cout << "===============================" << std::endl;
+    std::cout << "MULT-SUM-MAX model: " << std::endl;
+    std::cout << "\t Simulate single queries: " << std::endl;
+    std::cout << "--------------" << std::endl;
+
+    auto r1_opts(
+        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=single_queries"s);
+    auto r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", r1_opts);
+    auto r1_area = calc_chart_area(r1);
+    std::cout << "\t " << "sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=single_queries" << std::endl;
+    std::cout << "\t\t area: " << r1_area << std::endl;
+
+    // Assert results
+
+    r1_opts =
+        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=temp_queries"s;
+    r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", r1_opts);
+    r1_area = calc_chart_area(r1);
+    std::cout << "\t " << "sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=temp_queries" << std::endl;
+    std::cout << "\t\t area: " << r1_area << std::endl;
+
+    // Assert results
+
+    r1_opts =
+        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=alter_real_with_temporal"s;
+    r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", r1_opts);
+    r1_area = calc_chart_area(r1);
+    std::cout << "\t " << "sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=alter_real_with_temporal" << std::endl;
+    std::cout << "\t\t area: " << r1_area << std::endl;
+
+    // Assert results
+
+  }
 #endif
 
 #if TEST_run_model_vec_space

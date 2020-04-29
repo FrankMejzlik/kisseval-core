@@ -91,7 +91,7 @@ class SimUserXToP : public BaseSimUser
                                                       const std::vector<ModelKeyValOption>& options) const override;
 
  private:
-  std::vector<UserTestQuery> generate_single_queries(const BaseImageset* p_is,
+  std::vector<UserTestQuery> generate_whole_queries(const BaseImageset* p_is,
                                                      const BaseVectorTransform& transformed_data,
                                                      const KeywordsContainer& keywords,
                                                      const std::vector<UserTestQuery>& test_user_queries,

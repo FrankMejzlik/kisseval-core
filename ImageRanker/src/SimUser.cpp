@@ -25,11 +25,11 @@ std::vector<UserTestQuery> SimUserXToP::process_sim_user(const BaseImageset* p_i
   switch (opts.target)
   {
     case eSimUserTarget::SINGLE_QUERIES:
-      return generate_single_queries(p_is, transformed_data, keywords, test_user_queries, opts);
+      return generate_whole_queries(p_is, transformed_data, keywords, test_user_queries, opts);
       break;
 
     case eSimUserTarget::TEMP_QUERIES:
-      return generate_single_queries(p_is, transformed_data, keywords, test_user_queries, opts, 2_z);
+      return generate_whole_queries(p_is, transformed_data, keywords, test_user_queries, opts, 2_z);
       break;
 
     case eSimUserTarget::AUGMENT_REAL_WITH_TEMP:
@@ -44,7 +44,7 @@ std::vector<UserTestQuery> SimUserXToP::process_sim_user(const BaseImageset* p_i
   return test_user_queries;
 }
 
-std::vector<UserTestQuery> SimUserXToP::generate_single_queries(const BaseImageset* p_is,
+std::vector<UserTestQuery> SimUserXToP::generate_whole_queries(const BaseImageset* p_is,
                                                                 const BaseVectorTransform& transformed_data,
                                                                 const KeywordsContainer& keywords,
                                                                 const std::vector<UserTestQuery>& test_user_queries,
