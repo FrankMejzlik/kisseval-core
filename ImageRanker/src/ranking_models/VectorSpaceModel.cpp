@@ -192,6 +192,10 @@ RankingResult VectorSpaceModel::rank_frames(const BaseVectorTransform& transform
       max_prio_queue.emplace(dist, i);
 
       // \todo Add temporal ranking
+      if (user_query.size() > 1)
+      {
+        throw NotSuportedModelOption("Temporal queries not yet suported with this model.");
+      }
       ++i;
     }
   }

@@ -148,9 +148,67 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
     {
       float prim_ranking = rank_frame(fea_vec, user_query.front(), opts);
 
+      // \todo Add temporal dynamic temp ranking
+      if (user_query.size() > 1)
+      {
+        auto q2{user_query[1]};
+
+        float secondary_ranking{};
+
+        switch (opts.succ_aggregation)
+        {
+        case eSuccesorAggregation::cMax:
+        case eSuccesorAggregation::cSum:
+          secondary_ranking = 0.0F;
+          break;
+
+        case eSuccesorAggregation::cProduct:
+          secondary_ranking = 1.0F;
+
+        default:
+          LOGW("Uknown option!");
+          break;
+        }
+
+        for (size_t ii{0_z}; ii < TEMP_CONTEXT_LOOKUP_LENGTH && (ii + i) < data_mat.size(); ++ii)
+        {
+          auto features_vec{data_mat[ii + i]};
+
+          float ranking = rank_frame(features_vec, q2, opts);
+
+          switch (opts.succ_aggregation)
+          {
+          case eSuccesorAggregation::cMax:
+            secondary_ranking = std::max(secondary_ranking, ranking);
+            break;
+
+          case eSuccesorAggregation::cSum:
+            secondary_ranking += ranking;
+            break;
+
+          case eSuccesorAggregation::cProduct:
+            secondary_ranking *= ranking;
+
+          default:
+            LOGW("Uknown option!");
+            break;
+          }
+        }
+
+        // Combine with primary ranking
+        if (opts.main_temp_aggregation == eMainTempRankingAggregation::cProduct)
+        {
+          prim_ranking  = prim_ranking * secondary_ranking;
+        }
+        else if (opts.main_temp_aggregation == eMainTempRankingAggregation::cSum)
+        {
+          prim_ranking  = prim_ranking + secondary_ranking;
+        }
+
+      }
+
       max_prio_queue.emplace(prim_ranking, i);
 
-      // \todo Add temporal ranking
       ++i;
     }
     

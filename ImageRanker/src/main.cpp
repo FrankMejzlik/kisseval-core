@@ -134,7 +134,7 @@ int main()
     std::cout << "--------------" << std::endl;
 
     auto r1_opts(
-        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=single_queries;sim_user_num_words_from=1;sim_user_num_words_to=8;"s);
+        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=mult;model_inner_op=max;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=single_queries;sim_user_num_words_from=1;sim_user_num_words_to=8;"s);
     auto r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", r1_opts);
     auto r1_area = calc_chart_area(r1);
     std::cout << "\t "
@@ -144,7 +144,7 @@ int main()
     // Assert results
 
     r1_opts =
-        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=temp_queries;sim_user_num_words_from=1;sim_user_num_words_to=8;"s;
+        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=mult;model_inner_op=max;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=temp_queries;sim_user_num_words_from=1;sim_user_num_words_to=8;"s;
     r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", r1_opts);
     r1_area = calc_chart_area(r1);
     std::cout << "\t "

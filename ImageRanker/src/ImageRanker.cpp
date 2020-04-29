@@ -157,6 +157,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
   // Google type
   for (auto&& pack : _settings.config.Google_packs)
   {
+    break;
     const auto& is{ imageset(pack.target_imageset) };
 
     // Initialize all images
