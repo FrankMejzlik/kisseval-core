@@ -42,23 +42,17 @@ enum class HyperAccumType
 class BaseVectorTransform
 {
  public:
-  BaseVectorTransform(const std::pair<Matrix<float>, const DataInfo>& data_sum_mat,
-                      const std::pair<Matrix<float>, DataInfo>& data_max_mat)
-      : _data_sum_mat(data_sum_mat.first),
-        _data_max_mat(data_max_mat.first),
-        _data_sum_mat_info(data_sum_mat.second),
-        _data_max_mat_info(data_max_mat.second)
-  {
-  }
   BaseVectorTransform(std::pair<Matrix<float>, DataInfo>&& data_sum_mat,
-                      std::pair<Matrix<float>, DataInfo>&& data_max_mat)
+    std::pair<Matrix<float>, DataInfo>&& data_max_mat, Matrix<float> data_lin_raw = Matrix<float>{})
       : _data_sum_mat(std::move(data_sum_mat.first)),
         _data_max_mat(std::move(data_max_mat.first)),
         _data_sum_mat_info(std::move(data_sum_mat.second)),
-        _data_max_mat_info(std::move(data_max_mat.second))
+        _data_max_mat_info(std::move(data_max_mat.second)),
+    _data_linear_raw(data_lin_raw)
   {
   }
 
+  [[nodiscard]] virtual const Matrix<float>& data_linear_raw() const { return _data_linear_raw; }
   [[nodiscard]] virtual const Matrix<float>& data_max() const { return _data_max_mat; }
   [[nodiscard]] virtual const DataInfo& data_max_info() const { return _data_max_mat_info; }
   [[nodiscard]] virtual const Matrix<float>& data_sum() const { return _data_sum_mat; }
@@ -84,5 +78,7 @@ class BaseVectorTransform
    *  Used for models with MAX inner operation. */
   Matrix<float> _data_max_mat;
   DataInfo _data_max_mat_info;
+
+  Matrix<float> _data_linear_raw;
 };
 }  // namespace image_ranker

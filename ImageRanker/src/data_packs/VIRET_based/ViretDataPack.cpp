@@ -231,7 +231,9 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
   const auto& sim_user = *(iter_su->second);
 
   // Process sim user
-  idx_test_queries = sim_user.process_sim_user(get_imageset_ptr(), transform, _keywords, idx_test_queries, opt_key_vals);
+  // Use linear transform data without hypernyms accumulated
+  const auto& sim_user_tr {*(_transforms.find(enum_label(eTransformationIds::LINEAR_01).first)->second)};
+  idx_test_queries = sim_user.process_sim_user(get_imageset_ptr(), sim_user_tr, _keywords, idx_test_queries, opt_key_vals);
 
   return ranking_model.test_model(transform, _keywords, idx_test_queries, opt_key_vals, num_points);
 }

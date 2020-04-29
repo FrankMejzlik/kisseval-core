@@ -142,7 +142,7 @@ CnfFormula SimUserXToP::generate_simulated_query(FrameId frame_ID, const BaseIma
                                                  const BaseVectorTransform& transformed_data,
                                                  const KeywordsContainer& keywords, const Options& options) const
 {
-  auto frame_fea_vec{ transformed_data.data_sum()[frame_ID] };
+  auto frame_fea_vec{ transformed_data.data_linear_raw()[frame_ID] };
 
   size_t from{ options.num_words_from };
   size_t to{ options.num_words_to };
