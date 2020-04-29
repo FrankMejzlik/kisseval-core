@@ -28,19 +28,15 @@ class GoogleVisionDataPack : public BaseDataPack
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
                                                    PackModelCommands model_commands, size_t num_points) const override;
 
-  [[nodiscard]] std::vector<UserTestQuery> process_sim_user(const BaseVectorTransform& transformed_data,
-                                                            const KeywordsContainer& keywords,
-                                                            const std::vector<UserTestQuery>& test_user_queries) const;
-
   [[nodiscard]] virtual const std::string& get_vocab_ID() const override;
   [[nodiscard]] virtual const std::string& get_vocab_description() const override;
 
   [[nodiscard]] virtual std::string humanize_and_query(const std::string& and_query) const override;
-  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID) const override;
+  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID, PackModelCommands model_commands, size_t count) const override;
 
   [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix,
                                                                          size_t result_size,
-                                                                         bool with_example_images) const override;
+                                                                         bool with_example_images, PackModelCommands model_commands) const override;
 
   [[nodiscard]] virtual DataPackInfo get_info() const override;
 

@@ -12,9 +12,13 @@ class BaseImageset;
 class BaseDataPack
 {
  public:
-  BaseDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
-               const std::string& description)
-      : _p_is(p_is), _ID(ID), _description(description), _model_options(model_options), _target_imageset_ID(target_imageset_ID)
+  BaseDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
+               const std::string& model_options, const std::string& description)
+      : _p_is(p_is),
+        _ID(ID),
+        _description(description),
+        _model_options(model_options),
+        _target_imageset_ID(target_imageset_ID)
   {
     LOGI("Loaded data pack: " << ID << std::endl
                               << "\tdescription:" << description << std::endl
@@ -30,7 +34,7 @@ class BaseDataPack
   {
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested.");
-    throw std::runtime_error("This data pack does not support this.");
+    throw NotSuportedModelOption("This data pack does not support this.");
   };
 
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
@@ -40,18 +44,23 @@ class BaseDataPack
   {
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested.");
-    throw std::runtime_error("This data pack does not support this.");
+    throw NotSuportedModelOption("This data pack does not support this.");
   };
 
   [[nodiscard]] virtual const std::string& get_vocab_ID() const = 0;
   [[nodiscard]] virtual const std::string& get_vocab_description() const = 0;
 
   [[nodiscard]] virtual std::string humanize_and_query(const std::string& and_query) const = 0;
-  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID) const = 0;
-
+  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID,
+                                                                 PackModelCommands model_commands, size_t count) const
+  {
+    LOGE("Unsupported data pack feature requested.");
+    throw NotSuportedModelOption("This data pack does not support this.");
+  };
+  
   [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix,
-                                                                         size_t result_size,
-                                                                         bool with_example_images) const = 0;
+                                                                         size_t result_size, bool with_example_images,
+                                                                         PackModelCommands model_commands) const = 0;
 
   [[nodiscard]] virtual DataPackInfo get_info() const = 0;
 

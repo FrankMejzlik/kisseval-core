@@ -51,7 +51,7 @@ std::string GoogleVisionDataPack::humanize_and_query(const std::string& and_quer
   return "I am just dummy query!"s;
 }
 
-std::vector<Keyword*> GoogleVisionDataPack::top_frame_keywords(FrameId frame_ID) const
+std::vector<Keyword*> GoogleVisionDataPack::top_frame_keywords(FrameId frame_ID, PackModelCommands model_commands, size_t count) const
 {
   LOGW("Not implemented!");
 
@@ -233,7 +233,7 @@ ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery
 
 AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std::string& query_prefix,
                                                                        size_t result_size,
-                                                                       bool with_example_image) const
+                                                                       bool with_example_image, PackModelCommands model_commands) const
 {
   return {_keywords.GetNearKeywordsPtrs(query_prefix, result_size)};
 }

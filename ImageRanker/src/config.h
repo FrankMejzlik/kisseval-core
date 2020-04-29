@@ -4,7 +4,7 @@
 
 /*============================================
  * Logging config
- *============================================/
+ *============================================*/
 /** Will throw exception on LOG_ERROR */
 #define THROW_ON_ERROR 1  // NOLINT
 
@@ -13,6 +13,12 @@
 
 constexpr size_t NUM_MODEL_TEST_RESULT_POINTS = 100;
 constexpr size_t TEMP_CONTEXT_LOOKUP_LENGTH = 3;
+
+/*============================================
+ * Default settings
+ *============================================*/
+/** top_frame_keywords will return this ammount by default */
+constexpr size_t DEF_NUMBER_OF_TOP_KWS = 5;
 
 /********************************************************
 

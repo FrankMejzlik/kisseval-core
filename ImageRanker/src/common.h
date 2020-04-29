@@ -408,6 +408,7 @@ struct GameSessionQueryResult
 struct AutocompleteInputResult
 {
   std::vector<const Keyword*> top_keywords;
+  std::vector<std::vector<const SelFrame*>> example_frames;
 };
 
 struct ImagesetInfo

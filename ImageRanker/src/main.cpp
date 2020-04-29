@@ -266,5 +266,7 @@ int main()
 
 #endif
 
+  auto succs = ranker.frame_successors("V3C1_20k", 999, 4_z);
+
   return 0;
 }

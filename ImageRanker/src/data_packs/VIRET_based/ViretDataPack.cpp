@@ -57,7 +57,7 @@ const std::string& ViretDataPack::get_vocab_description() const { return _keywor
   return "I am just dummy query!"s;
 }
 
-[[nodiscard]] std::vector<Keyword*> ViretDataPack::top_frame_keywords(FrameId frame_ID) const
+[[nodiscard]] std::vector<Keyword*> ViretDataPack::top_frame_keywords(FrameId frame_ID, PackModelCommands model_commands, size_t count) const
 {
   LOGW("Not implemented!");
 
@@ -237,7 +237,7 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
 }
 
 AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,
-                                                                bool with_example_image) const
+                                                                bool with_example_image, PackModelCommands model_commands) const
 {
   return {_keywords.GetNearKeywordsPtrs(query_prefix, result_size)};
 }

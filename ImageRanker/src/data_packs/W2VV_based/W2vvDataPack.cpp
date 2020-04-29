@@ -8,8 +8,9 @@
 
 using namespace image_ranker;
 
-W2vvDataPack::W2vvDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
-                           const std::string& description, const W2vvDataPackRef::VocabData& vocab_data_refs,
+W2vvDataPack::W2vvDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
+                           const std::string& model_options, const std::string& description,
+                           const W2vvDataPackRef::VocabData& vocab_data_refs,
                            std::vector<std::vector<float>>&& frame_features, Matrix<float>&& kw_features,
                            Vector<float>&& kw_bias_vec, Matrix<float>&& kw_PCA_mat, Vector<float>&& kw_PCA_mean_vec)
     : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description),
@@ -34,7 +35,8 @@ std::string W2vvDataPack::humanize_and_query(const std::string& and_query) const
   return ""s;
 }
 
-std::vector<Keyword*> W2vvDataPack::top_frame_keywords(FrameId frame_ID) const
+std::vector<Keyword*> W2vvDataPack::top_frame_keywords(FrameId frame_ID, PackModelCommands model_commands,
+                                                       size_t count) const
 {
   LOGW("Not implemented!");
 
@@ -85,22 +87,22 @@ RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_quer
   const auto& ranking_model = *(iter_m->second);
 
   // Run this model
-  return ranking_model.rank_frames(_features_of_frames, 
-    _kw_features, _kw_bias_vec, _kw_PCA_mat, _kw_PCA_mean_vec, _keywords, user_queries, result_size, opt_key_vals, target_image_ID);
+  return ranking_model.rank_frames(_features_of_frames, _kw_features, _kw_bias_vec, _kw_PCA_mat, _kw_PCA_mean_vec,
+                                   _keywords, user_queries, result_size, opt_key_vals, target_image_ID);
 }
 
 RankingResult W2vvDataPack::rank_frames(const std::vector<std::string>& user_native_queries,
-                                                  PackModelCommands model_commands, size_t result_size,
-                                                  FrameId target_image_ID) const
+                                        PackModelCommands model_commands, size_t result_size,
+                                        FrameId target_image_ID) const
+{
+  std::vector<CnfFormula> cnf_queries;
+  for (auto&& nat_q : user_native_queries)
   {
-    std::vector<CnfFormula> cnf_queries;
-    for (auto&& nat_q : user_native_queries)
-    {
-      cnf_queries.emplace_back(native_query_to_CNF_formula(nat_q));
-    }
+    cnf_queries.emplace_back(native_query_to_CNF_formula(nat_q));
+  }
 
-    return rank_frames(cnf_queries, model_commands, result_size, target_image_ID);
-  };
+  return rank_frames(cnf_queries, model_commands, result_size, target_image_ID);
+};
 
 ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_queries,
                                          PackModelCommands model_commands, size_t num_points) const
@@ -153,32 +155,34 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   const auto& sim_user = *(iter_su->second);
 
   // Process sim user \todo
-  //test_queries = sim_user.process_sim_user(_frames_features, _keywords, test_queries, opt_key_vals);
+  // test_queries = sim_user.process_sim_user(_frames_features, _keywords, test_queries, opt_key_vals);
 
-  return ranking_model.test_model(_features_of_frames, _kw_features, _kw_bias_vec, _kw_PCA_mat, _kw_PCA_mean_vec, _keywords, test_queries, opt_key_vals, num_points);
+  return ranking_model.test_model(_features_of_frames, _kw_features, _kw_bias_vec, _kw_PCA_mat, _kw_PCA_mean_vec,
+                                  _keywords, test_queries, opt_key_vals, num_points);
 }
 
 ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestNativeQuery>& test_native_queries,
-                                                   PackModelCommands model_commands, size_t num_points) const
+                                         PackModelCommands model_commands, size_t num_points) const
+{
+  std::vector<UserTestQuery> test_cnf_queries;
+  test_cnf_queries.reserve(test_native_queries.size());
+
+  for (auto&& [nat_q, target_ID] : test_native_queries)
   {
-    std::vector<UserTestQuery> test_cnf_queries;
-    test_cnf_queries.reserve(test_native_queries.size());
-
-    for (auto&& [nat_q, target_ID] : test_native_queries)
+    std::vector<CnfFormula> cnf_query;
+    for (auto&& single_nat_q : nat_q)
     {
-      std::vector<CnfFormula> cnf_query;
-      for (auto&& single_nat_q : nat_q)
-      {
-        cnf_query.emplace_back(native_query_to_CNF_formula(single_nat_q));
-      }
-      test_cnf_queries.emplace_back(std::move(cnf_query), target_ID);
+      cnf_query.emplace_back(native_query_to_CNF_formula(single_nat_q));
     }
+    test_cnf_queries.emplace_back(std::move(cnf_query), target_ID);
+  }
 
-    return test_model(test_cnf_queries, model_commands, num_points);
-  };
+  return test_model(test_cnf_queries, model_commands, num_points);
+};
 
 AutocompleteInputResult W2vvDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,
-                                                               bool with_example_image) const
+                                                               bool with_example_images,
+                                                               PackModelCommands model_commands) const
 {
   return {_keywords.GetNearKeywordsPtrs(query_prefix, result_size)};
 }
@@ -193,7 +197,6 @@ CnfFormula W2vvDataPack::native_query_to_CNF_formula(const std::string& native_q
 {
   std::vector<Clause> res;
   std::string nat_query(native_query);
-
 
   // Remove all unwanted charactes
   std::string illegal_chars = "\\/?!,.'\"";
@@ -213,7 +216,7 @@ CnfFormula W2vvDataPack::native_query_to_CNF_formula(const std::string& native_q
   while (query_ss >> token_str)
   {
     auto p_kw = _keywords.GetKeywordByWord(token_str);
-    if (!p_kw) 
+    if (!p_kw)
     {
       ++ignore_cnt;
       continue;
@@ -221,11 +224,9 @@ CnfFormula W2vvDataPack::native_query_to_CNF_formula(const std::string& native_q
 
     Clause c;
     c.emplace_back(Literal<KeywordId>{p_kw->ID, false});
-    
+
     res.emplace_back(std::move(c));
   }
-
-  
 
   return res;
 }

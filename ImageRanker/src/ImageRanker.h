@@ -86,7 +86,11 @@ class ImageRanker
   const SelFrame* get_random_frame(const std::string& imageset_ID) const;
 
   AutocompleteInputResult get_autocomplete_results(const std::string& data_pack_ID, const std::string& query_prefix,
-                                                   size_t result_size, bool with_example_images) const;
+                                                   size_t result_size, bool with_example_images,
+                                                   const PackModelCommands& model_options) const;
+
+  [[nodiscard]] std::vector<const SelFrame*> frame_successors(const std::string& imageset_ID, FrameId ID,
+                                                              size_t num_succs) const;
 
   LoadedImagesetsInfo get_loaded_imagesets_info() const;
   LoadedDataPacksInfo get_loaded_data_packs_info() const;
@@ -95,7 +99,7 @@ class ImageRanker
   const SelFrame& get_frame(const std::string& imageset_ID, size_t imageId) const;
 
  private:
-  const BaseImageset* imageset(const std::string& imageset_ID) const { return _imagesets.at(imageset_ID).get(); }
+  const BaseImageset& imageset(const std::string& imageset_ID) const { return *_imagesets.at(imageset_ID); }
 
   const BaseDataPack& data_pack(const std::string& data_pack_ID) const { return *_data_packs.at(data_pack_ID); }
 
