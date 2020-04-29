@@ -11,14 +11,6 @@ class BaseVectorTransform;
 class KeywordsContainer;
 class BaseImageset;
 
-enum class eSimUserTarget
-{
-  SINGLE_QUERIES,
-  TEMP_QUERIES,
-  AUGMENT_REAL_WITH_TEMP,
-  _COUNT
-};
-
 class BaseSimUser
 {
  public:
@@ -26,7 +18,17 @@ class BaseSimUser
                                                       const BaseVectorTransform& transformed_data,
                                                       const KeywordsContainer& keywords,
                                                       const std::vector<UserTestQuery>& test_user_queries,
-                                                      const std::vector<ModelKeyValOption>& options) const = 0;
+                                                      std::vector<ModelKeyValOption>& options) const = 0;
+
+  virtual std::vector<UserTestQuery> generate_simulated_queries(const BaseImageset* p_is,
+                                                                const BaseVectorTransform& transformed_data,
+                                                                const KeywordsContainer& keywords,
+                                                                std::vector<ModelKeyValOption>& options,
+                                                                size_t count, size_t temporal_count = 1_z) const
+  {
+    throw NotSuportedModelOption("Single queries generation not suported for this options combinations.");
+    return std::vector<UserTestQuery>{};
+  };
 };
 
 class SimUserNoSim : public BaseSimUser
@@ -36,7 +38,7 @@ class SimUserNoSim : public BaseSimUser
                                                       const BaseVectorTransform& transformed_data,
                                                       const KeywordsContainer& keywords,
                                                       const std::vector<UserTestQuery>& test_user_queries,
-                                                      const std::vector<ModelKeyValOption>& options) const override;
+                                                      std::vector<ModelKeyValOption>& options) const override;
 };
 
 class SimUserXToP : public BaseSimUser
@@ -44,23 +46,36 @@ class SimUserXToP : public BaseSimUser
  public:
   struct Options
   {
-    Options() : exponent_p(5.0F), target(eSimUserTarget::SINGLE_QUERIES) {}
-
-    float exponent_p;
-    eSimUserTarget target;
+    float exponent_p{ 5.0F };
+    eSimUserTarget target{ DEF_SIM_USER_TARGET };
+    size_t num_words_from{ DEF_SIM_USER_NUM_WORDS_FROM };
+    size_t num_words_to{ DEF_SIM_USER_NUM_WORDS_TO };
   };
 
-  static Options parse_options(const std::vector<ModelKeyValOption>& options)
+  /**
+   * Warning: Parsed pairs from \param options are removed.
+   */
+  static Options parse_options(std::vector<ModelKeyValOption>& options)
   {
+    std::vector<ModelKeyValOption> forwarded_options;
+
     Options opts;
 
     for (auto&& [key, val] : options)
     {
-      if (key == "paremeter_p")
+      if (key == "sim_user_num_words_from")
+      {
+        opts.num_words_from = strTo<size_t>(val);
+      }
+      else if (key == "sim_user_num_words_to")
+      {
+        opts.num_words_to = strTo<size_t>(val);
+      }
+      else if (key == "sim_user_paremeter_p")
       {
         opts.exponent_p = strTo<float>(val);
       }
-      else if (key == "target")
+      else if (key == "sim_user_target")
       {
         if (val == "single_queries")
         {
@@ -79,7 +94,14 @@ class SimUserXToP : public BaseSimUser
           LOGW("Uknown value '" + val + "'.")
         }
       }
+      // Forward those key-value pairs
+      else
+      {
+        forwarded_options.emplace_back(key, val);
+      }
     }
+
+    options = forwarded_options;
 
     return opts;
   }
@@ -88,20 +110,29 @@ class SimUserXToP : public BaseSimUser
                                                       const BaseVectorTransform& transformed_data,
                                                       const KeywordsContainer& keywords,
                                                       const std::vector<UserTestQuery>& test_user_queries,
-                                                      const std::vector<ModelKeyValOption>& options) const override;
+                                                      std::vector<ModelKeyValOption>& options) const override;
+
+  virtual std::vector<UserTestQuery> generate_simulated_queries(
+      const BaseImageset* p_is, const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+      std::vector<ModelKeyValOption>& options, size_t count, size_t temporal_count = 1_z) const override;
 
  private:
   std::vector<UserTestQuery> generate_whole_queries(const BaseImageset* p_is,
-                                                     const BaseVectorTransform& transformed_data,
-                                                     const KeywordsContainer& keywords,
-                                                     const std::vector<UserTestQuery>& test_user_queries,
-                                                     const Options& options, size_t num_queries = 1_z) const;
+                                                    const BaseVectorTransform& transformed_data,
+                                                    const KeywordsContainer& keywords,
+                                                    const std::vector<UserTestQuery>& test_user_queries,
+                                                    const Options& options, size_t num_queries = 1_z) const;
 
   std::vector<UserTestQuery> augment_with_temp_queries(const BaseImageset* p_is,
                                                        const BaseVectorTransform& transformed_data,
                                                        const KeywordsContainer& keywords,
                                                        const std::vector<UserTestQuery>& test_user_queries,
-                                                       const Options& options) const;
+                                                       const Options& options,
+                                                       size_t count_additional_queries = 1_z) const;
+
+  CnfFormula generate_simulated_query(FrameId frame_ID, const BaseImageset* p_is,
+                                      const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+                                      const Options& options) const;
 };
 
 };  // namespace image_ranker

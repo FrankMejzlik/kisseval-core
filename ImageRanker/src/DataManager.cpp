@@ -97,8 +97,8 @@ std::vector<UserTestQuery> DataManager::fetch_user_test_queries(eUserQueryOrigin
   // Parse DB results
   for (auto&& row : db_rows)
   {
-    FrameId target_frame_ID{strTo<FrameId>(row[0])};
-    CnfFormula single_query{parse_cnf_string(row[1])};
+    FrameId target_frame_ID{ strTo<FrameId>(row[0]) };
+    CnfFormula single_query{ parse_cnf_string(row[1]) };
 
     std::vector<CnfFormula> query;
     query.emplace_back(single_query);
@@ -128,7 +128,7 @@ std::vector<UserTestNativeQuery> DataManager::fetch_user_native_test_queries(eUs
   // Parse DB results
   for (auto&& row : db_rows)
   {
-    FrameId target_frame_ID{strTo<FrameId>(row[0])};
+    FrameId target_frame_ID{ strTo<FrameId>(row[0]) };
 
     std::vector<std::string> query;
     query.emplace_back(row[1]);

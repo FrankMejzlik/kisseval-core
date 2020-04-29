@@ -381,6 +381,26 @@
                             "default": 5
                         },
                         {
+                            "active": true,
+                            "key": "num_words_from",
+                            "name": "Lower limit for number of words used",
+                            "input_type": "float",
+                            "min": 1,
+                            "max": 20,
+                            "step": 0.1,
+                            "default": 5
+                        },
+                        {
+                            "active": true,
+                            "key": "num_words_to",
+                            "name": "Upper limit for number of words used",
+                            "input_type": "float",
+                            "min": 1,
+                            "max": 20,
+                            "step": 0.1,
+                            "default": 5
+                        },
+                        {
                             "key": "target",
                             "name": "Target queries",
                             "description": "How simulated queries will be generated",

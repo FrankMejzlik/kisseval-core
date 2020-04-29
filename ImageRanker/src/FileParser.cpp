@@ -59,7 +59,7 @@ std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string
     size_t curr_offset = 0;
 
     // Iterate through all floats in a row
-    for (size_t i{0ULL}; i < row_dim; ++i)
+    for (size_t i{ 0ULL }; i < row_dim; ++i)
     {
       // ParseFloatLE(&lineBuffer[currOffset])
       float feature_value = ParseFloatLE(&line_byte_buffer[curr_offset]);
@@ -123,7 +123,7 @@ std::vector<float> FileParser::parse_float_vector(const std::string& filepath, s
     size_t curr_offset = 0;
 
     // Iterate through all floats in a row
-    for (size_t i{0ULL}; i < dim; ++i)
+    for (size_t i{ 0ULL }; i < dim; ++i)
     {
       float feature_value = ParseFloatLE(&line_byte_buffer[curr_offset]);
 
@@ -209,7 +209,7 @@ std::tuple<VideoId, ShotId, FrameNumber> FileParser::ParseVideoFilename(const st
 VideoId FileParser::GetVideoIdFromFrameFilename(const std::string& filename) const
 {
   // Extract string representing video ID
-  std::string videoIdString{filename.substr(FILENAME_VIDEO_ID_FROM, FILENAME_VIDEO_ID_LEN)};
+  std::string videoIdString{ filename.substr(FILENAME_VIDEO_ID_FROM, FILENAME_VIDEO_ID_LEN) };
 
   // Return integral value of this string's representation
   return strTo<VideoId>(videoIdString);
@@ -218,7 +218,7 @@ VideoId FileParser::GetVideoIdFromFrameFilename(const std::string& filename) con
 ShotId FileParser::GetShotIdFromFrameFilename(const std::string& filename) const
 {
   // Extract string representing video ID
-  std::string videoIdString{filename.substr(FILENAME_SHOT_ID_FROM, FILENAME_SHOT_ID_LEN)};
+  std::string videoIdString{ filename.substr(FILENAME_SHOT_ID_FROM, FILENAME_SHOT_ID_LEN) };
 
   // Return integral value of this string's representation
   return strTo<ShotId>(videoIdString);
@@ -226,13 +226,13 @@ ShotId FileParser::GetShotIdFromFrameFilename(const std::string& filename) const
 
 void FileParser::ProcessVideoShotsStack(std::stack<SelFrame*>& videoFrames) const
 {
-  size_t i{0_z};
+  size_t i{ 0_z };
 
   // Loop until stack is empty
   while (!videoFrames.empty())
   {
     // Get top image from stack
-    auto pImg{videoFrames.top()};
+    auto pImg{ videoFrames.top() };
     videoFrames.pop();
 
     // Asign this number to this image
@@ -301,8 +301,8 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
   //
 
   // Initialize video ID counter
-  size_t prevVideoId{ERR_VAL<size_t>()};
-  size_t prevShotId{ERR_VAL<size_t>()};
+  size_t prevVideoId{ ERR_VAL<size_t>() };
+  size_t prevShotId{ ERR_VAL<size_t>() };
   std::stack<SelFrame*> videoFrames;
 
   // Iterate over all images in ASC order by their IDs
@@ -333,7 +333,7 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
 #else
 
     // Get ID of current shot
-    size_t currShotId{pImg->m_shotId};
+    size_t currShotId{ pImg->m_shotId };
     // If this frame is from next video
     if (currShotId != prevShotId || currVideoId != prevVideoId)
     {
@@ -377,7 +377,7 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, boo
   std::map<KeywordId, Keyword*> ID_to_keyword;
 
   std::string lineBuffer;
-  size_t iii{0};
+  size_t iii{ 0 };
   // While there is something to read
   while (std::getline(inFile, lineBuffer))
   {
@@ -460,7 +460,7 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, boo
     std::string finalWord;
 
     // Decide what is considered ID
-    FrameId frame_ID{FrameId(iii)};
+    FrameId frame_ID{ FrameId(iii) };
     if (first_col_is_ID)
     {
       frame_ID = FrameId(vectorIndex);
@@ -469,7 +469,7 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, boo
     // Insert all synonyms as well
     while (std::getline(classnames, finalWord, SYNONYM_DELIMITER_001))
     {
-      std::string description{_allDescriptions.data() + descStartIndex};
+      std::string description{ _allDescriptions.data() + descStartIndex };
 
       // Insert this record into table
       _keywords.emplace_back(std::make_unique<Keyword>(FrameId(frame_ID), wordnetId, vectorIndex, std::move(finalWord),
@@ -490,8 +490,8 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, boo
     ++iii;
   }
 
-  return std::tuple{std::move(_allDescriptions),    std::move(_vecIndexToKeyword), std::move(_wordnetIdToKeywords),
-                    std::move(_descIndexToKeyword), std::move(_keywords),          std::move(ID_to_keyword)};
+  return std::tuple{ std::move(_allDescriptions),    std::move(_vecIndexToKeyword), std::move(_wordnetIdToKeywords),
+                     std::move(_descIndexToKeyword), std::move(_keywords),          std::move(ID_to_keyword) };
 }
 
 std::pair<std::vector<std::vector<float>>, std::vector<std::vector<std::pair<FrameId, float>>>>
@@ -546,8 +546,8 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
   size_t currOffset = 40ULL;
 
   // Initialize video ID counter
-  size_t prevVideoId{ERR_VAL<size_t>()};
-  size_t prevShotId{ERR_VAL<size_t>()};
+  size_t prevVideoId{ ERR_VAL<size_t>() };
+  size_t prevShotId{ ERR_VAL<size_t>() };
 
   // Create line buffer
   std::vector<std::byte> lineBuffer;
@@ -581,14 +581,14 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
     // Reserve exact capacitys
     rawRankData.reserve(numFloats);
 
-    float sum{0.0f};
-    float min{std::numeric_limits<float>::max()};
-    float max{-std::numeric_limits<float>::max()};
+    float sum{ 0.0f };
+    float min{ std::numeric_limits<float>::max() };
+    float max{ -std::numeric_limits<float>::max() };
 
     // Iterate through all floats in row
     for (size_t i = 0ULL; i < numFloats; ++i)
     {
-      float rankValue{ParseFloatLE(&lineBuffer[currOffset])};
+      float rankValue{ ParseFloatLE(&lineBuffer[currOffset]) };
 
       // Update min
       if (rankValue < min)
@@ -614,13 +614,13 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
     }
 
     // Calculate mean value
-    float mean{sum / numFloats};
+    float mean{ sum / numFloats };
 
     // Calculate variance
-    float varSum{0.0f};
+    float varSum{ 0.0f };
     for (auto&& val : rawRankData)
     {
-      float tmp{val - mean};
+      float tmp{ val - mean };
       varSum += (tmp * tmp);
     }
     float variance = sqrtf((float)1 / (numFloats - 1) * varSum);
@@ -628,11 +628,11 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
     std::vector<std::pair<FrameId, float>> top_KW_frame_IDs;
     top_KW_frame_IDs.reserve(NUM_TOP_KEYWORDS);
 
-    for (size_t ii{0_z}; ii < NUM_TOP_KEYWORDS; ++ii)
+    for (size_t ii{ 0_z }; ii < NUM_TOP_KEYWORDS; ++ii)
     {
       if (maxHeap.size() <= 0) break;
 
-      std::pair<size_t, float> pair{maxHeap.top()};
+      std::pair<size_t, float> pair{ maxHeap.top() };
       maxHeap.pop();
 
       top_KW_frame_IDs.emplace_back(FrameId(pair.first), pair.second);
@@ -649,7 +649,7 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
 std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath)
 {
   // \todo Make dynamic
-  std::vector<std::vector<float>> result{20000};
+  std::vector<std::vector<float>> result{ 20000 };
 
   // Open file for reading as binary from the end side
   std::ifstream ifs(inputFilepath, std::ios::binary | std::ios::ate);
@@ -700,8 +700,8 @@ std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(cons
   size_t currOffset = 40ULL;
 
   // Initialize video ID counter
-  size_t prevVideoId{ERR_VAL<size_t>()};
-  size_t prevShotId{ERR_VAL<size_t>()};
+  size_t prevVideoId{ ERR_VAL<size_t>() };
+  size_t prevShotId{ ERR_VAL<size_t>() };
 
   // Create line buffer
   std::vector<std::byte> lineBuffer;
@@ -722,14 +722,14 @@ std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(cons
     // Reserve exact capacitys
     rawRankData.reserve(numFloats);
 
-    float sum{0.0f};
-    float min{std::numeric_limits<float>::max()};
-    float max{-std::numeric_limits<float>::max()};
+    float sum{ 0.0f };
+    float min{ std::numeric_limits<float>::max() };
+    float max{ -std::numeric_limits<float>::max() };
 
     // Iterate through all floats in row
     for (size_t i = 0ULL; i < numFloats; ++i)
     {
-      float rankValue{ParseFloatLE(&lineBuffer[currOffset])};
+      float rankValue{ ParseFloatLE(&lineBuffer[currOffset]) };
 
       // Update min
       if (rankValue < min)
@@ -753,13 +753,13 @@ std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(cons
     }
 
     // Calculate mean value
-    float mean{sum / numFloats};
+    float mean{ sum / numFloats };
 
     // Calculate variance
-    float varSum{0.0f};
+    float varSum{ 0.0f };
     for (auto&& val : rawRankData)
     {
-      float tmp{val - mean};
+      float tmp{ val - mean };
       varSum += (tmp * tmp);
     }
     float variance = sqrtf((float)1 / (numFloats - 1) * varSum);
@@ -778,7 +778,7 @@ std::vector<std::vector<float>> FileParser::ParseDeepFeasBinFile_ViretFormat(con
 Matrix<float> FileParser::ParseRawScoringData_GoogleAiVisionFormat(const std::string& inputFilepath)
 {
   // \todo Make dynamic
-  std::vector<std::vector<float>> result{20000};
+  std::vector<std::vector<float>> result{ 20000 };
 
   // Open file for reading as binary from the end side
   std::ifstream ifs(inputFilepath, std::ios::binary | std::ios::ate);
@@ -822,11 +822,11 @@ Matrix<float> FileParser::ParseRawScoringData_GoogleAiVisionFormat(const std::st
   ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
   uint32_t numKeywords = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
 
-  float sum{0.0f};
-  float min{std::numeric_limits<float>::max()};
-  float max{-std::numeric_limits<float>::max()};
+  float sum{ 0.0f };
+  float min{ std::numeric_limits<float>::max() };
+  float max{ -std::numeric_limits<float>::max() };
 
-  for (size_t i{0_z}; i < numRecords; ++i)
+  for (size_t i{ 0_z }; i < numRecords; ++i)
   {
     std::vector<float> scoringData;
     scoringData.resize(numKeywords, GOOGLE_AI_NO_LABEL_SCORE);
@@ -847,7 +847,7 @@ Matrix<float> FileParser::ParseRawScoringData_GoogleAiVisionFormat(const std::st
     std::priority_queue<std::pair<size_t, float>, std::vector<std::pair<size_t, float>>, decltype(cmp)> maxHeap(
         cmp, std::move(container));
 
-    for (size_t iLabel{0_z}; iLabel < numLabels; ++iLabel)
+    for (size_t iLabel{ 0_z }; iLabel < numLabels; ++iLabel)
     {
       ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
       uint32_t kwId = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
@@ -876,13 +876,13 @@ Matrix<float> FileParser::ParseRawScoringData_GoogleAiVisionFormat(const std::st
     }
 
     // Calculate mean value
-    float mean{sum / numLabels};
+    float mean{ sum / numLabels };
 
     // Calculate variance
-    float varSum{0.0f};
+    float varSum{ 0.0f };
     for (auto&& val : scoringData)
     {
-      float tmp{val - mean};
+      float tmp{ val - mean };
       varSum += (tmp * tmp);
     }
     float variance = sqrtf((float)1 / (numLabels - 1) * varSum);

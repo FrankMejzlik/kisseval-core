@@ -257,6 +257,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\named_types.h" />
     <ClCompile Include="src\ranking_models\PlainBowModel.cpp" />
     <ClCompile Include="src\ranking_models\BaseW2vvModel.cpp" />
     <ClCompile Include="src\data_packs\Google_based\GoogleVisionDataPack.cpp" />

@@ -15,8 +15,8 @@ Database::~Database() noexcept { mysql_close(_mysqlConnection); }
 
 std::string Database::GetErrorDescription() const
 {
-  return std::string{"Error(" + mysql_errno(_mysqlConnection) + std::string(") [") + mysql_sqlstate(_mysqlConnection) +
-                     std::string("]\n ") + mysql_error(_mysqlConnection)};
+  return std::string{ "Error(" + mysql_errno(_mysqlConnection) + std::string(") [") + mysql_sqlstate(_mysqlConnection) +
+                      std::string("]\n ") + mysql_error(_mysqlConnection) };
 }
 
 size_t Database::GetErrorCode() const { return static_cast<size_t>(mysql_errno(_mysqlConnection)); }
@@ -56,13 +56,13 @@ std::string Database::EscapeString(const std::string& stringToEscape) const
   mysql_real_escape_string(_mysqlConnection, buffer, stringToEscape.data(),
                            static_cast<unsigned long>(stringToEscape.size()));
 
-  return std::string{buffer};
+  return std::string{ buffer };
 }
 
 size_t Database::NoResultQuery(std::string_view query) const
 {
   // Send query to DB and get result
-  auto result{mysql_real_query(_mysqlConnection, query.data(), static_cast<unsigned long>(query.length()))};
+  auto result{ mysql_real_query(_mysqlConnection, query.data(), static_cast<unsigned long>(query.length())) };
 
   // If error executing query
   if (result != 0)
@@ -80,7 +80,7 @@ size_t Database::GetLastId() const { return mysql_insert_id(_mysqlConnection); }
 std::pair<size_t, std::vector<std::vector<std::string>>> Database::ResultQuery(std::string_view query) const
 {
   // Send query to DB and get result
-  auto result{mysql_real_query(_mysqlConnection, query.data(), static_cast<unsigned long>(query.length()))};
+  auto result{ mysql_real_query(_mysqlConnection, query.data(), static_cast<unsigned long>(query.length())) };
 
   // If error executing query
   if (result != 0)

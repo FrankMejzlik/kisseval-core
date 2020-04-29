@@ -75,6 +75,13 @@ class ImageRanker
                                                        size_t num_points = NUM_MODEL_TEST_RESULT_POINTS,
                                                        bool normalize_y = true) const;
 
+  /** Only for the given number of generated queries */
+  [[nodiscard]] virtual ModelTestResult run_model_test(size_t test_queries_count, const DataPackId& data_pack_ID,
+                                                       const PackModelCommands& model_commands,
+                                                       bool native_lang_queries = false,
+                                                       size_t num_points = NUM_MODEL_TEST_RESULT_POINTS,
+                                                       bool normalize_y = true) const;
+
   /*!
    * This processes input queries that come from users, generates results and sends them back
    */

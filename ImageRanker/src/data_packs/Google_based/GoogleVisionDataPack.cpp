@@ -32,10 +32,6 @@ GoogleVisionDataPack::GoogleVisionDataPack(const BaseImageset* p_is, const Strin
   _models.emplace(enum_label(eModelIds::VECTOR_SPACE).first, std::make_unique<VectorSpaceModel>());
   _models.emplace(enum_label(eModelIds::MULT_SUM_MAX).first, std::make_unique<MultSumMaxModel>());
 
-  // Simulated user models
-  _sim_users.emplace(enum_label(eSimUserIds::NO_SIM).first, std::make_unique<SimUserNoSim>());
-  _sim_users.emplace(enum_label(eSimUserIds::USER_X_TO_P).first, std::make_unique<SimUserXToP>());
-
   t2.join();
   t3.join();
 }
@@ -207,26 +203,6 @@ ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery
     }
   }
   const auto& transform = *(iter_t->second);
-
-  // Choose desired simulated user
-  auto iter_su = _sim_users.find(sim_user_ID);
-  if (iter_su == _sim_users.end())
-  {
-    if (!_sim_users.empty())
-    {
-      iter_su = _sim_users.begin();
-      LOGW("Uknown sim_user_ID: '" + sim_user_ID + "'. Falling back to: " + iter_su->first);
-    }
-    else
-    {
-      LOGE("No sim users!");
-      return ModelTestResult{};
-    }
-  }
-  const auto& sim_user = *(iter_su->second);
-
-  // Process sim user
-  idx_test_queries = sim_user.process_sim_user(get_imageset_ptr(), transform, _keywords, idx_test_queries, opt_key_vals);
 
   return ranking_model.test_model(transform, _keywords, idx_test_queries, opt_key_vals, num_points);
 }

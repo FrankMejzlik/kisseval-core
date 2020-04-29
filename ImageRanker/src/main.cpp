@@ -39,8 +39,8 @@ int main()
 #if TEST_submit_annotator_user_queries
   ranker.submit_annotator_user_queries(enum_label(eDataPackId::NASNET_2019).first, 9, true,
                                        {
-                                           {"Shonicka1", "123&345&3232", "car,; '  '  \\ \\ cat, cow", 4321},
-                                           {"Shonicka2", "1213&3451&32321", "cars, cats, cows", 5321},
+                                           { "Shonicka1", "123&345&3232", "car,; '  '  \\ \\ cat, cow", 4321 },
+                                           { "Shonicka2", "1213&3451&32321", "cars, cats, cows", 5321 },
                                        });
 #endif
 
@@ -75,8 +75,8 @@ int main()
   // TEST: `rank_frames`
 #if TEST_rank_frames
   {
-    std::vector<std::string> a = {"1&2", "3&4"};
-    std::vector<std::string> b{"1&2", "3&4"};
+    std::vector<std::string> a = { "1&2", "3&4" };
+    std::vector<std::string> b{ "1&2", "3&4" };
 
     /**
      * model_ID:
@@ -93,7 +93,7 @@ int main()
      */
 
     auto r1 = ranker.rank_frames(
-        {"&-274+"}, dp1["ID"].get<std::string>(),
+        { "&-274+" }, dp1["ID"].get<std::string>(),
         "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0", 1000, 1304);
   }
 #endif
@@ -134,32 +134,35 @@ int main()
     std::cout << "--------------" << std::endl;
 
     auto r1_opts(
-        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=single_queries"s);
+        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=single_queries;sim_user_num_words_from=1;sim_user_num_words_to=8;"s);
     auto r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", r1_opts);
     auto r1_area = calc_chart_area(r1);
-    std::cout << "\t " << "sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=single_queries" << std::endl;
+    std::cout << "\t "
+              << "sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=single_queries" << std::endl;
     std::cout << "\t\t area: " << r1_area << std::endl;
 
     // Assert results
 
     r1_opts =
-        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=temp_queries"s;
+        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=temp_queries;sim_user_num_words_from=1;sim_user_num_words_to=8;"s;
     r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", r1_opts);
     r1_area = calc_chart_area(r1);
-    std::cout << "\t " << "sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=temp_queries" << std::endl;
+    std::cout << "\t "
+              << "sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=temp_queries" << std::endl;
     std::cout << "\t\t area: " << r1_area << std::endl;
 
     // Assert results
 
     r1_opts =
-        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=alter_real_with_temporal"s;
+        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=alter_real_with_temporal;sim_user_num_words_from=1;sim_user_num_words_to=8;"s;
     r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", r1_opts);
     r1_area = calc_chart_area(r1);
-    std::cout << "\t " << "sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=alter_real_with_temporal" << std::endl;
+    std::cout << "\t "
+              << "sim_user=user_model_x_to_p;sim_user_paremeter_p=6.0;sim_user_target=alter_real_with_temporal"
+              << std::endl;
     std::cout << "\t\t area: " << r1_area << std::endl;
 
     // Assert results
-
   }
 #endif
 
@@ -190,22 +193,22 @@ int main()
 
 #if TEST_boolean_grid_test_threshold
 
-  constexpr size_t num_iters{100_z};
-  constexpr float p_from{0.0005F};
-  constexpr float p_to{0.0006F};
+  constexpr size_t num_iters{ 100_z };
+  constexpr float p_from{ 0.0005F };
+  constexpr float p_to{ 0.0006F };
 
-  constexpr float delta_it{(p_to - p_from) / num_iters};
+  constexpr float delta_it{ (p_to - p_from) / num_iters };
 
-  float max_area{0.0F};
-  float max_p_val{std::numeric_limits<float>::quiet_NaN()};
+  float max_area{ 0.0F };
+  float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
 
-  for (auto [param, i] = std::tuple{p_from, 0_z}; param <= p_to; param += delta_it, ++i)
+  for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
   {
     auto res =
         ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
                               "model=boolean;model_true_threshold=" + std::to_string(param) + ";transform=linear_01;");
 
-    float area{calc_chart_area(res)};
+    float area{ calc_chart_area(res) };
 
     if (area > max_area)
     {
@@ -255,22 +258,22 @@ int main()
 
 #if TEST_boolean_grid_test_threshold_Google
 
-  constexpr size_t num_iters{100_z};
-  constexpr float p_from{0.0001F};
-  constexpr float p_to{0.001F};
+  constexpr size_t num_iters{ 100_z };
+  constexpr float p_from{ 0.0001F };
+  constexpr float p_to{ 0.001F };
 
-  constexpr float delta_it{(p_to - p_from) / num_iters};
+  constexpr float delta_it{ (p_to - p_from) / num_iters };
 
-  float max_area{0.0F};
-  float max_p_val{std::numeric_limits<float>::quiet_NaN()};
+  float max_area{ 0.0F };
+  float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
 
-  for (auto [param, i] = std::tuple{p_from, 0_z}; param <= p_to; param += delta_it, ++i)
+  for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
   {
     auto res =
         ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019",
                               "model=boolean;model_true_threshold=" + std::to_string(param) + ";transform=linear_01;");
 
-    float area{calc_chart_area(res)};
+    float area{ calc_chart_area(res) };
 
     if (area > max_area)
     {
@@ -288,11 +291,11 @@ int main()
 #if TEST_run_model_test_W2VV
 
   auto r1 = ranker.rank_frames(
-      std::vector<std::string>{"A man wearing a black t-shirt and pants riding a bike on a concrete surface."},
+      std::vector<std::string>{ "A man wearing a black t-shirt and pants riding a bike on a concrete surface." },
       "W2VV_BoW_Dec2019", "model=w2vv_bow_plain;", 1000, true, 498);
 
   auto r2 =
-      ranker.rank_frames(std::vector<std::string>{"An old black car riding in a desert with a few bushes nearby."},
+      ranker.rank_frames(std::vector<std::string>{ "An old black car riding in a desert with a few bushes nearby." },
                          "W2VV_BoW_Dec2019", "model=w2vv_bow_plain;", 1000, true, 16554);
 
   std::cout << "===============================" << std::endl;

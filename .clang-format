@@ -6,4 +6,5 @@ IndentWidth: 2
 ColumnLimit: 120
 IndentPPDirectives: None
 IncludeBlocks: Preserve
+Cpp11BracedListStyle: false
 ...

@@ -231,7 +231,7 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywords(size_t wordnetId) const
   }
 
   // If vector word, return self
-  return std::vector<size_t>{pRootKeyword->m_wordnetId};
+  return std::vector<size_t>{ pRootKeyword->m_wordnetId };
 }
 
 std::vector<size_t> KeywordsContainer::GetVectorKeywordsIndices(size_t wordnetId) const
@@ -265,7 +265,7 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywordsIndices(size_t wordnetId
   }
 
   // If vector word, return self
-  return std::vector<size_t>{pRootKeyword->m_vectorIndex};
+  return std::vector<size_t>{ pRootKeyword->m_vectorIndex };
 }
 
 const Keyword* KeywordsContainer::GetKeywordConstPtrByWordnetId(size_t wordnetId) const
@@ -307,7 +307,7 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool s
 
   std::stringstream idSs;
   size_t wordnetId;
-  bool nextIdNegate{false};
+  bool nextIdNegate{ false };
 
   std::vector<Clause> resultFormula;
 
@@ -348,7 +348,7 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool s
         // Add their negations as ANDs
         for (auto&& id : vecIds)
         {
-          Clause tmp{{id, true}};
+          Clause tmp{ { id, true } };
 
           resultFormula.push_back(tmp);
         }
@@ -359,7 +359,7 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool s
         // Add their
         for (auto&& id : vecIds)
         {
-          tmp.emplace_back(Literal<KeywordId>{id, false});
+          tmp.emplace_back(Literal<KeywordId>{ id, false });
         }
 
         resultFormula.emplace_back(tmp);
@@ -503,7 +503,7 @@ std::vector<std::tuple<size_t, std::string, std::string>> KeywordsContainer::Get
   // Get desired number of results
   for (size_t j = 0ULL; j < NUM_SUGESTIONS; ++j)
   {
-    Keyword* pKeyword{_keywords[left + j].get()};
+    Keyword* pKeyword{ _keywords[left + j].get() };
 
     // Check if prefix is equal to searched word
 
@@ -598,14 +598,14 @@ std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsConstPtrs(const st
   // Get desired number of results
   for (size_t j = 0ULL; j < NUM_SUGESTIONS; ++j)
   {
-    size_t idx{left + j};
+    size_t idx{ left + j };
 
     if (idx >= _keywords.size())
     {
       break;
     }
 
-    Keyword* pKeyword{_keywords[idx].get()};
+    Keyword* pKeyword{ _keywords[idx].get() };
 
     // Check if prefix is equal to searched word
 
@@ -702,14 +702,14 @@ std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::st
   // Get desired number of results
   for (size_t j = 0ULL; j < numResults; ++j)
   {
-    size_t idx{left + j};
+    size_t idx{ left + j };
 
     if (idx >= _keywords.size())
     {
       break;
     }
 
-    const Keyword* pKeyword{_keywords[idx].get()};
+    const Keyword* pKeyword{ _keywords[idx].get() };
 
     // Check if prefix is equal to searched word
 
@@ -840,7 +840,7 @@ bool KeywordsContainer::PushKeywordsToDatabase(Database& db)
     ===========================*/
   {
     // Start query
-    std::string query{"INSERT IGNORE INTO words (`word`) VALUES "};
+    std::string query{ "INSERT IGNORE INTO words (`word`) VALUES " };
 
     // Words first
     for (auto&& word : _words)
@@ -864,12 +864,12 @@ bool KeywordsContainer::PushKeywordsToDatabase(Database& db)
     ===========================*/
   {
     // Start query
-    std::string query{"INSERT IGNORE INTO keywords (`wordnet_id`, `vector_index`, `description`) VALUES"};
+    std::string query{ "INSERT IGNORE INTO keywords (`wordnet_id`, `vector_index`, `description`) VALUES" };
 
     // Keywords then
     for (auto&& pKeyword : _keywords)
     {
-      std::string desctiption{db.EscapeString(GetKeywordDescriptionByWordnetId(pKeyword->m_wordnetId))};
+      std::string desctiption{ db.EscapeString(GetKeywordDescriptionByWordnetId(pKeyword->m_wordnetId)) };
 
       query.append("( ");
       query.append(std::to_string(pKeyword->m_wordnetId));
@@ -908,12 +908,12 @@ bool KeywordsContainer::PushKeywordsToDatabase(Database& db)
     ===========================*/
   {
     // Start query
-    std::string query{"INSERT IGNORE INTO `keyword_word` (`keyword_id`, `word_id`) VALUES"};
+    std::string query{ "INSERT IGNORE INTO `keyword_word` (`keyword_id`, `word_id`) VALUES" };
 
     // Keywords then
     for (auto&& pKeyword : _keywordToWord)
     {
-      std::string word{pKeyword.second};
+      std::string word{ pKeyword.second };
 
       auto aa = db.ResultQuery("SELECT `id` FROM `words` WHERE `word` LIKE '" + db.EscapeString(word) + "'");
 

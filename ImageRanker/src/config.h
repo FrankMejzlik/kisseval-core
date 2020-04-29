@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "named_types.h"
+
 /*============================================
  * Logging config
  *============================================*/
@@ -17,6 +19,16 @@ constexpr size_t TEMP_CONTEXT_LOOKUP_LENGTH = 3;
 /*============================================
  * Default settings
  *============================================*/
+/* Simulted users
+ * ------------------------------- */
+/** top_frame_keywords will return this ammount by default */
+constexpr size_t DEF_SIM_USER_NUM_WORDS_FROM = 2;
+constexpr size_t DEF_SIM_USER_NUM_WORDS_TO = 6;
+constexpr eSimUserTarget DEF_SIM_USER_TARGET = eSimUserTarget::SINGLE_QUERIES;
+constexpr float DEF_SIM_USER_EXPONENT = 6.0F;
+
+/* Autocomplete
+ * ------------------------------- */
 /** top_frame_keywords will return this ammount by default */
 constexpr size_t DEF_NUMBER_OF_TOP_KWS = 5;
 
@@ -132,8 +144,8 @@ constexpr size_t DEF_NUMBER_OF_TOP_KWS = 5;
 //! Default settings for main evaluation
 #define DEFAULT_RANKING_MODEL RankingModelId::cViretBase
 #define DEFAULT_AGG_FUNCTION InputDataTransformId::cXToTheP
-#define DEFAULT_MODEL_SETTINGS std::vector<std::string>({"0"s, "0.0f"s, "1"s})
-#define DEFAULT_TRANSFORM_SETTINGS std::vector<std::string>({"0"s, "0"s})
+#define DEFAULT_MODEL_SETTINGS std::vector<std::string>({ "0"s, "0.0f"s, "1"s })
+#define DEFAULT_TRANSFORM_SETTINGS std::vector<std::string>({ "0"s, "0"s })
 
 #define MODEL_TEST_CHART_NUM_X_POINTS 100
 

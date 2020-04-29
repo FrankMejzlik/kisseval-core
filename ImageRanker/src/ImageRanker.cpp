@@ -33,7 +33,7 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
 
     imagesets.emplace_back(DatasetDataPackRef{
         is1["ID"].get<std::string>(), is1["description"].get<std::string>(), is1["ID"].get<std::string>(),
-        data_dir + is1["frames_dir"].get<std::string>(), data_dir + is1["ID_to_frame_fpth"].get<std::string>()});
+        data_dir + is1["frames_dir"].get<std::string>(), data_dir + is1["ID_to_frame_fpth"].get<std::string>() });
   }
 
   // VIRET data packs
@@ -55,7 +55,7 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
 
         data_dir + dp1["data"]["presoftmax_scorings_fpth"].get<std::string>(),
         data_dir + dp1["data"]["softmax_scorings_fpth"].get<std::string>(),
-        data_dir + dp1["data"]["deep_features_fpth"].get<std::string>()});
+        data_dir + dp1["data"]["deep_features_fpth"].get<std::string>() });
   }
 
   // Google data packs
@@ -75,7 +75,7 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
         dp3["vocabulary"]["ID"].get<std::string>(), dp3["vocabulary"]["description"].get<std::string>(),
         data_dir + dp3["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
 
-        data_dir + dp3["data"]["presoftmax_scorings_fpth"].get<std::string>()});
+        data_dir + dp3["data"]["presoftmax_scorings_fpth"].get<std::string>() });
   }
 
   // W2VV data packs
@@ -89,38 +89,38 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
     }
 
     W2VV_data_packs.emplace_back(
-        W2vvDataPackRef{dp3["ID"].get<std::string>(),
-                        dp3["description"].get<std::string>(),
-                        dp3["model_options"].get<std::string>(),
-                        dp3["data"]["target_dataset"].get<std::string>(),
+        W2vvDataPackRef{ dp3["ID"].get<std::string>(),
+                         dp3["description"].get<std::string>(),
+                         dp3["model_options"].get<std::string>(),
+                         dp3["data"]["target_dataset"].get<std::string>(),
 
-                        dp3["vocabulary"]["ID"].get<std::string>(),
-                        dp3["vocabulary"]["description"].get<std::string>(),
+                         dp3["vocabulary"]["ID"].get<std::string>(),
+                         dp3["vocabulary"]["description"].get<std::string>(),
 
-                        data_dir + dp3["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
+                         data_dir + dp3["vocabulary"]["keyword_synsets_fpth"].get<std::string>(),
 
-                        data_dir + dp3["vocabulary"]["keyword_features_fpth"].get<std::string>(),
-                        dp3["vocabulary"]["keyword_features_dim"].get<size_t>(),
-                        dp3["vocabulary"]["keyword_features_data_offset"].get<size_t>(),
+                         data_dir + dp3["vocabulary"]["keyword_features_fpth"].get<std::string>(),
+                         dp3["vocabulary"]["keyword_features_dim"].get<size_t>(),
+                         dp3["vocabulary"]["keyword_features_data_offset"].get<size_t>(),
 
-                        data_dir + dp3["vocabulary"]["keyword_bias_vec_fpth"].get<std::string>(),
-                        dp3["vocabulary"]["keyword_bias_vec_dim"].get<size_t>(),
-                        dp3["vocabulary"]["keyword_bias_vec_data_offset"].get<size_t>(),
+                         data_dir + dp3["vocabulary"]["keyword_bias_vec_fpth"].get<std::string>(),
+                         dp3["vocabulary"]["keyword_bias_vec_dim"].get<size_t>(),
+                         dp3["vocabulary"]["keyword_bias_vec_data_offset"].get<size_t>(),
 
-                        data_dir + dp3["vocabulary"]["keyword_PCA_mat_fpth"].get<std::string>(),
-                        dp3["vocabulary"]["keyword_PCA_mat_dim"].get<size_t>(),
-                        dp3["vocabulary"]["keyword_PCA_mat_data_offset"].get<size_t>(),
+                         data_dir + dp3["vocabulary"]["keyword_PCA_mat_fpth"].get<std::string>(),
+                         dp3["vocabulary"]["keyword_PCA_mat_dim"].get<size_t>(),
+                         dp3["vocabulary"]["keyword_PCA_mat_data_offset"].get<size_t>(),
 
-                        data_dir + dp3["vocabulary"]["keyword_PCA_mean_vec_fpth"].get<std::string>(),
-                        dp3["vocabulary"]["keyword_PCA_mean_vec_dim"].get<size_t>(),
-                        dp3["vocabulary"]["keyword_PCA_mean_vec_offset"].get<size_t>(),
+                         data_dir + dp3["vocabulary"]["keyword_PCA_mean_vec_fpth"].get<std::string>(),
+                         dp3["vocabulary"]["keyword_PCA_mean_vec_dim"].get<size_t>(),
+                         dp3["vocabulary"]["keyword_PCA_mean_vec_offset"].get<size_t>(),
 
-                        data_dir + dp3["data"]["deep_features_fpth"].get<std::string>(),
-                        dp3["data"]["deep_features_dim"].get<size_t>(),
-                        dp3["data"]["deep_features_data_offset"].get<size_t>()});
+                         data_dir + dp3["data"]["deep_features_fpth"].get<std::string>(),
+                         dp3["data"]["deep_features_dim"].get<size_t>(),
+                         dp3["data"]["deep_features_data_offset"].get<size_t>() });
   }
 
-  return {ImageRanker::eMode::cFullAnalytical, imagesets, VIRET_data_packs, Google_data_packs, W2VV_data_packs};
+  return { ImageRanker::eMode::cFullAnalytical, imagesets, VIRET_data_packs, Google_data_packs, W2VV_data_packs };
 }
 ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _fileParser(this), _data_manager(this)
 {
@@ -146,7 +146,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
     auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.softmax_scorings_fpth);
     auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.deep_features_fpth);
 
-    const auto& is{imageset(pack.target_imageset)};
+    const auto& is{ imageset(pack.target_imageset) };
 
     _data_packs.emplace(pack.ID,
                         std::make_unique<ViretDataPack>(&is, pack.ID, pack.target_imageset, pack.model_options,
@@ -157,7 +157,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
   // Google type
   for (auto&& pack : _settings.config.Google_packs)
   {
-    const auto& is{imageset(pack.target_imageset)};
+    const auto& is{ imageset(pack.target_imageset) };
 
     // Initialize all images
     // \todo Use transparent sparse matrix representation for Google data
@@ -171,7 +171,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
   // W2VV type
   for (auto&& pack : _settings.config.W2VV_packs)
   {
-    const auto& is{imageset(pack.target_imageset)};
+    const auto& is{ imageset(pack.target_imageset) };
 
     // Keyword feature vectors
     auto kw_features =
@@ -320,11 +320,11 @@ std::vector<const SelFrame*> ImageRanker::frame_successors(const std::string& im
   res.reserve(num_succs);
 
   /** We see all selected frames as one whole video since it has no effect on temp query performance */
-  const auto& is{imageset(imageset_ID)};
+  const auto& is{ imageset(imageset_ID) };
 
   const SelFrame& frame = is[ID];
   res.emplace_back(&frame);
-  for (size_t i{ID + 1}; i <= ID + num_succs && i < is.size(); ++i)
+  for (size_t i{ ID + 1 }; i <= ID + num_succs && i < is.size(); ++i)
   {
     res.emplace_back(&is[i]);
   }
@@ -341,7 +341,7 @@ LoadedImagesetsInfo ImageRanker::get_loaded_imagesets_info() const
     infos.emplace_back(is.second->get_info());
   }
 
-  return LoadedImagesetsInfo{infos};
+  return LoadedImagesetsInfo{ infos };
 }
 
 LoadedDataPacksInfo ImageRanker::get_loaded_data_packs_info() const
@@ -353,14 +353,14 @@ LoadedDataPacksInfo ImageRanker::get_loaded_data_packs_info() const
     infos.emplace_back(dp.second->get_info());
   }
 
-  return LoadedDataPacksInfo{infos};
+  return LoadedDataPacksInfo{ infos };
 }
 
 RankingResult ImageRanker::rank_frames(const std::vector<std::string>& user_queries, const DataPackId& data_pack_ID,
                                        const PackModelCommands& model_commands, size_t result_size,
                                        bool native_lang_queries, FrameId target_image_ID) const
 {
-  const BaseDataPack& dp{data_pack(data_pack_ID)};
+  const BaseDataPack& dp{ data_pack(data_pack_ID) };
 
   // Decide if native or ID based version wanted
   if (native_lang_queries)
@@ -383,17 +383,17 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
                                             const PackModelCommands& model_commands, bool native_lang_queries,
                                             size_t num_points, bool normalize_y) const
 {
-  const auto& dp{data_pack(data_pack_ID)};
-  const auto& is{imageset(dp.target_imageset_ID())};
+  const auto& dp{ data_pack(data_pack_ID) };
+  const auto& is{ imageset(dp.target_imageset_ID()) };
 
   ModelTestResult res;
-  size_t num_queries{ERR_VAL<size_t>()};
+  size_t num_queries{ ERR_VAL<size_t>() };
 
   // Decide if native or ID based version wanted
   if (native_lang_queries)
   {
     // Fetch queries from the DB
-    auto native_test_queries{_data_manager.fetch_user_native_test_queries(queries_origin)};
+    auto native_test_queries{ _data_manager.fetch_user_native_test_queries(queries_origin) };
     num_queries = native_test_queries.size();
 
     res = dp.test_model(native_test_queries, model_commands, num_points);
@@ -401,7 +401,7 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
   else
   {
     // Fetch queries from the DB
-    auto test_queries{_data_manager.fetch_user_test_queries(queries_origin, dp.get_vocab_ID())};
+    auto test_queries{ _data_manager.fetch_user_test_queries(queries_origin, dp.get_vocab_ID()) };
     num_queries = test_queries.size();
 
     res = dp.test_model(test_queries, model_commands, num_points);
@@ -417,9 +417,17 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
   return res;
 }
 
-// =====================================
-//  NOT REFACTORED CODE BELOW
-// =====================================
+ModelTestResult ImageRanker::run_model_test(size_t test_queries_count, const DataPackId& data_pack_ID,
+                                            const PackModelCommands& model_commands, bool native_lang_queries,
+                                            size_t num_points, bool normalize_y) const
+{
+  LOGW("Not implemented!");
+  return ModelTestResult{};
+};
+
+  // =====================================
+  //  NOT REFACTORED CODE BELOW
+  // =====================================
 
 #if 0
 
