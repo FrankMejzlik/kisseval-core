@@ -357,27 +357,44 @@ LoadedDataPacksInfo ImageRanker::get_loaded_data_packs_info() const
   return LoadedDataPacksInfo{ infos };
 }
 
-RankingResult ImageRanker::rank_frames(const std::vector<std::string>& user_queries, const DataPackId& data_pack_ID,
-                                       const PackModelCommands& model_commands, size_t result_size,
-                                       bool native_lang_queries, FrameId target_image_ID) const
+RankingResultWithFilenames ImageRanker::rank_frames(const std::vector<std::string>& user_queries,
+                                                    const DataPackId& data_pack_ID,
+                                                    const PackModelCommands& model_commands, size_t result_size,
+                                                    bool native_lang_queries, FrameId target_image_ID) const
 {
   const BaseDataPack& dp{ data_pack(data_pack_ID) };
+  const BaseImageset& is{ imageset(dp.target_imageset_ID()) };
 
   // Decide if native or ID based version wanted
+  RankingResult res{};
   if (native_lang_queries)
   {
-    return dp.rank_frames(user_queries, model_commands, result_size, target_image_ID);
+    res = dp.rank_frames(user_queries, model_commands, result_size, target_image_ID);
   }
-
-  // Parse CNF strings
-  std::vector<CnfFormula> cnf_user_query;
-  cnf_user_query.reserve(user_queries.size());
-  for (auto&& single_query : user_queries)
+  else
   {
-    cnf_user_query.emplace_back(parse_cnf_string(single_query));
+    // Parse CNF strings
+    std::vector<CnfFormula> cnf_user_query;
+    cnf_user_query.reserve(user_queries.size());
+    for (auto&& single_query : user_queries)
+    {
+      cnf_user_query.emplace_back(parse_cnf_string(single_query));
+    }
+
+    res = dp.rank_frames(cnf_user_query, model_commands, result_size, target_image_ID);
   }
 
-  return dp.rank_frames(cnf_user_query, model_commands, result_size, target_image_ID);
+  RankingResultWithFilenames res_with_filenames;
+  res_with_filenames.target = res.target;
+  res_with_filenames.target_pos = res.target_pos;
+
+  std::transform(res.m_frames.begin(), res.m_frames.end(), std::back_inserter(res_with_filenames.m_frames),
+                 [&is](const FrameId& f_ID) {
+                   auto filename{ is[f_ID].m_filename };
+                   return std::pair<FrameId, std::string>(f_ID, filename);
+                 });
+
+  return res_with_filenames;
 }
 
 ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, const DataPackId& data_pack_ID,

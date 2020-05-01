@@ -64,6 +64,7 @@ class Keyword
   std::unordered_set<size_t> m_hyponymBinIndices;
 
   std::vector<std::string> m_exampleImageFilenames;
+  size_t lastExampleFramesHash = ERR_VAL<size_t>();
 
   std::vector<Keyword*> m_expanded1Concat;
   std::vector<Keyword*> m_expanded1Substrings;
@@ -248,6 +249,7 @@ class KeywordsContainer
 
   std::vector<const Keyword*> GetNearKeywordsConstPtrs(const std::string& prefix) const;
   std::vector<const Keyword*> GetNearKeywordsPtrs(const std::string& prefix, size_t numResults) const;
+  std::vector<Keyword*> GetNearKeywordsPtrs(const std::string& prefix, size_t numResults);
 
   const Keyword* GetKeywordConstPtrByWordnetId(size_t wordnetId) const;
 

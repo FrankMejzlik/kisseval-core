@@ -45,7 +45,7 @@ class GoogleVisionDataPack : public BaseDataPack
   CnfFormula keyword_IDs_to_vector_indices(CnfFormula ID_query) const;
 
  private:
-  KeywordsContainer _keywords;
+  mutable KeywordsContainer _keywords;
 
   std::vector<std::vector<float>> _presoftmax_data_raw;
 

@@ -95,7 +95,7 @@ RankingResult BooleanModel::rank_frames(const BaseVectorTransform& transformed_d
 
       if (i < result_size)
       {
-        result.m_frames.emplace_back();
+        result.m_frames.emplace_back(FrameId(pair.second));
       }
       max_prio_queue.pop();
     }

@@ -64,7 +64,7 @@ class ImageRanker
 
   ImageRanker(const ImageRanker::Config& cfg);
 
-  [[nodiscard]] RankingResult rank_frames(const std::vector<std::string>& user_queries, const DataPackId& data_pack_ID,
+  [[nodiscard]] RankingResultWithFilenames rank_frames(const std::vector<std::string>& user_queries, const DataPackId& data_pack_ID,
                                           const PackModelCommands& model_commands, size_t result_size,
                                           bool native_lang_queries = false,
                                           FrameId target_image_ID = ERR_VAL<FrameId>()) const;

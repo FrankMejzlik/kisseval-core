@@ -262,6 +262,13 @@ struct RankingResult
   size_t target_pos;
 };
 
+struct RankingResultWithFilenames
+{
+  std::vector<std::pair<FrameId, std::string>> m_frames;
+  FrameId target;
+  size_t target_pos;
+};
+
 /** User queries come in in as vector of those. */
 struct AnnotatorUserQuery
 {
@@ -292,7 +299,6 @@ struct GameSessionQueryResult
 struct AutocompleteInputResult
 {
   std::vector<const Keyword*> top_keywords;
-  std::vector<std::vector<const SelFrame*>> example_frames;
 };
 
 struct ImagesetInfo

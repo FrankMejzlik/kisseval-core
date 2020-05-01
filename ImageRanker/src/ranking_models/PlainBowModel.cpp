@@ -174,7 +174,7 @@ RankingResult PlainBowModel::rank_frames(const Matrix<float>& data_mat, const Ma
 
       if (i < result_size)
       {
-        result.m_frames.emplace_back();
+        result.m_frames.emplace_back(FrameId(pair.second));
       }
       max_prio_queue.pop();
     }

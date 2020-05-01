@@ -16,6 +16,8 @@
 constexpr size_t NUM_MODEL_TEST_RESULT_POINTS = 100;
 constexpr size_t TEMP_CONTEXT_LOOKUP_LENGTH = 3;
 
+constexpr size_t NUM_EXAMPLE_FRAMES = 10;
+
 /*============================================
  * Default settings
  *============================================*/

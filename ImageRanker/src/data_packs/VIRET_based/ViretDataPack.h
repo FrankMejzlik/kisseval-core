@@ -48,9 +48,10 @@ class ViretDataPack : public BaseDataPack
  private:
   /** Converts CNF query using keyword IDs to the one using only valid vector indices */
   CnfFormula keyword_IDs_to_vector_indices(CnfFormula ID_query) const;
+  CnfFormula wordnetIDs_to_vector_indices(CnfFormula ID_query) const;
 
  private:
-  KeywordsContainer _keywords;
+  mutable KeywordsContainer _keywords;
 
   std::vector<std::vector<float>> _feas_data_raw;
   std::vector<std::vector<float>> _presoftmax_data_raw;

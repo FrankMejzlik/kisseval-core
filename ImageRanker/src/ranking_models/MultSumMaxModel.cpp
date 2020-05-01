@@ -8,7 +8,7 @@ using namespace image_ranker;
 
 MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelKeyValOption>& option_key_val_pairs)
 {
-  auto res{MultSumMaxModel::Options()};
+  auto res{ MultSumMaxModel::Options() };
 
   for (auto&& [key, val] : option_key_val_pairs)
   {
@@ -34,7 +34,8 @@ MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelK
       {
         res.scoring_operations = eScoringOperations::cMaxMax;
       }
-      else {
+      else
+      {
         LOGW("Unknown model option value for key '" + key + "' -> '" + val + "'");
       }
     }
@@ -52,7 +53,8 @@ MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelK
       {
         res.succ_aggregation = eSuccesorAggregation::cProduct;
       }
-      else {
+      else
+      {
         LOGW("Unknown model option value for key '" + key + "' -> '" + val + "'");
       }
     }
@@ -66,7 +68,8 @@ MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelK
       {
         res.main_temp_aggregation = eMainTempRankingAggregation::cProduct;
       }
-      else {
+      else
+      {
         LOGW("Unknown model option value for key '" + key + "' -> '" + val + "'");
       }
     }
@@ -74,7 +77,8 @@ MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelK
     {
       res.ignore_below_threshold = strTo<float>(val);
     }
-    else {
+    else
+    {
       LOGW("Unknown model option key '" + key + "'");
     }
   }
@@ -82,9 +86,10 @@ MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelK
   return res;
 }
 
-RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-                                      const std::vector<CnfFormula>& user_query, size_t result_size,
-                                      const std::vector<ModelKeyValOption>& options, FrameId target_frame_ID) const
+RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transformed_data,
+                                           const KeywordsContainer& keywords, const std::vector<CnfFormula>& user_query,
+                                           size_t result_size, const std::vector<ModelKeyValOption>& options,
+                                           FrameId target_frame_ID) const
 {
   if (user_query.empty())
   {
@@ -98,11 +103,11 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
   return rank_frames(transformed_data, keywords, user_query, result_size, opts, target_frame_ID);
 }
 
-RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-                                      const std::vector<CnfFormula>& user_query, size_t result_size,
-                                      const Options& opts, FrameId target_frame_ID) const
+RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transformed_data,
+                                           const KeywordsContainer& keywords, const std::vector<CnfFormula>& user_query,
+                                           size_t result_size, const Options& opts, FrameId target_frame_ID) const
 {
-  using FramePair = std::pair<float, size_t>;
+  using FramePair = std::pair<float, FrameId>;
 
   // Comparator for the priority queue
   auto frame_pair_cmptor = [](const FramePair& left, const FramePair& right) { return left.first < right.first; };
@@ -140,10 +145,10 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
       return RankingResult{};
   }
 
-  const Matrix<float>& data_mat{*p_data_mat};
+  const Matrix<float>& data_mat{ *p_data_mat };
 
   {
-    size_t i{0};
+    FrameId i{ 0 };
     for (auto&& fea_vec : data_mat)
     {
       float prim_ranking = rank_frame(fea_vec, user_query.front(), opts);
@@ -151,74 +156,72 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
       // \todo Add temporal dynamic temp ranking
       if (user_query.size() > 1)
       {
-        auto q2{user_query[1]};
+        auto q2{ user_query[1] };
 
         float secondary_ranking{};
 
         switch (opts.succ_aggregation)
         {
-        case eSuccesorAggregation::cMax:
-        case eSuccesorAggregation::cSum:
-          secondary_ranking = 0.0F;
-          break;
+          case eSuccesorAggregation::cMax:
+          case eSuccesorAggregation::cSum:
+            secondary_ranking = 0.0F;
+            break;
 
-        case eSuccesorAggregation::cProduct:
-          secondary_ranking = 1.0F;
+          case eSuccesorAggregation::cProduct:
+            secondary_ranking = 1.0F;
 
-        default:
-          LOGW("Uknown option!");
-          break;
+          default:
+            LOGW("Uknown option!");
+            break;
         }
 
-        for (size_t ii{0_z}; ii < TEMP_CONTEXT_LOOKUP_LENGTH && (ii + i) < data_mat.size(); ++ii)
+        for (size_t ii{ 0_z }; ii < TEMP_CONTEXT_LOOKUP_LENGTH && (ii + i) < data_mat.size(); ++ii)
         {
-          auto features_vec{data_mat[ii + i]};
+          auto features_vec{ data_mat[ii + i] };
 
           float ranking = rank_frame(features_vec, q2, opts);
 
           switch (opts.succ_aggregation)
           {
-          case eSuccesorAggregation::cMax:
-            secondary_ranking = std::max(secondary_ranking, ranking);
-            break;
+            case eSuccesorAggregation::cMax:
+              secondary_ranking = std::max(secondary_ranking, ranking);
+              break;
 
-          case eSuccesorAggregation::cSum:
-            secondary_ranking += ranking;
-            break;
+            case eSuccesorAggregation::cSum:
+              secondary_ranking += ranking;
+              break;
 
-          case eSuccesorAggregation::cProduct:
-            secondary_ranking *= ranking;
+            case eSuccesorAggregation::cProduct:
+              secondary_ranking *= ranking;
 
-          default:
-            LOGW("Uknown option!");
-            break;
+            default:
+              LOGW("Uknown option!");
+              break;
           }
         }
 
         // Combine with primary ranking
         if (opts.main_temp_aggregation == eMainTempRankingAggregation::cProduct)
         {
-          prim_ranking  = prim_ranking * secondary_ranking;
+          prim_ranking = prim_ranking * secondary_ranking;
         }
         else if (opts.main_temp_aggregation == eMainTempRankingAggregation::cSum)
         {
-          prim_ranking  = prim_ranking + secondary_ranking;
+          prim_ranking = prim_ranking + secondary_ranking;
         }
-
       }
 
       max_prio_queue.emplace(prim_ranking, i);
 
       ++i;
     }
-    
   }
 
   {
-    bool found_target{target_frame_ID == ERR_VAL<FrameId>() ? true : false};
-    for (size_t i{0}; i < result_size || !found_target; ++i)
+    bool found_target{ target_frame_ID == ERR_VAL<FrameId>() ? true : false };
+    for (size_t i{ 0 }; i < result_size || !found_target; ++i)
     {
-      auto pair{max_prio_queue.top()};
+      auto pair{ max_prio_queue.top() };
 
       if (pair.second == target_frame_ID)
       {
@@ -228,7 +231,7 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
 
       if (i < result_size)
       {
-        result.m_frames.emplace_back();
+        result.m_frames.emplace_back(pair.second);
       }
       max_prio_queue.pop();
     }
@@ -238,17 +241,17 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
 }
 
 ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transformed_data,
-                                          const KeywordsContainer& keywords,
-                                          const std::vector<UserTestQuery>& test_user_queries,
-                                          const std::vector<ModelKeyValOption>& options, size_t num_points) const
+                                            const KeywordsContainer& keywords,
+                                            const std::vector<UserTestQuery>& test_user_queries,
+                                            const std::vector<ModelKeyValOption>& options, size_t num_points) const
 {
-  size_t imageset_size{transformed_data.num_frames()};
-  float divisor{float(imageset_size) / num_points};
+  size_t imageset_size{ transformed_data.num_frames() };
+  float divisor{ float(imageset_size) / num_points };
 
   // Prefil result [x,f(x)] values
   std::vector<std::pair<uint32_t, uint32_t>> test_results;
   test_results.reserve(num_points + 1);
-  for (size_t i{0}; i <= num_points; ++i)
+  for (size_t i{ 0 }; i <= num_points; ++i)
   {
     test_results.emplace_back(uint32_t(i * divisor), 0);
   }
@@ -261,16 +264,16 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
   {
     auto res = rank_frames(transformed_data, keywords, query, 0, opts, target_frame_ID);
 
-    uint32_t x{uint32_t(res.target_pos / divisor)};
+    uint32_t x{ uint32_t(res.target_pos / divisor) };
 
     ++(test_results[x].second);
   }
 
   // Sumarize results into results
-  uint32_t sum{0};
+  uint32_t sum{ 0 };
   for (auto&& num_hits : test_results)
   {
-    auto val{num_hits.second};
+    auto val{ num_hits.second };
     num_hits.second = sum;
     sum += val;
   }
@@ -761,9 +764,9 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
 #endif
 
 float MultSumMaxModel::rank_frame(const Vector<float>& frame_data, const CnfFormula& single_query,
-                             const Options& options) const
+                                  const Options& options) const
 {
-  float frame_ranking{1.0F};
+  float frame_ranking{ 1.0F };
 
   /********************************************************
    * SETTINGS: Initialize frame ranking with correct value
@@ -787,11 +790,11 @@ float MultSumMaxModel::rank_frame(const Vector<float>& frame_data, const CnfForm
 
   for (auto&& clause : single_query)
   {
-    float clause_ranking{0.0F};
+    float clause_ranking{ 0.0F };
 
     for (auto&& literal : clause)
     {
-      float literal_ranking{frame_data[literal.atom]};
+      float literal_ranking{ frame_data[literal.atom] };
 
       // If literal_ranking under the threshold
       if (literal_ranking < options.ignore_below_threshold)

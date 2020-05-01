@@ -769,6 +769,110 @@ std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::st
   return resultKeywords;
 }
 
+std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& prefix, size_t numResults)
+{
+  KeywordsContainer::KeywordLessThanStringComparator comparator;
+  size_t left = 0ULL;
+  size_t right = _keywords.size() - 1ULL;
+
+  size_t i = right / 2;
+
+  while (true)
+  {
+    // Test if middle one is less than
+    bool leftIsLess = comparator(_keywords[i]->m_word, prefix);
+
+    if (leftIsLess)
+    {
+      left = i + 1;
+    }
+    else
+    {
+      right = i;
+    }
+
+    if (right - left < 1)
+    {
+      break;
+    }
+
+    i = (right + left) / 2;
+  }
+
+  std::vector<Keyword*> resultKeywords;
+  resultKeywords.reserve(numResults);
+  std::vector<Keyword*> postResultKeywords;
+
+  // Get desired number of results
+  for (size_t j = 0ULL; j < numResults; ++j)
+  {
+    size_t idx{ left + j };
+
+    if (idx >= _keywords.size())
+    {
+      break;
+    }
+
+    Keyword* pKeyword{ _keywords[idx].get() };
+
+    // Check if prefix is equal to searched word
+
+    // Force lowercase
+    std::locale loc;
+    std::string lowerWord;
+    std::string lowerPrefix;
+
+    for (auto elem : pKeyword->m_word)
+    {
+      lowerWord.push_back(std::tolower(elem, loc));
+    }
+
+    for (auto elem : prefix)
+    {
+      lowerPrefix.push_back(std::tolower(elem, loc));
+    }
+
+    auto res = std::mismatch(lowerPrefix.begin(), lowerPrefix.end(), lowerWord.begin());
+
+    if (res.first == lowerPrefix.end())
+    {
+      resultKeywords.emplace_back(pKeyword);
+    }
+    else
+    {
+      postResultKeywords.emplace_back(pKeyword);
+    }
+  }
+
+  // If we need to add up desc search results
+  if (resultKeywords.size() < numResults && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
+  {
+    std::vector<size_t> needleIndices = FindAllNeedles(_allDescriptions, prefix);
+
+    for (auto&& index : needleIndices)
+    {
+      Keyword* pKeyword = MapDescIndexToKeyword(index);
+
+      resultKeywords.emplace_back(pKeyword);
+    }
+  }
+
+  size_t j = 0ULL;
+  while (resultKeywords.size() < numResults)
+  {
+    if (j >= postResultKeywords.size())
+    {
+      break;
+    }
+
+    resultKeywords.push_back(postResultKeywords[j]);
+
+    ++j;
+  }
+
+  return resultKeywords;
+}
+
 Keyword* KeywordsContainer::MapDescIndexToKeyword(size_t descIndex) const
 {
   size_t left = 0ULL;

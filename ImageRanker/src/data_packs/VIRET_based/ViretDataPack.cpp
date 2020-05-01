@@ -3,13 +3,15 @@
 
 #include <thread>
 
+#include "./datasets/BaseImageset.h"
 #include "./ranking_models/ranking_models.h"
 #include "./transformations/transformations.h"
 
 using namespace image_ranker;
 
-ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
-                             const std::string& description, const ViretDataPackRef::VocabData& vocab_data_refs,
+ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
+                             const std::string& model_options, const std::string& description,
+                             const ViretDataPackRef::VocabData& vocab_data_refs,
                              std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
                              std::vector<std::vector<float>>&& feas_data)
     : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description),
@@ -57,7 +59,9 @@ const std::string& ViretDataPack::get_vocab_description() const { return _keywor
   return "I am just dummy query!"s;
 }
 
-[[nodiscard]] std::vector<Keyword*> ViretDataPack::top_frame_keywords(FrameId frame_ID, PackModelCommands model_commands, size_t count) const
+[[nodiscard]] std::vector<Keyword*> ViretDataPack::top_frame_keywords(FrameId frame_ID,
+                                                                      PackModelCommands model_commands,
+                                                                      size_t count) const
 {
   LOGW("Not implemented!");
 
@@ -232,22 +236,59 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
 
   // Process sim user
   // Use linear transform data without hypernyms accumulated
-  const auto& sim_user_tr {*(_transforms.find(enum_label(eTransformationIds::LINEAR_01).first)->second)};
-  idx_test_queries = sim_user.process_sim_user(get_imageset_ptr(), sim_user_tr, _keywords, idx_test_queries, opt_key_vals);
+  const auto& sim_user_tr{ *(_transforms.find(enum_label(eTransformationIds::LINEAR_01).first)->second) };
+  idx_test_queries =
+      sim_user.process_sim_user(get_imageset_ptr(), sim_user_tr, _keywords, idx_test_queries, opt_key_vals);
 
   return ranking_model.test_model(transform, _keywords, idx_test_queries, opt_key_vals, num_points);
 }
 
 AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,
-                                                                bool with_example_image, PackModelCommands model_commands) const
+                                                                bool with_example_image,
+                                                                PackModelCommands model_commands) const
 {
-  return {_keywords.GetNearKeywordsPtrs(query_prefix, result_size)};
+  auto kws = _keywords.GetNearKeywordsPtrs(query_prefix, result_size);
+
+  std::vector<const Keyword*> res_kws;
+
+  auto hasher{ std::hash<std::string>{} };
+
+  size_t curr_opts_hash{ hasher(model_commands) };
+
+  for (auto&& p_kw : kws)
+  {
+    if (curr_opts_hash != p_kw->lastExampleFramesHash)
+    {
+      CnfFormula fml{ Clause{ Literal<KeywordId>{ p_kw->ID } } };
+
+      std::vector<CnfFormula> v{ fml  };
+
+      // Rank frames with query "this_kw"
+      auto ranked_frames{ rank_frames(v, model_commands, NUM_EXAMPLE_FRAMES) };
+
+      p_kw->m_exampleImageFilenames.clear();
+      for (auto&& f_ID : ranked_frames.m_frames)
+      {
+        std::string filename{ get_imageset_ptr()->operator[](f_ID).m_filename };
+        p_kw->m_exampleImageFilenames.emplace_back(std::move(filename));
+      }
+
+      // Update hash
+      p_kw->lastExampleFramesHash = curr_opts_hash;
+    }
+
+    res_kws.emplace_back(p_kw);
+  }
+
+  AutocompleteInputResult res{ res_kws };
+
+  return res;
 }
 
 DataPackInfo ViretDataPack::get_info() const
 {
-  return DataPackInfo{get_ID(),           get_description(),          get_model_options(), target_imageset_ID(),
-                      _keywords.get_ID(), _keywords.get_description()};
+  return DataPackInfo{ get_ID(),           get_description(),          get_model_options(), target_imageset_ID(),
+                       _keywords.get_ID(), _keywords.get_description() };
 }
 
 CnfFormula ViretDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) const
@@ -256,9 +297,9 @@ CnfFormula ViretDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) con
   {
     assert(ID_clause.size() == 1);
 
-    KeywordId kw_ID{ID_clause[0].atom};
+    KeywordId kw_ID{ ID_clause[0].atom };
 
-    const Keyword& kw{_keywords[kw_ID]};
+    const Keyword& kw{ _keywords[kw_ID] };
 
     std::unordered_set<size_t> vecIds;
     _keywords.GetVectorKeywordsIndicesSetShallow(vecIds, kw.m_wordnetId);
@@ -266,7 +307,27 @@ CnfFormula ViretDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) con
     ID_clause.clear();
     for (auto&& id : vecIds)
     {
-      ID_clause.emplace_back(Literal<KeywordId>{id, false});
+      ID_clause.emplace_back(Literal<KeywordId>{ id, false });
+    }
+  }
+  return ID_query;
+}
+
+CnfFormula ViretDataPack::wordnetIDs_to_vector_indices(CnfFormula ID_query) const
+{
+  for (auto&& ID_clause : ID_query)
+  {
+    assert(ID_clause.size() == 1);
+
+    KeywordId kw_ID{ ID_clause[0].atom };
+
+    std::unordered_set<size_t> vecIds;
+    _keywords.GetVectorKeywordsIndicesSetShallow(vecIds, kw_ID);
+
+    ID_clause.clear();
+    for (auto&& id : vecIds)
+    {
+      ID_clause.emplace_back(Literal<KeywordId>{ id, false });
     }
   }
   return ID_query;
