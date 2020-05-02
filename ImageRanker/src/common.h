@@ -67,6 +67,7 @@ struct DataInfo
 {
   Vector<float> mins;
   Vector<float> maxes;
+  std::vector<std::vector<KeywordId>> top_classes;
 };
 
 /**
@@ -293,6 +294,13 @@ struct GameSessionQueryResult
   std::string model_top_query;
 };
 
+struct FrameDetailData
+{
+  FrameId frame_ID;
+  std::string data_pack_ID;
+  std::string model_options;
+};
+
 /**
  * Keywords that are possible for given prefix.
  */
@@ -353,6 +361,17 @@ enum class eUserQueryOrigin
   SEMI_EXPERTS = 10,
   EXPERTS = 15
 };
+
+struct InteractiveSearchAction
+{
+  size_t query_idx;
+  std::string action;
+  std::string operand;
+  std::string operand_readable;
+  size_t final_rank;
+  size_t time;
+};
+
 // =====================================
 //  NOT REFACTORED CODE BELOW
 // =====================================
@@ -421,8 +440,6 @@ enum class eExportFileTypeId
 };
 
 // ------------------------------------------------
-
-using InteractiveSearchAction = std::tuple<size_t, size_t, size_t>;
 
 struct StatPerKwSc
 {

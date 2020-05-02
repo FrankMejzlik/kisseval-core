@@ -18,6 +18,9 @@ constexpr size_t TEMP_CONTEXT_LOOKUP_LENGTH = 3;
 
 constexpr size_t NUM_EXAMPLE_FRAMES = 10;
 
+/** Number of top classes that will be computed and stored */
+constexpr size_t NUM_TOP_CLASSES = 10;
+
 /*============================================
  * Default settings
  *============================================*/

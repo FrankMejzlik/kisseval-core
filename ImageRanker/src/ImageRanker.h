@@ -64,10 +64,11 @@ class ImageRanker
 
   ImageRanker(const ImageRanker::Config& cfg);
 
-  [[nodiscard]] RankingResultWithFilenames rank_frames(const std::vector<std::string>& user_queries, const DataPackId& data_pack_ID,
-                                          const PackModelCommands& model_commands, size_t result_size,
-                                          bool native_lang_queries = false,
-                                          FrameId target_image_ID = ERR_VAL<FrameId>()) const;
+  [[nodiscard]] RankingResultWithFilenames rank_frames(const std::vector<std::string>& user_queries,
+                                                       const DataPackId& data_pack_ID,
+                                                       const PackModelCommands& model_commands, size_t result_size,
+                                                       bool native_lang_queries = false,
+                                                       FrameId target_image_ID = ERR_VAL<FrameId>()) const;
 
   [[nodiscard]] virtual ModelTestResult run_model_test(eUserQueryOrigin queries_origin, const DataPackId& data_pack_ID,
                                                        const PackModelCommands& model_commands,
@@ -82,12 +83,23 @@ class ImageRanker
                                                        size_t num_points = NUM_MODEL_TEST_RESULT_POINTS,
                                                        bool normalize_y = true) const;
 
-  /*!
-   * This processes input queries that come from users, generates results and sends them back
+  /**
+   * This processes input queries that come from users, generates results and sends them back.
    */
   std::vector<GameSessionQueryResult> submit_annotator_user_queries(
       const StringId& data_pack_ID, const ::std::string& model_options, size_t user_level, bool with_example_images,
       const std::vector<AnnotatorUserQuery>& user_queries);
+
+  /**
+   * Processes and saves provided search session into the database.
+   */
+  bool submit_search_session(const DataPackId& data_pack_ID, const PackModelCommands& model_commands, size_t user_level,
+                             bool with_example_images, FrameId target_frame_ID, eSearchSessionEndStatus end_status,
+                             size_t duration, const std::string& sessionId,
+                             const std::vector<InteractiveSearchAction>& actions);
+
+  FrameDetailData get_frame_detail_data(FrameId frame_ID, const std::string& data_pack_ID,
+                                        const std::string& model_commands, bool with_example_frames);
 
   std::vector<const SelFrame*> get_random_frame_sequence(const std::string& imageset_ID, size_t seq_len) const;
   const SelFrame* get_random_frame(const std::string& imageset_ID) const;
@@ -160,20 +172,6 @@ class ImageRanker
 
     size_t MapIdToVectorIndex(size_t id) const;
     KeywordsContainer* GetCorrectKwContainerPtr(DataId data_ID) const;
-
-    std::tuple<std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
-      std::vector<std::tuple<size_t, std::string, float, std::vector<std::string>>>,
-      std::vector<std::pair<size_t, std::string>>>
-      GetImageKeywordsForInteractiveSearch(size_t imageId, size_t numResults, DataId data_ID,
-        bool withExampleImages);
-
-    void SubmitInteractiveSearchSubmit(DataId data_ID, InteractiveSearchOrigin originType, size_t imageId,
-      RankingModelId modelId, InputDataTransformId transformId,
-      std::vector<std::string> modelSettings, std::vector<std::string> transformSettings,
-      std::string sessionId, size_t searchSessionIndex, int endStatus,
-      size_t sessionDuration, std::vector<InteractiveSearchAction> actions,
-      size_t userId = 0_z);
-
 
     std::vector<std::pair<TestSettings, ChartData>> RunGridTest(const std::vector<TestSettings>& testSettings);
 

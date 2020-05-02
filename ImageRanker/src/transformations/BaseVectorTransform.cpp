@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <queue>
 
 using namespace image_ranker;
 
@@ -16,15 +17,31 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
   Matrix<float> result_data;
   result_data.reserve(data.size());
   DataInfo di;
+  std::vector<std::vector<KeywordId>> top_classes;
 
   for (auto&& row : data)
   {
     Vector<float> new_row;
     new_row.reserve(row.size());
 
+    std::vector<KeywordId> row_top_classes;
+    row_top_classes.reserve(NUM_TOP_CLASSES);
+
     float row_sum{0.0F};
-    float row_max{-99999999.0F};
+    float row_max{-std::numeric_limits<float>::max()};
     float row_min{std::numeric_limits<float>::max()};
+
+    using KwPair = std::pair<float, KeywordId>;
+    // Comparator for the priority queue
+    auto frame_pair_cmptor = [](const KwPair& left, const KwPair& right) { return left.first < right.first; };
+
+    // Create inner container for the queue
+    std::vector<KwPair> queue_cont;
+    queue_cont.reserve(row.size());
+
+    // Construct prioprity queue
+    std::priority_queue<KwPair, std::vector<KwPair>, decltype(frame_pair_cmptor)> max_prio_queue(
+      frame_pair_cmptor, std::move(queue_cont));
 
     // Iterate over all bins in this vector
     for (auto&& [it, i]{std::tuple(row.begin(), size_t{0})}; it != row.end(); ++it, ++i)
@@ -45,6 +62,7 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
       row_min = std::min(row_min, new_cell_value);
 
       new_row.emplace_back(new_cell_value);
+      max_prio_queue.emplace(std::pair(new_cell_value, i));
     }
 
     if (normalize)
@@ -55,8 +73,17 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
       row_min /= row_sum;
     }
 
+    // Ge top concepts
+    for (size_t ii{0_z}; ii < NUM_TOP_CLASSES; ++ii)
+    {
+      auto&& [score, ID] {max_prio_queue.top()};
+      row_top_classes.emplace_back(ID);
+      max_prio_queue.pop();
+    }
+
     di.maxes.emplace_back(row_max);
     di.mins.emplace_back(row_min);
+    di.top_classes.emplace_back(std::move(row_top_classes));
 
     result_data.emplace_back(std::move(new_row));
   }

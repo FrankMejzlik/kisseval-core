@@ -23,8 +23,10 @@ int main()
   ImageRanker ranker(cfg);
 
 #define TEST_submit_annotator_user_queries 0
+#define TEST_submit_search_session 1
+
 #define TEST_get_random_frame_sequence 0
-#define TEST_get_autocomplete_results 1
+#define TEST_get_autocomplete_results 0
 #define TEST_get_loaded_imagesets_info 0
 #define TEST_rank_frames 0
 #define TEST_run_model_test 0
@@ -44,6 +46,18 @@ int main()
                                        });
 #endif
 
+#if TEST_submit_search_session
+  ranker.submit_search_session("NasNet2019",
+                               "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_"
+                               "op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;",
+                               10, true, 8888, eSearchSessionEndStatus::FOUND_TARGET, 12345, "jajsemsession1111",
+                               std::vector<InteractiveSearchAction>{
+                                   { 0, "add_from_autocomplete", "1234", "apple", 333, 4 },
+                                   { 0, "delete_from_query", "1234", "apple", 88888, 10 },
+                                   { 0, "add_from_detail", "234", "tuple", 12, 13 },
+                               });
+#endif
+
   // TEST: `get_random_frame_sequence`
 #if TEST_get_random_frame_sequence
   {
@@ -54,11 +68,15 @@ int main()
   // TEST: `get_autocomplete_results`
 #if TEST_get_autocomplete_results
   {
-    auto r1 = ranker.get_autocomplete_results("NasNet2019", "entity", 20, true, 
-      "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;");
+    auto r1 =
+        ranker.get_autocomplete_results("NasNet2019", "entity", 20, true,
+                                        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_"
+                                        "outter_op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;");
 
-    r1 = ranker.get_autocomplete_results("NasNet2019", "entity", 20, true, 
-      "model=mult-sum-max;model_operations=mult-max;model_ignore_treshold=0.00;model_outter_op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;");
+    r1 =
+        ranker.get_autocomplete_results("NasNet2019", "entity", 20, true,
+                                        "model=mult-sum-max;model_operations=mult-max;model_ignore_treshold=0.00;model_"
+                                        "outter_op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;");
 
     if (r1.top_keywords.size() < 20)
     {

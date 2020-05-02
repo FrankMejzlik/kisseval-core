@@ -138,3 +138,71 @@ std::vector<UserTestNativeQuery> DataManager::fetch_user_native_test_queries(eUs
 
   return result;
 }
+
+bool DataManager::submit_search_session(const std::string& data_pack_ID, const std::string& vocabulary_ID,
+                                        const std::string& model_commands, size_t user_level, bool with_example_images,
+                                        FrameId target_frame_ID, eSearchSessionEndStatus end_status, size_t duration,
+                                        const std::string& session_ID,
+                                        const std::vector<InteractiveSearchAction>& actions)
+{
+  if (actions.empty())
+  {
+    return false;
+  }
+
+  /*
+   * Insert into "search_sessions" table
+   */
+  std::stringstream query1Ss{ "" };
+  query1Ss << "INSERT INTO `" << db_name << "`.`" << searches_table_name << "` ";
+  query1Ss << "(`target_frame_ID`,`vocabulary_ID`,`data_pack_ID`,`model_options`,`duration`,`result`,";
+  query1Ss << "`with_example_images`,`user_level`,`session_ID`,`manually_validated`) VALUES ";
+
+  query1Ss << "(" << target_frame_ID << ",'" << vocabulary_ID << "','" << data_pack_ID << "','" << model_commands
+           << "',";
+  query1Ss << duration << "," << int(end_status) << "," << with_example_images << "," << user_level;
+  query1Ss << ",'" << session_ID << "'," << int(false) << ");";
+
+  // Run first query
+  auto q1{ query1Ss.str() };
+  size_t result1{ _db.NoResultQuery(q1) };
+  if (result1 != 0)
+  {
+    LOGE("Failed to insert into:" + db_name + "`.`" + searches_table_name + "!");
+  }
+  // Currently inserted ID
+  size_t id{ _db.GetLastId() };
+
+  /*
+   * Insert into "search_sessions_actions" table
+   */
+  std::stringstream query2Ss;
+
+  query2Ss << "INSERT INTO `" << db_name << "`.`" << search_actions_table_name << "` ";
+  query2Ss << "(`search_session_ID`,`action_index`,`action_query_index`,`action`,`operand`,`operand_readable`,`result_"
+              "target_rank`,`time`) VALUES ";
+
+  {
+    size_t i{ 0_z };
+    for (auto&& a : actions)
+    {
+      query2Ss << "(" << id << "," << i << "," << a.query_idx << ",'" << a.action << "','" << a.operand << "','"
+               << a.operand_readable << "'," << a.final_rank << "," << a.time << ")";
+
+      if (i < actions.size() - 1)
+      {
+        query2Ss << ",";
+      }
+      ++i;
+    }
+    query2Ss << ";";
+  }
+
+  auto q2{ query2Ss.str() };
+  size_t result2{ _db.NoResultQuery(q2) };
+
+  if (result1 != 0 || result2 != 0)
+  {
+    LOGE("Failed to insert into:" + db_name + "`.`" + search_actions_table_name + "!");
+  }
+}

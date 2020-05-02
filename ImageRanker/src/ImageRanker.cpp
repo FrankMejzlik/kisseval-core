@@ -443,9 +443,36 @@ ModelTestResult ImageRanker::run_model_test(size_t test_queries_count, const Dat
   return ModelTestResult{};
 };
 
-  // =====================================
-  //  NOT REFACTORED CODE BELOW
-  // =====================================
+bool ImageRanker::submit_search_session(const std::string& data_pack_ID, const std::string& model_commands,
+                                        size_t user_level, bool with_example_images, FrameId target_frame_ID,
+                                        eSearchSessionEndStatus end_status, size_t duration,
+                                        const std::string& sessionId,
+                                        const std::vector<InteractiveSearchAction>& actions)
+{
+  const BaseDataPack& dp{ data_pack(data_pack_ID) };
+  const std::string& imageset_ID{ dp.target_imageset_ID() };
+
+  return _data_manager.submit_search_session(data_pack_ID, imageset_ID, model_commands, user_level, with_example_images,
+                                             target_frame_ID, end_status, duration, sessionId, actions);
+}
+
+FrameDetailData ImageRanker::get_frame_detail_data(FrameId frame_ID, const std::string& data_pack_ID,
+                                                   const std::string& model_commands, bool with_example_frames)
+{
+  const BaseDataPack& dp{ data_pack(data_pack_ID) };
+  const BaseImageset& is{ imageset(dp.target_imageset_ID()) };
+
+  FrameDetailData res_data;
+  res_data.frame_ID = frame_ID;
+  res_data.data_pack_ID = data_pack_ID;
+  res_data.model_options = model_commands;
+
+  return res_data;
+}
+
+// =====================================
+//  NOT REFACTORED CODE BELOW
+// =====================================
 
 #if 0
 
@@ -2613,96 +2640,6 @@ std::vector<std::vector<UserImgQuery>>& ImageRanker::GetCachedQueries(DataId dat
   }
 
   return cachedData0;
-}
-
-void ImageRanker::SubmitInteractiveSearchSubmit(DataId data_ID, InteractiveSearchOrigin originType,
-                                                size_t imageId, RankingModelId modelId,
-                                                InputDataTransformId transformId,
-                                                std::vector<std::string> modelSettings,
-                                                std::vector<std::string> transformSettings, std::string sessionId,
-                                                size_t searchSessionIndex, int endStatus, size_t sessionDuration,
-                                                std::vector<InteractiveSearchAction> actions, size_t userId)
-{
-  size_t isEmpty{0_z};
-
-  size_t countIn{0_z};
-  size_t countOut{0_z};
-
-  for (auto&& a : actions)
-  {
-    if (std::get<0>(a) == 0)
-    {
-      ++countOut;
-    }
-    else if (std::get<0>(a) == 1 || std::get<0>(a) == 2)
-    {
-      ++countIn;
-    }
-  }
-
-  if (countIn == countOut)
-  {
-    isEmpty = 1_z;
-  }
-
-  std::stringstream query1Ss;
-  query1Ss << "INSERT INTO `interactive_searches`(`keyword_data_type`, "
-              "`scoring_data_type`, `type`, `target_image_id`, "
-              "`model_id`, `transformation_id`, `model_settings`, "
-              "`transformation_settings`, `session_id`, `user_id`, "
-              "`search_session_index`, `end_status`, `session_duration`,`is_empty`)";
-  query1Ss << "VALUES(" << std::to_string((int)std::get<0>(data_ID)) << ", "
-           << std::to_string((int)std::get<1>(data_ID)) << "," << (int)originType << "," << imageId << ","
-           << (int)modelId << "," << (int)transformId << ",";
-
-  query1Ss << "\"";
-  for (auto&& s : modelSettings)
-  {
-    query1Ss << s << ";";
-  }
-  query1Ss << "\"";
-  query1Ss << ",";
-  query1Ss << "\"";
-  for (auto&& s : transformSettings)
-  {
-    query1Ss << s << ";";
-  }
-  query1Ss << "\"";
-  query1Ss << ",\"" << sessionId << "\"," << userId << "," << searchSessionIndex << "," << endStatus << ","
-           << sessionDuration << "," << isEmpty << ");";
-
-  std::string query1{query1Ss.str()};
-  size_t result1{_db.NoResultQuery(query1)};
-
-  size_t id{_db.GetLastId()};
-
-  std::stringstream query2Ss;
-  query2Ss << "INSERT INTO `interactive_searches_actions`(`interactive_search_id`, "
-              "`index`, `action`, `score`, `operand`)";
-  query2Ss << "VALUES";
-  {
-    size_t i{0_z};
-    for (auto&& action : actions)
-    {
-      query2Ss << "(" << id << "," << i << "," << std::get<0>(action) << "," << std::get<1>(action) << ","
-               << std::get<2>(action) << ")";
-
-      if (i < actions.size() - 1)
-      {
-        query2Ss << ",";
-      }
-      ++i;
-    }
-    query2Ss << ";";
-  }
-
-  std::string query2{query2Ss.str()};
-  size_t result2{_db.NoResultQuery(query2)};
-
-  if (result1 != 0 || result2 != 0)
-  {
-    LOG_ERROR("Failed to insert search session result.");
-  }
 }
 
 std::tuple<UserAccuracyChartData, UserAccuracyChartData> ImageRanker::GetStatisticsUserKeywordAccuracy(

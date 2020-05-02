@@ -53,8 +53,10 @@ class BaseVectorTransform
   }
 
   [[nodiscard]] virtual const Matrix<float>& data_linear_raw() const { return _data_linear_raw; }
+
   [[nodiscard]] virtual const Matrix<float>& data_max() const { return _data_max_mat; }
   [[nodiscard]] virtual const DataInfo& data_max_info() const { return _data_max_mat_info; }
+
   [[nodiscard]] virtual const Matrix<float>& data_sum() const { return _data_sum_mat; }
   [[nodiscard]] virtual const DataInfo& data_sum_info() const { return _data_sum_mat_info; }
 
@@ -71,13 +73,13 @@ class BaseVectorTransform
   Matrix<float> _data_sum_mat;
   DataInfo _data_sum_mat_info;
 
-  mutable std::unordered_map<float, Vector<float>> _data_idfs;
-  mutable std::map<TfidfCacheKey, Matrix<float>> _transformed_data_cache;
-
   /** Data with precomputed hypernyms as a max of all hyponyms.
    *  Used for models with MAX inner operation. */
   Matrix<float> _data_max_mat;
   DataInfo _data_max_mat_info;
+
+  mutable std::unordered_map<float, Vector<float>> _data_idfs;
+  mutable std::map<TfidfCacheKey, Matrix<float>> _transformed_data_cache;
 
   Matrix<float> _data_linear_raw;
 };

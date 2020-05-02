@@ -8,6 +8,12 @@
  * Name definitions
  ***********************************************/
 
+enum class eSearchSessionEndStatus
+{
+  GAVE_UP = 0,
+  FOUND_TARGET = 1
+};
+
 enum class eSimUserTarget
 {
   SINGLE_QUERIES,
