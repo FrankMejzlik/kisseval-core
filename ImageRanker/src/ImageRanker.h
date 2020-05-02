@@ -99,7 +99,8 @@ class ImageRanker
                              const std::vector<InteractiveSearchAction>& actions);
 
   FrameDetailData get_frame_detail_data(FrameId frame_ID, const std::string& data_pack_ID,
-                                        const std::string& model_commands, bool with_example_frames);
+                                        const std::string& model_commands, bool with_example_frames,
+                                        bool accumulated = false);
 
   std::vector<const SelFrame*> get_random_frame_sequence(const std::string& imageset_ID, size_t seq_len) const;
   const SelFrame* get_random_frame(const std::string& imageset_ID) const;

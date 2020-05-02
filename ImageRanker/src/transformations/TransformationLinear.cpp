@@ -40,7 +40,8 @@ Matrix<float> TransformationLinear01::apply(const Matrix<float>& data, const std
 TransformationLinear01::TransformationLinear01(const KeywordsContainer& keywords, const Matrix<float>& data_mat,
                                                const std::string& options)
     : BaseVectorTransform(accumulate_hypernyms(keywords, apply(data_mat), HyperAccumType::SUM),
-                          accumulate_hypernyms(keywords, apply(data_mat), HyperAccumType::MAX), apply(data_mat))
+                          accumulate_hypernyms(keywords, apply(data_mat), HyperAccumType::MAX), 
+                          calc_stats(keywords, apply(data_mat)))
 {
 }
 

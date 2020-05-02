@@ -36,7 +36,7 @@ class GoogleVisionDataPack : public BaseDataPack
 
   [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix,
                                                                          size_t result_size,
-                                                                         bool with_example_images, PackModelCommands model_commands) const override;
+                                                                         bool with_example_images, const std::string& model_commands) const override;
 
   [[nodiscard]] virtual DataPackInfo get_info() const override;
 

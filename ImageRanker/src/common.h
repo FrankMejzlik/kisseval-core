@@ -299,6 +299,7 @@ struct FrameDetailData
   FrameId frame_ID;
   std::string data_pack_ID;
   std::string model_options;
+  std::vector<const Keyword*> top_keywords;
 };
 
 /**

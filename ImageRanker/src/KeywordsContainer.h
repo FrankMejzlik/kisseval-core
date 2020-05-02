@@ -91,6 +91,10 @@ class KeywordsContainer
   {
     return *_ID_to_keyword.at(keyword_ID);
   }
+  Keyword& operator[](KeywordId keyword_ID)
+  {
+    return *_ID_to_keyword.at(keyword_ID);
+  }
 
  private:
   std::string _ID;

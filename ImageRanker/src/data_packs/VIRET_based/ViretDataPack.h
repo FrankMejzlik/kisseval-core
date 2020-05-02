@@ -17,10 +17,10 @@ namespace image_ranker
 class ViretDataPack : public BaseDataPack
 {
  public:
-  ViretDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
-                const std::string& description, const ViretDataPackRef::VocabData& vocab_data_refs,
-                std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
-                std::vector<std::vector<float>>&& feas_data);
+  ViretDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
+                const std::string& model_options, const std::string& description,
+                const ViretDataPackRef::VocabData& vocab_data_refs, std::vector<std::vector<float>>&& presoft,
+                std::vector<std::vector<float>>&& softmax_data, std::vector<std::vector<float>>&& feas_data);
 
   [[nodiscard]] virtual RankingResult rank_frames(const std::vector<CnfFormula>& user_queries,
                                                   PackModelCommands model_commands, size_t result_size,
@@ -33,17 +33,24 @@ class ViretDataPack : public BaseDataPack
                                                             const KeywordsContainer& keywords,
                                                             const std::vector<UserTestQuery>& test_user_queries) const;
 
+  [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(
+      FrameId frame_ID, std::vector<ModelKeyValOption> opt_key_vals, bool accumulated) const override;
+
   [[nodiscard]] virtual const std::string& get_vocab_ID() const override;
   [[nodiscard]] virtual const std::string& get_vocab_description() const override;
 
   [[nodiscard]] virtual std::string humanize_and_query(const std::string& and_query) const override;
-  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID, PackModelCommands model_commands, size_t count) const override;
+  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID, PackModelCommands model_commands,
+                                                                 size_t count) const override;
 
-  [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix,
-                                                                         size_t result_size,
-                                                                         bool with_example_images, PackModelCommands model_commands) const override;
+  [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(
+      const std::string& query_prefix, size_t result_size, bool with_example_images,
+      const std::string& model_commands) const override;
 
   [[nodiscard]] virtual DataPackInfo get_info() const override;
+
+  virtual void cache_up_example_images(const std::vector<const Keyword*>& kws,
+                                       const std::string& model_commands) const override;
 
  private:
   /** Converts CNF query using keyword IDs to the one using only valid vector indices */

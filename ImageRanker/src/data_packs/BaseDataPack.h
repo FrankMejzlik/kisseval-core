@@ -37,6 +37,14 @@ class BaseDataPack
     throw NotSuportedModelOption("This data pack does not support this.");
   };
 
+  [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(
+    FrameId frame_ID, std::vector<ModelKeyValOption> opt_key_vals, bool accumulated) const
+  {
+    // Datapacks do not have to support this
+    LOGE("Unsupported data pack feature requested.");
+    throw NotSuportedModelOption("This data pack does not support this.");
+  };
+
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
                                                    PackModelCommands model_commands, size_t num_points) const = 0;
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestNativeQuery>& test_native_queries,
@@ -51,16 +59,22 @@ class BaseDataPack
   [[nodiscard]] virtual const std::string& get_vocab_description() const = 0;
 
   [[nodiscard]] virtual std::string humanize_and_query(const std::string& and_query) const = 0;
-  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID,
-                                                                 PackModelCommands model_commands, size_t count) const
+  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID, PackModelCommands model_commands,
+                                                                 size_t count) const
   {
     LOGE("Unsupported data pack feature requested.");
     throw NotSuportedModelOption("This data pack does not support this.");
   };
-  
+
   [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix,
                                                                          size_t result_size, bool with_example_images,
-                                                                         PackModelCommands model_commands) const = 0;
+                                                                         const std::string& model_commands) const = 0;
+
+  virtual void cache_up_example_images(const std::vector<const Keyword*>& kws, const std::string& model_commands) const
+  {
+    LOGE("Unsupported data pack feature requested.");
+    throw NotSuportedModelOption("This data pack does not support this.");
+  };
 
   [[nodiscard]] virtual DataPackInfo get_info() const = 0;
 

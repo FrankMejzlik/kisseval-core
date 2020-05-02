@@ -23,7 +23,8 @@ int main()
   ImageRanker ranker(cfg);
 
 #define TEST_submit_annotator_user_queries 0
-#define TEST_submit_search_session 1
+#define TEST_submit_search_session 0
+#define TEST_get_frame_detail_data 1
 
 #define TEST_get_random_frame_sequence 0
 #define TEST_get_autocomplete_results 0
@@ -56,6 +57,37 @@ int main()
                                    { 0, "delete_from_query", "1234", "apple", 88888, 10 },
                                    { 0, "add_from_detail", "234", "tuple", 12, 13 },
                                });
+#endif
+
+#if TEST_get_frame_detail_data
+  /** Man on a bike in bright hall */
+  auto res = ranker.get_frame_detail_data(
+      1, "NasNet2019",
+      "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_"
+      "op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;",
+      true, false);
+
+  for (auto&& p_kw : res.top_keywords)
+  {
+    std::cout << "ID = " << p_kw->ID << std::endl;
+    std::cout << "\t word = " << p_kw->m_word << std::endl;
+  }
+
+  std::cout << "======================== " << std::endl;
+
+  /** Man on a bike in bright hall */
+  res = ranker.get_frame_detail_data(
+      1, "NasNet2019",
+      "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_"
+      "op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;",
+      true, true);
+
+  for (auto&& p_kw : res.top_keywords)
+  {
+    std::cout << "ID = " << p_kw->ID << std::endl;
+    std::cout << "\t word = " << p_kw->m_word << std::endl;
+  }
+
 #endif
 
   // TEST: `get_random_frame_sequence`

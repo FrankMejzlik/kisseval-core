@@ -43,16 +43,18 @@ class BaseVectorTransform
 {
  public:
   BaseVectorTransform(std::pair<Matrix<float>, DataInfo>&& data_sum_mat,
-    std::pair<Matrix<float>, DataInfo>&& data_max_mat, Matrix<float> data_lin_raw = Matrix<float>{})
+    std::pair<Matrix<float>, DataInfo>&& data_max_mat, std::pair<Matrix<float>, DataInfo>&& data_lin_raw = std::pair<Matrix<float>, DataInfo>{})
       : _data_sum_mat(std::move(data_sum_mat.first)),
         _data_max_mat(std::move(data_max_mat.first)),
+        _data_linear_raw(std::move(data_lin_raw.first)),
         _data_sum_mat_info(std::move(data_sum_mat.second)),
         _data_max_mat_info(std::move(data_max_mat.second)),
-    _data_linear_raw(data_lin_raw)
+        _data_linear_raw_info(std::move(data_lin_raw.second))
   {
   }
 
   [[nodiscard]] virtual const Matrix<float>& data_linear_raw() const { return _data_linear_raw; }
+  [[nodiscard]] virtual const DataInfo& data_linear_raw_info() const { return _data_linear_raw_info; }
 
   [[nodiscard]] virtual const Matrix<float>& data_max() const { return _data_max_mat; }
   [[nodiscard]] virtual const DataInfo& data_max_info() const { return _data_max_mat_info; }
@@ -82,5 +84,6 @@ class BaseVectorTransform
   mutable std::map<TfidfCacheKey, Matrix<float>> _transformed_data_cache;
 
   Matrix<float> _data_linear_raw;
+  DataInfo _data_linear_raw_info;
 };
 }  // namespace image_ranker

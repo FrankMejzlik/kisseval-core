@@ -457,15 +457,37 @@ bool ImageRanker::submit_search_session(const std::string& data_pack_ID, const s
 }
 
 FrameDetailData ImageRanker::get_frame_detail_data(FrameId frame_ID, const std::string& data_pack_ID,
-                                                   const std::string& model_commands, bool with_example_frames)
+                                                   const std::string& model_commands, bool with_example_frames,
+                                                   bool accumulated)
 {
   const BaseDataPack& dp{ data_pack(data_pack_ID) };
   const BaseImageset& is{ imageset(dp.target_imageset_ID()) };
+
+  // Parse model & transformation
+  std::vector<std::string> tokens = split(model_commands, ';');
+
+  std::vector<ModelKeyValOption> opt_key_vals;
+
+  std::string transform_ID{ "linear_01" };
+  std::string model_ops{ "mult-sum" };
+
+  for (auto&& tok : tokens)
+  {
+    auto key_val = split(tok, '=');
+    opt_key_vals.emplace_back(key_val[0], key_val[1]);
+  }
+
+  // Get top keywords for the given frame ID
+  std::vector<const Keyword*> top_keywords{ dp.get_frame_top_classes(frame_ID, opt_key_vals, accumulated) };
+
+  // Cache it up if needed
+  dp.cache_up_example_images(top_keywords, model_commands);
 
   FrameDetailData res_data;
   res_data.frame_ID = frame_ID;
   res_data.data_pack_ID = data_pack_ID;
   res_data.model_options = model_commands;
+  res_data.top_keywords = std::move(top_keywords);
 
   return res_data;
 }

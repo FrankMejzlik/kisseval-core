@@ -244,45 +244,102 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
 }
 
 AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,
-                                                                bool with_example_image,
-                                                                PackModelCommands model_commands) const
+                                                                bool with_example_images,
+                                                                const std::string& model_commands) const
 {
-  auto kws = _keywords.GetNearKeywordsPtrs(query_prefix, result_size);
+  auto kws = const_cast<const KeywordsContainer&>(_keywords).GetNearKeywordsPtrs(query_prefix, result_size);
 
-  std::vector<const Keyword*> res_kws;
+  // Cache it up if needed
+  cache_up_example_images(kws, model_commands);
 
+  AutocompleteInputResult res{ kws };
+
+  return res;
+}
+
+std::vector<const Keyword*> ViretDataPack::get_frame_top_classes(FrameId frame_ID,
+                                                                 std::vector<ModelKeyValOption> opt_key_vals, bool accumulated) const
+{
+  bool max_based{ false };
+  std::string transform_ID{ "linear_01" };
+
+  for (auto&& [key, val] : opt_key_vals)
+  {
+    if (key == "transform")
+    {
+      transform_ID = val;
+    }
+    else if (key == "model_operations")
+    {
+      // If max-based model
+      if (val == "mult-max" || val == "sum-max" || val == "max-max")
+      {
+        max_based = true;
+      }
+    }
+  }
+
+  // Choose desired transform
+  auto iter_t = _transforms.find(transform_ID);
+  if (iter_t == _transforms.end())
+  {
+    LOGE("Tranform not found!");
+  }
+  const auto& transform = *(iter_t->second);
+
+  const DataInfo* p_data_info{nullptr};
+
+  if (accumulated)
+  {
+    p_data_info =  max_based ? &transform.data_max_info() : &transform.data_sum_info();
+  } 
+  else {
+    p_data_info = &transform.data_linear_raw_info();
+  }
+
+  const auto& kw_IDs{ p_data_info->top_classes[frame_ID] };
+
+
+  std::vector<const Keyword*> res;
+
+  std::transform(kw_IDs.begin(), kw_IDs.end(), std::back_inserter(res),
+                 [this](const size_t& kw_ID) { return &_keywords[kw_ID]; });
+
+  return res;
+};
+
+void ViretDataPack::cache_up_example_images(const std::vector<const Keyword*>& kws,
+                                            const std::string& model_commands) const
+{
   auto hasher{ std::hash<std::string>{} };
 
   size_t curr_opts_hash{ hasher(model_commands) };
 
-  for (auto&& p_kw : kws)
+  for (auto&& cp_kw : kws)
   {
-    if (curr_opts_hash != p_kw->lastExampleFramesHash)
-    {
-      CnfFormula fml{ Clause{ Literal<KeywordId>{ p_kw->ID } } };
+   
+    Keyword& kw{ _keywords[cp_kw->ID]};
 
-      std::vector<CnfFormula> v{ fml  };
+    if (curr_opts_hash != kw.lastExampleFramesHash)
+    {
+      CnfFormula fml{ Clause{ Literal<KeywordId>{ kw.ID } } };
+
+      std::vector<CnfFormula> v{ fml };
 
       // Rank frames with query "this_kw"
       auto ranked_frames{ rank_frames(v, model_commands, NUM_EXAMPLE_FRAMES) };
 
-      p_kw->m_exampleImageFilenames.clear();
+      kw.m_exampleImageFilenames.clear();
       for (auto&& f_ID : ranked_frames.m_frames)
       {
         std::string filename{ get_imageset_ptr()->operator[](f_ID).m_filename };
-        p_kw->m_exampleImageFilenames.emplace_back(std::move(filename));
+        kw.m_exampleImageFilenames.emplace_back(std::move(filename));
       }
 
       // Update hash
-      p_kw->lastExampleFramesHash = curr_opts_hash;
+      kw.lastExampleFramesHash = curr_opts_hash;
     }
-
-    res_kws.emplace_back(p_kw);
   }
-
-  AutocompleteInputResult res{ res_kws };
-
-  return res;
 }
 
 DataPackInfo ViretDataPack::get_info() const

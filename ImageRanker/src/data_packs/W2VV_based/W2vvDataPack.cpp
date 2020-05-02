@@ -182,7 +182,7 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestNativeQuery>&
 
 AutocompleteInputResult W2vvDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,
                                                                bool with_example_images,
-                                                               PackModelCommands model_commands) const
+                                                               const std::string& model_commands) const
 {
   return {_keywords.GetNearKeywordsPtrs(query_prefix, result_size)};
 }

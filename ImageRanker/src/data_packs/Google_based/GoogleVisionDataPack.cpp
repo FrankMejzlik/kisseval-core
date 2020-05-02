@@ -210,7 +210,7 @@ ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery
 
 AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std::string& query_prefix,
                                                                        size_t result_size,
-                                                                       bool with_example_image, PackModelCommands model_commands) const
+                                                                       bool with_example_image, const std::string& model_commands) const
 {
   auto kws = _keywords.GetNearKeywordsPtrs(query_prefix, result_size);
 
