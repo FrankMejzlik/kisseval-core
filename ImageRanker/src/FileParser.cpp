@@ -356,7 +356,7 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
 
 std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
            std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>,
-           std::map<KeywordId, Keyword*>>
+           std::map<KeywordId, Keyword*>, std::map<KeywordId, std::set<Keyword*>>>
 FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, bool first_col_is_ID)
 {
   // Open file with list of files in images dir
@@ -375,6 +375,7 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, boo
   std::vector<std::pair<size_t, Keyword*>> _descIndexToKeyword;
   std::vector<std::unique_ptr<Keyword>> _keywords;
   std::map<KeywordId, Keyword*> ID_to_keyword;
+  std::map<KeywordId, std::set<Keyword*>> ID_to_allkeywords;
 
   std::string lineBuffer;
   size_t iii{ 0 };
@@ -466,6 +467,7 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, boo
       frame_ID = FrameId(vectorIndex);
     }
 
+    std::set<Keyword*> syn_kws;
     // Insert all synonyms as well
     while (std::getline(classnames, finalWord, SYNONYM_DELIMITER_001))
     {
@@ -484,14 +486,18 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, boo
 
       // Insert into vector index -> Keyword
       _vecIndexToKeyword.insert(std::make_pair(vectorIndex, _keywords.back().get()));
+
+      syn_kws.emplace(_keywords.back().get());
     }
 
+    ID_to_allkeywords.insert(std::make_pair(frame_ID, std::move(syn_kws)));
     ID_to_keyword.insert(std::make_pair(frame_ID, _keywords.back().get()));
     ++iii;
   }
 
   return std::tuple{ std::move(_allDescriptions),    std::move(_vecIndexToKeyword), std::move(_wordnetIdToKeywords),
-                     std::move(_descIndexToKeyword), std::move(_keywords),          std::move(ID_to_keyword) };
+                     std::move(_descIndexToKeyword), std::move(_keywords),          std::move(ID_to_keyword),
+                     std::move(ID_to_allkeywords) };
 }
 
 std::pair<std::vector<std::vector<float>>, std::vector<std::vector<std::pair<FrameId, float>>>>

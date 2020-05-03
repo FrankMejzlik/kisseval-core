@@ -317,27 +317,34 @@ void ViretDataPack::cache_up_example_images(const std::vector<const Keyword*>& k
 
   for (auto&& cp_kw : kws)
   {
-   
-    Keyword& kw{ _keywords[cp_kw->ID]};
+    const auto& all_kws_with_ID {_keywords.get_all_keywords_ptrs(cp_kw->ID)};
 
-    if (curr_opts_hash != kw.lastExampleFramesHash)
+    // Check if images are already cached
+    Keyword& kw{ **all_kws_with_ID.begin() };
+    if (curr_opts_hash == kw.lastExampleFramesHash)
     {
-      CnfFormula fml{ Clause{ Literal<KeywordId>{ kw.ID } } };
+      continue;
+    }
 
-      std::vector<CnfFormula> v{ fml };
+    // Get example images
+    CnfFormula fml{ Clause{ Literal<KeywordId>{ kw.ID } } };
+    std::vector<CnfFormula> v{ fml };
 
-      // Rank frames with query "this_kw"
-      auto ranked_frames{ rank_frames(v, model_commands, NUM_EXAMPLE_FRAMES) };
+    // Rank frames with query "this_kw"
+    auto ranked_frames{ rank_frames(v, model_commands, NUM_EXAMPLE_FRAMES) };
 
-      kw.m_exampleImageFilenames.clear();
+    // Store them in all keyword synonyms
+    for (auto&& p_kw : all_kws_with_ID)
+    {
+      p_kw->m_exampleImageFilenames.clear();
       for (auto&& f_ID : ranked_frames.m_frames)
       {
         std::string filename{ get_imageset_ptr()->operator[](f_ID).m_filename };
-        kw.m_exampleImageFilenames.emplace_back(std::move(filename));
+        p_kw->m_exampleImageFilenames.emplace_back(std::move(filename));
       }
 
       // Update hash
-      kw.lastExampleFramesHash = curr_opts_hash;
+      p_kw->lastExampleFramesHash = curr_opts_hash;
     }
   }
 }

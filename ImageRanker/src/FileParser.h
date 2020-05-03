@@ -50,7 +50,7 @@ class FileParser
   static Matrix<float> ParseRawScoringData_GoogleAiVisionFormat(const std::string& inputFilepath);
   static std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
                     std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>,
-                    std::map<KeywordId, Keyword*>>
+                    std::map<KeywordId, Keyword*>, std::map<KeywordId, std::set<Keyword*>>>
   ParseKeywordClassesFile_ViretFormat(const std::string& filepath, bool first_col_is_ID = false);
 
   FileParser(ImageRanker* pRanker);

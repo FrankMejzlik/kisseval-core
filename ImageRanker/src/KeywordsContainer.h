@@ -96,12 +96,20 @@ class KeywordsContainer
     return *_ID_to_keyword.at(keyword_ID);
   }
 
+
+  std::set<Keyword*>& get_all_keywords_ptrs(KeywordId keyword_ID)
+  {
+    return _ID_to_allkeywords.at(keyword_ID);
+  }
+  
+
  private:
   std::string _ID;
   std::string _description;
   std::string _kw_classes_fpth;
 
   std::map<KeywordId, Keyword*> _ID_to_keyword;
+  std::map<KeywordId, std::set<Keyword*>> _ID_to_allkeywords;
 
  public:
   void SubstringExpansionPrecompute()

@@ -27,7 +27,7 @@ int main()
 #define TEST_get_frame_detail_data 1
 
 #define TEST_get_random_frame_sequence 0
-#define TEST_get_autocomplete_results 0
+#define TEST_get_autocomplete_results 1
 #define TEST_get_loaded_imagesets_info 0
 #define TEST_rank_frames 0
 #define TEST_run_model_test 0
@@ -101,12 +101,12 @@ int main()
 #if TEST_get_autocomplete_results
   {
     auto r1 =
-        ranker.get_autocomplete_results("NasNet2019", "entity", 20, true,
+        ranker.get_autocomplete_results("NasNet2019", "w", 20, true,
                                         "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_"
                                         "outter_op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;");
 
     r1 =
-        ranker.get_autocomplete_results("NasNet2019", "entity", 20, true,
+        ranker.get_autocomplete_results("NasNet2019", "we", 20, true,
                                         "model=mult-sum-max;model_operations=mult-max;model_ignore_treshold=0.00;model_"
                                         "outter_op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;");
 

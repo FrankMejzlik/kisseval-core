@@ -450,7 +450,7 @@ bool ImageRanker::submit_search_session(const std::string& data_pack_ID, const s
                                         const std::vector<InteractiveSearchAction>& actions)
 {
   const BaseDataPack& dp{ data_pack(data_pack_ID) };
-  const std::string& imageset_ID{ dp.target_imageset_ID() };
+  const std::string& imageset_ID{ dp.get_vocab_ID() };
 
   return _data_manager.submit_search_session(data_pack_ID, imageset_ID, model_commands, user_level, with_example_images,
                                              target_frame_ID, end_status, duration, sessionId, actions);

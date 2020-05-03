@@ -73,7 +73,7 @@
         ],
         "Google_based": [
             {
-                "active": true,
+                "active": false,
                 "ID": "GoogleVisionAi_Sep2019",
                 "name": "GoogleVisionAi_Sep2019",
                 "description": "Google_based",
@@ -95,7 +95,7 @@
                 "ID": "W2VV_BoW_Dec2019",
                 "name": "W2VV_BoW_Dec2019",
                 "description": "W2VV_based",
-                "model_options": "",
+                "model_options": "model=w2vv_bow_plain;model_sub_PCA_mean=true;",
                 "vocabulary": {
                     "ID": "native_language",
                     "description": "Supported ~12k words.",

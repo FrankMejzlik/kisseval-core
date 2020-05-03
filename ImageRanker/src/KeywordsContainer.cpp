@@ -76,6 +76,7 @@ KeywordsContainer::KeywordsContainer(const ViretDataPackRef::VocabData& vocab_da
   _descIndexToKeyword = std::move(std::get<3>(res));
   _keywords = std::move(std::get<4>(res));
   _ID_to_keyword = std::move(std::get<5>(res));
+  _ID_to_allkeywords = std::move(std::get<6>(res));
 
   // Sort keywords
   std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
