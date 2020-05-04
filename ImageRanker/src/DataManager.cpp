@@ -206,3 +206,10 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
     LOGE("Failed to insert into:" + db_name + "`.`" + search_actions_table_name + "!");
   }
 }
+
+[[nodiscard]] QuantileLineChartData get_search_sessions_rank_progress_chart_data(
+      const std::string& data_pack_ID, const std::string& model_options, size_t max_user_level) const
+{
+  LOGW("Not implemented");
+  return QuantileLineChartData{};
+}

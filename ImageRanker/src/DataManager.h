@@ -28,7 +28,19 @@ class DataManager
                              FrameId target_frame_ID, eSearchSessionEndStatus end_status, size_t duration,
                              const std::string& sessionId, const std::vector<InteractiveSearchAction>& actions);
 
- private:
+  /**
+   * Returns struct containing chart data showing Q1, Q2, Q3 for progress of ranks for currently collected search
+   * sessions.
+   *
+   * \param   data_pack_ID    Collected data over this `data_pack_ID` will be used for the chart generation.
+   * \param   model_options   Additional specification on what data will be used as source data.
+   * \param   max_user_level  Maximum user level records that will be used for generating the data.
+   * \return                  Struct with data needed for plotting the chart.
+   */
+  [[nodiscard]] QuantileLineChartData get_search_sessions_rank_progress_chart_data(
+      const std::string& data_pack_ID, const std::string& model_options, size_t max_user_level) const;
+
+
  private:
   ImageRanker* _p_owner;
   Database _db;

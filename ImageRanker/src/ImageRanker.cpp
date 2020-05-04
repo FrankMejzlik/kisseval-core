@@ -333,6 +333,15 @@ std::vector<const SelFrame*> ImageRanker::frame_successors(const std::string& im
   return res;
 }
 
+QuantileLineChartData ImageRanker::get_search_sessions_rank_progress_chart_data(
+      const std::string& data_pack_ID, const std::string& model_options, size_t max_user_level) const
+{
+  auto res{_data_manager.get_search_sessions_rank_progress_chart_data(data_pack_ID, model_options, max_user_level)};
+
+  return res;
+}
+
+
 LoadedImagesetsInfo ImageRanker::get_loaded_imagesets_info() const
 {
   std::vector<ImagesetInfo> infos;
