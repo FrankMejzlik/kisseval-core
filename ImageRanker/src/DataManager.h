@@ -37,9 +37,9 @@ class DataManager
    * \param   max_user_level  Maximum user level records that will be used for generating the data.
    * \return                  Struct with data needed for plotting the chart.
    */
-  [[nodiscard]] QuantileLineChartData get_search_sessions_rank_progress_chart_data(
-      const std::string& data_pack_ID, const std::string& model_options, size_t max_user_level) const;
-
+  [[nodiscard]] QuantileLineChartData get_search_sessions_rank_progress_chart_data(const std::string& data_pack_ID,
+                                                                                   const std::string& model_options,
+                                                                                   size_t max_user_level) const;
 
  private:
   ImageRanker* _p_owner;

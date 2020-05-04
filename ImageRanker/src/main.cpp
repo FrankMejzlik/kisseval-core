@@ -22,9 +22,12 @@ int main()
 
   ImageRanker ranker(cfg);
 
+  // Statistics
+#define TEST_get_search_sessions_rank_progress_chart_data 1
+
 #define TEST_submit_annotator_user_queries 0
 #define TEST_submit_search_session 0
-#define TEST_get_frame_detail_data 1
+#define TEST_get_frame_detail_data 0
 
 #define TEST_get_random_frame_sequence 0
 #define TEST_get_autocomplete_results 1
@@ -37,6 +40,53 @@ int main()
 #define TEST_run_model_test_Google 0
 #define TEST_boolean_grid_test_threshold_Google 0
 #define TEST_run_model_test_W2VV 0
+
+#if TEST_get_search_sessions_rank_progress_chart_data
+  {
+    auto r1 = ranker.get_search_sessions_rank_progress_chart_data("NasNet2019", ""s);
+    std::cout << "xs: \t";
+    for (auto&& val : r1.x)
+    {
+      std::cout << val << "\t";
+    }
+    std::cout << std::endl;
+
+    std::cout << "mins: \t";
+    for (auto&& val : r1.y_min)
+    {
+      std::cout << val << "\t";
+    }
+    std::cout << std::endl;
+
+    std::cout << "Q1s: \t";
+    for (auto&& val : r1.y_q1)
+    {
+      std::cout << val << "\t";
+    }
+    std::cout << std::endl;
+
+    std::cout << "Q2s: \t";
+    for (auto&& val : r1.y_q2)
+    {
+      std::cout << val << "\t";
+    }
+    std::cout << std::endl;
+
+    std::cout << "Q3s: \t";
+    for (auto&& val : r1.y_q3)
+    {
+      std::cout << val << "\t";
+    }
+    std::cout << std::endl;
+
+    std::cout << "maxes: \t";
+    for (auto&& val : r1.y_max)
+    {
+      std::cout << val << "\t";
+    }
+    std::cout << std::endl;
+  }
+#endif
 
   // TEST: `submit_annotator_user_queries`
 #if TEST_submit_annotator_user_queries

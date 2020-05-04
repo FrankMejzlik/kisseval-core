@@ -302,12 +302,14 @@ struct FrameDetailData
   std::vector<const Keyword*> top_keywords;
 };
 
-struct QuantileLineChartData 
+struct QuantileLineChartData
 {
   std::vector<float> x;
+  std::vector<float> y_min;
   std::vector<float> y_q1;
   std::vector<float> y_q2;
   std::vector<float> y_q3;
+  std::vector<float> y_max;
 };
 
 /**
