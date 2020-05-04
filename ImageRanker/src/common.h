@@ -302,14 +302,22 @@ struct FrameDetailData
   std::vector<const Keyword*> top_keywords;
 };
 
+template <typename XType, typename FXType>
 struct QuantileLineChartData
 {
-  std::vector<float> x;
-  std::vector<float> y_min;
-  std::vector<float> y_q1;
-  std::vector<float> y_q2;
-  std::vector<float> y_q3;
-  std::vector<float> y_max;
+  std::vector<XType> x;
+  std::vector<FXType> y_min;
+  std::vector<FXType> y_q1;
+  std::vector<FXType> y_q2;
+  std::vector<FXType> y_q3;
+  std::vector<FXType> y_max;
+};
+
+template <typename XType, typename FXType>
+struct HistogramChartData
+{
+  std::vector<XType> x;
+  std::vector<FXType> fx;
 };
 
 /**

@@ -207,19 +207,18 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
   }
 }
 
-QuantileLineChartData DataManager::get_search_sessions_rank_progress_chart_data(const std::string& data_pack_ID,
-                                                                                const std::string& model_options,
-                                                                                size_t max_user_level) const
+QuantileLineChartData<size_t, float> DataManager::get_search_sessions_rank_progress_chart_data(
+    const std::string& data_pack_ID, const std::string& model_options, size_t max_user_level) const
 {
   LOGW("Not implemented");
 
-  QuantileLineChartData res;
-  res.x = std::vector<float>{ 1.0F, 2.0F, 3.0F, 4.0F, 5.0F };
-  res.y_min = std::vector<float>{ 200.0F, 1400.0F, 100.0F, 60.0F, 20.0F };
+  QuantileLineChartData<size_t, float> res;
+  res.x = std::vector<size_t>{ 1, 2, 3, 4, 5 };
+  res.y_min = std::vector<float>{ 200.0F, 250.0F, 100.0F, 60.0F, 20.0F };
 
   res.y_q1 = std::vector<float>{ 2000.0F, 1000.0F, 500.0F, 500.0F, 400.0F };
-  res.y_q2 = std::vector<float>{ 3000.0F, 2000.0F, 1000.0F, 600.0F, 500.0F };
-  res.y_q3 = std::vector<float>{ 6000.0F, 2000.0F, 100.0F, 1000.0F, 800.0F };
+  res.y_q2 = std::vector<float>{ 4000.0F, 2000.0F, 1000.0F, 600.0F, 500.0F };
+  res.y_q3 = std::vector<float>{ 8000.0F, 4000.0F, 3000.0F, 2000.0F, 800.0F };
 
   res.y_max = std::vector<float>{ 18000.0F, 14000.0F, 10000.0F, 6000.0F, 5000.0F };
 

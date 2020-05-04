@@ -24,13 +24,14 @@ int main()
 
   // Statistics
 #define TEST_get_search_sessions_rank_progress_chart_data 1
+#define TEST_get_histogram_used_labels 1
 
 #define TEST_submit_annotator_user_queries 0
 #define TEST_submit_search_session 0
 #define TEST_get_frame_detail_data 0
 
 #define TEST_get_random_frame_sequence 0
-#define TEST_get_autocomplete_results 1
+#define TEST_get_autocomplete_results 0
 #define TEST_get_loaded_imagesets_info 0
 #define TEST_rank_frames 0
 #define TEST_run_model_test 0
@@ -81,6 +82,25 @@ int main()
 
     std::cout << "maxes: \t";
     for (auto&& val : r1.y_max)
+    {
+      std::cout << val << "\t";
+    }
+    std::cout << std::endl;
+  }
+#endif
+
+#if TEST_get_histogram_used_labels
+  {
+    auto r1 = ranker.get_histogram_used_labels("NasNet2019", ""s);
+    std::cout << "xs: \t";
+    for (auto&& val : r1.x)
+    {
+      std::cout << val << "\t";
+    }
+    std::cout << std::endl;
+
+    std::cout << "fxs: \t";
+    for (auto&& val : r1.fx)
     {
       std::cout << val << "\t";
     }

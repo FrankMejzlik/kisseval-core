@@ -333,12 +333,23 @@ std::vector<const SelFrame*> ImageRanker::frame_successors(const std::string& im
   return res;
 }
 
-QuantileLineChartData ImageRanker::get_search_sessions_rank_progress_chart_data(const std::string& data_pack_ID,
-                                                                                const std::string& model_options,
-                                                                                size_t max_user_level) const
+QuantileLineChartData<size_t, float> ImageRanker::get_search_sessions_rank_progress_chart_data(
+    const std::string& data_pack_ID, const std::string& model_options, size_t max_user_level) const
 {
   auto res{ _data_manager.get_search_sessions_rank_progress_chart_data(data_pack_ID, model_options, max_user_level) };
 
+  return res;
+}
+
+HistogramChartData<size_t, float> ImageRanker::get_histogram_used_labels(const std::string& data_pack_ID,
+                                                                         const std::string& model_options,
+                                                                         size_t num_points, bool accumulated,
+                                                                         size_t max_user_level) const
+{
+  HistogramChartData<size_t, float> res;
+
+  res.x = std::vector<size_t>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+  res.fx = std::vector<float>{ 0.1F, 0.2F, 0.05F, 0.05F, 0.05F, 0.01F, 0.005F, 0.0005F, 0.005F, 0.000001F };
   return res;
 }
 
