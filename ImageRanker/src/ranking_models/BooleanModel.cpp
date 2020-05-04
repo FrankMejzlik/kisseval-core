@@ -74,7 +74,7 @@ RankingResult BooleanModel::rank_frames(const BaseVectorTransform& transformed_d
       // \todo Add temporal ranking
       if (user_query.size() > 1)
       {
-        throw NotSuportedModelOption("Boolean model does not support temporal queries.");
+        throw NotSuportedModelOptionExcept("Boolean model does not support temporal queries.");
       }
       ++i;
     }

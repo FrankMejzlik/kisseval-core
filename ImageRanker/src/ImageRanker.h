@@ -18,6 +18,9 @@ using namespace std::string_literals;
 
 namespace image_ranker
 {
+/**
+ * Main public API of this library.
+ */
 class ImageRanker
 {
   /****************************
@@ -107,10 +110,21 @@ class ImageRanker
 
   AutocompleteInputResult get_autocomplete_results(const std::string& data_pack_ID, const std::string& query_prefix,
                                                    size_t result_size, bool with_example_images,
-                                                   const PackModelCommands& model_options) const;
+                                                   const std::string& model_options) const;
 
   [[nodiscard]] std::vector<const SelFrame*> frame_successors(const std::string& imageset_ID, FrameId ID,
                                                               size_t num_succs) const;
+
+  /**
+   * Returns struct containing chart data showing Q1, Q2, Q3 for progress of ranks for currently collected search
+   * sessions.
+   *
+   * \param   data_pack_ID    Collected data over this `data_pack_ID` will be used for the chart generation.
+   * \param   model_options   Additional specification on what data will be used as source data.
+   * \return                  Struct with data needed for plotting the chart.
+   */
+  [[nodiscard]] QuantileLineChartData get_search_sessions_rank_progress_chart_data(
+      const std::string& data_pack_ID, const std::string& model_options) const;
 
   LoadedImagesetsInfo get_loaded_imagesets_info() const;
   LoadedDataPacksInfo get_loaded_data_packs_info() const;

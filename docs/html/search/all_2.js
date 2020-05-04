@@ -1,4 +1,30 @@
 var searchData=
 [
-  ['imageranker_20for_20kiseval',['ImageRanker for KISEval',['../index.html',1,'']]]
+  ['baseclassificationmodel',['BaseClassificationModel',['../classimage__ranker_1_1_base_classification_model.html',1,'image_ranker']]],
+  ['baseclassificationmodel_2ecpp',['BaseClassificationModel.cpp',['../_base_classification_model_8cpp.html',1,'']]],
+  ['baseclassificationmodel_2eh',['BaseClassificationModel.h',['../_base_classification_model_8h.html',1,'']]],
+  ['basedatapack',['BaseDataPack',['../classimage__ranker_1_1_base_data_pack.html',1,'image_ranker::BaseDataPack'],['../classimage__ranker_1_1_base_data_pack.html#a876112e9c438f22baa1f9c5ae398b0ad',1,'image_ranker::BaseDataPack::BaseDataPack()']]],
+  ['basedatapack_2eh',['BaseDataPack.h',['../_base_data_pack_8h.html',1,'']]],
+  ['basedatapackref',['BaseDataPackRef',['../structimage__ranker_1_1_base_data_pack_ref.html',1,'image_ranker']]],
+  ['baseimageset',['BaseImageset',['../classimage__ranker_1_1_base_imageset.html',1,'image_ranker']]],
+  ['baseimageset_2eh',['BaseImageset.h',['../_base_imageset_8h.html',1,'']]],
+  ['baseimagesetkref',['BaseImagesetkRef',['../structimage__ranker_1_1_base_imagesetk_ref.html',1,'image_ranker']]],
+  ['basemodel',['BaseModel',['../classimage__ranker_1_1_base_model.html',1,'image_ranker']]],
+  ['basesimuser',['BaseSimUser',['../classimage__ranker_1_1_base_sim_user.html',1,'image_ranker']]],
+  ['basespacemodel',['BaseSpaceModel',['../classimage__ranker_1_1_base_space_model.html',1,'image_ranker']]],
+  ['basespacemodel_2ecpp',['BaseSpaceModel.cpp',['../_base_space_model_8cpp.html',1,'']]],
+  ['basespacemodel_2eh',['BaseSpaceModel.h',['../_base_space_model_8h.html',1,'']]],
+  ['basevectortransform',['BaseVectorTransform',['../classimage__ranker_1_1_base_vector_transform.html',1,'image_ranker::BaseVectorTransform'],['../classimage__ranker_1_1_base_vector_transform.html#a5f73576a20b31b59a078aecd5a4b0721',1,'image_ranker::BaseVectorTransform::BaseVectorTransform()']]],
+  ['basevectortransform_2ecpp',['BaseVectorTransform.cpp',['../_base_vector_transform_8cpp.html',1,'']]],
+  ['basevectortransform_2eh',['BaseVectorTransform.h',['../_base_vector_transform_8h.html',1,'']]],
+  ['basew2vvmodel',['BaseW2vvModel',['../classimage__ranker_1_1_base_w2vv_model.html',1,'image_ranker']]],
+  ['basew2vvmodel_2ecpp',['BaseW2vvModel.cpp',['../_base_w2vv_model_8cpp.html',1,'']]],
+  ['basew2vvmodel_2eh',['BaseW2vvModel.h',['../_base_w2vv_model_8h.html',1,'']]],
+  ['boolean',['BOOLEAN',['../named__types_8h.html#adbef82fe9ac64cc4b37ee302e563d497ac48d5da12d702e73d6966069f2687376',1,'named_types.h']]],
+  ['boolean_5fbucket',['BOOLEAN_BUCKET',['../named__types_8h.html#adbef82fe9ac64cc4b37ee302e563d497a6c74f9dedd184d0dd9b3e079fa8249eb',1,'named_types.h']]],
+  ['booleanmodel',['BooleanModel',['../classimage__ranker_1_1_boolean_model.html',1,'image_ranker']]],
+  ['booleanmodel_2ecpp',['BooleanModel.cpp',['../_boolean_model_8cpp.html',1,'']]],
+  ['booleanmodel_2eh',['BooleanModel.h',['../_boolean_model_8h.html',1,'']]],
+  ['bow',['BOW',['../namespaceimage__ranker.html#aea259e8d4a9f97d65a62ef72e5821bd0a88b32ad640ab8b35c85bb25fb4a75e11',1,'image_ranker']]],
+  ['buffer',['Buffer',['../namespaceimage__ranker.html#ab191a9de4bbd0ac91d0b20d8bcf5fe72',1,'image_ranker']]]
 ];

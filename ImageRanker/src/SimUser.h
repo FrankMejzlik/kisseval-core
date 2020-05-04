@@ -26,7 +26,7 @@ class BaseSimUser
                                                                 std::vector<ModelKeyValOption>& options,
                                                                 size_t count, size_t temporal_count = 1_z) const
   {
-    throw NotSuportedModelOption("Single queries generation not suported for this options combinations.");
+    throw NotSuportedModelOptionExcept("Single queries generation not suported for this options combinations.");
     return std::vector<UserTestQuery>{};
   };
 };

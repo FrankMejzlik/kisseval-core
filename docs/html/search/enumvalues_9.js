@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['manhattan',['MANHATTAN',['../named__types_8h.html#aa77866a6c97e47ee727c76373b20066fa20548c3a17d5b27db0c2995b6646a792',1,'named_types.h']]],
+  ['max',['MAX',['../namespaceimage__ranker.html#abd545ebd6eda666758feb50c396e5e74a26a4b44a837bf97b972628509912b4a5',1,'image_ranker']]],
+  ['model_5fdist_5ffn',['MODEL_DIST_FN',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928a35598a6afdf62e9ae7ad37069524bf66',1,'named_types.h']]],
+  ['model_5fid',['MODEL_ID',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928a418812cc6f69bcc5f961ddfd4310edeb',1,'named_types.h']]],
+  ['model_5fidf_5fcoef',['MODEL_IDF_COEF',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928a59a20198eab845e89c00e01fc6841be1',1,'named_types.h']]],
+  ['model_5fignore_5fthreshold',['MODEL_IGNORE_THRESHOLD',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928a8d1014c73c6f5f067ee3537659d2bc4c',1,'named_types.h']]],
+  ['model_5finner_5fop',['MODEL_INNER_OP',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928a167bbaaadd9b7703c97f8d85439513b3',1,'named_types.h']]],
+  ['model_5foperations',['MODEL_OPERATIONS',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928a9f4b9043127f4ecd67bcc7588a9328e5',1,'named_types.h']]],
+  ['model_5foutter_5fop',['MODEL_OUTTER_OP',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928a15cdcc70211b4e9881d4d468ff0eb8b9',1,'named_types.h']]],
+  ['model_5fquery_5fidf',['MODEL_QUERY_IDF',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928a7ef8b5771e0401d0a301621e5a4e51e1',1,'named_types.h']]],
+  ['model_5fquery_5ftf',['MODEL_QUERY_TF',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928af91670080f28e62c89c6d37daff18849',1,'named_types.h']]],
+  ['model_5fsub_5fpca_5fmean',['MODEL_SUB_PCA_MEAN',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928abe81967ae1411b91e495b5d1e9ebff07',1,'named_types.h']]],
+  ['model_5fterm_5fidf',['MODEL_TERM_IDF',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928ab982a30a88138cba226949b5c12fab6c',1,'named_types.h']]],
+  ['model_5fterm_5ftf',['MODEL_TERM_TF',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928a4a07197f4ffd02699c26bf7513f580df',1,'named_types.h']]],
+  ['model_5ftrue_5fthreshold',['MODEL_TRUE_THRESHOLD',['../named__types_8h.html#a166dbb722235d773fa715bbeed57e928a8a60e19adb3202d949f0f780c0b2e6a8',1,'named_types.h']]],
+  ['mult_5fsum_5fmax',['MULT_SUM_MAX',['../named__types_8h.html#adbef82fe9ac64cc4b37ee302e563d497a1d3981585163163eedb6f2c41ac86619',1,'named_types.h']]]
+];

@@ -34,7 +34,7 @@ class BaseDataPack
   {
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested.");
-    throw NotSuportedModelOption("This data pack does not support this.");
+    throw NotSuportedModelOptionExcept("This data pack does not support this.");
   };
 
   [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(
@@ -42,7 +42,7 @@ class BaseDataPack
   {
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested.");
-    throw NotSuportedModelOption("This data pack does not support this.");
+    throw NotSuportedModelOptionExcept("This data pack does not support this.");
   };
 
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
@@ -52,7 +52,7 @@ class BaseDataPack
   {
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested.");
-    throw NotSuportedModelOption("This data pack does not support this.");
+    throw NotSuportedModelOptionExcept("This data pack does not support this.");
   };
 
   [[nodiscard]] virtual const std::string& get_vocab_ID() const = 0;
@@ -63,7 +63,7 @@ class BaseDataPack
                                                                  size_t count) const
   {
     LOGE("Unsupported data pack feature requested.");
-    throw NotSuportedModelOption("This data pack does not support this.");
+    throw NotSuportedModelOptionExcept("This data pack does not support this.");
   };
 
   [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix,
@@ -73,7 +73,7 @@ class BaseDataPack
   virtual void cache_up_example_images(const std::vector<const Keyword*>& kws, const std::string& model_commands) const
   {
     LOGE("Unsupported data pack feature requested.");
-    throw NotSuportedModelOption("This data pack does not support this.");
+    throw NotSuportedModelOptionExcept("This data pack does not support this.");
   };
 
   [[nodiscard]] virtual DataPackInfo get_info() const = 0;

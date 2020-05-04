@@ -1,0 +1,26 @@
+var classimage__ranker_1_1_base_data_pack =
+[
+    [ "BaseDataPack", "classimage__ranker_1_1_base_data_pack.html#a876112e9c438f22baa1f9c5ae398b0ad", null ],
+    [ "cache_up_example_images", "classimage__ranker_1_1_base_data_pack.html#a6bc3148017533d9c4ee09147bab97de3", null ],
+    [ "get_autocomplete_results", "classimage__ranker_1_1_base_data_pack.html#a7d86133e623116a428cffaeaf212df14", null ],
+    [ "get_description", "classimage__ranker_1_1_base_data_pack.html#af0df8e57d8aae8f2baf1fddaa40cfb24", null ],
+    [ "get_frame_top_classes", "classimage__ranker_1_1_base_data_pack.html#ab7a1c36f25abe80d519f8246d2e8ec2a", null ],
+    [ "get_ID", "classimage__ranker_1_1_base_data_pack.html#a3d0a1da1b31b3f6ac6d710c7862620cb", null ],
+    [ "get_imageset_ptr", "classimage__ranker_1_1_base_data_pack.html#a217dfeaeb9e2e1632e9f1d98acb7ec6e", null ],
+    [ "get_info", "classimage__ranker_1_1_base_data_pack.html#a0953d6c0e6f5137a0d8eb8d53a9df185", null ],
+    [ "get_model_options", "classimage__ranker_1_1_base_data_pack.html#a0c8f61630854e4a4c8b47cbfd00d8a58", null ],
+    [ "get_vocab_description", "classimage__ranker_1_1_base_data_pack.html#ac2d7b09169ed4f04bbdeada3c9c6bd3c", null ],
+    [ "get_vocab_ID", "classimage__ranker_1_1_base_data_pack.html#a8d58c79870d95ec1eaf707a8bcedabc2", null ],
+    [ "humanize_and_query", "classimage__ranker_1_1_base_data_pack.html#abe905c85b1cf6c858643fbe13f49f74a", null ],
+    [ "rank_frames", "classimage__ranker_1_1_base_data_pack.html#a1feb716ec167d8ef570edec019823acb", null ],
+    [ "rank_frames", "classimage__ranker_1_1_base_data_pack.html#afd724049aa9073bbb02e1748bfd34004", null ],
+    [ "target_imageset_ID", "classimage__ranker_1_1_base_data_pack.html#ad86bee377b4ea10af5c17c0af27dad67", null ],
+    [ "test_model", "classimage__ranker_1_1_base_data_pack.html#a250c8f7f4aa1ed57f8c7cc85a4bcdbc0", null ],
+    [ "test_model", "classimage__ranker_1_1_base_data_pack.html#afdc3403bf57da2752f43677bf3c4547f", null ],
+    [ "top_frame_keywords", "classimage__ranker_1_1_base_data_pack.html#acbf88f4b59b38cd22699160d99336558", null ],
+    [ "_description", "classimage__ranker_1_1_base_data_pack.html#ad3a09c878eefd8106d064438e778a5d0", null ],
+    [ "_ID", "classimage__ranker_1_1_base_data_pack.html#ac795cd0908cd0959abe0ddaed74dfce9", null ],
+    [ "_model_options", "classimage__ranker_1_1_base_data_pack.html#af18b33098c2bf386a0b9948c4658002d", null ],
+    [ "_p_is", "classimage__ranker_1_1_base_data_pack.html#ae726fe973ca85b87d83473655784f031", null ],
+    [ "_target_imageset_ID", "classimage__ranker_1_1_base_data_pack.html#a73731e11e570c69039ea8b54b3212fd2", null ]
+];

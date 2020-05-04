@@ -302,6 +302,14 @@ struct FrameDetailData
   std::vector<const Keyword*> top_keywords;
 };
 
+struct QuantileLineChartData 
+{
+  std::vector<float> x;
+  std::vector<float> y_q1;
+  std::vector<float> y_q2;
+  std::vector<float> y_q3;
+};
+
 /**
  * Keywords that are possible for given prefix.
  */

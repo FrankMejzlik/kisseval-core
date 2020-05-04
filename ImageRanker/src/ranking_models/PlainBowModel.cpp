@@ -154,7 +154,7 @@ RankingResult PlainBowModel::rank_frames(const Matrix<float>& data_mat, const Ma
       // \todo Add temporal ranking
       if (user_query.size() > 1)
       {
-        throw NotSuportedModelOption("Temporal queries not yet suported with this model.");
+        throw NotSuportedModelOptionExcept("Temporal queries not yet suported with this model.");
       }
       ++i;
     }
