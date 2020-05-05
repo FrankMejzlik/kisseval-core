@@ -124,8 +124,9 @@ class ImageRanker
    * \param   max_user_level  Maximum user level records that will be used for generating the data.
    * \return                  Struct with data needed for plotting the chart.
    */
-  [[nodiscard]] QuantileLineChartData<size_t, float> get_search_sessions_rank_progress_chart_data(
-      const std::string& data_pack_ID, const std::string& model_options = ""s, size_t max_user_level = 9_z) const;
+  [[nodiscard]] SearchSessRankChartData get_search_sessions_rank_progress_chart_data(
+      const std::string& data_pack_ID, const std::string& model_options = ""s, size_t max_user_level = 9_z,
+      size_t min_samples = 50_z, bool normalize = true) const;
 
   [[nodiscard]] HistogramChartData<size_t, float> get_histogram_used_labels(const std::string& data_pack_ID,
                                                                             const std::string& model_options,

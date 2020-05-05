@@ -207,20 +207,246 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
   }
 }
 
-QuantileLineChartData<size_t, float> DataManager::get_search_sessions_rank_progress_chart_data(
-    const std::string& data_pack_ID, const std::string& model_options, size_t max_user_level) const
+SearchSessRankChartData DataManager::get_search_sessions_rank_progress_chart_data(
+    const std::string& data_pack_ID, const std::string& model_options, size_t max_user_level, size_t num_frames,
+    size_t min_samples_count, bool normalize) const
 {
   LOGW("Not implemented");
 
+  std::stringstream SQL_query_sessions_ss;
+  SQL_query_sessions_ss << "SELECT `ID`, `target_frame_ID`, `duration`, `result` FROM `" << db_name << "`.`"
+                        << searches_table_name
+                        << "` WHERE `data_pack_ID` = 'NasNet2019' AND `user_level` <= " << max_user_level << ";";
+  std::stringstream SQL_query_actions_ss;
+  SQL_query_actions_ss << "SELECT `search_session_ID`, `action_index`, `result_target_rank` FROM `" << db_name << "`.`"
+                       << search_actions_table_name << "` WHERE `action_query_index` = 0;";
+
+  auto [res_code0, rows_sessions] = _db.ResultQuery(SQL_query_sessions_ss.str());
+  if (res_code0 != 0)
+  {
+    LOGE("Error fetching user queries from the DB. \n\n Error code: "s + std::to_string(res_code0));
+  }
+  auto [res_code1, rows_actions] = _db.ResultQuery(SQL_query_actions_ss.str());
+  if (res_code1 != 0)
+  {
+    LOGE("Error fetching user queries from the DB. \n\n Error code: "s + std::to_string(res_code1));
+  }
+
+  // Create all sessions
+  std::vector<SearchSession> sessions;
+  sessions.reserve(rows_sessions.size());
+  for (auto&& row : rows_sessions)
+  {
+    size_t ID{ strTo<size_t>(row[0]) };
+    FrameId target_frame_ID{ strTo<FrameId>(row[1]) };
+    size_t duration{ strTo<size_t>(row[2]) };
+    bool found{ static_cast<bool>(strTo<unsigned char>(row[3])) };
+
+    sessions.emplace_back(SearchSession{ ID, target_frame_ID, duration, found });
+  }
+
+  // Parse all actions
+  std::vector<SearchSessionAction> all_actions;
+  all_actions.reserve(rows_actions.size());
+  for (auto&& row : rows_actions)
+  {
+    size_t search_session_ID{ strTo<size_t>(row[0]) };
+    size_t action_index{ strTo<size_t>(row[1]) };
+    size_t result_target_rank{ strTo<size_t>(row[2]) };
+
+    all_actions.emplace_back(SearchSessionAction{ search_session_ID, action_index, result_target_rank });
+  }
+
+  size_t max_session_len{ 0_z };
+
+  // Add actions to all loaded sessions
+  for (auto&& [ID, target_frame_ID, duration, found, actions] : sessions)
+  {
+    size_t counter{ 0_z };
+    for (auto&& [sess_ID, action_index, rank] : all_actions)
+    {
+      if (sess_ID != ID)
+      {
+        continue;
+      }
+      actions.emplace_back(SearchSessionAction{ sess_ID, action_index, rank });
+      ++counter;
+    }
+
+    max_session_len = std::max(max_session_len, counter);
+  }
+
+  std::vector<size_t> counter;
+  counter.resize(max_session_len + 1);
+
+  // Filter out sessions of length we dont have enough samples from
+  {
+    size_t i{ 0_z };
+    for (auto&& [ID, target_frame_ID, duration, found, actions] : sessions)
+    {
+      size_t num_actions{ actions.size() };
+
+      ++counter[num_actions];
+
+      ++i;
+    }
+  }
+
+  std::vector<SearchSession> sessions_filtered;
+  size_t max_filtered_len{ 0_z };
+  for (auto&& sess : sessions)
+  {
+    size_t num_actions{ sess.actions.size() };
+
+    if (counter[num_actions] < min_samples_count)
+    {
+      continue;
+    }
+
+    max_filtered_len = std::max(max_filtered_len, num_actions);
+    sessions_filtered.emplace_back(std::move(sess));
+  }
+
+  SearchSessRankChartData total_res;
+  total_res.aggregate_quantile_chart =
+      get_aggregate_rank_progress_data(sessions_filtered, max_filtered_len, num_frames, min_samples_count, normalize);
+  total_res.median_multichart = get_median_multichart_rank_progress_data(sessions_filtered, max_filtered_len,
+                                                                         num_frames, min_samples_count, normalize);
+
+  return total_res;
+}
+
+QuantileLineChartData<size_t, float> DataManager::get_aggregate_rank_progress_data(
+    const std::vector<SearchSession>& sessions, size_t max_sess_len, size_t num_frames_total, size_t min_samples_count,
+    bool normalize) const
+{
   QuantileLineChartData<size_t, float> res;
-  res.x = std::vector<size_t>{ 1, 2, 3, 4, 5 };
-  res.y_min = std::vector<float>{ 200.0F, 250.0F, 100.0F, 60.0F, 20.0F };
 
-  res.y_q1 = std::vector<float>{ 2000.0F, 1000.0F, 500.0F, 500.0F, 400.0F };
-  res.y_q2 = std::vector<float>{ 4000.0F, 2000.0F, 1000.0F, 600.0F, 500.0F };
-  res.y_q3 = std::vector<float>{ 8000.0F, 4000.0F, 3000.0F, 2000.0F, 800.0F };
+  // Vector of vectors for all session lengths
+  std::vector<std::vector<size_t>> sess_ranks(max_sess_len + 1, std::vector<size_t>{});
+  for (auto&& [ID, target_frame_ID, duration, found, actions] : sessions)
+  {
+    size_t len{ 1_z };
+    for (auto&& [sess_ID, action_index, rank] : actions)
+    {
+      sess_ranks[len].emplace_back(rank);
+      ++len;
+    }
+  }
 
-  res.y_max = std::vector<float>{ 18000.0F, 14000.0F, 10000.0F, 6000.0F, 5000.0F };
+  // Sort those vectors
+  size_t i{ 0_z };
+  for (auto&& rank_vec : sess_ranks)
+  {
+    if (i == 0)
+    {
+      ++i;
+      continue;
+    }
 
+    std::sort(rank_vec.begin(), rank_vec.end());
+
+    size_t count{ rank_vec.size() };
+
+    if (count == 0)
+    {
+      continue;
+    }
+
+    size_t q1_idx{ static_cast<size_t>(round(count * 0.25F)) };
+    size_t q2_idx{ static_cast<size_t>(round(count * 0.5F)) };
+    size_t q3_idx{ static_cast<size_t>(round(count * 0.75F)) };
+
+    res.x.emplace_back(i);
+    if (normalize)
+    {
+      res.y_min.emplace_back(float(rank_vec.front()) / num_frames_total);
+      res.y_q1.emplace_back(float(rank_vec[q1_idx]) / num_frames_total);
+      res.y_q2.emplace_back(float(rank_vec[q2_idx]) / num_frames_total);
+      res.y_q3.emplace_back(float(rank_vec[q3_idx]) / num_frames_total);
+      res.y_max.emplace_back(float(rank_vec.back()) / num_frames_total);
+    }
+    else
+    {
+      res.y_min.emplace_back(float(rank_vec.front()));
+      res.y_q1.emplace_back(float(rank_vec[q1_idx]));
+      res.y_q2.emplace_back(float(rank_vec[q2_idx]));
+      res.y_q3.emplace_back(float(rank_vec[q3_idx]));
+      res.y_max.emplace_back(float(rank_vec.back()));
+    }
+    res.count.emplace_back(count);
+
+    ++i;
+  }
   return res;
+}
+
+MedianLineMultichartData<size_t, float> DataManager::get_median_multichart_rank_progress_data(
+    const std::vector<SearchSession>& sessions, size_t max_sess_len, size_t num_frames_total, size_t min_samples_count,
+    bool normalize) const
+{
+  // Populate rank values into specified vectors
+  std::vector<std::vector<std::vector<size_t>>> sess_ranks(max_sess_len + 1);
+  size_t i{ 0_z };
+  for (auto&& vec : sess_ranks)
+  {
+    vec.resize(i);
+    ++i;
+  }
+  for (auto&& [ID, target_frame_ID, duration, found, actions] : sessions)
+  {
+    size_t sess_len{ actions.size() };
+
+    auto& vec{ sess_ranks[sess_len] };
+
+    size_t i{ 0_z };
+    for (auto&& [sess_ID, action_index, rank] : actions)
+    {
+      vec[i].emplace_back(rank);
+      ++i;
+    }
+  }
+
+  std::vector<std::vector<size_t>> x;
+  std::vector<std::vector<float>> medians;
+
+  // Do the counting
+  for (auto&& vec_len_N : sess_ranks)
+  {
+    size_t i{ 0_z };
+    std::vector<float> medians_for_len_N;
+    std::vector<size_t> xs_for_len_N;
+    for (auto&& sess_len_N_act_i : vec_len_N)
+    {
+      std::sort(sess_len_N_act_i.begin(), sess_len_N_act_i.end());
+
+      // Get Q2
+      xs_for_len_N.emplace_back(i + 1);
+
+      size_t num_samples{ sess_len_N_act_i.size() };
+      if (num_samples <= 0)
+      {
+        continue;
+      }
+
+      size_t median_idx{ size_t(round(num_samples / 2.0F)) };
+
+      float median = float(sess_len_N_act_i[median_idx]);
+      if (normalize)
+      {
+        median /= num_frames_total;
+      }
+
+      medians_for_len_N.emplace_back(median);
+
+      ++i;
+    }
+    if (medians_for_len_N.size() > 0)
+    {
+      x.emplace_back(xs_for_len_N);
+      medians.emplace_back(medians_for_len_N);
+    }
+  }
+
+  return MedianLineMultichartData<size_t, float>{ x, medians };
 }

@@ -333,10 +333,17 @@ std::vector<const SelFrame*> ImageRanker::frame_successors(const std::string& im
   return res;
 }
 
-QuantileLineChartData<size_t, float> ImageRanker::get_search_sessions_rank_progress_chart_data(
-    const std::string& data_pack_ID, const std::string& model_options, size_t max_user_level) const
+SearchSessRankChartData ImageRanker::get_search_sessions_rank_progress_chart_data(const std::string& data_pack_ID,
+                                                                                  const std::string& model_options,
+                                                                                  size_t max_user_level,
+                                                                                  size_t min_samples,
+                                                                                  bool normalize) const
 {
-  auto res{ _data_manager.get_search_sessions_rank_progress_chart_data(data_pack_ID, model_options, max_user_level) };
+  const auto& dp{ data_pack(data_pack_ID) };
+  const auto& is(imageset(dp.target_imageset_ID()));
+
+  auto res{ _data_manager.get_search_sessions_rank_progress_chart_data(data_pack_ID, model_options, max_user_level,
+                                                                       is.size(), min_samples, normalize) };
 
   return res;
 }
@@ -346,11 +353,18 @@ HistogramChartData<size_t, float> ImageRanker::get_histogram_used_labels(const s
                                                                          size_t num_points, bool accumulated,
                                                                          size_t max_user_level) const
 {
-  HistogramChartData<size_t, float> res;
+  constexpr eUserQueryOrigin user_query_origin{ eUserQueryOrigin::SEMI_EXPERTS };
+  const auto& dp{ data_pack(data_pack_ID) };
+  const auto& is{ imageset(dp.target_imageset_ID()) };
 
-  res.x = std::vector<size_t>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-  res.fx = std::vector<float>{ 0.1F, 0.2F, 0.05F, 0.05F, 0.05F, 0.01F, 0.005F, 0.0005F, 0.005F, 0.000001F };
-  return res;
+  ModelTestResult res;
+  size_t num_queries{ ERR_VAL<size_t>() };
+
+  // Fetch queries from the DB
+  auto test_queries{ _data_manager.fetch_user_test_queries(user_query_origin, dp.get_vocab_ID()) };
+  num_queries = test_queries.size();
+
+  return dp.get_histogram_used_labels(test_queries, model_options, num_queries, num_points, accumulated);
 }
 
 LoadedImagesetsInfo ImageRanker::get_loaded_imagesets_info() const

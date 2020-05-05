@@ -8,6 +8,22 @@ namespace image_ranker
 {
 class ImageRanker;
 
+struct SearchSessionAction
+{
+  size_t session_ID;
+  size_t action_index;
+  size_t rank;
+};
+
+struct SearchSession
+{
+  size_t ID;
+  FrameId target_frame_ID;
+  size_t duration;
+  bool found;
+  std::vector<SearchSessionAction> actions;
+};
+
 class DataManager
 {
  public:
@@ -37,8 +53,17 @@ class DataManager
    * \param   max_user_level  Maximum user level records that will be used for generating the data.
    * \return                  Struct with data needed for plotting the chart.
    */
-  [[nodiscard]] QuantileLineChartData<size_t, float> get_search_sessions_rank_progress_chart_data(
-      const std::string& data_pack_ID, const std::string& model_options, size_t max_user_level) const;
+  [[nodiscard]] SearchSessRankChartData get_search_sessions_rank_progress_chart_data(
+      const std::string& data_pack_ID, const std::string& model_options, size_t max_user_level, size_t num_frames,
+      size_t min_samples_count, bool normalize) const;
+
+ private:
+  [[nodiscard]] QuantileLineChartData<size_t, float> get_aggregate_rank_progress_data(
+      const std::vector<SearchSession>& sessions, size_t max_sess_len, size_t num_frames_total,
+      size_t min_samples_count, bool normalize) const;
+  [[nodiscard]] MedianLineMultichartData<size_t, float> get_median_multichart_rank_progress_data(
+      const std::vector<SearchSession>& sessions, size_t max_sess_len, size_t num_frames_total,
+      size_t min_samples_count, bool normalize) const;
 
  private:
   ImageRanker* _p_owner;

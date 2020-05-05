@@ -311,6 +311,21 @@ struct QuantileLineChartData
   std::vector<FXType> y_q2;
   std::vector<FXType> y_q3;
   std::vector<FXType> y_max;
+  std::vector<size_t> count;
+};
+
+template <typename XType, typename FXType>
+struct MedianLineMultichartData
+{
+  /** Charts  */
+  std::vector<std::vector<XType>> x;
+  std::vector<std::vector<FXType>> medians;
+};
+
+struct SearchSessRankChartData
+{
+  MedianLineMultichartData<size_t, float> median_multichart;
+  QuantileLineChartData<size_t, float> aggregate_quantile_chart;
 };
 
 template <typename XType, typename FXType>

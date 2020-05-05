@@ -24,7 +24,7 @@ int main()
 
   // Statistics
 #define TEST_get_search_sessions_rank_progress_chart_data 1
-#define TEST_get_histogram_used_labels 1
+#define TEST_get_histogram_used_labels 0
 
 #define TEST_submit_annotator_user_queries 0
 #define TEST_submit_search_session 0
@@ -44,7 +44,8 @@ int main()
 
 #if TEST_get_search_sessions_rank_progress_chart_data
   {
-    auto r1 = ranker.get_search_sessions_rank_progress_chart_data("NasNet2019", ""s);
+    auto r11 = ranker.get_search_sessions_rank_progress_chart_data("NasNet2019", ""s);
+    auto r1{ r11.aggregate_quantile_chart };
     std::cout << "xs: \t";
     for (auto&& val : r1.x)
     {
@@ -91,7 +92,22 @@ int main()
 
 #if TEST_get_histogram_used_labels
   {
-    auto r1 = ranker.get_histogram_used_labels("NasNet2019", ""s);
+    auto r1 = ranker.get_histogram_used_labels("NasNet2019", ""s, 100, true, 9);
+    std::cout << "xs: \t";
+    for (auto&& val : r1.x)
+    {
+      std::cout << val << "\t";
+    }
+    std::cout << std::endl;
+
+    std::cout << "fxs: \t";
+    for (auto&& val : r1.fx)
+    {
+      std::cout << val << "\t";
+    }
+    std::cout << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    r1 = ranker.get_histogram_used_labels("NasNet2019", ""s, 100, false, 9);
     std::cout << "xs: \t";
     for (auto&& val : r1.x)
     {

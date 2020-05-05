@@ -35,7 +35,7 @@ std::string W2vvDataPack::humanize_and_query(const std::string& and_query) const
   return ""s;
 }
 
-std::vector<Keyword*> W2vvDataPack::top_frame_keywords(FrameId frame_ID, PackModelCommands model_commands,
+std::vector<Keyword*> W2vvDataPack::top_frame_keywords(FrameId frame_ID, const std::string& model_commands,
                                                        size_t count) const
 {
   LOGW("Not implemented!");
@@ -47,7 +47,7 @@ std::vector<Keyword*> W2vvDataPack::top_frame_keywords(FrameId frame_ID, PackMod
   });
 }
 
-RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, PackModelCommands model_commands,
+RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, const std::string& model_commands,
                                         size_t result_size, FrameId target_image_ID) const
 {
   std::vector<std::string> tokens = split(model_commands, ';');
@@ -92,7 +92,7 @@ RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_quer
 }
 
 RankingResult W2vvDataPack::rank_frames(const std::vector<std::string>& user_native_queries,
-                                        PackModelCommands model_commands, size_t result_size,
+                                        const std::string& model_commands, size_t result_size,
                                         FrameId target_image_ID) const
 {
   std::vector<CnfFormula> cnf_queries;
@@ -105,7 +105,7 @@ RankingResult W2vvDataPack::rank_frames(const std::vector<std::string>& user_nat
 };
 
 ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_queries,
-                                         PackModelCommands model_commands, size_t num_points) const
+                                         const std::string& model_commands, size_t num_points) const
 {
   // Parse model & transformation
   std::vector<std::string> tokens = split(model_commands, ';');
@@ -162,7 +162,7 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
 }
 
 ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestNativeQuery>& test_native_queries,
-                                         PackModelCommands model_commands, size_t num_points) const
+                                         const std::string& model_commands, size_t num_points) const
 {
   std::vector<UserTestQuery> test_cnf_queries;
   test_cnf_queries.reserve(test_native_queries.size());

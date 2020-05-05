@@ -1,6 +1,8 @@
 
 #include "ViretDataPack.h"
 
+#include <algorithm>
+#include <execution>
 #include <thread>
 
 #include "./datasets/BaseImageset.h"
@@ -48,6 +50,164 @@ ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const
   t3.join();
 }
 
+HistogramChartData<size_t, float> ViretDataPack::get_histogram_used_labels(
+    const std::vector<UserTestQuery>& test_queries, const std::string& model_commands, size_t num_queries,
+    size_t num_points, bool accumulated) const
+{
+  // Expand query to vector indices
+  std::vector<UserTestQuery> idx_test_queries;
+  idx_test_queries.reserve(test_queries.size());
+
+  for (auto&& [test_query, target_ID] : test_queries)
+  {
+    std::vector<CnfFormula> idx_query;
+    idx_query.reserve(test_query.size());
+    for (auto&& q : test_query)
+    {
+      idx_query.emplace_back(keyword_IDs_to_vector_indices(q));
+    }
+    idx_test_queries.emplace_back(std::move(idx_query), target_ID);
+  }
+
+  // Parse model & transformation
+  std::vector<std::string> tokens = split(model_commands, ';');
+
+  std::vector<ModelKeyValOption> opt_key_vals;
+
+  std::string transform_ID{ "linear_01" };
+
+  for (auto&& tok : tokens)
+  {
+    auto key_val = split(tok, '=');
+    if (key_val[0] == enum_label(eModelOptsKeys::TRANSFORM_ID).first)
+    {
+      transform_ID = key_val[1];
+    }
+    // Options for model itself
+    else
+    {
+      opt_key_vals.emplace_back(key_val[0], key_val[1]);
+    }
+  }
+
+  // Choose desired transform
+  auto iter_t = _transforms.find(transform_ID);
+  if (iter_t == _transforms.end())
+  {
+    LOGE("Uknown transform_ID: '" + transform_ID + "'.");
+  }
+  const auto& transform = *(iter_t->second);
+
+  const std::vector<std::vector<float>>& data_mat{ accumulated ? transform.data_sum() : transform.data_linear_raw() };
+
+  // Convert this raw matrix to sorted matrix of pairs with their indices
+  using IdxScorePair = std::pair<size_t, float>;
+  std::vector<std::vector<IdxScorePair>> tagged_sorted_mat;
+  tagged_sorted_mat.resize(data_mat.size());
+
+  std::transform(
+      std::execution::par, data_mat.cbegin(), data_mat.cend(), tagged_sorted_mat.begin(),
+      [](const std::vector<float>& v) {
+        // Ptr to the first elem for index calculation
+        auto base{ &v.front() };
+
+        // Tag each element with the according index
+        std::vector<std::pair<size_t, float>> tagged_sorted_vec;
+        tagged_sorted_vec.resize(v.size());
+        std::transform(std::execution::par, v.cbegin(), v.cend(), tagged_sorted_vec.begin(), [base](const float& v) {
+          size_t idx{ size_t(&v - base) };
+          return std::pair(idx, v);
+        });
+
+        // Sort this vector
+        std::sort(tagged_sorted_vec.begin(), tagged_sorted_vec.end(),
+                  [](const std::pair<size_t, float>& l, std::pair<size_t, float>& r) { return l.second > r.second; });
+        return std::move(tagged_sorted_vec);
+      });
+
+  std::vector<size_t> label_hits;
+  label_hits.resize(tagged_sorted_mat.front().size());
+
+  // Iterate over all user queries
+  size_t hit_count{ 0_z };
+  for (auto&& [user_queries, target_frame_ID] : idx_test_queries)
+  {
+    const auto& frame_vec{ tagged_sorted_mat[target_frame_ID] };
+
+    // Find this labels
+    for (auto&& c : user_queries.front())
+    {
+      for (auto&& lit : c)
+      {
+        KeywordId kw_ID{ lit.atom };
+
+        size_t i = 0;
+        for (auto&& [idx, score] : frame_vec)
+        {
+          if (idx == kw_ID)
+          {
+            break;
+          }
+          ++i;
+        }
+
+        assert(i < frame_vec.size());
+
+        // Add hit
+        ++hit_count;
+        ++label_hits[i];
+      }
+    }
+  }
+
+  float div{ tagged_sorted_mat.front().size() / float(num_points) };
+  std::vector<size_t> scaled_label_hits;
+  scaled_label_hits.resize(num_points);
+
+  {
+    size_t ii{ 0_z };
+    for (auto&& hits : label_hits)
+    {
+      size_t scaled_idx{ size_t(ii / div) };
+
+      // \todo What function here?
+      scaled_label_hits[scaled_idx] = std::max(scaled_label_hits[scaled_idx], hits);
+      // AVG?
+      //scaled_label_hits[scaled_idx] +=  hits;
+
+      ++ii;
+    }
+  }
+
+  std::vector<size_t> normalized_label_xs;
+  normalized_label_xs.reserve(scaled_label_hits.size());
+
+  size_t sum_scaled{ 0_z };
+  {
+    size_t ii{ 0_z };
+    for (auto&& val : scaled_label_hits)
+    {
+      sum_scaled += val;
+
+      normalized_label_xs.emplace_back(size_t(div * ii));
+      ++ii;
+    }
+  }
+
+  // normalize
+
+  std::vector<float> normalized_label_hits;
+  normalized_label_hits.reserve(scaled_label_hits.size());
+  std::transform(scaled_label_hits.begin(), scaled_label_hits.end(), std::back_inserter(normalized_label_hits),
+                 [sum_scaled](const size_t& val) { return float(val) / sum_scaled; });
+
+  HistogramChartData<size_t, float> res;
+
+  res.x = normalized_label_xs;
+  res.fx = normalized_label_hits;
+  return res;
+}
+
 const std::string& ViretDataPack::get_vocab_ID() const { return _keywords.get_ID(); }
 
 const std::string& ViretDataPack::get_vocab_description() const { return _keywords.get_description(); }
@@ -60,7 +220,7 @@ const std::string& ViretDataPack::get_vocab_description() const { return _keywor
 }
 
 [[nodiscard]] std::vector<Keyword*> ViretDataPack::top_frame_keywords(FrameId frame_ID,
-                                                                      PackModelCommands model_commands,
+                                                                      const std::string& model_commands,
                                                                       size_t count) const
 {
   LOGW("Not implemented!");
@@ -72,7 +232,7 @@ const std::string& ViretDataPack::get_vocab_description() const { return _keywor
   });
 }
 
-RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, PackModelCommands model_commands,
+RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, const std::string& model_commands,
                                          size_t result_size, FrameId target_image_ID) const
 {
   // Expand query to vector indices
@@ -133,7 +293,7 @@ RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_que
 }
 
 ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test_queries,
-                                          PackModelCommands model_commands, size_t num_points) const
+                                          const std::string& model_commands, size_t num_points) const
 {
   // Expand query to vector indices
   std::vector<UserTestQuery> idx_test_queries;
@@ -258,7 +418,8 @@ AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::strin
 }
 
 std::vector<const Keyword*> ViretDataPack::get_frame_top_classes(FrameId frame_ID,
-                                                                 std::vector<ModelKeyValOption> opt_key_vals, bool accumulated) const
+                                                                 std::vector<ModelKeyValOption> opt_key_vals,
+                                                                 bool accumulated) const
 {
   bool max_based{ false };
   std::string transform_ID{ "linear_01" };
@@ -287,18 +448,18 @@ std::vector<const Keyword*> ViretDataPack::get_frame_top_classes(FrameId frame_I
   }
   const auto& transform = *(iter_t->second);
 
-  const DataInfo* p_data_info{nullptr};
+  const DataInfo* p_data_info{ nullptr };
 
   if (accumulated)
   {
-    p_data_info =  max_based ? &transform.data_max_info() : &transform.data_sum_info();
-  } 
-  else {
+    p_data_info = max_based ? &transform.data_max_info() : &transform.data_sum_info();
+  }
+  else
+  {
     p_data_info = &transform.data_linear_raw_info();
   }
 
   const auto& kw_IDs{ p_data_info->top_classes[frame_ID] };
-
 
   std::vector<const Keyword*> res;
 
@@ -317,7 +478,7 @@ void ViretDataPack::cache_up_example_images(const std::vector<const Keyword*>& k
 
   for (auto&& cp_kw : kws)
   {
-    const auto& all_kws_with_ID {_keywords.get_all_keywords_ptrs(cp_kw->ID)};
+    const auto& all_kws_with_ID{ _keywords.get_all_keywords_ptrs(cp_kw->ID) };
 
     // Check if images are already cached
     Keyword& kw{ **all_kws_with_ID.begin() };

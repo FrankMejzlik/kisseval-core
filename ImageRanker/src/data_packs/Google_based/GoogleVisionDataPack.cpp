@@ -9,8 +9,9 @@
 
 using namespace image_ranker;
 
-GoogleVisionDataPack::GoogleVisionDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
-                                           const std::string& model_options, const std::string& description,
+GoogleVisionDataPack::GoogleVisionDataPack(const BaseImageset* p_is, const StringId& ID,
+                                           const StringId& target_imageset_ID, const std::string& model_options,
+                                           const std::string& description,
                                            const GoogleDataPackRef::VocabData& vocab_data_refs,
                                            std::vector<std::vector<float>>&& presoft)
     : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description),
@@ -48,7 +49,8 @@ std::string GoogleVisionDataPack::humanize_and_query(const std::string& and_quer
   return "I am just dummy query!"s;
 }
 
-std::vector<Keyword*> GoogleVisionDataPack::top_frame_keywords(FrameId frame_ID, PackModelCommands model_commands, size_t count) const
+std::vector<Keyword*> GoogleVisionDataPack::top_frame_keywords(FrameId frame_ID, const std::string& model_commands,
+                                                               size_t count) const
 {
   LOGW("Not implemented!");
 
@@ -60,7 +62,7 @@ std::vector<Keyword*> GoogleVisionDataPack::top_frame_keywords(FrameId frame_ID,
 }
 
 RankingResult GoogleVisionDataPack::rank_frames(const std::vector<CnfFormula>& user_queries,
-                                                PackModelCommands model_commands, size_t result_size,
+                                                const std::string& model_commands, size_t result_size,
                                                 FrameId target_image_ID) const
 {
   // Expand query to vector indices
@@ -121,7 +123,7 @@ RankingResult GoogleVisionDataPack::rank_frames(const std::vector<CnfFormula>& u
 }
 
 ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery>& test_queries,
-                                                 PackModelCommands model_commands, size_t num_points) const
+                                                 const std::string& model_commands, size_t num_points) const
 {
   // Expand query to vector indices
   std::vector<UserTestQuery> idx_test_queries;
@@ -208,9 +210,21 @@ ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery
   return ranking_model.test_model(transform, _keywords, idx_test_queries, opt_key_vals, num_points);
 }
 
+HistogramChartData<size_t, float> GoogleVisionDataPack::get_histogram_used_labels(
+    const std::vector<UserTestQuery>& test_queries, const std::string& model_options, size_t num_queries,  size_t num_points,
+    bool accumulated) const
+{
+  LOGW("Not implemented!");
+  HistogramChartData<size_t, float> res;
+
+  res.x = std::vector<size_t>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+  res.fx = std::vector<float>{ 0.1F, 0.2F, 0.05F, 0.05F, 0.05F, 0.01F, 0.005F, 0.0005F, 0.005F, 0.000001F };
+  return res;
+}
+
 AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std::string& query_prefix,
-                                                                       size_t result_size,
-                                                                       bool with_example_image, const std::string& model_commands) const
+                                                                       size_t result_size, bool with_example_image,
+                                                                       const std::string& model_commands) const
 {
   auto kws = _keywords.GetNearKeywordsPtrs(query_prefix, result_size);
 
@@ -226,7 +240,7 @@ AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std
     {
       CnfFormula fml{ Clause{ Literal<KeywordId>{ p_kw->ID } } };
 
-      std::vector<CnfFormula> v{ fml  };
+      std::vector<CnfFormula> v{ fml };
 
       // Rank frames with query "this_kw"
       auto ranked_frames{ rank_frames(v, model_commands, NUM_EXAMPLE_FRAMES) };
@@ -252,8 +266,8 @@ AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std
 
 DataPackInfo GoogleVisionDataPack::get_info() const
 {
-  return DataPackInfo{get_ID(),           get_description(),          get_model_options(), target_imageset_ID(),
-                      _keywords.get_ID(), _keywords.get_description()};
+  return DataPackInfo{ get_ID(),           get_description(),          get_model_options(), target_imageset_ID(),
+                       _keywords.get_ID(), _keywords.get_description() };
 }
 
 CnfFormula GoogleVisionDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) const

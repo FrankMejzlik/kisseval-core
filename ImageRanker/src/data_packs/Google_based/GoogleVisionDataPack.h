@@ -22,17 +22,20 @@ class GoogleVisionDataPack : public BaseDataPack
                 std::vector<std::vector<float>>&& presoft);
 
   [[nodiscard]] virtual RankingResult rank_frames(const std::vector<CnfFormula>& user_queries,
-                                                  PackModelCommands model_commands, size_t result_size,
+                                                  const std::string& model_options, size_t result_size,
                                                   FrameId target_image_ID = ERR_VAL<FrameId>()) const override;
 
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
-                                                   PackModelCommands model_commands, size_t num_points) const override;
+                                                   const std::string& model_options, size_t num_points) const override;
+
+  [[nodiscard]] virtual HistogramChartData<size_t, float> get_histogram_used_labels(const std::vector<UserTestQuery>& test_queries,
+                                                   const std::string& model_options,size_t num_queries,  size_t num_points, bool accumulated) const override;
 
   [[nodiscard]] virtual const std::string& get_vocab_ID() const override;
   [[nodiscard]] virtual const std::string& get_vocab_description() const override;
 
   [[nodiscard]] virtual std::string humanize_and_query(const std::string& and_query) const override;
-  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID, PackModelCommands model_commands, size_t count) const override;
+  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID, const std::string& model_commands, size_t count) const override;
 
   [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix,
                                                                          size_t result_size,
