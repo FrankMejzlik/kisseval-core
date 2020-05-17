@@ -138,12 +138,21 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
     case eScoringOperations::cMultMax:
     case eScoringOperations::cSumMax:
       p_data_mat = &transformed_data.data_max();
+
+      // Fall back to SUM based (e.g. if GoogleVisionAI data)
+      if (p_data_mat->empty())
+      {
+        p_data_mat = &transformed_data.data_sum();
+      }
       break;
 
     default:
       LOGE("Unknown scoring operation.");
       return RankingResult{};
   }
+
+  assert(p_data_mat->size() > 0 && "There must be some data! `p_data_mat` pointing to empty data.");
+  assert(p_data_mat->front().size() > 0 && "There must be some data! `p_data_mat` pointing to empty data.");
 
   const Matrix<float>& data_mat{ *p_data_mat };
 
@@ -799,7 +808,7 @@ float MultSumMaxModel::rank_frame(const Vector<float>& frame_data, const CnfForm
       // If literal_ranking under the threshold
       if (literal_ranking < options.ignore_below_threshold)
       {
-        continue;
+        continue; 
       }
 
       /********************************************************

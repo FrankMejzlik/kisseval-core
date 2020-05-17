@@ -6,7 +6,7 @@
 #include <thread>
 
 #define DATA_DIR "data/"
-#define DATA_INFO_FPTH R"(c:\Users\devwe\source\repos\ImageRanker\data_info.json)"
+#define DATA_INFO_FPTH R"(c:\Users\frank\source\repos\ImageRanker\data_info.json)"
 
 #include "common.h"
 #include "utility.h"
@@ -14,6 +14,349 @@
 #include "ImageRanker.h"
 
 using namespace image_ranker;
+
+void grid_test_find_true_thresholds(ImageRanker& ranker)
+{
+  //
+  // LINEAR
+  //
+#if 0
+  // NASNet, Linear, Boolean
+  { 
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    std::cout << "\t NASNet, Linear, Boolean" <<  std::endl;
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+
+    constexpr size_t num_iters{ 50_z };
+    constexpr float p_from{ 0.0005F };
+    constexpr float p_to{ 0.00065F };
+
+    constexpr float delta_it{ (p_to - p_from) / num_iters };
+
+    float max_area{ 0.0F };
+    float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
+
+    for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
+    {
+      auto res =
+          ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+                                "model=boolean;model_true_threshold=" + std::to_string(param) + ";transform=linear_01;");
+
+      float area{ calc_chart_area(res) };
+
+      if (area > max_area)
+      {
+        std::cout << "New max found... p = " << param << ", i = " << i << std::endl;
+        std::cout << "\t area = " << area << std::endl;
+        max_area = area;
+        max_p_val = param;
+      }
+      std::cout << "i = " << i << std::endl;
+      std::cout << "\t area = " << area << std::endl;
+    }
+  }
+
+  // NASNet, Linear, VectorSpace
+  { 
+
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    std::cout << "\t NASNet, Linear, VectorSpace" <<  std::endl;
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+
+    constexpr size_t num_iters{ 50_z };
+    constexpr float p_from{ 0.0005F };
+    constexpr float p_to{ 0.00065F };
+
+    constexpr float delta_it{ (p_to - p_from) / num_iters };
+
+    float max_area{ 0.0F };
+    float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
+
+    for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
+    {
+      auto res =
+          ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+                                "model=boolean;model_true_threshold=" + std::to_string(param) + ";transform=linear_01;");
+
+      float area{ calc_chart_area(res) };
+
+      if (area > max_area)
+      {
+        std::cout << "New max found... p = " << param << ", i = " << i << std::endl;
+        std::cout << "\t area = " << area << std::endl;
+        max_area = area;
+        max_p_val = param;
+      }
+      std::cout << "i = " << i << std::endl;
+      std::cout << "\t area = " << area << std::endl;
+    }
+  }
+
+  // GoogLe, Linear, Bool
+  { 
+
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    std::cout << "\t GoogLe, Linear, Bool" <<  std::endl;
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    // cca 0.000598
+    constexpr size_t num_iters{ 50_z };
+    constexpr float p_from{ 0.0005F };
+    constexpr float p_to{ 0.0006F };
+
+    constexpr float delta_it{ (p_to - p_from) / num_iters };
+
+    float max_area{ 0.0F };
+    float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
+
+    for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
+    {
+      auto res =
+          ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogLeNet2019",
+            "model=vector_space;model_term_tf=natural;model_term_idf=idf;model_query_tf=augmented;model_query_idf=idf;model_dist_fn=cosine;model_IDF_method=static_threshold;model_IDF_method_true_threshold=" + std::to_string(param) + ";transform=linear_01;sim_user=no_sim_user;");
+
+      float area{ calc_chart_area(res) };
+
+      if (area > max_area)
+      {
+        std::cout << "New max found... p = " << param << ", i = " << i << std::endl;
+        std::cout << "\t area = " << area << std::endl;
+        max_area = area;
+        max_p_val = param;
+      }
+      std::cout << "i = " << i << std::endl;
+      std::cout << "\t area = " << area << std::endl;
+    }
+  }
+
+  // GoogLe, Linear, VectorSpace
+  { 
+    
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    std::cout << "\t GoogLe, Linear, VectorSpace" <<  std::endl;
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    
+    // cca 0.000598
+    constexpr size_t num_iters{ 50_z };
+    constexpr float p_from{ 0.0005F };
+    constexpr float p_to{ 0.0006F };
+
+    constexpr float delta_it{ (p_to - p_from) / num_iters };
+
+    float max_area{ 0.0F };
+    float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
+
+
+
+    for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
+    {
+      auto res =
+          ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogLeNet2019",
+            "model=vector_space;model_term_tf=natural;model_term_idf=idf;model_query_tf=augmented;model_query_idf=idf;model_dist_fn=cosine;model_IDF_method=static_threshold;model_IDF_method_true_threshold=" + std::to_string(param) + ";transform=linear_01;sim_user=no_sim_user;");
+
+                                
+
+      float area{ calc_chart_area(res) };
+
+      if (area > max_area)
+      {
+        std::cout << "New max found... p = " << param << ", i = " << i << std::endl;
+        std::cout << "\t area = " << area << std::endl;
+        max_area = area;
+        max_p_val = param;
+      }
+      std::cout << "i = " << i << std::endl;
+      std::cout << "\t area = " << area << std::endl;
+    }
+  }
+
+#endif
+
+  //
+  // SOFTMAX
+  //
+
+  // NASNet, sfotmax, Boolean
+  {
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    std::cout << "\t NASNet, softmax, Boolean" << std::endl;
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+
+    constexpr size_t num_iters{ 100_z };
+    constexpr float p_from{ 0.0000001F };
+    constexpr float p_to{ 0.0001F };
+
+    constexpr float delta_it{ (p_to - p_from) / num_iters };
+
+    float max_area{ 0.0F };
+    float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
+
+    for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
+    {
+      auto res =
+          ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+                                "model=boolean;model_true_threshold=" + std::to_string(param) + ";transform=softmax;");
+
+      float area{ calc_chart_area(res) };
+
+      if (area > max_area)
+      {
+        std::cout << "New max found... p = " << param << ", i = " << i << std::endl;
+        std::cout << "\t area = " << area << std::endl;
+        max_area = area;
+        max_p_val = param;
+      }
+      std::cout << "i = " << i << std::endl;
+      std::cout << "\t area = " << area << std::endl;
+    }
+  }
+
+  // NASNet, Linear, VectorSpace
+
+#if 0
+  { 
+
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    std::cout << "\t NASNet, softmax, VectorSpace" <<  std::endl;
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+
+    constexpr size_t num_iters{ 20_z };
+    constexpr float p_from{ 0.0005F };
+    constexpr float p_to{ 0.005F };
+
+    constexpr float delta_it{ (p_to - p_from) / num_iters };
+
+    float max_area{ 0.0F };
+    float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
+
+    for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
+    {
+      auto res =
+          ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+            "model=vector_space;model_term_tf=natural;model_term_idf=idf;model_query_tf=augmented;model_query_idf=idf;model_dist_fn=cosine;model_IDF_method=static_threshold;model_IDF_method_true_threshold=" + std::to_string(param) + ";transform=softmax;sim_user=no_sim_user;");
+
+      float area{ calc_chart_area(res) };
+
+      if (area > max_area)
+      {
+        std::cout << "New max found... p = " << param << ", i = " << i << std::endl;
+        std::cout << "\t area = " << area << std::endl;
+        max_area = area;
+        max_p_val = param;
+      }
+      std::cout << "i = " << i << std::endl;
+      std::cout << "\t area = " << area << std::endl;
+    }
+  }
+
+#endif
+  // NASNet, Linear, VectorSpace
+  {
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    std::cout << "\t GoogLeNet, softmax, VectorSpace" << std::endl;
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+
+    constexpr size_t num_iters{ 100_z };
+    constexpr float p_from{ 0.00001F };
+    constexpr float p_to{ 0.00001F };
+
+    constexpr float delta_it{ (p_to - p_from) / num_iters };
+
+    float max_area{ 0.0F };
+    float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
+
+    for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
+    {
+      auto res =
+          ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
+                                "model=boolean;model_true_threshold=" + std::to_string(param) + ";transform=softmax;");
+
+      float area{ calc_chart_area(res) };
+
+      if (area > max_area)
+      {
+        std::cout << "New max found... p = " << param << ", i = " << i << std::endl;
+        std::cout << "\t area = " << area << std::endl;
+        max_area = area;
+        max_p_val = param;
+      }
+      std::cout << "i = " << i << std::endl;
+      std::cout << "\t area = " << area << std::endl;
+    }
+  }
+
+  // GoogLe, Linear, Bool
+  {
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    std::cout << "\t GoogLe, softmax, Bool" << std::endl;
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    // cca 0.000598
+    constexpr size_t num_iters{ 100_z };
+    constexpr float p_from{ 0.0000001F };
+    constexpr float p_to{ 0.0001F };
+
+    constexpr float delta_it{ (p_to - p_from) / num_iters };
+
+    float max_area{ 0.0F };
+    float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
+
+    for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
+    {
+      auto res = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogLeNet2019",
+                                       "model=boolean;model_true_threshold=" + std::to_string(param) +
+                                           ";model_IDF_method_idf_coef=6;transform=softmax;sim_user=no_sim_user;");
+
+      float area{ calc_chart_area(res) };
+
+      if (area > max_area)
+      {
+        std::cout << "New max found... p = " << param << ", i = " << i << std::endl;
+        std::cout << "\t area = " << area << std::endl;
+        max_area = area;
+        max_p_val = param;
+      }
+      std::cout << "i = " << i << std::endl;
+      std::cout << "\t area = " << area << std::endl;
+    }
+  }
+
+  // softmax, Linear, VectorSpace
+  {
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    std::cout << "\t GoogLe, softmax, VectorSpace" << std::endl;
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+
+    // cca 0.000598
+    constexpr size_t num_iters{ 50_z };
+    constexpr float p_from{ 0.0005F };
+    constexpr float p_to{ 0.0006F };
+
+    constexpr float delta_it{ (p_to - p_from) / num_iters };
+
+    float max_area{ 0.0F };
+    float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
+
+    for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
+    {
+      auto res = ranker.run_model_test(
+          eUserQueryOrigin::SEMI_EXPERTS, "GoogLeNet2019",
+          "model=vector_space;model_term_tf=natural;model_term_idf=idf;model_query_tf=augmented;model_query_idf=idf;"
+          "model_dist_fn=cosine;model_IDF_method=static_threshold;model_IDF_method_true_threshold=" +
+              std::to_string(param) + ";transform=softmax;sim_user=no_sim_user;");
+
+      float area{ calc_chart_area(res) };
+
+      if (area > max_area)
+      {
+        std::cout << "New max found... p = " << param << ", i = " << i << std::endl;
+        std::cout << "\t area = " << area << std::endl;
+        max_area = area;
+        max_p_val = param;
+      }
+      std::cout << "i = " << i << std::endl;
+      std::cout << "\t area = " << area << std::endl;
+    }
+  }
+}
 
 int main()
 {
@@ -23,11 +366,11 @@ int main()
   ImageRanker ranker(cfg);
 
   // Statistics
-#define TEST_get_search_sessions_rank_progress_chart_data 1
+#define TEST_get_search_sessions_rank_progress_chart_data 0
 #define TEST_get_histogram_used_labels 0
 
 #define TEST_submit_annotator_user_queries 0
-#define TEST_submit_search_session 0
+#define TEST_submit_search_session 1
 #define TEST_get_frame_detail_data 0
 
 #define TEST_get_random_frame_sequence 0
@@ -139,16 +482,16 @@ int main()
                                "op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;",
                                10, true, 8888, eSearchSessionEndStatus::FOUND_TARGET, 12345, "jajsemsession1111",
                                std::vector<InteractiveSearchAction>{
-                                   { 0, "add_from_autocomplete", "1234", "apple", 333, 4 },
-                                   { 0, "delete_from_query", "1234", "apple", 88888, 10 },
-                                   { 0, "add_from_detail", "234", "tuple", 12, 13 },
+                                   { 0, "add_from_autocomplete", "1234", "apple", 333, 4, true },
+                                   { 0, "delete_from_query", "1234", "apple", 88888, 10, true },
+                                   { 0, "add_from_detail", "234", "tuple", 12, 13, false },
                                });
 #endif
 
 #if TEST_get_frame_detail_data
   /** Man on a bike in bright hall */
   auto res = ranker.get_frame_detail_data(
-      1, "NasNet2019",
+      1, "GoogleVisionAi_Sep2019",
       "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_"
       "op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;",
       true, false);
@@ -186,15 +529,13 @@ int main()
   // TEST: `get_autocomplete_results`
 #if TEST_get_autocomplete_results
   {
-    auto r1 =
-        ranker.get_autocomplete_results("NasNet2019", "w", 20, true,
-                                        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_"
-                                        "outter_op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;");
+    auto r1 = ranker.get_autocomplete_results(
+        "GoogleVisionAi_Sep2019", "cat furniture", 20, true,
+        "model=mult-sum-max;transform=softmax;model_operations=mult-sum;model_ignore_treshold=0.0");
 
-    r1 =
-        ranker.get_autocomplete_results("NasNet2019", "we", 20, true,
-                                        "model=mult-sum-max;model_operations=mult-max;model_ignore_treshold=0.00;model_"
-                                        "outter_op=mult;model_inner_op=max;transform=linear_01;sim_user=no_sim_user;");
+    r1 = ranker.get_autocomplete_results(
+        "GoogleVisionAi_Sep2019", "we", 20, true,
+        "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0");
 
     if (r1.top_keywords.size() < 20)
     {
@@ -244,9 +585,12 @@ int main()
     std::cout << "MULT-SUM-MAX model: " << std::endl;
     std::cout << "--------------" << std::endl;
     auto r1 = ranker.run_model_test(
-        eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
-        "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op="
-        "sum;transform=linear_01;sim_user=no_sim_user;");
+        eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019",
+        "model=mult-sum-max;transform=softmax;model_operations=mult-max;model_ignore_treshold=0.0");
+
+    r1 = ranker.run_model_test(
+        eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019",
+        "model=mult-sum-max;transform=softmax;model_operations=mult-max;model_ignore_treshold=0.0");
     auto r1_area = calc_chart_area(r1);
     std::cout << "transform=linear_01, model_operations=mult-sum: " << r1_area << std::endl;
 
@@ -333,33 +677,7 @@ int main()
 
 #if TEST_boolean_grid_test_threshold
 
-  constexpr size_t num_iters{ 100_z };
-  constexpr float p_from{ 0.0005F };
-  constexpr float p_to{ 0.0006F };
-
-  constexpr float delta_it{ (p_to - p_from) / num_iters };
-
-  float max_area{ 0.0F };
-  float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
-
-  for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
-  {
-    auto res =
-        ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
-                              "model=boolean;model_true_threshold=" + std::to_string(param) + ";transform=linear_01;");
-
-    float area{ calc_chart_area(res) };
-
-    if (area > max_area)
-    {
-      std::cout << "New max found... p = " << param << ", i = " << i << std::endl;
-      std::cout << "\t area = " << area << std::endl;
-      max_area = area;
-      max_p_val = param;
-    }
-    std::cout << "i = " << i << std::endl;
-    std::cout << "\t area = " << area << std::endl;
-  }
+  grid_test_find_true_thresholds(ranker);
 
 #endif
 
@@ -371,61 +689,31 @@ int main()
   std::cout << "===============================" << std::endl;
   std::cout << "===============================" << std::endl;
 
-  std::string m1_opts =
-      "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=no_sim_user;"s;
-  auto r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m1_opts);
-  auto r1_area = calc_chart_area(r1);
-  std::cout << "========================================" << std::endl;
-  std::cout << m1_opts << std::endl;
-  std::cout << "\t" << r1_area << std::endl;
+  // std::string m1_opts =
+  //    "model=mult-sum-max;model_operations=mult-sum;model_ignore_treshold=0.00;model_outter_op=sum;model_inner_op=sum;transform=linear_01;sim_user=no_sim_user;"s;
+  // auto r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m1_opts);
+  // auto r1_area = calc_chart_area(r1);
+  // std::cout << "========================================" << std::endl;
+  // std::cout << m1_opts << std::endl;
+  // std::cout << "\t" << r1_area << std::endl;
 
-  std::string m2_opts = "sim_user=no_sim_user;model=boolean;model_true_threshold=0.000598001;transform=linear_01;"s;
-  auto r2 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m2_opts);
-  auto r2_area = calc_chart_area(r2);
-  std::cout << "========================================" << std::endl;
-  std::cout << m2_opts << std::endl;
-  std::cout << "\t" << r2_area << std::endl;
+  // std::string m2_opts = "sim_user=no_sim_user;model=boolean;model_true_threshold=0.000598001;transform=linear_01;"s;
+  // auto r2 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m2_opts);
+  // auto r2_area = calc_chart_area(r2);
+  // std::cout << "========================================" << std::endl;
+  // std::cout << m2_opts << std::endl;
+  // std::cout << "\t" << r2_area << std::endl;
 
-  std::string m5_opts =
-      "sim_user=no_sim_user;model=vector_space;transform=linear_01;model_dist_fn=cosine;model_term_tf=natural;model_term_idf=idf;model_query_tf=log;model_query_idf=none;model_IDF_method_idf_coef=6.0f"s;
-  auto r5 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m5_opts);
-  auto r5_area = calc_chart_area(r5);
-  std::cout << "========================================" << std::endl;
-  std::cout << m5_opts << std::endl;
-  std::cout << "\t" << r5_area << std::endl;
-
-#endif
-
-#if TEST_boolean_grid_test_threshold_Google
-
-  constexpr size_t num_iters{ 100_z };
-  constexpr float p_from{ 0.0001F };
-  constexpr float p_to{ 0.001F };
-
-  constexpr float delta_it{ (p_to - p_from) / num_iters };
-
-  float max_area{ 0.0F };
-  float max_p_val{ std::numeric_limits<float>::quiet_NaN() };
-
-  for (auto [param, i] = std::tuple{ p_from, 0_z }; param <= p_to; param += delta_it, ++i)
+  while (true)
   {
-    auto res =
-        ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019",
-                              "model=boolean;model_true_threshold=" + std::to_string(param) + ";transform=linear_01;");
-
-    float area{ calc_chart_area(res) };
-
-    if (area > max_area)
-    {
-      std::cout << "New max found... p = " << param << ", i = " << i << std::endl;
-      std::cout << "\t area = " << area << std::endl;
-      max_area = area;
-      max_p_val = param;
-    }
-    std::cout << "i = " << i << std::endl;
-    std::cout << "\t area = " << area << std::endl;
+    std::string m5_opts =
+        "model=vector_space;model_term_tf=natural;model_term_idf=none;model_query_tf=augmented;model_query_idf=idf;model_dist_fn=cosine;model_IDF_method=static_threshold;model_IDF_method_true_threshold=0.001;transform=softmax;"s;
+    auto r5 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019", m5_opts);
+    auto r5_area = calc_chart_area(r5);
+    std::cout << "========================================" << std::endl;
+    std::cout << m5_opts << std::endl;
+    std::cout << "\t" << r5_area << std::endl;
   }
-
 #endif
 
 #if TEST_run_model_test_W2VV

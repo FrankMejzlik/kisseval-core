@@ -30,7 +30,7 @@ inline bool is_arch_LE()
         "smaller than uint32_t.");
   }
 
-  uint32_t num{1ULL};
+  uint32_t num{ 1ULL };
   if (*(reinterpret_cast<char*>(&num)) == 1)
   {
     return true;
@@ -46,8 +46,8 @@ inline bool is_arch_LE()
  */
 inline float calc_chart_area(const ModelTestResult& chart_data)
 {
-  float area{0.0F};
-  uint32_t prev_x{0};
+  float area{ 0.0F };
+  uint32_t prev_x{ 0 };
   for (auto&& [x, fx] : chart_data)
   {
     area += float((x - prev_x) * fx);
@@ -69,9 +69,9 @@ inline CnfFormula parse_cnf_string(const std::string& string)
 
   std::stringstream idx_ss;
   KeywordId idx_buffer;
-  bool negate_next_atom{false};
+  bool negate_next_atom{ false };
 
-  size_t depth{0};
+  size_t depth{ 0 };
 
   Clause clause_buffer;
 
@@ -87,7 +87,7 @@ inline CnfFormula parse_cnf_string(const std::string& string)
     if (idx_ss.rdbuf()->in_avail() > 0)
     {
       idx_ss >> idx_buffer;
-      clause_buffer.emplace_back(Literal<KeywordId>{idx_buffer, negate_next_atom});
+      clause_buffer.emplace_back(Literal<KeywordId>{ idx_buffer, negate_next_atom });
       idx_ss = std::stringstream();
     }
 
@@ -142,7 +142,7 @@ inline std::vector<std::string> split(const std::string& str, const std::string&
 {
   std::vector<std::string> result;
 
-  std::string s{str};
+  std::string s{ str };
 
   size_t pos = 0;
   std::string token;
@@ -164,7 +164,7 @@ inline std::array<char, 4> floatToBytesLE(float number)
 {
   std::array<char, 4> byteArray;
 
-  char* bitNumber{reinterpret_cast<char*>(&number)};
+  char* bitNumber{ reinterpret_cast<char*>(&number) };
 
   std::get<0>(byteArray) = bitNumber[0];
   std::get<1>(byteArray) = bitNumber[1];
@@ -178,7 +178,7 @@ inline std::array<char, 4> uint32ToBytesLE(uint32_t number)
 {
   std::array<char, 4> byteArray;
 
-  char* bitNumber{reinterpret_cast<char*>(&number)};
+  char* bitNumber{ reinterpret_cast<char*>(&number) };
 
   std::get<0>(byteArray) = bitNumber[0];
   std::get<1>(byteArray) = bitNumber[1];
@@ -254,7 +254,7 @@ inline float strToFloat(const std::string& str)
 {
   float result;
 
-  std::stringstream ss{str};
+  std::stringstream ss{ str };
 
   ss >> result;
   return result;
@@ -327,7 +327,7 @@ inline T strTo(const std::string& str)
 {
   auto word_IDs(tokenize_query_and(query));
 
-  std::string result_encoded_query{"&"s};
+  std::string result_encoded_query{ "&"s };
 
   for (auto&& ID : word_IDs)
   {
@@ -339,9 +339,9 @@ inline T strTo(const std::string& str)
 
 inline float dist_manhattan(const Vector<float>& left, const Vector<float>& right)
 {
-  float res{0.0F};
+  float res{ 0.0F };
 
-  for (size_t i{0_z}; i < left.size(); ++i)
+  for (size_t i{ 0_z }; i < left.size(); ++i)
   {
     float sub = std::abs(left[i] - right[i]);
     res += sub;
@@ -352,12 +352,12 @@ inline float dist_manhattan(const Vector<float>& left, const Vector<float>& righ
 
 inline float dist_cos(const Vector<float>& left, const Vector<float>& right)
 {
-  float res{0.0F};
+  float res{ 0.0F };
 
-  float sum_l{0.0F};
-  float sum_r{0.0F};
+  float sum_l{ 0.0F };
+  float sum_r{ 0.0F };
 
-  for (size_t i{0_z}; i < left.size(); ++i)
+  for (size_t i{ 0_z }; i < left.size(); ++i)
   {
     sum_l += left[i] * left[i];
     sum_r += right[i] * right[i];
@@ -373,9 +373,9 @@ inline float dist_cos(const Vector<float>& left, const Vector<float>& right)
 
 inline float dist_cos_norm(const Vector<float>& left, const Vector<float>& right)
 {
-  float res{0.0F};
+  float res{ 0.0F };
 
-  for (size_t i{0_z}; i < left.size(); ++i)
+  for (size_t i{ 0_z }; i < left.size(); ++i)
   {
     res += left[i] * right[i];
   }
@@ -386,9 +386,9 @@ inline float dist_cos_norm(const Vector<float>& left, const Vector<float>& right
 
 inline float dist_sq_eucl(const Vector<float>& left, const Vector<float>& right)
 {
-  float res{0.0F};
+  float res{ 0.0F };
 
-  for (size_t i{0_z}; i < left.size(); ++i)
+  for (size_t i{ 0_z }; i < left.size(); ++i)
   {
     float sub = left[i] - right[i];
     res += sub * sub;

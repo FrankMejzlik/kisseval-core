@@ -11,6 +11,8 @@ using json = nlohmann::json;
 
 #include "datasets/SelFramesDataset.h"
 
+#include "transformations/TransformationSoftmax.h"
+
 using namespace image_ranker;
 
 ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::string& filepath,
@@ -141,37 +143,57 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
   // VIRET type
   for (auto&& pack : _settings.config.VIRET_packs)
   {
+    DataPackStats stats{};
+
     // Initialize all images
-    auto presoft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
-    auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.softmax_scorings_fpth);
-    auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.deep_features_fpth);
+    auto [presoft_data, parse_stats] =
+        FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
+    stats.avg_num_labels_asigned = parse_stats.avg_num_labels_asigned;
+    stats.median_num_labels_asigned = parse_stats.median_num_labels_asigned;
+
+    // Count label hits
+
+    // auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.softmax_scorings_fpth);
+    // auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.deep_features_fpth);
+
+    auto deep_features{ Matrix<float>{} };
+    auto soft_data{ Matrix<float>{} };
+
+    auto rr{ TransformationSoftmax::apply_real(presoft_data) };
 
     const auto& is{ imageset(pack.target_imageset) };
 
-    _data_packs.emplace(pack.ID,
-                        std::make_unique<ViretDataPack>(&is, pack.ID, pack.target_imageset, pack.model_options,
-                                                        pack.description, pack.vocabulary_data, std::move(presoft_data),
-                                                        std::move(soft_data), std::move(deep_features)));
+    _data_packs.emplace(
+        pack.ID, std::make_unique<ViretDataPack>(&is, pack.ID, pack.target_imageset, pack.model_options,
+                                                 pack.description, stats, pack.vocabulary_data, std::move(presoft_data),
+                                                 std::move(soft_data), std::move(deep_features)));
   }
 
   // Google type
   for (auto&& pack : _settings.config.Google_packs)
   {
-    break;
+    DataPackStats stats{};
+
     const auto& is{ imageset(pack.target_imageset) };
 
     // Initialize all images
     // \todo Use transparent sparse matrix representation for Google data
-    auto presoft_data = FileParser::ParseRawScoringData_GoogleAiVisionFormat(pack.score_data.presoftmax_scorings_fpth);
+
+    auto [presoft_data, parse_stats] =
+        FileParser::ParseRawScoringData_GoogleAiVisionFormat(pack.score_data.presoftmax_scorings_fpth);
+    stats.avg_num_labels_asigned = parse_stats.avg_num_labels_asigned;
+    stats.median_num_labels_asigned = parse_stats.median_num_labels_asigned;
 
     _data_packs.emplace(pack.ID, std::make_unique<GoogleVisionDataPack>(&is, pack.ID, pack.target_imageset,
-                                                                        pack.model_options, pack.description,
+                                                                        pack.model_options, pack.description, stats,
                                                                         pack.vocabulary_data, std::move(presoft_data)));
   }
 
   // W2VV type
   for (auto&& pack : _settings.config.W2VV_packs)
   {
+    DataPackStats stats{};
+
     const auto& is{ imageset(pack.target_imageset) };
 
     // Keyword feature vectors
@@ -198,7 +220,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
     deep_features = normalize_matrix_rows(std::move(deep_features));
 
     _data_packs.emplace(pack.ID, std::make_unique<W2vvDataPack>(
-                                     &is, pack.ID, pack.target_imageset, pack.model_options, pack.description,
+                                     &is, pack.ID, pack.target_imageset, pack.model_options, pack.description, stats,
                                      pack.vocabulary_data, std::move(deep_features), std::move(kw_features),
                                      std::move(bias_vec_transposed), std::move(PCA_mat), std::move(PCA_mean_vec)));
   }
@@ -462,7 +484,7 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
   if (normalize_y)
   {
     std::transform(res.begin(), res.end(), res.begin(), [num_queries](const std::pair<uint32_t, uint32_t>& x) {
-      return std::pair(x.first, uint32_t((float(x.second) / num_queries) * 100.0F));
+      return std::pair(x.first, uint32_t((float(x.second) / num_queries) * 10000.0F));
     });
   }
 

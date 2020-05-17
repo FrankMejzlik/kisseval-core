@@ -250,13 +250,6 @@
                                         "name": "sum-max",
                                         "description": "",
                                         "options": []
-                                    },
-                                    {
-                                        "active": true,
-                                        "ID": "max-max",
-                                        "name": "max-max",
-                                        "description": "",
-                                        "options": []
                                     }
                                 ]
                             },
@@ -268,15 +261,15 @@
                                 "values": [
                                     {
                                         "active": true,
-                                        "ID": "sum",
-                                        "name": "sum",
+                                        "ID": "mult",
+                                        "name": "mult",
                                         "description": "",
                                         "options": []
                                     },
                                     {
                                         "active": true,
-                                        "ID": "mult",
-                                        "name": "mult",
+                                        "ID": "sum",
+                                        "name": "sum",
                                         "description": "",
                                         "options": []
                                     }
@@ -290,13 +283,6 @@
                                 "values": [
                                     {
                                         "active": true,
-                                        "ID": "sum",
-                                        "name": "sum",
-                                        "description": "",
-                                        "options": []
-                                    },
-                                    {
-                                        "active": true,
                                         "ID": "max",
                                         "name": "max",
                                         "description": "",
@@ -306,6 +292,13 @@
                                         "active": true,
                                         "ID": "mult",
                                         "name": "mult",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "active": true,
+                                        "ID": "sum",
+                                        "name": "sum",
                                         "description": "",
                                         "options": []
                                     }
@@ -334,12 +327,6 @@
                     {
                         "ID": "linear_01",
                         "name": "Linear scale to [0, 1]",
-                        "description": "",
-                        "options": []
-                    },
-                    {
-                        "ID": "no_transform",
-                        "name": "No transform",
                         "description": "",
                         "options": []
                     },
@@ -378,7 +365,7 @@
                             "min": 1,
                             "max": 20,
                             "step": 0.1,
-                            "default": 5
+                            "default": 4
                         },
                         {
                             "active": true,
@@ -388,7 +375,7 @@
                             "min": 1,
                             "max": 20,
                             "step": 0.1,
-                            "default": 5
+                            "default": 2
                         },
                         {
                             "active": true,
@@ -398,7 +385,7 @@
                             "min": 1,
                             "max": 20,
                             "step": 0.1,
-                            "default": 5
+                            "default": 6
                         },
                         {
                             "key": "target",
@@ -686,13 +673,6 @@
                                         "name": "sum-max",
                                         "description": "",
                                         "options": []
-                                    },
-                                    {
-                                        "active": true,
-                                        "ID": "max-max",
-                                        "name": "max-max",
-                                        "description": "",
-                                        "options": []
                                     }
                                 ]
                             },
@@ -704,15 +684,15 @@
                                 "values": [
                                     {
                                         "active": true,
-                                        "ID": "sum",
-                                        "name": "sum",
+                                        "ID": "mult",
+                                        "name": "mult",
                                         "description": "",
                                         "options": []
                                     },
                                     {
                                         "active": true,
-                                        "ID": "mult",
-                                        "name": "mult",
+                                        "ID": "sum",
+                                        "name": "sum",
                                         "description": "",
                                         "options": []
                                     }
@@ -726,13 +706,6 @@
                                 "values": [
                                     {
                                         "active": true,
-                                        "ID": "sum",
-                                        "name": "sum",
-                                        "description": "",
-                                        "options": []
-                                    },
-                                    {
-                                        "active": true,
                                         "ID": "max",
                                         "name": "max",
                                         "description": "",
@@ -742,6 +715,13 @@
                                         "active": true,
                                         "ID": "mult",
                                         "name": "mult",
+                                        "description": "",
+                                        "options": []
+                                    },
+                                    {
+                                        "active": true,
+                                        "ID": "sum",
+                                        "name": "sum",
                                         "description": "",
                                         "options": []
                                     }
@@ -770,12 +750,6 @@
                     {
                         "ID": "linear_01",
                         "name": "Linear scale to [0, 1]",
-                        "description": "",
-                        "options": []
-                    },
-                    {
-                        "ID": "no_transform",
-                        "name": "No transform",
                         "description": "",
                         "options": []
                     },

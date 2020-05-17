@@ -180,14 +180,14 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
 
   query2Ss << "INSERT INTO `" << db_name << "`.`" << search_actions_table_name << "` ";
   query2Ss << "(`search_session_ID`,`action_index`,`action_query_index`,`action`,`operand`,`operand_readable`,`result_"
-              "target_rank`,`time`) VALUES ";
+              "target_rank`,`time`,`is_initial`) VALUES ";
 
   {
     size_t i{ 0_z };
     for (auto&& a : actions)
     {
       query2Ss << "(" << id << "," << i << "," << a.query_idx << ",'" << a.action << "','" << a.operand << "','"
-               << a.operand_readable << "'," << a.final_rank << "," << a.time << ")";
+               << a.operand_readable << "'," << a.final_rank << "," << a.time << "," << size_t(a.is_initial) << ")";
 
       if (i < actions.size() - 1)
       {
@@ -219,7 +219,7 @@ SearchSessRankChartData DataManager::get_search_sessions_rank_progress_chart_dat
                         << "` WHERE `data_pack_ID` = 'NasNet2019' AND `user_level` <= " << max_user_level << ";";
   std::stringstream SQL_query_actions_ss;
   SQL_query_actions_ss << "SELECT `search_session_ID`, `action_index`, `result_target_rank` FROM `" << db_name << "`.`"
-                       << search_actions_table_name << "` WHERE `action_query_index` = 0;";
+                       << search_actions_table_name << "` WHERE `action_query_index` = 0  AND `is_initial` = 0;";
 
   auto [res_code0, rows_sessions] = _db.ResultQuery(SQL_query_sessions_ss.str());
   if (res_code0 != 0)

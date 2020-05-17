@@ -18,7 +18,7 @@ class GoogleVisionDataPack : public BaseDataPack
 {
  public:
   GoogleVisionDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
-                const std::string& description, const GoogleDataPackRef::VocabData& vocab_data_refs,
+                const std::string& description, const DataPackStats& stats, const GoogleDataPackRef::VocabData& vocab_data_refs,
                 std::vector<std::vector<float>>&& presoft);
 
   [[nodiscard]] virtual RankingResult rank_frames(const std::vector<CnfFormula>& user_queries,
@@ -27,6 +27,12 @@ class GoogleVisionDataPack : public BaseDataPack
 
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
                                                    const std::string& model_options, size_t num_points) const override;
+
+  [[nodiscard]] void cache_up_example_images(const std::vector<const Keyword*>& kws,
+                                            const std::string& model_commands) const;
+
+  [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(
+      FrameId frame_ID, std::vector<ModelKeyValOption> opt_key_vals, bool accumulated) const override;
 
   [[nodiscard]] virtual HistogramChartData<size_t, float> get_histogram_used_labels(const std::vector<UserTestQuery>& test_queries,
                                                    const std::string& model_options,size_t num_queries,  size_t num_points, bool accumulated) const override;

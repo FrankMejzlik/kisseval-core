@@ -13,8 +13,9 @@ class BaseDataPack
 {
  public:
   BaseDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
-               const std::string& model_options, const std::string& description)
-      : _p_is(p_is),
+               const std::string& model_options, const std::string& description, const DataPackStats& stats)
+      : _stats(stats),
+        _p_is(p_is),
         _ID(ID),
         _description(description),
         _model_options(model_options),
@@ -37,8 +38,9 @@ class BaseDataPack
     throw NotSuportedModelOptionExcept("This data pack does not support this.");
   };
 
-  [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(
-    FrameId frame_ID, std::vector<ModelKeyValOption> opt_key_vals, bool accumulated) const
+  [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(FrameId frame_ID,
+                                                                          std::vector<ModelKeyValOption> opt_key_vals,
+                                                                          bool accumulated) const
   {
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested.");
@@ -55,8 +57,9 @@ class BaseDataPack
     throw NotSuportedModelOptionExcept("This data pack does not support this.");
   };
 
-  [[nodiscard]] virtual HistogramChartData<size_t, float> get_histogram_used_labels(const std::vector<UserTestQuery>& test_queries,
-                                                   const std::string& model_commands, size_t num_queries, size_t num_points, bool accumulated) const
+  [[nodiscard]] virtual HistogramChartData<size_t, float> get_histogram_used_labels(
+      const std::vector<UserTestQuery>& test_queries, const std::string& model_commands, size_t num_queries,
+      size_t num_points, bool accumulated) const
   {
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested.");
@@ -65,6 +68,8 @@ class BaseDataPack
 
   [[nodiscard]] virtual const std::string& get_vocab_ID() const = 0;
   [[nodiscard]] virtual const std::string& get_vocab_description() const = 0;
+
+  [[nodiscard]] virtual const DataPackStats& get_stats() const { return _stats; };
 
   [[nodiscard]] virtual std::string humanize_and_query(const std::string& and_query) const = 0;
   [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID, const std::string& model_commands,
@@ -84,7 +89,6 @@ class BaseDataPack
     throw NotSuportedModelOptionExcept("This data pack does not support this.");
   };
 
-
   [[nodiscard]] virtual DataPackInfo get_info() const = 0;
 
   [[nodiscard]] virtual const std::string& get_ID() const { return _ID; };
@@ -92,6 +96,9 @@ class BaseDataPack
   [[nodiscard]] virtual const std::string& get_description() const { return _description; };
   [[nodiscard]] virtual const std::string& get_model_options() const { return _model_options; };
   [[nodiscard]] virtual const std::string& target_imageset_ID() const { return _target_imageset_ID; };
+
+ protected:
+  DataPackStats _stats;
 
  private:
   const BaseImageset* _p_is;

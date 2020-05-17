@@ -13,6 +13,8 @@
 /** Logging level */
 #define LOG_LEVEL 5  // NOLINT
 
+constexpr float ZERO_WEIGHT = 0.01F;
+
 constexpr size_t NUM_MODEL_TEST_RESULT_POINTS = 100;
 constexpr size_t TEMP_CONTEXT_LOOKUP_LENGTH = 3;
 

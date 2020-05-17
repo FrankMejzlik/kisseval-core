@@ -11,10 +11,10 @@ using namespace image_ranker;
 
 GoogleVisionDataPack::GoogleVisionDataPack(const BaseImageset* p_is, const StringId& ID,
                                            const StringId& target_imageset_ID, const std::string& model_options,
-                                           const std::string& description,
+                                           const std::string& description, const DataPackStats& stats,
                                            const GoogleDataPackRef::VocabData& vocab_data_refs,
                                            std::vector<std::vector<float>>&& presoft)
-    : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description),
+    : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description, stats),
       _presoftmax_data_raw(std::move(presoft)),
       _keywords(vocab_data_refs)
 {
@@ -24,9 +24,14 @@ GoogleVisionDataPack::GoogleVisionDataPack(const BaseImageset* p_is, const Strin
     _transforms.emplace(enum_label(eTransformationIds::LINEAR_01).first,
                         std::make_unique<TransformationLinear01GoogleVision>(_keywords, _presoftmax_data_raw));
   });
-  std::thread t3([this]() {
+  /*std::thread t3([this]() {
     _transforms.emplace(enum_label(eTransformationIds::NO_TRANSFORM).first,
                         std::make_unique<NoTransformGoogleVision>(_keywords, _presoftmax_data_raw));
+  });*/
+
+  std::thread t3([this]() {
+    _transforms.emplace(enum_label(eTransformationIds::SOFTMAX).first,
+                        std::make_unique<TransformationSoftmaxGoogleVision>(_keywords, _presoftmax_data_raw));
   });
 
   // Instantiate all wanted models
@@ -37,6 +42,93 @@ GoogleVisionDataPack::GoogleVisionDataPack(const BaseImageset* p_is, const Strin
   t2.join();
   t3.join();
 }
+
+void GoogleVisionDataPack::cache_up_example_images(const std::vector<const Keyword*>& kws,
+                                            const std::string& model_commands) const
+{
+  auto hasher{ std::hash<std::string>{} };
+
+  size_t curr_opts_hash{ hasher(model_commands) };
+
+  for (auto&& cp_kw : kws)
+  {
+    const auto& all_kws_with_ID{ _keywords.get_all_keywords_ptrs(cp_kw->ID) };
+
+    // Check if images are already cached
+    Keyword& kw{ **all_kws_with_ID.begin() };
+    if (curr_opts_hash == kw.lastExampleFramesHash)
+    {
+      continue;
+    }
+
+    // Get example images
+    CnfFormula fml{ Clause{ Literal<KeywordId>{ kw.ID } } };
+    std::vector<CnfFormula> v{ fml };
+
+    // Rank frames with query "this_kw"
+    auto ranked_frames{ rank_frames(v, model_commands, NUM_EXAMPLE_FRAMES) };
+
+    // Store them in all keyword synonyms
+    for (auto&& p_kw : all_kws_with_ID)
+    {
+      p_kw->m_exampleImageFilenames.clear();
+      for (auto&& f_ID : ranked_frames.m_frames)
+      {
+        std::string filename{ get_imageset_ptr()->operator[](f_ID).m_filename };
+        p_kw->m_exampleImageFilenames.emplace_back(std::move(filename));
+      }
+
+      // Update hash
+      p_kw->lastExampleFramesHash = curr_opts_hash;
+    }
+  }
+}
+
+std::vector<const Keyword*> GoogleVisionDataPack::get_frame_top_classes(FrameId frame_ID,
+                                                                 std::vector<ModelKeyValOption> opt_key_vals,
+                                                                 bool accumulated) const
+{
+  bool max_based{ false };
+  std::string transform_ID{ "linear_01" };
+
+  for (auto&& [key, val] : opt_key_vals)
+  {
+    if (key == "transform")
+    {
+      transform_ID = val;
+    }
+    else if (key == "model_operations")
+    {
+      // If max-based model
+      if (val == "mult-max" || val == "sum-max" || val == "max-max")
+      {
+        max_based = true;
+      }
+    }
+  }
+
+  // Choose desired transform
+  auto iter_t = _transforms.find(transform_ID);
+  if (iter_t == _transforms.end())
+  {
+    LOGE("Tranform not found!");
+  }
+  const auto& transform = *(iter_t->second);
+
+  const DataInfo* p_data_info{ nullptr };
+
+
+  p_data_info = &transform.data_sum_info();
+
+  const auto& kw_IDs{ p_data_info->top_classes[frame_ID] };
+
+  std::vector<const Keyword*> res;
+
+  std::transform(kw_IDs.begin(), kw_IDs.end(), std::back_inserter(res),
+                 [this](const size_t& kw_ID) { return &_keywords[kw_ID]; });
+
+  return res;
+};
 
 const std::string& GoogleVisionDataPack::get_vocab_ID() const { return _keywords.get_ID(); }
 

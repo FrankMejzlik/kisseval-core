@@ -23,8 +23,8 @@ class BaseSimUser
   virtual std::vector<UserTestQuery> generate_simulated_queries(const BaseImageset* p_is,
                                                                 const BaseVectorTransform& transformed_data,
                                                                 const KeywordsContainer& keywords,
-                                                                std::vector<ModelKeyValOption>& options,
-                                                                size_t count, size_t temporal_count = 1_z) const
+                                                                std::vector<ModelKeyValOption>& options, size_t count,
+                                                                size_t temporal_count = 1_z) const
   {
     throw NotSuportedModelOptionExcept("Single queries generation not suported for this options combinations.");
     return std::vector<UserTestQuery>{};
@@ -112,9 +112,11 @@ class SimUserXToP : public BaseSimUser
                                                       const std::vector<UserTestQuery>& test_user_queries,
                                                       std::vector<ModelKeyValOption>& options) const override;
 
-  virtual std::vector<UserTestQuery> generate_simulated_queries(
-      const BaseImageset* p_is, const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-      std::vector<ModelKeyValOption>& options, size_t count, size_t temporal_count = 1_z) const override;
+  virtual std::vector<UserTestQuery> generate_simulated_queries(const BaseImageset* p_is,
+                                                                const BaseVectorTransform& transformed_data,
+                                                                const KeywordsContainer& keywords,
+                                                                std::vector<ModelKeyValOption>& options, size_t count,
+                                                                size_t temporal_count = 1_z) const override;
 
  private:
   std::vector<UserTestQuery> generate_whole_queries(const BaseImageset* p_is,

@@ -80,7 +80,7 @@ class BaseVectorTransform
   Matrix<float> _data_max_mat;
   DataInfo _data_max_mat_info;
 
-  mutable std::unordered_map<float, Vector<float>> _data_idfs;
+  mutable std::map<std::pair<float, float>, Vector<float>> _data_idfs;
   mutable std::map<TfidfCacheKey, Matrix<float>> _transformed_data_cache;
 
   Matrix<float> _data_linear_raw;

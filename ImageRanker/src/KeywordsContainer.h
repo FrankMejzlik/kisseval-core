@@ -28,8 +28,9 @@ class Keyword
 {
  public:
   Keyword() = default;
-  Keyword(FrameId ID, size_t wordnetId, size_t vectorIndex, std::string&& word, size_t descStartIndex, size_t descEndIndex,
-          std::vector<size_t>&& hypernyms, std::vector<size_t>&& hyponyms, std::string&& description)
+  Keyword(FrameId ID, size_t wordnetId, size_t vectorIndex, std::string&& word, size_t descStartIndex,
+          size_t descEndIndex, std::vector<size_t>&& hypernyms, std::vector<size_t>&& hyponyms,
+          std::string&& description)
       : ID(ID),
         m_wordnetId(wordnetId),
         m_vectorIndex(vectorIndex),
@@ -58,7 +59,6 @@ class Keyword
   std::string m_word;
   std::vector<size_t> m_hypernyms;
   std::vector<size_t> m_hyponyms;
-  
 
   //! Set of indices that are hyponyms of this keyword
   std::unordered_set<size_t> m_hyponymBinIndices;
@@ -87,21 +87,10 @@ class KeywordsContainer
   const std::string& get_ID() const { return _ID; }
   const std::string& get_description() const { return _description; }
 
-  const Keyword& operator[](KeywordId keyword_ID) const
-  {
-    return *_ID_to_keyword.at(keyword_ID);
-  }
-  Keyword& operator[](KeywordId keyword_ID)
-  {
-    return *_ID_to_keyword.at(keyword_ID);
-  }
+  const Keyword& operator[](KeywordId keyword_ID) const { return *_ID_to_keyword.at(keyword_ID); }
+  Keyword& operator[](KeywordId keyword_ID) { return *_ID_to_keyword.at(keyword_ID); }
 
-
-  std::set<Keyword*>& get_all_keywords_ptrs(KeywordId keyword_ID)
-  {
-    return _ID_to_allkeywords.at(keyword_ID);
-  }
-  
+  std::set<Keyword*>& get_all_keywords_ptrs(KeywordId keyword_ID) { return _ID_to_allkeywords.at(keyword_ID); }
 
  private:
   std::string _ID;
@@ -120,7 +109,7 @@ class KeywordsContainer
 
   const Keyword* GetKeywordPtr(const std::string& wordString) const
   {
-    auto pKw{GetNearKeywordsPtrs(wordString, 1)[0]};
+    auto pKw{ GetNearKeywordsPtrs(wordString, 1)[0] };
 
     if (!pKw)
     {
@@ -223,7 +212,7 @@ class KeywordsContainer
           continue;
         }
 
-        auto subwords{SplitString(pKwRight->m_word, ' ')};
+        auto subwords{ SplitString(pKwRight->m_word, ' ') };
 
         for (auto&& w : subwords)
         {
@@ -235,7 +224,7 @@ class KeywordsContainer
         }
       }
 
-      auto subwordsL{SplitString(pKwLeft->m_word, ' ')};
+      auto subwordsL{ SplitString(pKwLeft->m_word, ' ') };
       // Find all words that are contained in this word
       for (auto&& pKwRight : _keywords)
       {
@@ -293,7 +282,7 @@ class KeywordsContainer
                                  });
     if (item == _keywords.cend() || item->get()->m_word != keyword)
     {
-      //LOGE("This keyword not found.");
+      // LOGE("This keyword not found.");
       return nullptr;
     }
 
@@ -375,8 +364,8 @@ class KeywordsContainer
     {
       // Compare strings
 
-      std::string aa{a};
-      std::string bb{b};
+      std::string aa{ a };
+      std::string bb{ b };
       std::transform(aa.begin(), aa.end(), aa.begin(), ::tolower);
       std::transform(bb.begin(), bb.end(), bb.begin(), ::tolower);
 

@@ -12,11 +12,11 @@
 using namespace image_ranker;
 
 ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
-                             const std::string& model_options, const std::string& description,
+                             const std::string& model_options, const std::string& description, const DataPackStats& stats,
                              const ViretDataPackRef::VocabData& vocab_data_refs,
                              std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
                              std::vector<std::vector<float>>&& feas_data)
-    : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description),
+    : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description, stats),
       _feas_data_raw(std::move(feas_data)),
       _presoftmax_data_raw(std::move(presoft)),
       _softmax_data_raw(std::move(softmax_data)),
@@ -25,16 +25,16 @@ ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const
   // Instantiate all wanted transforms
   std::thread t1([this]() {
     _transforms.emplace(enum_label(eTransformationIds::SOFTMAX).first,
-                        std::make_unique<TransformationSoftmax>(_keywords, _softmax_data_raw));
+                        std::make_unique<TransformationSoftmax>(_keywords, _presoftmax_data_raw));
   });
   std::thread t2([this]() {
     _transforms.emplace(enum_label(eTransformationIds::LINEAR_01).first,
                         std::make_unique<TransformationLinear01>(_keywords, _presoftmax_data_raw));
   });
-  std::thread t3([this]() {
+  /*std::thread t3([this]() {
     _transforms.emplace(enum_label(eTransformationIds::NO_TRANSFORM).first,
                         std::make_unique<NoTransform>(_keywords, _presoftmax_data_raw));
-  });
+  });*/
 
   // Instantiate all wanted models
   _models.emplace(enum_label(eModelIds::BOOLEAN).first, std::make_unique<BooleanModel>());
@@ -47,7 +47,7 @@ ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const
 
   t1.join();
   t2.join();
-  t3.join();
+  //t3.join();
 }
 
 HistogramChartData<size_t, float> ViretDataPack::get_histogram_used_labels(

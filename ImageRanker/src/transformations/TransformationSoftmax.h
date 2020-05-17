@@ -22,8 +22,25 @@ class TransformationSoftmax : public BaseVectorTransform
 
  public:
   [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, [[maybe_unused]] const std::string& options = "");
+  [[nodiscard]] static Matrix<float> apply_real(const Matrix<float>& data, [[maybe_unused]] const std::string& options = "");
 
   TransformationSoftmax(const KeywordsContainer& keywords, Matrix<float>& data_mat,
                         [[maybe_unused]] const std::string& options = "");
 };
+
+class TransformationSoftmaxGoogleVision : public BaseVectorTransform
+{
+ public:
+  struct Options
+  {
+  };
+
+ public:
+  [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, [[maybe_unused]] const std::string& options = "");
+  [[nodiscard]] static Matrix<float> apply_real(const Matrix<float>& data, [[maybe_unused]] const std::string& options = "");
+
+  TransformationSoftmaxGoogleVision(const KeywordsContainer& keywords, Matrix<float>& data_mat,
+                        [[maybe_unused]] const std::string& options = "");
+};
+
 }  // namespace image_ranker

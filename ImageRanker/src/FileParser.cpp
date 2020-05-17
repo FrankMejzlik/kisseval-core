@@ -652,8 +652,10 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
       result_data, result_top_KWs);
 }
 
-std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath)
+std::pair<Matrix<float>, DataParseStats> FileParser::ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath)
 {
+  DataParseStats stats{};
+
   // \todo Make dynamic
   std::vector<std::vector<float>> result{ 20000 };
 
@@ -773,7 +775,7 @@ std::vector<std::vector<float>> FileParser::ParseSoftmaxBinFile_ViretFormat(cons
     result[id] = std::move(rawRankData);
   }
 
-  return result;
+  return std::pair(result, stats);
 }
 
 std::vector<std::vector<float>> FileParser::ParseDeepFeasBinFile_ViretFormat(const std::string& inputFilepath)
@@ -781,8 +783,11 @@ std::vector<std::vector<float>> FileParser::ParseDeepFeasBinFile_ViretFormat(con
   return std::vector<std::vector<float>>();
 }
 
-Matrix<float> FileParser::ParseRawScoringData_GoogleAiVisionFormat(const std::string& inputFilepath)
+std::pair<Matrix<float>, DataParseStats> FileParser::ParseRawScoringData_GoogleAiVisionFormat(
+    const std::string& inputFilepath)
 {
+  DataParseStats stats{};
+
   // \todo Make dynamic
   std::vector<std::vector<float>> result{ 20000 };
 
@@ -832,10 +837,15 @@ Matrix<float> FileParser::ParseRawScoringData_GoogleAiVisionFormat(const std::st
   float min{ std::numeric_limits<float>::max() };
   float max{ -std::numeric_limits<float>::max() };
 
+  std::vector<size_t> num_label_cnter;
+  size_t num_labels_sum{ 0_z };
+
+  std::vector<std::pair<size_t, size_t>> labels;
+
   for (size_t i{ 0_z }; i < numRecords; ++i)
   {
     std::vector<float> scoringData;
-    scoringData.resize(numKeywords, GOOGLE_AI_NO_LABEL_SCORE);
+    scoringData.resize(numKeywords, ZERO_WEIGHT);
 
     ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
     uint32_t ID = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
@@ -852,6 +862,11 @@ Matrix<float> FileParser::ParseRawScoringData_GoogleAiVisionFormat(const std::st
 
     std::priority_queue<std::pair<size_t, float>, std::vector<std::pair<size_t, float>>, decltype(cmp)> maxHeap(
         cmp, std::move(container));
+
+    labels.emplace_back(ID, numLabels);
+
+    num_label_cnter.emplace_back(numLabels);
+    num_labels_sum += numLabels;
 
     for (size_t iLabel{ 0_z }; iLabel < numLabels; ++iLabel)
     {
@@ -896,7 +911,30 @@ Matrix<float> FileParser::ParseRawScoringData_GoogleAiVisionFormat(const std::st
     result[ID] = std::move(scoringData);
   }
 
-  return result;
+  // Get mean of how many labels was used
+  std::sort(num_label_cnter.begin(), num_label_cnter.end());
+
+  std::sort(labels.begin(), labels.end(),
+            [](const std::pair<size_t, size_t>& l, const std::pair<size_t, size_t>& r) { return l.first < r.first; });
+
+  // std::ofstream ofs("query_hits.txt");
+  // if (!ofs.is_open())
+  //{
+  //  assert(false);
+  //}
+  // for (auto&& [ID, num_labels] : labels)
+  //{
+  //  ofs << ID << "," << num_labels << std::endl;
+  //}
+  // ofs.close();
+
+  auto median_num_classes{ float(num_label_cnter[num_label_cnter.size() / 2]) };
+  float avg_num_classes{ float(num_labels_sum) / num_label_cnter.size() };
+
+  stats.median_num_labels_asigned = median_num_classes;
+  stats.avg_num_labels_asigned = avg_num_classes;
+
+  return std::pair(result, stats);
 }
 
 #if 0

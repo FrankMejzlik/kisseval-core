@@ -26,6 +26,29 @@ using ModelKeyValOption = std::pair<std::string, std::string>;
  **********************************************
  ***********************************************/
 
+struct UserQueriesStats
+{
+  float median_num_labels_asigned = std::numeric_limits<float>().quiet_NaN();
+  float avg_num_labels_asigned = std::numeric_limits<float>().quiet_NaN();
+};
+
+struct DataParseStats
+{
+  float median_num_labels_asigned = std::numeric_limits<float>().quiet_NaN();
+  float avg_num_labels_asigned = std::numeric_limits<float>().quiet_NaN();
+};
+
+struct DataPackStats
+{
+  float median_num_labels_asigned = std::numeric_limits<float>().quiet_NaN();
+  float avg_num_labels_asigned = std::numeric_limits<float>().quiet_NaN();
+
+  float median_num_labels_used_in_query = std::numeric_limits<float>().quiet_NaN();
+  float avg_num_labels_used_in_query = std::numeric_limits<float>().quiet_NaN();
+
+  float label_hit_prob = std::numeric_limits<float>().quiet_NaN();
+};
+
 using KeywordId = size_t;
 
 template <typename T>
@@ -404,6 +427,7 @@ struct InteractiveSearchAction
   std::string operand_readable;
   size_t final_rank;
   size_t time;
+  bool is_initial = true;
 };
 
 // =====================================

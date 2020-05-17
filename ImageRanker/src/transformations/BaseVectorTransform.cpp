@@ -78,6 +78,11 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
     {
       auto&& [score, idx] {max_prio_queue.top()};
 
+      if (score < ZERO_WEIGHT)
+      {
+        break;
+      }
+
       auto ID{keywords.GetKeywordConstPtrByVectorIndex(idx)->ID};
 
       row_top_classes.emplace_back(ID);
@@ -172,7 +177,8 @@ std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords,
 const Vector<float>& BaseVectorTransform::data_idfs(float true_threshold, float idf_coef) const
 {
   // Look into the cache first
-  float key = true_threshold + 1000*idf_coef;
+  std::pair<float, float> key = std::pair(true_threshold, idf_coef);
+
   const auto it{_data_idfs.find(key)};
   if (it != _data_idfs.end())
   {
@@ -218,6 +224,8 @@ const Vector<float>& BaseVectorTransform::data_idfs(float true_threshold, float 
     {
       auto v = (1 - (val / max));
       val = 2 * pow(v, idf_coef);
+      // xoxo
+      //val = log(_data_sum_mat.size() / val);
     }
   }
   else
@@ -252,8 +260,11 @@ const Matrix<float>& BaseVectorTransform::data_sum_tfidf(eTermFrequency tf_ID, e
   float term_t = idf_ID == eInvDocumentFrequency::IDF ? true_t : 0.0F;
 
   // Get IDFs
-  const Vector<float>& term_idfs_vector{data_idfs(term_t, idf_coef)};
   const Vector<float>& data_mat_maximums = data_sum_info().maxes;
+
+  size_t num_frames{data_mat_maximums.size()};
+
+  const Vector<float>& term_idfs_vector{ term_t != 0.0F ? data_idfs(term_t, idf_coef) : Vector<float>(num_frames, 1.0F) };
 
   Matrix<float> new_data_mat;
   new_data_mat.reserve(_data_sum_mat.size());
