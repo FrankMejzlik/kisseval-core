@@ -24,7 +24,7 @@ void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, co
                                                 const std::vector<AnnotatorUserQuery>& user_queries)
 {
   std::stringstream sql_query_ss;
-  sql_query_ss << ("INSERT INTO `" + db_name + "`.`" + queries_table_name +
+  sql_query_ss << ("INSERT INTO `" + queries_table_name +
                    "`"
                    "(`user_query`,`readable_user_query`,`vocabulary_ID`,`data_pack_ID`,`model_options`,`target_frame_"
                    "ID`,`with_example_images`,`user_level`,`manually_validated`,`session_ID`) VALUES ");
@@ -36,10 +36,10 @@ void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, co
   size_t i = 0;
   for (auto&& query : user_queries)
   {
-    sql_query_ss << "('"s << query.user_query_encoded.at(0) + "','"s << query.user_query_readable.at(0) << "','"
-                 << vocab_ID << "','" << data_pack_ID << "','" + model_options + "',"
-                 << std::to_string(query.target_sequence_IDs.at(0)) << ", "s << ex_imgs_str << ","
-                 << std::to_string(user_level) << ",0,'" << query.session_ID + "')";
+    sql_query_ss << "('"s << _db.EscapeString(query.user_query_encoded.at(0)) + "','"s
+                 << _db.EscapeString(query.user_query_readable.at(0)) << "','" << vocab_ID << "','" << data_pack_ID
+                 << "','" + model_options + "'," << std::to_string(query.target_sequence_IDs.at(0)) << ", "s
+                 << ex_imgs_str << "," << std::to_string(user_level) << ",0,'" << query.session_ID + "')";
 
     if (i < (user_queries.size() - 1))
     {
@@ -71,8 +71,7 @@ std::vector<UserTestQuery> DataManager::fetch_user_test_queries(eUserQueryOrigin
   std::vector<UserTestQuery> result;
 
   std::stringstream SQL_query_ss;
-  SQL_query_ss << "SELECT `target_frame_ID`, `user_query` FROM `" << _db.GetDbName() << "`.`" << queries_table_name
-               << "` ";
+  SQL_query_ss << "SELECT `target_frame_ID`, `user_query` FROM `" << queries_table_name << "` ";
   SQL_query_ss << "WHERE (`user_level` = " << int(queries_origin) << " AND `vocabulary_ID` = '" << vocabulary_ID
                << "' ";
 
@@ -154,7 +153,7 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
    * Insert into "search_sessions" table
    */
   std::stringstream query1Ss{ "" };
-  query1Ss << "INSERT INTO `" << db_name << "`.`" << searches_table_name << "` ";
+  query1Ss << "INSERT INTO `" << searches_table_name << "` ";
   query1Ss << "(`target_frame_ID`,`vocabulary_ID`,`data_pack_ID`,`model_options`,`duration`,`result`,";
   query1Ss << "`with_example_images`,`user_level`,`session_ID`,`manually_validated`) VALUES ";
 
@@ -168,7 +167,7 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
   size_t result1{ _db.NoResultQuery(q1) };
   if (result1 != 0)
   {
-    LOGE("Failed to insert into:" + db_name + "`.`" + searches_table_name + "!");
+    LOGE("Failed to insert into:` " + searches_table_name + "!");
   }
   // Currently inserted ID
   size_t id{ _db.GetLastId() };
@@ -178,7 +177,7 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
    */
   std::stringstream query2Ss;
 
-  query2Ss << "INSERT INTO `" << db_name << "`.`" << search_actions_table_name << "` ";
+  query2Ss << "INSERT INTO `" << search_actions_table_name << "` ";
   query2Ss << "(`search_session_ID`,`action_index`,`action_query_index`,`action`,`operand`,`operand_readable`,`result_"
               "target_rank`,`time`,`is_initial`) VALUES ";
 
@@ -203,7 +202,7 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
 
   if (result1 != 0 || result2 != 0)
   {
-    LOGE("Failed to insert into:" + db_name + "`.`" + search_actions_table_name + "!");
+    LOGE("Failed to insert into: `" + search_actions_table_name + "!");
   }
 }
 
@@ -214,11 +213,10 @@ SearchSessRankChartData DataManager::get_search_sessions_rank_progress_chart_dat
   LOGW("Not implemented");
 
   std::stringstream SQL_query_sessions_ss;
-  SQL_query_sessions_ss << "SELECT `ID`, `target_frame_ID`, `duration`, `result` FROM `" << db_name << "`.`"
-                        << searches_table_name
+  SQL_query_sessions_ss << "SELECT `ID`, `target_frame_ID`, `duration`, `result` FROM `" << searches_table_name
                         << "` WHERE `data_pack_ID` = 'NasNet2019' AND `user_level` <= " << max_user_level << ";";
   std::stringstream SQL_query_actions_ss;
-  SQL_query_actions_ss << "SELECT `search_session_ID`, `action_index`, `result_target_rank` FROM `" << db_name << "`.`"
+  SQL_query_actions_ss << "SELECT `search_session_ID`, `action_index`, `result_target_rank` FROM `"
                        << search_actions_table_name << "` WHERE `action_query_index` = 0  AND `is_initial` = 0;";
 
   auto [res_code0, rows_sessions] = _db.ResultQuery(SQL_query_sessions_ss.str());

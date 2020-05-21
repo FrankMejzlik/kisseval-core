@@ -370,14 +370,14 @@ int main()
 #define TEST_get_histogram_used_labels 0
 
 #define TEST_submit_annotator_user_queries 0
-#define TEST_submit_search_session 1
+#define TEST_submit_search_session 0
 #define TEST_get_frame_detail_data 0
 
 #define TEST_get_random_frame_sequence 0
 #define TEST_get_autocomplete_results 0
 #define TEST_get_loaded_imagesets_info 0
 #define TEST_rank_frames 0
-#define TEST_run_model_test 0
+#define TEST_run_model_test 1
 #define TEST_run_model_test_with_sim 0
 #define TEST_run_model_vec_space 0
 #define TEST_boolean_grid_test_threshold 0
@@ -469,11 +469,14 @@ int main()
 
   // TEST: `submit_annotator_user_queries`
 #if TEST_submit_annotator_user_queries
-  ranker.submit_annotator_user_queries(enum_label(eDataPackId::NASNET_2019).first, 9, true,
-                                       {
-                                           { "Shonicka1", "123&345&3232", "car,; '  '  \\ \\ cat, cow", 4321 },
-                                           { "Shonicka2", "1213&3451&32321", "cars, cats, cows", 5321 },
-                                       });
+  ranker.submit_annotator_user_queries(
+      "NasNet2019", "xx", 9, true,
+      std::vector<AnnotatorUserQuery>{
+          AnnotatorUserQuery{ "Shonicka1", std::vector<std::string>{ "123&345&3232" },
+                              std::vector<std::string>{ "car,; '  '  \\ \\ cat, cow" }, std::vector<FrameId>{ 4321 } },
+          AnnotatorUserQuery{ "Shonicka2", std::vector<std::string>{ "1213&3451&32321" },
+                              std::vector<std::string>{ "cars, cats, cows" }, std::vector<FrameId>{ 5321 } },
+      });
 #endif
 
 #if TEST_submit_search_session
@@ -585,7 +588,7 @@ int main()
     std::cout << "MULT-SUM-MAX model: " << std::endl;
     std::cout << "--------------" << std::endl;
     auto r1 = ranker.run_model_test(
-        eUserQueryOrigin::SEMI_EXPERTS, "GoogleVisionAi_Sep2019",
+        eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019",
         "model=mult-sum-max;transform=softmax;model_operations=mult-max;model_ignore_treshold=0.0");
 
     r1 = ranker.run_model_test(

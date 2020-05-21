@@ -53,7 +53,7 @@
                 }
             },
             {
-                "active": true,
+                "active": false,
                 "ID": "GoogLeNet2019",
                 "name": "GoogLeNet2019",
                 "description": "VIRET_based",
@@ -91,7 +91,7 @@
         ],
         "W2VV_based": [
             {
-                "active": true,
+                "active": false,
                 "ID": "W2VV_BoW_Dec2019",
                 "name": "W2VV_BoW_Dec2019",
                 "description": "W2VV_based",

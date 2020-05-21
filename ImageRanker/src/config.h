@@ -7,11 +7,14 @@
 /*============================================
  * Logging config
  *============================================*/
+
 /** Will throw exception on LOG_ERROR */
-#define THROW_ON_ERROR 1  // NOLINT
+#define THROW_ON_ERROR 1
 
 /** Logging level */
-#define LOG_LEVEL 5  // NOLINT
+#define LOG_LEVEL 5
+
+#define USE_SQLITE 1
 
 constexpr float ZERO_WEIGHT = 0.01F;
 
@@ -22,6 +25,8 @@ constexpr size_t NUM_EXAMPLE_FRAMES = 10;
 
 /** Number of top classes that will be computed and stored */
 constexpr size_t NUM_TOP_CLASSES = 10;
+
+#define DB_FILENAME "database.db"
 
 /*============================================
  * Default settings

@@ -2,6 +2,106 @@
 
 using namespace image_ranker;
 
+#if USE_SQLITE
+
+Database::Database(const std::string& host, size_t port, const std::string& username, const std::string& password,
+                   const std::string& db_name)
+    : _host(host), _port(port), _username(username), _db_name(db_name), _password(password)
+{
+  int rc;
+
+  rc = sqlite3_open(DB_FILENAME, &_db);
+  if (rc)
+  {
+    sqlite3_close(_db);
+    std::string msg{ "Can't open database: " + std::string{ sqlite3_errmsg(_db) } };
+    LOGE(msg);
+  }
+};
+
+Database::~Database() noexcept { sqlite3_close(_db); }
+
+size_t Database::GetErrorCode() const { return static_cast<size_t>(sqlite3_errcode(_db)); }
+
+size_t Database::NoResultQuery(const std::string& query) const
+{
+  sqlite3_stmt* stmt;
+  // compile sql statement to binary
+  if (sqlite3_prepare_v2(_db, query.c_str(), -1, &stmt, NULL) != SQLITE_OK)
+  {
+    printf("ERROR: while compiling sql: %s\n", sqlite3_errmsg(_db));
+    sqlite3_close(_db);
+    sqlite3_finalize(stmt);
+    return GetErrorCode();
+  }
+
+  int rc{ sqlite3_step(stmt) };
+  if (rc != SQLITE_DONE)
+  {
+    auto msg{ "SQL statement `"s + std::string(sqlite3_sql(stmt)) +
+              "` failed with error: " + std::string(sqlite3_errmsg(_db)) };
+    LOGE(msg);
+  }
+
+  // release resources
+  sqlite3_finalize(stmt);
+
+  return GetErrorCode();
+}
+
+std::string Database::EscapeString(const std::string& stringToEscape) const
+{
+  char* zSQL = sqlite3_mprintf("%q", stringToEscape.c_str());
+
+  return std::string(zSQL);
+}
+
+size_t Database::GetLastId() const { return static_cast<size_t>(sqlite3_last_insert_rowid(_db)); }
+
+std::pair<size_t, std::vector<std::vector<std::string>>> Database::ResultQuery(const std::string& query) const
+{
+  // Send query to DB and get result
+  std::vector<std::vector<std::string>> result;
+
+  sqlite3_stmt* stmt;
+  // compile sql statement to binary
+  if (sqlite3_prepare_v2(_db, query.c_str(), -1, &stmt, NULL) != SQLITE_OK)
+  {
+    printf("ERROR: while compiling sql: %s\n", sqlite3_errmsg(_db));
+    sqlite3_close(_db);
+    sqlite3_finalize(stmt);
+    return std::pair(sqlite3_errcode(_db), result);
+  }
+
+  int ret_code = 0;
+  while ((ret_code = sqlite3_step(stmt)) == SQLITE_ROW)
+  {
+    // execute sql statement, and while there are rows returned, print ID
+    auto cnt = sqlite3_data_count(stmt);
+
+    std::vector<std::string> r;
+    for (size_t i{ 0_z }; i < cnt; ++i)
+    {
+      auto c = (char*)sqlite3_column_text(stmt, i);
+      r.emplace_back(std::string(c));
+    }
+    result.emplace_back(std::move(r));
+  }
+  if (ret_code != SQLITE_DONE)
+  {
+    // this error handling could be done better, but it works
+    printf("ERROR: while performing sql: %s\n", sqlite3_errmsg(_db));
+    printf("ret_code = %d\n", ret_code);
+  }
+
+  // release resources
+  sqlite3_finalize(stmt);
+
+  return std::make_pair(GetErrorCode(), result);
+}
+
+#else
+
 Database::Database(std::string_view host, size_t port, std::string_view username, std::string_view password,
                    std::string_view dbName)
     : _host(host),
@@ -122,3 +222,5 @@ std::pair<size_t, std::vector<std::vector<std::string>>> Database::ResultQuery(s
 
   return std::make_pair(GetErrorCode(), retData);
 }
+
+#endif

@@ -148,7 +148,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories);$(ProjectDir)external/JSON/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external/sqlite/;$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories);$(ProjectDir)external/JSON/</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <AdditionalOptions>/experimental:external /external:anglebrackets /external:W0 %(AdditionalOptions)</AdditionalOptions>
@@ -212,7 +212,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories);$(ProjectDir)external/JSON/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external/sqlite/;$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories);$(ProjectDir)external/JSON/</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <AdditionalOptions>/experimental:external /external:anglebrackets /external:W0 %(AdditionalOptions)</AdditionalOptions>
@@ -242,7 +242,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories);$(ProjectDir)external/JSON/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external/sqlite/;$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories);$(ProjectDir)external/JSON/</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <AdditionalOptions>/experimental:external /external:anglebrackets /external:W0 %(AdditionalOptions)</AdditionalOptions>
@@ -257,6 +257,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="external\sqlite\shell.c" />
+    <ClCompile Include="external\sqlite\sqlite3.c" />
     <ClCompile Include="src\named_types.h" />
     <ClCompile Include="src\ranking_models\PlainBowModel.cpp" />
     <ClCompile Include="src\ranking_models\BaseW2vvModel.cpp" />
