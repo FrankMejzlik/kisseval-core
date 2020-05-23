@@ -30,7 +30,7 @@ enum class HyperAccumType
 
 [[nodiscard]] std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer& keywords,
                                                                       Matrix<float>&& data, HyperAccumType type,
-                                                                      bool normalize = true);
+                                                                      bool normalize = true, bool accumulate = true);
 
 [[nodiscard]] std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords, Matrix<float>&& data,
                                                             bool normalize = true);

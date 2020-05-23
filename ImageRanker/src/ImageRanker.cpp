@@ -20,6 +20,11 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
 {
   // Read the JSON cfg file
   std::ifstream i(filepath);
+  if (!i.is_open())
+  {
+    LOGE("Error opening file: " + filepath);
+  }
+
   json json_data;
   i >> json_data;
 
@@ -35,6 +40,9 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
 
     imagesets.emplace_back(DatasetDataPackRef{
         is1["ID"].get<std::string>(), is1["description"].get<std::string>(), is1["ID"].get<std::string>(),
+        FrameFilenameOffsets{ is1["filename_vID_from"].get<size_t>(), is1["filename_vID_len"].get<size_t>(),
+                              is1["filename_sID_from"].get<size_t>(), is1["filename_sID_len"].get<size_t>(),
+                              is1["filename_fn_from"].get<size_t>(), is1["filename_fn_len"].get<size_t>() },
         data_dir + is1["frames_dir"].get<std::string>(), data_dir + is1["ID_to_frame_fpth"].get<std::string>() });
   }
 
@@ -49,7 +57,7 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
     }
 
     VIRET_data_packs.emplace_back(ViretDataPackRef{
-        dp1["ID"].get<std::string>(), dp1["description"].get<std::string>(), dp1["model_options"].get<std::string>(),
+        dp1["ID"].get<std::string>(), dp1["type"].get<std::string>(), dp1["model_options"].get<std::string>(),
         dp1["data"]["target_dataset"].get<std::string>(),
 
         dp1["vocabulary"]["ID"].get<std::string>(), dp1["vocabulary"]["description"].get<std::string>(),
@@ -57,7 +65,7 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
 
         data_dir + dp1["data"]["presoftmax_scorings_fpth"].get<std::string>(),
         data_dir + dp1["data"]["softmax_scorings_fpth"].get<std::string>(),
-        data_dir + dp1["data"]["deep_features_fpth"].get<std::string>() });
+        data_dir + dp1["data"]["deep_features_fpth"].get<std::string>(), dp1["accumulated"].get<bool>() });
   }
 
   // Google data packs
@@ -71,7 +79,7 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
     }
 
     Google_data_packs.emplace_back(GoogleDataPackRef{
-        dp3["ID"].get<std::string>(), dp3["description"].get<std::string>(), dp3["model_options"].get<std::string>(),
+        dp3["ID"].get<std::string>(), dp3["type"].get<std::string>(), dp3["model_options"].get<std::string>(),
         dp3["data"]["target_dataset"].get<std::string>(),
 
         dp3["vocabulary"]["ID"].get<std::string>(), dp3["vocabulary"]["description"].get<std::string>(),
@@ -92,7 +100,7 @@ ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::s
 
     W2VV_data_packs.emplace_back(
         W2vvDataPackRef{ dp3["ID"].get<std::string>(),
-                         dp3["description"].get<std::string>(),
+                         dp3["type"].get<std::string>(),
                          dp3["model_options"].get<std::string>(),
                          dp3["data"]["target_dataset"].get<std::string>(),
 
@@ -132,7 +140,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
   for (auto&& pack : _settings.config.dataset_packs)
   {
     // Initialize all images
-    auto frames = _fileParser.ParseImagesMetaData(pack.imgage_to_ID_fpth, 1);
+    auto frames = _fileParser.ParseImagesMetaData(pack.imgage_to_ID_fpth, pack.offsets, 1);
 
     _imagesets.emplace(pack.ID, std::make_unique<SelFramesDataset>(pack.ID, pack.images_dir, std::move(frames)));
   }
@@ -145,28 +153,24 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
   {
     DataPackStats stats{};
 
+    const auto& is{ imageset(pack.target_imageset) };
+
     // Initialize all images
     auto [presoft_data, parse_stats] =
-        FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth);
+        FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth, is.size());
     stats.avg_num_labels_asigned = parse_stats.avg_num_labels_asigned;
     stats.median_num_labels_asigned = parse_stats.median_num_labels_asigned;
 
-    // Count label hits
-
+    // We don't need these yet
     // auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.softmax_scorings_fpth);
     // auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.deep_features_fpth);
-
     auto deep_features{ Matrix<float>{} };
     auto soft_data{ Matrix<float>{} };
 
-    auto rr{ TransformationSoftmax::apply_real(presoft_data) };
-
-    const auto& is{ imageset(pack.target_imageset) };
-
-    _data_packs.emplace(
-        pack.ID, std::make_unique<ViretDataPack>(&is, pack.ID, pack.target_imageset, pack.model_options,
-                                                 pack.description, stats, pack.vocabulary_data, std::move(presoft_data),
-                                                 std::move(soft_data), std::move(deep_features)));
+    _data_packs.emplace(pack.ID, std::make_unique<ViretDataPack>(&is, pack.ID, pack.target_imageset, pack.accumulated,
+                                                                 pack.model_options, pack.description, stats,
+                                                                 pack.vocabulary_data, std::move(presoft_data),
+                                                                 std::move(soft_data), std::move(deep_features)));
   }
 
   // Google type
@@ -180,7 +184,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
     // \todo Use transparent sparse matrix representation for Google data
 
     auto [presoft_data, parse_stats] =
-        FileParser::ParseRawScoringData_GoogleAiVisionFormat(pack.score_data.presoftmax_scorings_fpth);
+        FileParser::ParseRawScoringData_GoogleAiVisionFormat(pack.score_data.presoftmax_scorings_fpth, is.size());
     stats.avg_num_labels_asigned = parse_stats.avg_num_labels_asigned;
     stats.median_num_labels_asigned = parse_stats.median_num_labels_asigned;
 

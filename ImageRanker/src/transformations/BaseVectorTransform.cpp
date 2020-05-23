@@ -12,7 +12,7 @@ using namespace image_ranker;
 namespace image_ranker
 {
 std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer& keywords, Matrix<float>&& data,
-                                                        HyperAccumType type, bool normalize)
+                                                        HyperAccumType type, bool normalize, bool accumulate)
 {
   Matrix<float> result_data;
   result_data.reserve(data.size());
@@ -27,9 +27,9 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
     std::vector<KeywordId> row_top_classes;
     row_top_classes.reserve(NUM_TOP_CLASSES);
 
-    float row_sum{0.0F};
-    float row_max{-std::numeric_limits<float>::max()};
-    float row_min{std::numeric_limits<float>::max()};
+    float row_sum{ 0.0F };
+    float row_max{ -std::numeric_limits<float>::max() };
+    float row_min{ std::numeric_limits<float>::max() };
 
     using KwPair = std::pair<float, KeywordId>;
     // Comparator for the priority queue
@@ -40,21 +40,48 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
     queue_cont.reserve(row.size());
 
     // Construct prioprity queue
-    std::priority_queue<KwPair, std::vector<KwPair>, decltype(frame_pair_cmptor)> max_prio_queue(
-      frame_pair_cmptor, std::move(queue_cont));
+    std::priority_queue<KwPair, std::vector<KwPair>, decltype(frame_pair_cmptor)> max_prio_queue(frame_pair_cmptor, std::move(queue_cont));
 
     // Iterate over all bins in this vector
-    for (auto&& [it, i]{std::tuple(row.begin(), size_t{0})}; it != row.end(); ++it, ++i)
+    for (auto&& [it, i]{ std::tuple(row.begin(), size_t{ 0 }) }; it != row.end(); ++it, ++i)
     {
-      auto& bin{*it};
-      auto pKw{keywords.GetKeywordConstPtrByVectorIndex(i)};
+      auto& bin{ *it };
+      auto pKw{ keywords.GetKeywordConstPtrByVectorIndex(i) };
 
-      float new_cell_value{0.0F};
+      float new_cell_value{ 0.0F };
 
-      // Iterate over all indices this keyword interjoins
-      for (auto&& kwIndex : pKw->m_hyponymBinIndices)
+      // If hypernym accumulation is required
+      if (accumulate)
       {
-        new_cell_value += row[kwIndex];
+        // Iterate over all indices this keyword interjoins
+        for (auto&& kwIndex : pKw->m_hyponymBinIndices)
+        {
+          if (type == HyperAccumType::MAX)
+          {
+            new_cell_value = std::max(new_cell_value, row[kwIndex]);
+          }
+          else
+          {
+            new_cell_value += row[kwIndex];
+          }
+        }
+      }
+      else
+      {
+        new_cell_value = bin;
+
+        // Deaccumulate them 
+        for (auto&& kwIndex : pKw->m_hyponymBinIndices)
+        {
+          if (type == HyperAccumType::MAX)
+          {
+            new_cell_value = std::max(new_cell_value, row[kwIndex]);
+          }
+          else
+          {
+            new_cell_value += row[kwIndex];
+          }
+        }
       }
 
       row_sum += new_cell_value;
@@ -74,16 +101,16 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
     }
 
     // Ge top concepts
-    for (size_t ii{0_z}; ii < NUM_TOP_CLASSES; ++ii)
+    for (size_t ii{ 0_z }; ii < NUM_TOP_CLASSES; ++ii)
     {
-      auto&& [score, idx] {max_prio_queue.top()};
+      auto&& [score, idx]{ max_prio_queue.top() };
 
       if (score < ZERO_WEIGHT)
       {
         break;
       }
 
-      auto ID{keywords.GetKeywordConstPtrByVectorIndex(idx)->ID};
+      auto ID{ keywords.GetKeywordConstPtrByVectorIndex(idx)->ID };
 
       row_top_classes.emplace_back(ID);
       max_prio_queue.pop();
@@ -104,20 +131,25 @@ std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords,
   Matrix<float> result_data;
   result_data.reserve(data.size());
   DataInfo di;
-
+  size_t iii{ 0 };
   for (auto&& row : data)
   {
     Vector<float> new_row;
     new_row.reserve(row.size());
 
+    if (row.size() == 0)
+    {
+      std::cout << row.size() << std::endl;
+      std::cout << iii << std::endl;
+    }
+
     std::vector<KeywordId> row_top_classes;
     row_top_classes.reserve(NUM_TOP_CLASSES);
 
-    float row_sum{0.0F};
-    float row_max{-std::numeric_limits<float>::max()};
-    float row_min{std::numeric_limits<float>::max()};
+    float row_sum{ 0.0F };
+    float row_max{ -std::numeric_limits<float>::max() };
+    float row_min{ std::numeric_limits<float>::max() };
 
-    
     using KwPair = std::pair<float, KeywordId>;
     // Comparator for the priority queue
     auto frame_pair_cmptor = [](const KwPair& left, const KwPair& right) { return left.first < right.first; };
@@ -127,14 +159,14 @@ std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords,
     queue_cont.reserve(row.size());
 
     // Construct prioprity queue
-    std::priority_queue<KwPair, std::vector<KwPair>, decltype(frame_pair_cmptor)> max_prio_queue(
-      frame_pair_cmptor, std::move(queue_cont));
+    std::priority_queue<KwPair, std::vector<KwPair>, decltype(frame_pair_cmptor)> max_prio_queue(frame_pair_cmptor,
+                                                                                                 std::move(queue_cont));
 
     // Iterate over all bins in this vector
-    for (auto&& [it, i]{std::tuple(row.begin(), size_t{0})}; it != row.end(); ++it, ++i)
+    for (auto&& [it, i]{ std::tuple(row.begin(), size_t{ 0 }) }; it != row.end(); ++it, ++i)
     {
-      auto& bin{*it};
-      auto pKw{keywords.GetKeywordConstPtrByVectorIndex(i)};
+      auto& bin{ *it };
+      auto pKw{ keywords.GetKeywordConstPtrByVectorIndex(i) };
 
       row_sum += bin;
       row_max = std::max(row_max, bin);
@@ -152,12 +184,17 @@ std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords,
       row_min /= row_sum;
     }
 
-    // Ge top concepts
-    for (size_t ii{0_z}; ii < NUM_TOP_CLASSES; ++ii)
+    if (max_prio_queue.empty())
     {
-      auto&& [score, idx] {max_prio_queue.top()};
+      std::cout << "xx" << std::endl;
+    }
 
-      auto ID{keywords.GetKeywordConstPtrByVectorIndex(idx)->ID};
+    // Ge top concepts
+    for (size_t ii{ 0_z }; ii < NUM_TOP_CLASSES; ++ii)
+    {
+      auto&& [score, idx]{ max_prio_queue.top() };
+
+      auto ID{ keywords.GetKeywordConstPtrByVectorIndex(idx)->ID };
 
       row_top_classes.emplace_back(ID);
       max_prio_queue.pop();
@@ -168,7 +205,7 @@ std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords,
     di.top_classes.emplace_back(std::move(row_top_classes));
 
     result_data.emplace_back(std::move(new_row));
-
+    ++iii;
   }
 
   return std::pair(std::move(result_data), std::move(di));
@@ -179,7 +216,7 @@ const Vector<float>& BaseVectorTransform::data_idfs(float true_threshold, float 
   // Look into the cache first
   std::pair<float, float> key = std::pair(true_threshold, idf_coef);
 
-  const auto it{_data_idfs.find(key)};
+  const auto it{ _data_idfs.find(key) };
   if (it != _data_idfs.end())
   {
     return it->second;
@@ -202,15 +239,15 @@ const Vector<float>& BaseVectorTransform::data_idfs(float true_threshold, float 
 
   Vector<float> idfs(num_dims(), 0.0F);
 
-  float max{0.0F};
+  float max{ 0.0F };
 
   // Iterate all frame feature vectors
   for (auto&& fea_vec : _data_sum_mat)
   {
     // Iterate over all concept indices
-    for (size_t i{0_z}; i < num_dims(); ++i)
+    for (size_t i{ 0_z }; i < num_dims(); ++i)
     {
-      auto v{idf_val_fn(fea_vec[i])};
+      auto v{ idf_val_fn(fea_vec[i]) };
       idfs[i] += v;
       max = std::max(max, idfs[i]);
     }
@@ -225,7 +262,7 @@ const Vector<float>& BaseVectorTransform::data_idfs(float true_threshold, float 
       auto v = (1 - (val / max));
       val = 2 * pow(v, idf_coef);
       // xoxo
-      //val = log(_data_sum_mat.size() / val);
+      // val = log(_data_sum_mat.size() / val);
     }
   }
   else
@@ -248,23 +285,24 @@ const Matrix<float>& BaseVectorTransform::data_sum_tfidf(eTermFrequency tf_ID, e
                                                          float true_t, float idf_coef) const
 {
   // Look into the cache first
-  TfidfCacheKey key{TfidfCacheKey(tf_ID, idf_ID, true_t, idf_coef)};
-  const auto it{_transformed_data_cache.find(key)};
+  TfidfCacheKey key{ TfidfCacheKey(tf_ID, idf_ID, true_t, idf_coef) };
+  const auto it{ _transformed_data_cache.find(key) };
   if (it != _transformed_data_cache.end())
   {
     return it->second;
   }
 
-  auto term_tf_fn{pick_tf_scheme_fn(tf_ID)};
+  auto term_tf_fn{ pick_tf_scheme_fn(tf_ID) };
 
   float term_t = idf_ID == eInvDocumentFrequency::IDF ? true_t : 0.0F;
 
   // Get IDFs
   const Vector<float>& data_mat_maximums = data_sum_info().maxes;
 
-  size_t num_frames{data_mat_maximums.size()};
+  size_t num_frames{ data_mat_maximums.size() };
 
-  const Vector<float>& term_idfs_vector{ term_t != 0.0F ? data_idfs(term_t, idf_coef) : Vector<float>(num_frames, 1.0F) };
+  const Vector<float>& term_idfs_vector{ term_t != 0.0F ? data_idfs(term_t, idf_coef)
+                                                        : Vector<float>(num_frames, 1.0F) };
 
   Matrix<float> new_data_mat;
   new_data_mat.reserve(_data_sum_mat.size());
@@ -274,11 +312,11 @@ const Matrix<float>& BaseVectorTransform::data_sum_tfidf(eTermFrequency tf_ID, e
     Vector<float> frame_vector;
     frame_vector.reserve(fea_vec.size());
 
-    size_t i{0_z};
+    size_t i{ 0_z };
     for (auto&& val : fea_vec)
     {
-      float tf{term_tf_fn(val, data_mat_maximums[i])};
-      float idf{1.0F};
+      float tf{ term_tf_fn(val, data_mat_maximums[i]) };
+      float idf{ 1.0F };
       if (idf_ID == eInvDocumentFrequency::IDF)
       {
         idf = term_idfs_vector[i];
@@ -288,7 +326,7 @@ const Matrix<float>& BaseVectorTransform::data_sum_tfidf(eTermFrequency tf_ID, e
       ++i;
     }
 
-    //frame_vector = normalize(frame_vector);
+    // frame_vector = normalize(frame_vector);
     new_data_mat.emplace_back(std::move(frame_vector));
   }
 

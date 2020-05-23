@@ -113,8 +113,7 @@ std::vector<UserTestNativeQuery> DataManager::fetch_user_native_test_queries(eUs
   std::vector<UserTestNativeQuery> result;
 
   std::stringstream SQL_query_ss;
-  SQL_query_ss << "SELECT `target_frame_ID`, `user_query` FROM `" << _db.GetDbName() << "`.`" << queries_table_name
-               << "` ";
+  SQL_query_ss << "SELECT `target_frame_ID`, `user_query` FROM `" << queries_table_name << "` ";
   SQL_query_ss << "WHERE (`user_level` = " << int(queries_origin) << " AND `vocabulary_ID` = 'native_language');";
 
   auto [res, db_rows] = _db.ResultQuery(SQL_query_ss.str());
@@ -164,6 +163,7 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
 
   // Run first query
   auto q1{ query1Ss.str() };
+  std::cout << q1 << std::endl;
   size_t result1{ _db.NoResultQuery(q1) };
   if (result1 != 0)
   {
@@ -200,10 +200,13 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
   auto q2{ query2Ss.str() };
   size_t result2{ _db.NoResultQuery(q2) };
 
+  std::cout << q2 << std::endl;
+
   if (result1 != 0 || result2 != 0)
   {
     LOGE("Failed to insert into: `" + search_actions_table_name + "!");
   }
+  return true;
 }
 
 SearchSessRankChartData DataManager::get_search_sessions_rank_progress_chart_data(

@@ -777,26 +777,7 @@
                         "name": "BoW VBS2020",
                         "description": "We embedd text query into the space and find the nearest frames.",
                         "options": [
-                            {
-                                "key": "sub_PCA_mean",
-                                "name": "Substitute PCA mean vector",
-                                "description": "",
-                                "input_type": "enum",
-                                "values": [
-                                    {
-                                        "ID": "true",
-                                        "name": "False",
-                                        "description": "",
-                                        "options": []
-                                    },
-                                    {
-                                        "ID": "false",
-                                        "name": "False",
-                                        "description": "",
-                                        "options": []
-                                    }
-                                ]
-                            }
+                            
                         ]
                     }
                 ]

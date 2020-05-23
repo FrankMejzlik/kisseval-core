@@ -192,36 +192,19 @@ std::map<std::string, size_t> FileParser::parse_w2vv_word_to_idx_file(const std:
   return result_map;
 };
 
-std::tuple<VideoId, ShotId, FrameNumber> FileParser::ParseVideoFilename(const std::string& filename) const
+std::tuple<VideoId, ShotId, FrameNumber> FileParser::ParseVideoFilename(const std::string& filename,
+                                                                        const FrameFilenameOffsets& offsets) const
 {
   // Extract string representing video ID
-  std::string videoIdString = filename.substr(FILENAME_VIDEO_ID_FROM, FILENAME_VIDEO_ID_LEN);
+  std::string videoIdString = filename.substr(offsets.v_ID_off, offsets.v_ID_len);
 
   // Extract string representing shot ID
-  std::string shotIdString = filename.substr(FILENAME_SHOT_ID_FROM, FILENAME_SHOT_ID_LEN);
+  std::string shotIdString = filename.substr(offsets.s_ID_off, offsets.s_ID_len);
 
   // Extract string representing frame number
-  std::string frameNumberString = filename.substr(FILENAME_FRAME_NUMBER_FROM, FILENAME_FRAME_NUMBER_LEN);
+  std::string frameNumberString = filename.substr(offsets.fn_ID_off, offsets.fn_ID_len);
 
   return std::tuple(strTo<VideoId>(videoIdString), strTo<ShotId>(shotIdString), strTo<FrameNumber>(frameNumberString));
-}
-
-VideoId FileParser::GetVideoIdFromFrameFilename(const std::string& filename) const
-{
-  // Extract string representing video ID
-  std::string videoIdString{ filename.substr(FILENAME_VIDEO_ID_FROM, FILENAME_VIDEO_ID_LEN) };
-
-  // Return integral value of this string's representation
-  return strTo<VideoId>(videoIdString);
-}
-
-ShotId FileParser::GetShotIdFromFrameFilename(const std::string& filename) const
-{
-  // Extract string representing video ID
-  std::string videoIdString{ filename.substr(FILENAME_SHOT_ID_FROM, FILENAME_SHOT_ID_LEN) };
-
-  // Return integral value of this string's representation
-  return strTo<ShotId>(videoIdString);
 }
 
 void FileParser::ProcessVideoShotsStack(std::stack<SelFrame*>& videoFrames) const
@@ -276,7 +259,8 @@ std::vector<ImageIdFilenameTuple> FileParser::GetImageFilenames(const std::strin
   return result;
 }
 
-std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFilename, size_t imageIdStride) const
+std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFilename,
+                                                      const FrameFilenameOffsets& offsets, size_t imageIdStride) const
 {
   std::vector<ImageIdFilenameTuple> imageIdFilenameTuples = GetImageFilenames(idToFilename);
 
@@ -290,7 +274,7 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
   for (auto&& [imageId, filename] : imageIdFilenameTuples)
   {
     // Parse filename
-    auto [videoId, shotId, frameNumber] = ParseVideoFilename(filename);
+    auto [videoId, shotId, frameNumber] = ParseVideoFilename(filename, offsets);
 
     // Create new Image instance
     resultImages.emplace_back(SelFrame(FrameId(resultImages.size()), imageId, filename, videoId, shotId, frameNumber));
@@ -644,20 +628,21 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
       top_KW_frame_IDs.emplace_back(FrameId(pair.first), pair.second);
     }
 
-    result_data.emplace_back(std::move(rawRankData));
     result_top_KWs.emplace_back(std::move(top_KW_frame_IDs));
+    result_data.emplace_back(std::move(rawRankData));
   }
 
   return std::pair<std::vector<std::vector<float>>, std::vector<std::vector<std::pair<FrameId, float>>>>(
       result_data, result_top_KWs);
 }
 
-std::pair<Matrix<float>, DataParseStats> FileParser::ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath)
+std::pair<Matrix<float>, DataParseStats> FileParser::ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath,
+                                                                                     size_t num_frames)
 {
   DataParseStats stats{};
 
   // \todo Make dynamic
-  std::vector<std::vector<float>> result{ 20000 };
+  std::vector<std::vector<float>> result{ num_frames };
 
   // Open file for reading as binary from the end side
   std::ifstream ifs(inputFilepath, std::ios::binary | std::ios::ate);
@@ -778,18 +763,20 @@ std::pair<Matrix<float>, DataParseStats> FileParser::ParseSoftmaxBinFile_ViretFo
   return std::pair(result, stats);
 }
 
-std::vector<std::vector<float>> FileParser::ParseDeepFeasBinFile_ViretFormat(const std::string& inputFilepath)
+std::vector<std::vector<float>> FileParser::ParseDeepFeasBinFile_ViretFormat(const std::string& inputFilepath,
+                                                                             size_t num_frames)
 {
+  LOGW("Not implemented...");
   return std::vector<std::vector<float>>();
 }
 
 std::pair<Matrix<float>, DataParseStats> FileParser::ParseRawScoringData_GoogleAiVisionFormat(
-    const std::string& inputFilepath)
+    const std::string& inputFilepath, size_t num_frames)
 {
   DataParseStats stats{};
 
   // \todo Make dynamic
-  std::vector<std::vector<float>> result{ 20000 };
+  std::vector<std::vector<float>> result(num_frames);
 
   // Open file for reading as binary from the end side
   std::ifstream ifs(inputFilepath, std::ios::binary | std::ios::ate);

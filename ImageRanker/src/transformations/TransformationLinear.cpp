@@ -11,9 +11,9 @@ Matrix<float> TransformationLinear01::apply(const Matrix<float>& data, const std
 
   for (auto&& row : data)
   {
-    float sum{0.0F};
-    float min{std::numeric_limits<float>::max()};
-    float max{-std::numeric_limits<float>::max()};
+    float sum{ 0.0F };
+    float min{ std::numeric_limits<float>::max() };
+    float max{ -std::numeric_limits<float>::max() };
 
     Vector<float> new_row;
 
@@ -38,9 +38,9 @@ Matrix<float> TransformationLinear01::apply(const Matrix<float>& data, const std
 }
 
 TransformationLinear01::TransformationLinear01(const KeywordsContainer& keywords, const Matrix<float>& data_mat,
-                                               const std::string& options)
-    : BaseVectorTransform(accumulate_hypernyms(keywords, apply(data_mat), HyperAccumType::SUM),
-                          accumulate_hypernyms(keywords, apply(data_mat), HyperAccumType::MAX), 
+                                               bool accumulate, const std::string& options)
+    : BaseVectorTransform(accumulate_hypernyms(keywords, apply(data_mat), HyperAccumType::SUM, true, accumulate),
+                          accumulate_hypernyms(keywords, apply(data_mat), HyperAccumType::MAX, true, accumulate),
                           calc_stats(keywords, apply(data_mat)))
 {
 }
@@ -52,9 +52,9 @@ Matrix<float> TransformationLinear01GoogleVision::apply(const Matrix<float>& dat
 
   for (auto&& row : data)
   {
-    float sum{0.0F};
-    float min{std::numeric_limits<float>::max()};
-    float max{-std::numeric_limits<float>::max()};
+    float sum{ 0.0F };
+    float min{ std::numeric_limits<float>::max() };
+    float max{ -std::numeric_limits<float>::max() };
 
     Vector<float> new_row;
 

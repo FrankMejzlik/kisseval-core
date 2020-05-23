@@ -134,13 +134,28 @@ RankingResult PlainBowModel::rank_frames(const Matrix<float>& data_mat, const Ma
 
   std::vector<Vector<float>> embedded_user_queries;
 
-  for (auto&& q : user_query)
+  size_t visual_dim{data_mat.front().size()};
+  size_t text_dim{kw_features.front().size()};
+
+  // Copy options
+  Options new_opts {opts};
+
+  // If only PCAed visual data available, force PCA
+  if (visual_dim < text_dim)
   {
-    embedded_user_queries.emplace_back(
-        embedd_native_user_query(kw_features, kw_bias_vec, kw_PCA_mat, kw_PCA_mean_vec, q, opts));
+    new_opts.do_PCA = true;
   }
 
-  auto dist_fn{get_dist_fn(opts.dist_fn)};
+  for (auto&& q : user_query)
+  {
+    auto emb_q{embedd_native_user_query(kw_features, kw_bias_vec, kw_PCA_mat, kw_PCA_mean_vec, q, new_opts)};
+    embedded_user_queries.emplace_back(emb_q);
+
+    assert(emb_q.size() == visual_dim);
+  }
+
+
+  auto dist_fn{get_dist_fn(new_opts.dist_fn)};
 
   {
     size_t i{0};

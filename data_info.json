@@ -5,41 +5,41 @@
             "ID": "V3C1_20k",
             "name": "V3C1_20k",
             "description": "Subset of V31C dataset, every 50th selected frame.",
-            "frames_dir": "/imageset_V3C1_20k/thumbs/",
             "ID_to_frame_fpth": "./imageset_V3C1_20k/files.txt",
-            "num_frames": 20000
+            "frames_dir": "./imageset_V3C1_20k/frames/",
+            "num_frames": 20000,
+            "filename_vID_from": 1,
+            "filename_vID_len": 5,
+            "filename_sID_from": 8,
+            "filename_sID_len": 5,
+            "filename_fn_from": 40,
+            "filename_fn_len": 6
         },
         {
-            "active": false,
-            "ID": "V3C1_2019",
-            "name": "V3C1_2019",
-            "description": "Selected frames from V31C dataset by Tomas Soucek in 2019.",
-            "frames_dir": null,
-            "ID_to_frame_fpth": null
-        },
-        {
-            "active": false,
-            "ID": "V3C1_Jan_2020",
-            "description": "Selected frames from V31C dataset by Tomas Soucek for VBS 2020.",
-            "frames_dir": null,
-            "ID_to_frame_fpth": null
-        },
-        {
-            "active": false,
-            "ID": "LSC_Apr_2020",
-            "description": "Selected frames from V31C dataset by Tomas Soucek for LSC 2020.",
-            "frames_dir": null,
-            "ID_to_frame_fpth": null
+            "active": true,
+            "ID": "ITECTiny2019",
+            "name": "ITECTiny2019",
+            "description": "Small dataset by ITEC.",
+            "ID_to_frame_fpth": "./imageset_ITECTiny2019/files.txt",
+            "frames_dir": "./imageset_ITECTiny2019/frames/",
+            "num_frames": 628,
+            "filename_vID_from": 7,
+            "filename_vID_len": 5,
+            "filename_sID_from": 14,
+            "filename_sID_len": 5,
+            "filename_fn_from": 42,
+            "filename_fn_len": 8
         }
     ],
     "data_packs": {
         "VIRET_based": [
             {
-                "active": true,
+                "active": false,
                 "ID": "NasNet2019",
                 "name": "NasNet2019",
-                "description": "VIRET_based",
+                "type": "VIRET_based",
                 "model_options": "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0",
+                "accumulated": false,
                 "vocabulary": {
                     "ID": "VIRET_WordNet2019",
                     "description": "With ~1300 phrases.",
@@ -48,7 +48,7 @@
                 "data": {
                     "target_dataset": "V3C1_20k",
                     "presoftmax_scorings_fpth": "./imageset_V3C1_20k/VIRET/NasNet2019/Studenti_NasNetLarge.pre-softmax",
-                    "softmax_scorings_fpth": "./imageset_V3C1_20k/VIRET/NasNet2019/Studenti_NasNetLarge.softmax",
+                    "softmax_scorings_fpth": "",
                     "deep_features_fpth": "./imageset_V3C1_20k/VIRET/NasNet2019/Studenti_NasNetLarge.deep-features"
                 }
             },
@@ -56,8 +56,9 @@
                 "active": false,
                 "ID": "GoogLeNet2019",
                 "name": "GoogLeNet2019",
-                "description": "VIRET_based",
+                "type": "VIRET_based",
                 "model_options": "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0",
+                "accumulated": false,
                 "vocabulary": {
                     "ID": "VIRET_WordNet2019",
                     "description": "With ~1300 phrases.",
@@ -66,8 +67,27 @@
                 "data": {
                     "target_dataset": "V3C1_20k",
                     "presoftmax_scorings_fpth": "./imageset_V3C1_20k/VIRET/GoogLeNet2019/05_googlenet.pre-softmax",
-                    "softmax_scorings_fpth": "./imageset_V3C1_20k/VIRET/GoogLeNet2019/05_googlenet.softmax",
+                    "softmax_scorings_fpth": "",
                     "deep_features_fpth": "./imageset_V3C1_20k/VIRET/GoogLeNet2019/05_googlenet.deep-features"
+                }
+            },
+            {
+                "active": true,
+                "ID": "ITECTiny_NasNet2019",
+                "name": "ITECTiny_NasNet2019",
+                "type": "VIRET_based",
+                "model_options": "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0",
+                "accumulated": true,
+                "vocabulary": {
+                    "ID": "VIRET_WordNet2019",
+                    "description": "With ~1300 phrases.",
+                    "keyword_synsets_fpth": "./imageset_ITECTiny2019/VIRET/keyword_classes.txt"
+                },
+                "data": {
+                    "target_dataset": "ITECTiny2019",
+                    "presoftmax_scorings_fpth": "./imageset_ITECTiny2019/VIRET/ITECTiny_NasNet2019/ITECTiny2019.NasNet.linear.pre-softmax",
+                    "softmax_scorings_fpth": "",
+                    "deep_features_fpth": "./imageset_ITECTiny2019/VIRET/ITECTiny_NasNet2019/ITECTiny2019.NasNet.deep-features"
                 }
             }
         ],
@@ -76,7 +96,7 @@
                 "active": false,
                 "ID": "GoogleVisionAi_Sep2019",
                 "name": "GoogleVisionAi_Sep2019",
-                "description": "Google_based",
+                "type": "Google_based",
                 "model_options": "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0",
                 "vocabulary": {
                     "ID": "Google_AI_2019",
@@ -94,7 +114,7 @@
                 "active": false,
                 "ID": "W2VV_BoW_Dec2019",
                 "name": "W2VV_BoW_Dec2019",
-                "description": "W2VV_based",
+                "type": "W2VV_based",
                 "model_options": "model=w2vv_bow_plain;model_sub_PCA_mean=true;",
                 "vocabulary": {
                     "ID": "native_language",
@@ -117,6 +137,36 @@
                     "target_dataset": "V3C1_20k",
                     "deep_features_fpth": "./imageset_V3C1_20k/W2VV/W2VV_BoW_Dec2019/frame_features.resnext152_resnext101.w2vv_bow.bin",
                     "deep_features_dim": 2048,
+                    "deep_features_data_offset": 0
+                }
+            },
+            {
+                "active": true,
+                "ID": "ITECTiny_W2VV_BoW_Dec2019",
+                "name": "ITECTiny_W2VV_BoW_Dec2019",
+                "type": "W2VV_based",
+                "model_options": "model=w2vv_bow_plain;",
+                "vocabulary": {
+                    "ID": "native_language",
+                    "description": "Supported ~12k words.",
+                    "keyword_synsets_fpth": "./imageset_ITECTiny2019/W2VV/ITECTiny_W2VV_BoW_Dec2019/ITECTiny2019_keyword_classes.bow2019.txt",
+                    "keyword_features_fpth": "./imageset_ITECTiny2019/W2VV/ITECTiny_W2VV_BoW_Dec2019/ITECTiny2019_txt_weight-11147x2048floats.bin",
+                    "keyword_features_dim": 2048,
+                    "keyword_features_data_offset": 0,
+                    "keyword_bias_vec_fpth": "./imageset_ITECTiny2019/W2VV/ITECTiny_W2VV_BoW_Dec2019/ITECTiny2019_txt_bias-2048floats.bin",
+                    "keyword_bias_vec_dim": 2048,
+                    "keyword_bias_vec_data_offset": 0,
+                    "keyword_PCA_mat_fpth": "./imageset_ITECTiny2019/W2VV/ITECTiny_W2VV_BoW_Dec2019/ITECTiny2019.w2vv.pca.matrix.bin",
+                    "keyword_PCA_mat_dim": 2048,
+                    "keyword_PCA_mat_data_offset": 0,
+                    "keyword_PCA_mean_vec_fpth": "./imageset_ITECTiny2019/W2VV/ITECTiny_W2VV_BoW_Dec2019/ITECTiny2019_.w2vv.pca.mean.bin",
+                    "keyword_PCA_mean_vec_dim": 2048,
+                    "keyword_PCA_mean_vec_offset": 0
+                },
+                "data": {
+                    "target_dataset": "ITECTiny2019",
+                    "deep_features_fpth": "./imageset_ITECTiny2019/W2VV/ITECTiny_W2VV_BoW_Dec2019/ITECTiny2019_frame_features.resnext152_resnext101.w2vv_bow.bin",
+                    "deep_features_dim": 128,
                     "deep_features_data_offset": 0
                 }
             }

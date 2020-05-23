@@ -11,7 +11,7 @@
 
 using namespace image_ranker;
 
-ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
+ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,bool accumulated,
                              const std::string& model_options, const std::string& description, const DataPackStats& stats,
                              const ViretDataPackRef::VocabData& vocab_data_refs,
                              std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
@@ -22,19 +22,55 @@ ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const
       _softmax_data_raw(std::move(softmax_data)),
       _keywords(vocab_data_refs)
 {
+  std::cout <<accumulated <<std::endl;
+
+
+  // If data are already accumulated, we need to deaccumulate it
+  //if (accumulated)
+  //{
+  //  // Normalize it first
+  //  for (auto& row : _presoftmax_data_raw)
+  //  {
+  //    float sum {0.0F};
+  //    for (auto&& v : row)
+  //    {
+  //      sum+=v;
+  //    }
+  //    std::transform(row.begin(), row.end(), row.begin(), [sum](const float& x){return x / sum;});
+  //  }
+
+  //  for (auto& row : _presoftmax_data_raw)
+  //  {
+  //    for (auto&& [it, i]{ std::tuple(row.begin(), size_t{ 0 }) }; it != row.end(); ++it, ++i)
+  //    {
+  //      auto new_cell_value{*it};
+  //      auto pKw{ _keywords.GetKeywordConstPtrByVectorIndex(i) };
+
+  //      // Iterate over all indices this keyword interjoins
+  //      for (auto&& kwIndex : pKw->m_hyponymBinIndices)
+  //      {
+  //        // Skip self
+  //        if (kwIndex == i)
+  //        {
+  //          continue;
+  //        }
+  //        new_cell_value -= row[kwIndex];
+  //      }
+
+  //      row[i] = new_cell_value;
+  //    }
+  //  }
+  //}
+
   // Instantiate all wanted transforms
-  std::thread t1([this]() {
+  std::thread t1([this, accumulated]() {
     _transforms.emplace(enum_label(eTransformationIds::SOFTMAX).first,
-                        std::make_unique<TransformationSoftmax>(_keywords, _presoftmax_data_raw));
+                        std::make_unique<TransformationSoftmax>(_keywords, _presoftmax_data_raw, !accumulated));
   });
-  std::thread t2([this]() {
+  std::thread t2([this, accumulated]() {
     _transforms.emplace(enum_label(eTransformationIds::LINEAR_01).first,
-                        std::make_unique<TransformationLinear01>(_keywords, _presoftmax_data_raw));
+                        std::make_unique<TransformationLinear01>(_keywords, _presoftmax_data_raw, !accumulated));
   });
-  /*std::thread t3([this]() {
-    _transforms.emplace(enum_label(eTransformationIds::NO_TRANSFORM).first,
-                        std::make_unique<NoTransform>(_keywords, _presoftmax_data_raw));
-  });*/
 
   // Instantiate all wanted models
   _models.emplace(enum_label(eModelIds::BOOLEAN).first, std::make_unique<BooleanModel>());
@@ -47,7 +83,6 @@ ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const
 
   t1.join();
   t2.join();
-  //t3.join();
 }
 
 HistogramChartData<size_t, float> ViretDataPack::get_histogram_used_labels(
@@ -384,7 +419,6 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
     if (!_sim_users.empty())
     {
       iter_su = _sim_users.begin();
-      LOGW("Uknown sim_user_ID: '" + sim_user_ID + "'. Falling back to: " + iter_su->first);
     }
     else
     {
@@ -513,6 +547,7 @@ void ViretDataPack::cache_up_example_images(const std::vector<const Keyword*>& k
 DataPackInfo ViretDataPack::get_info() const
 {
   return DataPackInfo{ get_ID(),           get_description(),          get_model_options(), target_imageset_ID(),
+    _presoftmax_data_raw.size(),
                        _keywords.get_ID(), _keywords.get_description() };
 }
 

@@ -10,7 +10,7 @@ Database::Database(const std::string& host, size_t port, const std::string& user
 {
   int rc;
 
-  rc = sqlite3_open(DB_FILENAME, &_db);
+  rc = sqlite3_open(DB_FPTH, &_db);
   if (rc)
   {
     sqlite3_close(_db);
@@ -82,7 +82,7 @@ std::pair<size_t, std::vector<std::vector<std::string>>> Database::ResultQuery(c
     std::vector<std::string> r;
     for (size_t i{ 0_z }; i < cnt; ++i)
     {
-      auto c = (char*)sqlite3_column_text(stmt, i);
+      auto c = (char*)sqlite3_column_text(stmt, static_cast<int>(i));
       r.emplace_back(std::string(c));
     }
     result.emplace_back(std::move(r));

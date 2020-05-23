@@ -359,6 +359,7 @@ AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std
 DataPackInfo GoogleVisionDataPack::get_info() const
 {
   return DataPackInfo{ get_ID(),           get_description(),          get_model_options(), target_imageset_ID(),
+                        _presoftmax_data_raw.size(),
                        _keywords.get_ID(), _keywords.get_description() };
 }
 

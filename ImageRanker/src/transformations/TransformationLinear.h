@@ -19,7 +19,7 @@ class TransformationLinear01 : public BaseVectorTransform
  public:
    [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, const std::string& options = "");
 
-  TransformationLinear01(const KeywordsContainer& keywords, const Matrix<float>& data_mat,
+  TransformationLinear01(const KeywordsContainer& keywords, const Matrix<float>& data_mat, bool accumulate = true,
                          const std::string& options = "");
 };
 

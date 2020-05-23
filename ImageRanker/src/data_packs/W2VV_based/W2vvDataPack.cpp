@@ -9,7 +9,7 @@
 using namespace image_ranker;
 
 W2vvDataPack::W2vvDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
-                           const std::string& model_options, const std::string& description, const DataPackStats& stats, 
+                           const std::string& model_options, const std::string& description, const DataPackStats& stats,
                            const W2vvDataPackRef::VocabData& vocab_data_refs,
                            std::vector<std::vector<float>>&& frame_features, Matrix<float>&& kw_features,
                            Vector<float>&& kw_bias_vec, Matrix<float>&& kw_PCA_mat, Vector<float>&& kw_PCA_mean_vec)
@@ -148,8 +148,6 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   auto iter_su = _sim_users.find(sim_user_ID);
   if (iter_su == _sim_users.end())
   {
-    LOGW("sim_user_ID not found: '" + sim_user_ID + "'. Using default: " + enum_label(eSimUserIds::NO_SIM).first);
-
     iter_su = _sim_users.find(enum_label(eSimUserIds::NO_SIM).first);
   }
   const auto& sim_user = *(iter_su->second);
@@ -184,13 +182,18 @@ AutocompleteInputResult W2vvDataPack::get_autocomplete_results(const std::string
                                                                bool with_example_images,
                                                                const std::string& model_commands) const
 {
-  return {_keywords.GetNearKeywordsPtrs(query_prefix, result_size)};
+  return { _keywords.GetNearKeywordsPtrs(query_prefix, result_size) };
 }
 
 DataPackInfo W2vvDataPack::get_info() const
 {
-  return DataPackInfo{get_ID(),           get_description(),          get_model_options(), target_imageset_ID(),
-                      _keywords.get_ID(), _keywords.get_description()};
+  return DataPackInfo{ get_ID(),
+                       get_description(),
+                       get_model_options(),
+                       target_imageset_ID(),
+                       _features_of_frames.size(),
+                       _keywords.get_ID(),
+                       _keywords.get_description() };
 }
 
 CnfFormula W2vvDataPack::native_query_to_CNF_formula(const std::string& native_query) const
@@ -212,7 +215,7 @@ CnfFormula W2vvDataPack::native_query_to_CNF_formula(const std::string& native_q
   // Tokenize this string
   std::string token_str;
   std::vector<std::string> query;
-  size_t ignore_cnt{0_z};
+  size_t ignore_cnt{ 0_z };
   while (query_ss >> token_str)
   {
     auto p_kw = _keywords.GetKeywordByWord(token_str);
@@ -223,7 +226,7 @@ CnfFormula W2vvDataPack::native_query_to_CNF_formula(const std::string& native_q
     }
 
     Clause c;
-    c.emplace_back(Literal<KeywordId>{p_kw->ID, false});
+    c.emplace_back(Literal<KeywordId>{ p_kw->ID, false });
 
     res.emplace_back(std::move(c));
   }

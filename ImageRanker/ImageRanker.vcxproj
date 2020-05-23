@@ -259,7 +259,6 @@
   <ItemGroup>
     <ClCompile Include="external\sqlite\shell.c" />
     <ClCompile Include="external\sqlite\sqlite3.c" />
-    <ClCompile Include="src\named_types.h" />
     <ClCompile Include="src\ranking_models\PlainBowModel.cpp" />
     <ClCompile Include="src\ranking_models\BaseW2vvModel.cpp" />
     <ClCompile Include="src\data_packs\Google_based\GoogleVisionDataPack.cpp" />
@@ -303,6 +302,7 @@
     <ClInclude Include="src\ranking_models\ranking_models.h" />
     <ClInclude Include="src\ranking_models\MultSumMaxModel.h" />
     <ClInclude Include="src\SimUser.h" />
+    <ClInclude Include="src\Tester.hpp" />
     <ClInclude Include="src\transformations\NoTransform.h" />
     <ClInclude Include="src\transformations\BaseVectorTransform.h" />
     <ClInclude Include="src\FileParser.h" />

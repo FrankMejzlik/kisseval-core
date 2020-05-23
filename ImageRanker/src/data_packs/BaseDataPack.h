@@ -21,7 +21,7 @@ class BaseDataPack
         _model_options(model_options),
         _target_imageset_ID(target_imageset_ID)
   {
-    LOGI("Loaded data pack: " << ID << std::endl
+    LOGI("Loading data pack: " << ID << std::endl
                               << "\tdescription:" << description << std::endl
                               << "\tdefault_options: " << model_options << std::endl);
   }

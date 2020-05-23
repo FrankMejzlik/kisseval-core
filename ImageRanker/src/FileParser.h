@@ -46,12 +46,14 @@ class FileParser
   static std::pair<std::vector<std::vector<float>>, std::vector<std::vector<std::pair<FrameId, float>>>>
   ParseRawScoringData_ViretFormat(const std::string& inputFilepath);
 
-  static std::pair<Matrix<float>, DataParseStats> ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath);
+  static std::pair<Matrix<float>, DataParseStats> ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath,
+                                                                                  size_t num_frames);
 
-  static std::vector<std::vector<float>> ParseDeepFeasBinFile_ViretFormat(const std::string& inputFilepath);
+  static std::vector<std::vector<float>> ParseDeepFeasBinFile_ViretFormat(const std::string& inputFilepath,
+                                                                          size_t num_frames);
 
   static std::pair<Matrix<float>, DataParseStats> ParseRawScoringData_GoogleAiVisionFormat(
-      const std::string& inputFilepath);
+      const std::string& inputFilepath, size_t num_frames);
   static std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
                     std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>,
                     std::map<KeywordId, Keyword*>, std::map<KeywordId, std::set<Keyword*>>>
@@ -59,11 +61,11 @@ class FileParser
 
   FileParser(ImageRanker* pRanker);
 
-  std::tuple<VideoId, ShotId, FrameNumber> ParseVideoFilename(const std::string& filename) const;
-  VideoId GetVideoIdFromFrameFilename(const std::string& filename) const;
-  ShotId GetShotIdFromFrameFilename(const std::string& filename) const;
+  std::tuple<VideoId, ShotId, FrameNumber> ParseVideoFilename(const std::string& filename,
+                                                              const FrameFilenameOffsets& offsets) const;
 
-  std::vector<SelFrame> ParseImagesMetaData(const std::string& idToFilename, size_t imageIdStride = 1) const;
+  std::vector<SelFrame> ParseImagesMetaData(const std::string& idToFilename, const FrameFilenameOffsets& offsets,
+                                            size_t imageIdStride = 1) const;
 
   // =================================
   // =================================

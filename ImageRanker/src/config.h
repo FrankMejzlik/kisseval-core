@@ -2,7 +2,10 @@
 
 #include <stdint.h>
 
-#include "named_types.h"
+#define DATA_DIR "./data/"
+#define DATA_INFO_FPTH "../data_info.json"
+
+#define DB_FPTH "database.db"
 
 /*============================================
  * Logging config
@@ -16,17 +19,15 @@
 
 #define USE_SQLITE 1
 
-constexpr float ZERO_WEIGHT = 0.01F;
+#define ZERO_WEIGHT 0.01F
 
-constexpr size_t NUM_MODEL_TEST_RESULT_POINTS = 100;
-constexpr size_t TEMP_CONTEXT_LOOKUP_LENGTH = 3;
+#define NUM_MODEL_TEST_RESULT_POINTS 100
+#define TEMP_CONTEXT_LOOKUP_LENGTH 3
 
-constexpr size_t NUM_EXAMPLE_FRAMES = 10;
+#define NUM_EXAMPLE_FRAMES 10
 
 /** Number of top classes that will be computed and stored */
-constexpr size_t NUM_TOP_CLASSES = 10;
-
-#define DB_FILENAME "database.db"
+#define NUM_TOP_CLASSES 10
 
 /*============================================
  * Default settings
@@ -34,15 +35,15 @@ constexpr size_t NUM_TOP_CLASSES = 10;
 /* Simulted users
  * ------------------------------- */
 /** top_frame_keywords will return this ammount by default */
-constexpr size_t DEF_SIM_USER_NUM_WORDS_FROM = 2;
-constexpr size_t DEF_SIM_USER_NUM_WORDS_TO = 6;
-constexpr eSimUserTarget DEF_SIM_USER_TARGET = eSimUserTarget::SINGLE_QUERIES;
-constexpr float DEF_SIM_USER_EXPONENT = 6.0F;
+#define DEF_SIM_USER_NUM_WORDS_FROM 2
+#define DEF_SIM_USER_NUM_WORDS_TO 6
+#define DEF_SIM_USER_TARGET eSimUserTarget::SINGLE_QUERIES
+#define DEF_SIM_USER_EXPONENT 6.0F
 
 /* Autocomplete
  * ------------------------------- */
 /** top_frame_keywords will return this ammount by default */
-constexpr size_t DEF_NUMBER_OF_TOP_KWS = 5;
+#define DEF_NUMBER_OF_TOP_KWS 5
 
 /********************************************************
 
@@ -119,15 +120,6 @@ constexpr size_t DEF_NUMBER_OF_TOP_KWS = 5;
 
 #define FILENAME_START_INDEX 6  // Trecvid one
 //#define FILENAME_START_INDEX 0
-
-#define FILENAME_VIDEO_ID_FROM 1
-#define FILENAME_VIDEO_ID_LEN 5
-
-#define FILENAME_SHOT_ID_FROM 8
-#define FILENAME_SHOT_ID_LEN 5
-
-#define FILENAME_FRAME_NUMBER_FROM 40
-#define FILENAME_FRAME_NUMBER_LEN 6
 
 //! If true, successors from whole videos will be considered (e.g. in temporal queries)
 #define USE_VIDEOS_AS_SHOTS 1
