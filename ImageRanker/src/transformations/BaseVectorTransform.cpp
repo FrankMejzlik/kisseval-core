@@ -299,23 +299,26 @@ const Matrix<float>& BaseVectorTransform::data_sum_tfidf(eTermFrequency tf_ID, e
   // Get IDFs
   const Vector<float>& data_mat_maximums = data_sum_info().maxes;
 
-  size_t num_frames{ data_mat_maximums.size() };
+  size_t num_classes{ _data_sum_mat.front().size() };
 
   const Vector<float>& term_idfs_vector{ term_t != 0.0F ? data_idfs(term_t, idf_coef)
-                                                        : Vector<float>(num_frames, 1.0F) };
+                                                        : Vector<float>(num_classes, 1.0F) };
 
   Matrix<float> new_data_mat;
   new_data_mat.reserve(_data_sum_mat.size());
 
+  FrameId frame_ID = 0;
   for (auto&& fea_vec : _data_sum_mat)
   {
     Vector<float> frame_vector;
     frame_vector.reserve(fea_vec.size());
 
+    auto tf_max{data_mat_maximums[frame_ID]};
+    
     size_t i{ 0_z };
     for (auto&& val : fea_vec)
     {
-      float tf{ term_tf_fn(val, data_mat_maximums[i]) };
+      float tf{ term_tf_fn(val, tf_max) };  
       float idf{ 1.0F };
       if (idf_ID == eInvDocumentFrequency::IDF)
       {
@@ -328,6 +331,8 @@ const Matrix<float>& BaseVectorTransform::data_sum_tfidf(eTermFrequency tf_ID, e
 
     // frame_vector = normalize(frame_vector);
     new_data_mat.emplace_back(std::move(frame_vector));
+
+    ++frame_ID;
   }
 
   // Insert into the cache

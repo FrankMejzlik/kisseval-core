@@ -34,7 +34,7 @@ int main()
 #define TEST_rank_frames 0
 #define TEST_run_model_test 0
 #define TEST_run_model_test_with_sim 0
-#define TEST_run_model_vec_space 0
+#define TEST_run_model_vec_space 1
 #define TEST_boolean_grid_test_threshold 0
 #define TEST_run_model_test_Google 0
 #define TEST_boolean_grid_test_threshold_Google 0
@@ -333,7 +333,7 @@ int main()
 
   std::string m5_opts =
       "model=vector_space;transform=linear_01;model_dist_fn=cosine;model_term_tf=natural;model_term_idf=idf;model_query_tf=log;model_query_idf=none;model_idf_coef=6.0f"s;
-  auto r5 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "NasNet2019", m5_opts);
+  auto r5 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "ITECTiny_NasNet2019", m5_opts);
   auto r5_area = calc_chart_area(r5);
   std::cout << m5_opts << std::endl;
   std::cout << "\t" << r5_area << std::endl;
