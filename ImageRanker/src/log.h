@@ -9,6 +9,9 @@
 
 #include <iostream>
 
+/** Macro used for throwing exceptions in production mode */
+#define THROW_PROD(x) throw std::runtime_error(x);
+
 /** Basic log error macro */
 #if THROW_ON_ERROR
 

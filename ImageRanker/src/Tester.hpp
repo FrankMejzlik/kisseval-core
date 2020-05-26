@@ -11,7 +11,11 @@ namespace image_ranker
 {
 class Tester
 {
-  static bool test_public_methods(ImageRanker& ranker, const ImageRanker::Config& cfg)
+  /*
+   * Methods
+   */
+ public:
+  static void test_public_methods(ImageRanker& ranker, const ImageRanker::Config& cfg)
   {
     /*
      * Data pack specific methods
@@ -24,9 +28,11 @@ class Tester
       }
       else if (pack.ID == "GoogLeNet2019")
       {
+        test_data_pack__GoogLeNet2019(ranker);
       }
       else if (pack.ID == "ITECTiny_NasNet2019")
       {
+        test_data_pack__ITECTiny_NasNet2019(ranker);
       }
     }
 
@@ -34,6 +40,7 @@ class Tester
     {
       if (pack.ID == "GoogleVisionAi_Sep2019")
       {
+        test_data_pack__GoogleVisionAi_Sep2019(ranker);
       }
     }
 
@@ -41,9 +48,11 @@ class Tester
     {
       if (pack.ID == "W2VV_BoW_Dec2019")
       {
+        test_data_pack__W2VV_BoW_Dec2019(ranker);
       }
       else if (pack.ID == "ITECTiny_W2VV_BoW_Dec2019")
       {
+        test_data_pack__W2VV_BoW_Dec2019(ranker);
       }
     }
 

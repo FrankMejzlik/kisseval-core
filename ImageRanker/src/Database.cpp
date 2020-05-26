@@ -12,10 +12,13 @@ Database::Database(const std::string& db_filepath) : _db_fpth(db_filepath)
     sqlite3_close(_db);
     std::string msg{ "Can't open database: " + std::string{ sqlite3_errmsg(_db) } };
     LOGE(msg);
+    THROW_PROD("An error occured!");
   }
 };
 
 Database::~Database() noexcept { sqlite3_close(_db); }
+
+std::string Database::GetErrorDescription() const { return std::string(sqlite3_errmsg(_db)); }
 
 size_t Database::GetErrorCode() const { return static_cast<size_t>(sqlite3_errcode(_db)); }
 
@@ -29,6 +32,7 @@ size_t Database::NoResultQuery(const std::string& query) const
     sqlite3_close(_db);
     sqlite3_finalize(stmt);
     return GetErrorCode();
+    THROW_PROD("An error occured!");
   }
 
   int rc{ sqlite3_step(stmt) };
@@ -37,6 +41,7 @@ size_t Database::NoResultQuery(const std::string& query) const
     auto msg{ "SQL statement `"s + std::string(sqlite3_sql(stmt)) +
               "` failed with error: " + std::string(sqlite3_errmsg(_db)) };
     LOGE(msg);
+    THROW_PROD("An error occured!");
   }
 
   // release resources
