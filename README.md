@@ -1,10 +1,18 @@
-Library used for evaluating of specific keyword models and for processing user data.
+# ImageRanker
+This is evaluation library mainly aimed to use as the part of [KISSEval system](https://gitlab.mff.cuni.cz/mejzlikf/imagerankerapp). You can use it separately too.
 
-# How to bild
-credentials.h file is missing because there are DB credentials, it is distributed separately.
 
-Also you need to deliver C MySQL connector include and lib paths. 
+## Online running version of KISSEval
+The full version of the KISSEval system with all the data and extracted data packs is available at [http://herkules.ms.mff.cuni.cz:8080](http://herkules.ms.mff.cuni.cz:8080).
 
-For VS just download external direcotry [HERE](http://www.devwesp.com/download/ImageRanker/external.zip) and place it next to src directory.
+### Access credentials
+Username: **mff**
 
-Even though it is VS Solution, code is compilable with GCC toolchain.
+Password: **2nKfmnVWVrQrNExP**
+
+### Evaluator mode
+Password: **Xe5yHH9NdxLXyELt**
+
+
+## Build
+It is MSVC solution but sources should be compilable using any C++17 compiler provided you send compiler correct options.
