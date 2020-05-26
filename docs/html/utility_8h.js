@@ -37,7 +37,7 @@ var utility_8h =
     [ "tokenize_query_and", "utility_8h.html#aad8193d1dd8ecde51c89ec878f2dbfcb", null ],
     [ "uint32ToBytesLE", "utility_8h.html#a70939bca5dc6de8e610b65b9f9435b83", null ],
     [ "vec_add", "utility_8h.html#aafa143a00d67ddb0512180bdd4ba78f9", null ],
-    [ "vec_mult", "utility_8h.html#a807c75ad1450bf414872464d8c2d3426", null ],
     [ "vec_mult", "utility_8h.html#a3415e8ce6429dcd30763254a112f6052", null ],
+    [ "vec_mult", "utility_8h.html#a807c75ad1450bf414872464d8c2d3426", null ],
     [ "vec_sub", "utility_8h.html#a5a523f6f34afd4d387ba17c361fd8594", null ]
 ];

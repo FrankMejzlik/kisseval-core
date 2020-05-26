@@ -24,8 +24,8 @@ var classimage__ranker_1_1_keywords_container =
     [ "GetKeywordPtrByWordnetId", "classimage__ranker_1_1_keywords_container.html#ac3282d9567549e42bd9b0d563338b6da", null ],
     [ "GetNearKeywords", "classimage__ranker_1_1_keywords_container.html#ae417f7ec7cdc27957a7ec13b951660f3", null ],
     [ "GetNearKeywordsConstPtrs", "classimage__ranker_1_1_keywords_container.html#aaff71916cca5f49b2a5850413b5c45c4", null ],
-    [ "GetNearKeywordsPtrs", "classimage__ranker_1_1_keywords_container.html#adedc53992de32b9302f7fae4eabcbd75", null ],
     [ "GetNearKeywordsPtrs", "classimage__ranker_1_1_keywords_container.html#af39d175b82b68e9c0ecae59118ffc691", null ],
+    [ "GetNearKeywordsPtrs", "classimage__ranker_1_1_keywords_container.html#adedc53992de32b9302f7fae4eabcbd75", null ],
     [ "GetNetVectorSize", "classimage__ranker_1_1_keywords_container.html#a0451314af63449909d5e773f9ce0a731", null ],
     [ "GetVectorKeywords", "classimage__ranker_1_1_keywords_container.html#af489056e706fe732c843d3bb809f0092", null ],
     [ "GetVectorKeywordsIndices", "classimage__ranker_1_1_keywords_container.html#a7efe89aa9e2ccd27e2115a1f691be925", null ],
@@ -33,8 +33,8 @@ var classimage__ranker_1_1_keywords_container =
     [ "GetVectorKeywordsIndicesSetShallow", "classimage__ranker_1_1_keywords_container.html#aef92c997df77d6c5aa1bb10900b2c02a", null ],
     [ "GetWholeKeywordByWordnetId", "classimage__ranker_1_1_keywords_container.html#a988fef02fdab8798af382d80a156815c", null ],
     [ "MapDescIndexToKeyword", "classimage__ranker_1_1_keywords_container.html#adf579d8fa2ade3a90c3b57027a0fc6d2", null ],
-    [ "operator[]", "classimage__ranker_1_1_keywords_container.html#a24c44cde8f66e5d4817ad81d6ce6983c", null ],
     [ "operator[]", "classimage__ranker_1_1_keywords_container.html#a457ee7039a2114d01e4d6131fc8a16c0", null ],
+    [ "operator[]", "classimage__ranker_1_1_keywords_container.html#a24c44cde8f66e5d4817ad81d6ce6983c", null ],
     [ "StringifyCnfFormula", "classimage__ranker_1_1_keywords_container.html#a072a8546236da0ad8b07ec35224accfd", null ],
     [ "SubstringExpansionPrecompute", "classimage__ranker_1_1_keywords_container.html#a5f924a3f4127df54020f736080492564", null ],
     [ "SubstringExpansionPrecompute1", "classimage__ranker_1_1_keywords_container.html#ab347bb88c5d80a915b54f120dd55064a", null ],
@@ -49,5 +49,5 @@ var classimage__ranker_1_1_keywords_container =
     [ "_kw_classes_fpth", "classimage__ranker_1_1_keywords_container.html#a9d5d8d41f3b443c5be83f2acf471ecb0", null ],
     [ "_vecIndexToKeyword", "classimage__ranker_1_1_keywords_container.html#a470215768c1a5f6e3c07ab69abc1e119", null ],
     [ "_wordnetIdToKeywords", "classimage__ranker_1_1_keywords_container.html#a87ad1febac6379df2faa74d2a52424c2", null ],
-    [ "keywordLessThan", "classimage__ranker_1_1_keywords_container.html#a0c5e7c640ee9883cc431b5f736e0ed41", null ]
+    [ "keywordLessThan", "classimage__ranker_1_1_keywords_container.html#a79cfe3d3f889b1a8d57741e1391932d0", null ]
 ];

@@ -1,37 +1,44 @@
 /*
-@ @licstart  The following is the entire license notice for the
-JavaScript code in this file.
+ @licstart  The following is the entire license notice for the JavaScript code in this file.
 
-Copyright (C) 1997-2017 by Dimitri van Heesch
+ The MIT License (MIT)
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+ Copyright (C) 1997-2020 by Dimitri van Heesch
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+ and associated documentation files (the "Software"), to deal in the Software without restriction,
+ including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
 
-You should have received a copy of the GNU General Public License along
-with this program; if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ The above copyright notice and this permission notice shall be included in all copies or
+ substantial portions of the Software.
 
-@licend  The above is the entire license notice
-for the JavaScript code in this file
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+ @licend  The above is the entire license notice for the JavaScript code in this file
 */
 var NAVTREE =
 [
   [ "ImageRanker", "index.html", [
-    [ "ImageRanker for KISEval", "index.html", null ],
-    [ "Manual", "manual.html", "manual" ],
+    [ "ImageRanker for KISSEval", "index.html", null ],
+    [ "Data", "data.html", null ],
+    [ "Database & database data", "db_data.html", null ],
+    [ "Extending library", "extending.html", [
+      [ "Using custom data packs", "extending.html#add_data_pack", null ],
+      [ "Add new models", "extending.html#add_models", null ]
+    ] ],
     [ "Todo List", "todo.html", null ],
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
       [ "Namespace Members", "namespacemembers.html", [
         [ "All", "namespacemembers.html", null ],
         [ "Functions", "namespacemembers_func.html", null ],
+        [ "Variables", "namespacemembers_vars.html", null ],
         [ "Typedefs", "namespacemembers_type.html", null ],
         [ "Enumerations", "namespacemembers_enum.html", null ]
       ] ]
@@ -44,8 +51,7 @@ var NAVTREE =
         [ "All", "functions.html", "functions_dup" ],
         [ "Functions", "functions_func.html", "functions_func" ],
         [ "Variables", "functions_vars.html", "functions_vars" ],
-        [ "Enumerations", "functions_enum.html", null ],
-        [ "Enumerator", "functions_eval.html", null ]
+        [ "Enumerations", "functions_enum.html", null ]
       ] ]
     ] ],
     [ "Files", "files.html", [
@@ -55,7 +61,6 @@ var NAVTREE =
         [ "Functions", "globals_func.html", null ],
         [ "Variables", "globals_vars.html", null ],
         [ "Typedefs", "globals_type.html", null ],
-        [ "Enumerations", "globals_enum.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -65,10 +70,10 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "_base_classification_model_8cpp.html",
-"classimage__ranker_1_1_keyword.html#a021076ca8e745fa346b9ce8a189b70cd",
-"common_8h.html#ae93cc55c3fd0bb2cc6ece71b3f42b5a7acd0c6092d6a6874f379fe4827ed1db8b",
-"named__types_8h.html#a39605a322183c0069af9a5ca5df8c976af68d7efaad2efd0f8c0c965a34fbe5e1",
-"utility_8h.html#a444400705d3c9dea48dabdeaf4fdae90"
+"classimage__ranker_1_1_image_ranker.html#aeee7327b434b89c1eda4fc897d993f33",
+"common_8h.html#a7cbe7f4dce40292a88f4677f0ca90f1da418812cc6f69bcc5f961ddfd4310edeb",
+"functions_vars_s.html",
+"structimage__ranker_1_1_vector_space_model_1_1_options.html#a675aee01ae15b52baaebeaa77deb16e4"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

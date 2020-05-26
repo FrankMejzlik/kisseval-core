@@ -1,36 +1,7 @@
-@page manual Manual
+@page db_data Database & database data
+Database is implemented using SQLite and should be placed wherever is configured in \ref `config.h` file. Database uses simple structure that is mainly designed to be human readable during the debugging process therefore is avoids cryptic integral codes with speacial meaning and uses human readable strings as values whenever possible e.g. `V3C1_20k_BoW_Jan_2020`.
 
-@subpage overview "Overview"  
-@subpage build "How to build"  
-@subpage db_data "Database data"
-
-@page overview Overview
-
-# TBA
-
-@section Future improvements
-- Use transparent sparse matrix representation for Google data
-- Better dynamic caching mechanism for data loading
-
-@page build How to build
-
-@note
-    TBA
-
-@section msvc MSVC
-
-
-Project folder structure should look something like: 
-@code
-SYEngine/ 
-├── Diagnostics/ 
-│   └── ...  
-├── Engine/  
-│   └── ...  
-@endcode
-
-@page db_data Database data
-Database uses simple structure that is mainly designed to be human readable during the debugging process therefore is avoids cryptic integral codes with speacial meaning and uses human readable strings as values whenever possible e.g. `V3C1_20k_BoW_Jan_2020`.
+Empty database file is inside `_LOCAL` folder.
 
 # Tables
 ## `user_queries`
@@ -94,8 +65,10 @@ This is string containing <key>`=`<value> pairs separated with `;`. There is gua
 Keys are specific to the models:
 
 ### "Boolean"" model
+TBU
 
 ### "Vector space" model
+TBU
 
 ### "mult-sum-max" model
 |Key| Possible values| Default value | Description |
@@ -107,5 +80,6 @@ Keys are specific to the models:
 |transform_ID| `Linear_01`,`Softmax`| `Linear_01`| What transformation is applied on vectors before the model itself.|
 
 
-### **Boolean bucketed** model
+### W2VV++ model
+TBU
 

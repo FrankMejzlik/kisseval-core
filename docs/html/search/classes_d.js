@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['quantilelinechartdata',['QuantileLineChartData',['../structimage__ranker_1_1_quantile_line_chart_data.html',1,'image_ranker']]]
+  ['plainbowmodel_811',['PlainBowModel',['../classimage__ranker_1_1_plain_bow_model.html',1,'image_ranker']]]
 ];

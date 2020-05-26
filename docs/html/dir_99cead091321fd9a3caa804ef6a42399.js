@@ -18,6 +18,8 @@ var dir_99cead091321fd9a3caa804ef6a42399 =
     ] ],
     [ "DataManager.cpp", "_data_manager_8cpp.html", null ],
     [ "DataManager.h", "_data_manager_8h.html", [
+      [ "SearchSessionAction", "structimage__ranker_1_1_search_session_action.html", "structimage__ranker_1_1_search_session_action" ],
+      [ "SearchSession", "structimage__ranker_1_1_search_session.html", "structimage__ranker_1_1_search_session" ],
       [ "DataManager", "classimage__ranker_1_1_data_manager.html", "classimage__ranker_1_1_data_manager" ]
     ] ],
     [ "FileParser.cpp", "_file_parser_8cpp.html", null ],
@@ -44,13 +46,15 @@ var dir_99cead091321fd9a3caa804ef6a42399 =
     ] ],
     [ "log.h", "log_8h.html", "log_8h" ],
     [ "main.cpp", "main_8cpp.html", "main_8cpp" ],
-    [ "named_types.h", "named__types_8h.html", "named__types_8h" ],
     [ "SimUser.cpp", "_sim_user_8cpp.html", null ],
     [ "SimUser.h", "_sim_user_8h.html", [
       [ "BaseSimUser", "classimage__ranker_1_1_base_sim_user.html", "classimage__ranker_1_1_base_sim_user" ],
       [ "SimUserNoSim", "classimage__ranker_1_1_sim_user_no_sim.html", "classimage__ranker_1_1_sim_user_no_sim" ],
       [ "SimUserXToP", "classimage__ranker_1_1_sim_user_x_to_p.html", "classimage__ranker_1_1_sim_user_x_to_p" ],
       [ "Options", "structimage__ranker_1_1_sim_user_x_to_p_1_1_options.html", "structimage__ranker_1_1_sim_user_x_to_p_1_1_options" ]
+    ] ],
+    [ "Tester.hpp", "_tester_8hpp.html", [
+      [ "Tester", "classimage__ranker_1_1_tester.html", null ]
     ] ],
     [ "use_intrins.h", "use__intrins_8h.html", null ],
     [ "utility.h", "utility_8h.html", "utility_8h" ]

@@ -20,6 +20,8 @@ var dir_2a401902ec6f617b0a00210948dfd4e1 =
     [ "TransformationSoftmax.cpp", "_transformation_softmax_8cpp.html", null ],
     [ "TransformationSoftmax.h", "_transformation_softmax_8h.html", [
       [ "TransformationSoftmax", "classimage__ranker_1_1_transformation_softmax.html", "classimage__ranker_1_1_transformation_softmax" ],
-      [ "Options", "structimage__ranker_1_1_transformation_softmax_1_1_options.html", null ]
+      [ "Options", "structimage__ranker_1_1_transformation_softmax_1_1_options.html", null ],
+      [ "TransformationSoftmaxGoogleVision", "classimage__ranker_1_1_transformation_softmax_google_vision.html", "classimage__ranker_1_1_transformation_softmax_google_vision" ],
+      [ "Options", "structimage__ranker_1_1_transformation_softmax_google_vision_1_1_options.html", null ]
     ] ]
 ];

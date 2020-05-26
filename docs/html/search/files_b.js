@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['ranking_5fmodels_2eh',['ranking_models.h',['../ranking__models_8h.html',1,'']]]
+  ['plainbowmodel_2ecpp_883',['PlainBowModel.cpp',['../_plain_bow_model_8cpp.html',1,'']]],
+  ['plainbowmodel_2eh_884',['PlainBowModel.h',['../_plain_bow_model_8h.html',1,'']]]
 ];

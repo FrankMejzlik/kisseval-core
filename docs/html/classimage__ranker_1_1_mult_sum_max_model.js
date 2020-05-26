@@ -9,7 +9,7 @@ var classimage__ranker_1_1_mult_sum_max_model =
       [ "cMaxMax", "classimage__ranker_1_1_mult_sum_max_model.html#a0fc13934b6e08b53a0eede7ab509c555abb4403d4e15d42896a64baf519035051", null ]
     ] ],
     [ "rank_frame", "classimage__ranker_1_1_mult_sum_max_model.html#a2040163b6c4947f9fbf7c2dd64c8df11", null ],
-    [ "rank_frames", "classimage__ranker_1_1_mult_sum_max_model.html#ab481bc144142f84b8e3658d733efca42", null ],
     [ "rank_frames", "classimage__ranker_1_1_mult_sum_max_model.html#a51d177ce05201b722cf6354148638c56", null ],
+    [ "rank_frames", "classimage__ranker_1_1_mult_sum_max_model.html#ab481bc144142f84b8e3658d733efca42", null ],
     [ "test_model", "classimage__ranker_1_1_mult_sum_max_model.html#ae94e6a1c64476517f843a83aa63b82a6", null ]
 ];

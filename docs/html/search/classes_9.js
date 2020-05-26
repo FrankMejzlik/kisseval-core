@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['modelinfo',['ModelInfo',['../structimage__ranker_1_1_model_info.html',1,'image_ranker']]],
-  ['modeloption',['ModelOption',['../structimage__ranker_1_1_model_option.html',1,'image_ranker']]],
-  ['multsummaxmodel',['MultSumMaxModel',['../classimage__ranker_1_1_mult_sum_max_model.html',1,'image_ranker']]]
+  ['literal_799',['Literal',['../structimage__ranker_1_1_literal.html',1,'image_ranker']]],
+  ['loadeddatapacksinfo_800',['LoadedDataPacksInfo',['../structimage__ranker_1_1_loaded_data_packs_info.html',1,'image_ranker']]],
+  ['loadedimagesetsinfo_801',['LoadedImagesetsInfo',['../structimage__ranker_1_1_loaded_imagesets_info.html',1,'image_ranker']]]
 ];

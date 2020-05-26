@@ -1,4 +1,4 @@
-__local
+_local/empty_database.db
 x64
 **/.vs
 */x64/

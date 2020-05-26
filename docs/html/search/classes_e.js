@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['rankingresult',['RankingResult',['../structimage__ranker_1_1_ranking_result.html',1,'image_ranker']]],
-  ['rankingresultwithfilenames',['RankingResultWithFilenames',['../structimage__ranker_1_1_ranking_result_with_filenames.html',1,'image_ranker']]]
+  ['quantilelinechartdata_812',['QuantileLineChartData',['../structimage__ranker_1_1_quantile_line_chart_data.html',1,'image_ranker']]],
+  ['quantilelinechartdata_3c_20size_5ft_2c_20float_20_3e_813',['QuantileLineChartData&lt; size_t, float &gt;',['../structimage__ranker_1_1_quantile_line_chart_data.html',1,'image_ranker']]]
 ];

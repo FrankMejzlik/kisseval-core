@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['_7edatabase',['~Database',['../classimage__ranker_1_1_database.html#a409e3c9dd0e6e3f62397a9dbe6f39db7',1,'image_ranker::Database']]]
+  ['zero_5fweight_761',['ZERO_WEIGHT',['../config_8h.html#ad7b7910c47f0b6b0ff33433187939103',1,'config.h']]]
 ];

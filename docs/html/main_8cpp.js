@@ -1,13 +1,13 @@
 var main_8cpp =
 [
-    [ "DATA_DIR", "main_8cpp.html#a48cc0a91e8f54c62f3341c21c8cc74e8", null ],
-    [ "DATA_INFO_FPTH", "main_8cpp.html#aeda7781c2e9e35d13ee173eb9e74323f", null ],
     [ "TEST_boolean_grid_test_threshold", "main_8cpp.html#a1f1cf1fde44da6e0af777e0551408f27", null ],
     [ "TEST_boolean_grid_test_threshold_Google", "main_8cpp.html#aceb9c8705dc734db885028164a03acc1", null ],
     [ "TEST_get_autocomplete_results", "main_8cpp.html#af3b0d634e1969b19c903504c110372bf", null ],
     [ "TEST_get_frame_detail_data", "main_8cpp.html#ac4172904803c41b0ed7108f99b88dc49", null ],
+    [ "TEST_get_histogram_used_labels", "main_8cpp.html#ab1b66b4acda88e0d151949f45b743b34", null ],
     [ "TEST_get_loaded_imagesets_info", "main_8cpp.html#a4e1bb2b3be2507bdf00d6779208b81e9", null ],
     [ "TEST_get_random_frame_sequence", "main_8cpp.html#a2d0a2425b80037448b359252ef0f93a9", null ],
+    [ "TEST_get_search_sessions_rank_progress_chart_data", "main_8cpp.html#aa494e8c23c24af87a2bde69ab34f9384", null ],
     [ "TEST_rank_frames", "main_8cpp.html#aa973bb90870f4ab15c46516d12c82afb", null ],
     [ "TEST_run_model_test", "main_8cpp.html#abc6d4d0d9533c66e72814a3c730f2f2e", null ],
     [ "TEST_run_model_test_Google", "main_8cpp.html#a88d60ca0b443d0e32aabf66286026651", null ],

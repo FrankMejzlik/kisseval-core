@@ -11,7 +11,7 @@ var classimage__ranker_1_1_base_vector_transform =
     [ "data_sum_tfidf", "classimage__ranker_1_1_base_vector_transform.html#a3317891f55993464bc4bcc76653e7235", null ],
     [ "num_dims", "classimage__ranker_1_1_base_vector_transform.html#a2eaeb881f3ae107105d308632f60958b", null ],
     [ "num_frames", "classimage__ranker_1_1_base_vector_transform.html#ae6292f5c036f11a15fbdf63cf0fca396", null ],
-    [ "_data_idfs", "classimage__ranker_1_1_base_vector_transform.html#a1522508293419cb241c663eff593e4c2", null ],
+    [ "_data_idfs", "classimage__ranker_1_1_base_vector_transform.html#af06dd1483f7a6a1558163780a3f369b3", null ],
     [ "_data_linear_raw", "classimage__ranker_1_1_base_vector_transform.html#aecfe8bc0d7a7bd5a0bbd56d2749630b4", null ],
     [ "_data_linear_raw_info", "classimage__ranker_1_1_base_vector_transform.html#ab322b3e5bda94fc47a764a1e48363666", null ],
     [ "_data_max_mat", "classimage__ranker_1_1_base_vector_transform.html#a67c0678a71341d0cf25f8b4e14e1277d", null ],

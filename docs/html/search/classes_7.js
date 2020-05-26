@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['keyword',['Keyword',['../classimage__ranker_1_1_keyword.html',1,'image_ranker']]],
-  ['keywordlessthancomparator',['KeywordLessThanComparator',['../structimage__ranker_1_1_keywords_container_1_1_keyword_less_than_comparator.html',1,'image_ranker::KeywordsContainer']]],
-  ['keywordlessthanstringcomparator',['KeywordLessThanStringComparator',['../structimage__ranker_1_1_keywords_container_1_1_keyword_less_than_string_comparator.html',1,'image_ranker::KeywordsContainer']]],
-  ['keywordscontainer',['KeywordsContainer',['../classimage__ranker_1_1_keywords_container.html',1,'image_ranker']]]
+  ['imageranker_792',['ImageRanker',['../classimage__ranker_1_1_image_ranker.html',1,'image_ranker']]],
+  ['imagesetinfo_793',['ImagesetInfo',['../structimage__ranker_1_1_imageset_info.html',1,'image_ranker']]],
+  ['interactivesearchaction_794',['InteractiveSearchAction',['../structimage__ranker_1_1_interactive_search_action.html',1,'image_ranker']]]
 ];
