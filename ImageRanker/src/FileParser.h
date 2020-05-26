@@ -13,7 +13,6 @@ using namespace std::literals;
 #include "KeywordsContainer.h"
 #include "common.h"
 #include "config.h"
-#include "data_format_config.h"
 #include "utility.h"
 
 namespace image_ranker

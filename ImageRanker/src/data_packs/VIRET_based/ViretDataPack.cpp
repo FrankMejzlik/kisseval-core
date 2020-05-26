@@ -24,44 +24,6 @@ ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const
 {
   std::cout <<accumulated <<std::endl;
 
-
-  // If data are already accumulated, we need to deaccumulate it
-  //if (accumulated)
-  //{
-  //  // Normalize it first
-  //  for (auto& row : _presoftmax_data_raw)
-  //  {
-  //    float sum {0.0F};
-  //    for (auto&& v : row)
-  //    {
-  //      sum+=v;
-  //    }
-  //    std::transform(row.begin(), row.end(), row.begin(), [sum](const float& x){return x / sum;});
-  //  }
-
-  //  for (auto& row : _presoftmax_data_raw)
-  //  {
-  //    for (auto&& [it, i]{ std::tuple(row.begin(), size_t{ 0 }) }; it != row.end(); ++it, ++i)
-  //    {
-  //      auto new_cell_value{*it};
-  //      auto pKw{ _keywords.GetKeywordConstPtrByVectorIndex(i) };
-
-  //      // Iterate over all indices this keyword interjoins
-  //      for (auto&& kwIndex : pKw->m_hyponymBinIndices)
-  //      {
-  //        // Skip self
-  //        if (kwIndex == i)
-  //        {
-  //          continue;
-  //        }
-  //        new_cell_value -= row[kwIndex];
-  //      }
-
-  //      row[i] = new_cell_value;
-  //    }
-  //  }
-  //}
-
   // Instantiate all wanted transforms
   std::thread t1([this, accumulated]() {
     _transforms.emplace(enum_label(eTransformationIds::SOFTMAX).first,

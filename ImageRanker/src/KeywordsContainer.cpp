@@ -165,19 +165,6 @@ KeywordsContainer::KeywordsContainer(const W2vvDataPackRef::VocabData& vocab_dat
   }
 }
 
-KeywordData KeywordsContainer::GetKeywordByVectorIndex(size_t index) const
-{
-  auto result = _vecIndexToKeyword.find(index);
-
-  if (result == _vecIndexToKeyword.end())
-  {
-    return KeywordData();
-  }
-
-  return KeywordData(result->second->m_wordnetId, result->second->m_word,
-                     GetKeywordDescriptionByWordnetId(result->second->m_wordnetId));
-}
-
 Keyword* KeywordsContainer::GetKeywordPtrByVectorIndex(size_t index) const
 {
   auto result = _vecIndexToKeyword.find(index);
@@ -458,7 +445,7 @@ std::vector<size_t> KeywordsContainer::FindAllNeedles(std::string_view hey, std:
     }
 
     // Gather maximum of needles
-    if (resultIndices.size() >= NUM_SUGESTIONS)
+    if (resultIndices.size() >= DEF_NUMBER_OF_TOP_KWS)
     {
       return resultIndices;
     }
@@ -498,12 +485,12 @@ std::vector<std::tuple<size_t, std::string, std::string>> KeywordsContainer::Get
   }
 
   std::vector<std::tuple<size_t, std::string, std::string>> resultWordnetIds;
-  resultWordnetIds.reserve(NUM_SUGESTIONS);
+  resultWordnetIds.reserve(DEF_NUM_AUTOCOMPLETE_RESULTS);
 
   std::vector<std::tuple<size_t, std::string, std::string>> postResultWordnetIds;
 
   // Get desired number of results
-  for (size_t j = 0ULL; j < NUM_SUGESTIONS; ++j)
+  for (size_t j = 0ULL; j < DEF_NUM_AUTOCOMPLETE_RESULTS; ++j)
   {
     Keyword* pKeyword{ _keywords[left + j].get() };
 
@@ -539,7 +526,7 @@ std::vector<std::tuple<size_t, std::string, std::string>> KeywordsContainer::Get
   }
 
   // If we need to add up desc search results
-  if (resultWordnetIds.size() < NUM_SUGESTIONS && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
+  if (resultWordnetIds.size() < DEF_NUM_AUTOCOMPLETE_RESULTS && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
   {
     std::vector<size_t> needleIndices = FindAllNeedles(_allDescriptions, prefix);
 
@@ -553,7 +540,7 @@ std::vector<std::tuple<size_t, std::string, std::string>> KeywordsContainer::Get
   }
 
   size_t j = 0ULL;
-  while (resultWordnetIds.size() < NUM_SUGESTIONS)
+  while (resultWordnetIds.size() < DEF_NUM_AUTOCOMPLETE_RESULTS)
   {
     resultWordnetIds.push_back(postResultWordnetIds[j]);
 
@@ -594,11 +581,11 @@ std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsConstPtrs(const st
   }
 
   std::vector<const Keyword*> resultKeywords;
-  resultKeywords.reserve(NUM_SUGESTIONS);
+  resultKeywords.reserve(DEF_NUM_AUTOCOMPLETE_RESULTS);
   std::vector<const Keyword*> postResultKeywords;
 
   // Get desired number of results
-  for (size_t j = 0ULL; j < NUM_SUGESTIONS; ++j)
+  for (size_t j = 0ULL; j < DEF_NUM_AUTOCOMPLETE_RESULTS; ++j)
   {
     size_t idx{ left + j };
 
@@ -639,7 +626,7 @@ std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsConstPtrs(const st
   }
 
   // If we need to add up desc search results
-  if (resultKeywords.size() < NUM_SUGESTIONS && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
+  if (resultKeywords.size() < DEF_NUM_AUTOCOMPLETE_RESULTS && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
   {
     std::vector<size_t> needleIndices = FindAllNeedles(_allDescriptions, prefix);
 
@@ -652,7 +639,7 @@ std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsConstPtrs(const st
   }
 
   size_t j = 0ULL;
-  while (resultKeywords.size() < NUM_SUGESTIONS)
+  while (resultKeywords.size() < DEF_NUM_AUTOCOMPLETE_RESULTS)
   {
     if (j >= postResultKeywords.size())
     {
@@ -912,148 +899,6 @@ Keyword* KeywordsContainer::MapDescIndexToKeyword(size_t descIndex) const
     i = (right + left) / 2;
   }
 }
-
-std::string KeywordsContainer::GetKeywordByWordnetId(size_t wordnetId) const
-{
-  auto resultIt = _wordnetIdToKeywords.find(wordnetId);
-
-  if (resultIt == _wordnetIdToKeywords.end())
-  {
-    std::string("NOT FOUND");
-  }
-
-  return resultIt->second->m_word;
-}
-
-Keyword* KeywordsContainer::GetWholeKeywordByWordnetId(size_t wordnetId) const
-{
-  auto resultIt = _wordnetIdToKeywords.find(wordnetId);
-
-  if (resultIt == _wordnetIdToKeywords.end())
-  {
-    std::string("NOT FOUND");
-  }
-
-  return resultIt->second;
-}
-
-#if PUSH_DATA_TO_DB
-
-bool KeywordsContainer::PushKeywordsToDatabase(Database& db)
-{
-  /*===========================
-    Push into `words`table
-    ===========================*/
-  {
-    // Start query
-    std::string query{ "INSERT IGNORE INTO words (`word`) VALUES " };
-
-    // Words first
-    for (auto&& word : _words)
-    {
-      query.append("('");
-      query.append(db.EscapeString(word));
-      query.append("'),");
-    }
-
-    // Delete last comma
-    query.pop_back();
-    // Add semicolon
-    query.append(";");
-
-    // Send query
-    db.NoResultQuery(query);
-  }
-
-  /*===========================
-    Push into `keywords`table
-    ===========================*/
-  {
-    // Start query
-    std::string query{ "INSERT IGNORE INTO keywords (`wordnet_id`, `vector_index`, `description`) VALUES" };
-
-    // Keywords then
-    for (auto&& pKeyword : _keywords)
-    {
-      std::string desctiption{ db.EscapeString(GetKeywordDescriptionByWordnetId(pKeyword->m_wordnetId)) };
-
-      query.append("( ");
-      query.append(std::to_string(pKeyword->m_wordnetId));
-      query.append(", ");
-
-      if (pKeyword->m_vectorIndex == ERR_VAL<size_t>())
-      {
-        query.append("NULL");
-      }
-      else
-      {
-        query.append(std::to_string(pKeyword->m_vectorIndex));
-      }
-
-      if (pKeyword->m_vectorIndex == 0ULL)
-      {
-        std::cout << "aa" << std::endl;
-      }
-
-      query.append(", '");
-      query.append(desctiption);
-      query.append("'),");
-    }
-
-    // Delete last comma
-    query.pop_back();
-    // Add semicolon
-    query.append(";");
-
-    // Send query
-    db.NoResultQuery(query);
-  }
-
-  /*===========================
-    Push into `keywords_words`table
-    ===========================*/
-  {
-    // Start query
-    std::string query{ "INSERT IGNORE INTO `keyword_word` (`keyword_id`, `word_id`) VALUES" };
-
-    // Keywords then
-    for (auto&& pKeyword : _keywordToWord)
-    {
-      std::string word{ pKeyword.second };
-
-      auto aa = db.ResultQuery("SELECT `id` FROM `words` WHERE `word` LIKE '" + db.EscapeString(word) + "'");
-
-      if (aa.second.empty())
-      {
-        continue;
-      }
-
-      std::stringstream sstream(aa.second.front().front());
-
-      size_t word_id;
-      sstream >> word_id;
-
-      query.append("( ");
-      query.append(std::to_string(pKeyword.first));
-      query.append(", ");
-      query.append(std::to_string(word_id));
-      query.append("),");
-    }
-
-    // Delete last comma
-    query.pop_back();
-    // Add semicolon
-    query.append(";");
-
-    // Send query
-    db.NoResultQuery(query);
-  }
-  //! \todo Populate tables - keywords_hyponyms & keywords_hypenyms
-
-  return false;
-}
-
-#endif
 
 std::string KeywordsContainer::GetKeywordDescriptionByWordnetId(size_t wordnetId) const
 {

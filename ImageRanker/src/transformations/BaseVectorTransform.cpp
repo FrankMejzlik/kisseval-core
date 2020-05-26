@@ -25,7 +25,7 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
     new_row.reserve(row.size());
 
     std::vector<KeywordId> row_top_classes;
-    row_top_classes.reserve(NUM_TOP_CLASSES);
+    row_top_classes.reserve(NUM_TOP_KWS_LOADED);
 
     float row_sum{ 0.0F };
     float row_max{ -std::numeric_limits<float>::max() };
@@ -101,7 +101,7 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
     }
 
     // Ge top concepts
-    for (size_t ii{ 0_z }; ii < NUM_TOP_CLASSES; ++ii)
+    for (size_t ii{ 0_z }; ii < NUM_TOP_KWS_LOADED; ++ii)
     {
       auto&& [score, idx]{ max_prio_queue.top() };
 
@@ -144,7 +144,7 @@ std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords,
     }
 
     std::vector<KeywordId> row_top_classes;
-    row_top_classes.reserve(NUM_TOP_CLASSES);
+    row_top_classes.reserve(NUM_TOP_KWS_LOADED);
 
     float row_sum{ 0.0F };
     float row_max{ -std::numeric_limits<float>::max() };
@@ -190,7 +190,7 @@ std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords,
     }
 
     // Ge top concepts
-    for (size_t ii{ 0_z }; ii < NUM_TOP_CLASSES; ++ii)
+    for (size_t ii{ 0_z }; ii < NUM_TOP_KWS_LOADED; ++ii)
     {
       auto&& [score, idx]{ max_prio_queue.top() };
 

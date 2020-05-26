@@ -273,7 +273,6 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\FileParser.cpp" />
     <ClCompile Include="src\Database.cpp" />
-    <ClCompile Include="src\GridTest.cpp" />
     <ClCompile Include="src\ImageRanker.cpp" />
     <ClCompile Include="src\KeywordsContainer.cpp" />
     <ClCompile Include="src\ranking_models\MultSumMaxModel.cpp" />
@@ -297,7 +296,6 @@
     <ClInclude Include="src\datasets\BaseImageset.h" />
     <ClInclude Include="src\DataManager.h" />
     <ClInclude Include="src\custom_exceptions.h" />
-    <ClInclude Include="src\data_format_config.h" />
     <ClInclude Include="src\ranking_models\BaseClassificationModel.h" />
     <ClInclude Include="src\ranking_models\ranking_models.h" />
     <ClInclude Include="src\ranking_models\MultSumMaxModel.h" />
@@ -308,17 +306,14 @@
     <ClInclude Include="src\FileParser.h" />
     <ClInclude Include="src\data_packs\VIRET_based\ViretDataPack.h" />
     <ClInclude Include="src\common.h" />
-    <ClInclude Include="src\credentials.h" />
     <ClInclude Include="src\config.h" />
     <ClInclude Include="src\Database.h" />
-    <ClInclude Include="src\GridTest.h" />
     <ClInclude Include="src\Image.hpp" />
     <ClInclude Include="src\ImageRanker.h" />
     <ClInclude Include="src\KeywordsContainer.h" />
     <ClInclude Include="src\transformations\TransformationLinear.h" />
     <ClInclude Include="src\transformations\transformations.h" />
     <ClInclude Include="src\transformations\TransformationSoftmax.h" />
-    <ClInclude Include="src\use_intrins.h" />
     <ClInclude Include="src\utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -258,12 +258,6 @@ class KeywordsContainer
 
   Keyword* MapDescIndexToKeyword(size_t descIndex) const;
 
-  [[deprecated]] Keyword* GetWholeKeywordByWordnetId(size_t wordnetId) const;
-
-  [[deprecated]] std::string GetKeywordByWordnetId(size_t wordnetId) const;
-
-  [[deprecated]] KeywordData GetKeywordByVectorIndex(size_t index) const;
-
   Keyword* GetKeywordPtrByVectorIndex(size_t index) const;
   const Keyword* GetKeywordConstPtrByVectorIndex(size_t index) const;
 
@@ -300,29 +294,6 @@ class KeywordsContainer
   void GetVectorKeywordsIndicesSet(std::unordered_set<size_t>& destSetRef, size_t wordnetId) const;
   void GetVectorKeywordsIndicesSetShallow(std::unordered_set<size_t>& destIndicesSetRef, size_t wordnetId,
                                           bool skipConstructedHypernyms = false) const;
-
-  std::string StringifyCnfFormula(const CnfFormula& formula)
-  {
-    std::string result;
-
-    for (auto&& clause : formula)
-    {
-      result += "(";
-
-      for (auto&& vecIndex : clause)
-      {
-        result += std::get<1>(GetKeywordByVectorIndex(vecIndex.atom)) + " | "s;
-      }
-      result.pop_back();
-      result.pop_back();
-
-      result += ") & ";
-    }
-    result.pop_back();
-    result.pop_back();
-
-    return result;
-  }
 
   size_t GetNetVectorSize() const { return _vecIndexToKeyword.size(); }
 

@@ -17,7 +17,6 @@ using namespace std::literals;
 using json = nlohmann::json;
 
 #include "common.h"
-#include "use_intrins.h"
 
 using namespace image_ranker;
 

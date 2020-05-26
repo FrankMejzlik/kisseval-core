@@ -2,187 +2,89 @@
 
 #include <stdint.h>
 
+/** If basic functionality tests will be executed after initialization.
+ *    \see image_ranker::Tester */
+#define RUN_BASIC_TESTS 1
+
+/**********************************************
+ * Input data
+ ***********************************************/
+
+/** Prefix that will be used when looking for data files. */
 #define DATA_DIR "./data/"
+
+/** File that defines where each data file is located. */
 #define DATA_INFO_FPTH "../data_info.json"
 
+/** Filepath to the SQLite database file. */
 #define DB_FPTH "database.db"
 
-/*============================================
- * Logging config
- *============================================*/
+/** Delimiter for columns in  VIRET format keyword classes file */
+#define CSV_DELIMITER_001 '~'
 
-/** Will throw exception on LOG_ERROR */
+/** Delimiter for synonyms in VIRET format keyword classes file */
+#define SYNONYM_DELIMITER_001 '#'
+
+/**********************************************
+ * Logging
+ ***********************************************/
+
+/** If exception will be thrown on LOGE. */
 #define THROW_ON_ERROR 1
 
-/** Logging level */
+/** Logging level.
+ *
+ * Levels:
+ *  5 - Verbose
+ *  4 - Debug
+ *  3 - Info
+ *  2 - Warning
+ *  1 - Error
+ *  0 - None
+ */
 #define LOG_LEVEL 5
 
-#define USE_SQLITE 1
+/**********************************************
+ * API methods' config
+ ***********************************************/
 
-#define ZERO_WEIGHT 0.01F
-
+/*
+ * Model testing
+ */
 #define NUM_MODEL_TEST_RESULT_POINTS 100
-#define TEMP_CONTEXT_LOOKUP_LENGTH 3
 
-#define NUM_EXAMPLE_FRAMES 10
-
-/** Number of top classes that will be computed and stored */
-#define NUM_TOP_CLASSES 10
-
-/*============================================
- * Default settings
- *============================================*/
-/* Simulted users
- * ------------------------------- */
-/** top_frame_keywords will return this ammount by default */
+/*
+ * Simulted users
+ */
+/** \ref image_ranker::top_frame_keywords will return this ammount by default */
 #define DEF_SIM_USER_NUM_WORDS_FROM 2
 #define DEF_SIM_USER_NUM_WORDS_TO 6
 #define DEF_SIM_USER_TARGET eSimUserTarget::SINGLE_QUERIES
 #define DEF_SIM_USER_EXPONENT 6.0F
 
-/* Autocomplete
- * ------------------------------- */
+/*
+ * Autocomplate
+ */
+#define DEF_NUM_AUTOCOMPLETE_RESULTS 10
+
+/** Minimal length of prefix to return any aytocomplete suggestions. */
+#define MIN_DESC_SEARCH_LENGTH 2
+
+/*
+ * Ranker
+ */
 /** top_frame_keywords will return this ammount by default */
-#define DEF_NUMBER_OF_TOP_KWS 5
+#define DEF_NUMBER_OF_TOP_KWS 10
 
-/********************************************************
+/**********************************************
+ * Data packs & Models
+ ***********************************************/
 
-********************************************************/
+/** Value that zero values will be substitued with */
+#define ZERO_WEIGHT 0.01F
 
-/*!
- * If set to 1 queries will be evaluated on original query first
- * Then on the new ones and printed to stdout
- */
-#define LOG_PRE_AND_PPOST_EXP_RANKS 0
+#define TEMP_CONTEXT_LOOKUP_LENGTH 3
+#define NUM_EXAMPLE_FRAMES 10
 
-/*!
- * If 1, in initialization it will precompute all
- * subword sets for query expansions any substring and whole word substring
- */
-#define PRECOMPUTE_EXPANSION_SUBWORDS 0
-// Wanna log those? ^^
-#define LOG_DEBUG_PRECOMPUTE_SUBSTRINGS_1 0
-// Wanna log those for ? ^^
-#define LOG_DEBUG_PRECOMPUTE_SUBSTRINGS_2 0
-
-//! Toggles parsing WOrd2Vec file on initialization
-#define PARSE_W2V_FILE 0
-// 1-> all substrings, 2 -> substring matching whole word, 3 -> w2v, 23 -> 2&3
-#define SUBSTRING_EXPANSION_SET 23
-
-//! Toggles if substring expansion will be done on testing queries
-#define DO_SUBSTRING_EXPANSION 0
-
-// 0 AND, 1 OR
-#define SUBSTRING_EXPANSION_TYPE 1
-#define LOG_QUERY_EXPANSION 0
-
-#define LOG_W2V_EXPANSION_KW_SETS 0
-#define W2V_DISTANCE_THRESHOLD 0.5f
-
-#define GENERATE_SIMULATED_USER_QUERIES_JSON 1
-
-#define SOLUTION_DIR R"(c:\Users\devwe\source\repos\ImageRanker\)"s
-
-#define NUM_TOP_KEYWORDS 100_z
-//
-// Google data setings
-//
-#define GOOGLE_AI_NO_LABEL_SCORE 0.001f
-#define VIRET_TRESHOLD_LINEAR_01 0.001f
-
-#define NO_TRANSFORM_ID 900_z
-
-//
-// Keyword types
-//
-#define DEFAULT_KEYWORD_DATA_TYPE eVocabularyId::VIRET_1200_WORDNET_2019
-#define DEFAULT_SCORING_DATA_TYPE eScoringsId::NASNET_2019
-
-//
-// Query tests settings
-//
-#define TEST_QUERIES_ID_MULTIPLIER 1
-
-//
-// TRECVID SPECIFIC
-//
-#define PRECOMPUTE_MAX_BASED_DATA 1
-#define TRECVID_MAPPING 1
-#define SHOT_REFERENCE_PATH R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\shot_reference\)"
-#define DROPPED_SHOTS_FILEPATH R"(c:\Users\devwe\source\repos\ImageRankerApp\data\trecvid_data\dropped_shots.txt)"
-#define DEBUG_SHOW_OUR_FRAME_IDS 1
-
-//
-// Frame filename format
-//
-#define MAX_SUCC_CHECK_COUNT 10
-
-#define FILENAME_START_INDEX 6  // Trecvid one
-//#define FILENAME_START_INDEX 0
-
-//! If true, successors from whole videos will be considered (e.g. in temporal queries)
-#define USE_VIDEOS_AS_SHOTS 1
-
-//! If constructed hypernyms should be ignored
-#define IGNORE_CONSTRUCTED_HYPERNYMS false
-#define RUN_TESTS_ONLY_ON_NON_EMPTY_POSTREMOVE_HYPERNYM 0
-
-//
-// Simulated user & temp queries settings
-//
-#define SIMULATED_QUERIES_ENUM_OFSET 10000
-#define USER_PLUS_SIMULATED_QUERIES_ENUM_OFSET 20000
-#define MAX_TEMP_QUERY_OFFSET 5
-
-//! In seconds
-#define QUERIES_CACHE_LIFETIME 0
-
-#define TRUE_TRESHOLD_FOR_KW_FREQUENCY 0.001f
-/*!
-  100 => always softmax
-  200 => always x^1
-*/
-#define KW_FREQUENCY_BASE_DATA 200
-
-//! Default settings for main evaluation
-#define DEFAULT_RANKING_MODEL RankingModelId::cViretBase
-#define DEFAULT_AGG_FUNCTION InputDataTransformId::cXToTheP
-#define DEFAULT_MODEL_SETTINGS std::vector<std::string>({ "0"s, "0.0f"s, "1"s })
-#define DEFAULT_TRANSFORM_SETTINGS std::vector<std::string>({ "0"s, "0"s })
-
-#define MODEL_TEST_CHART_NUM_X_POINTS 100
-
-/*!
- * Boolean model settings
- */
-#define NUM_IMAGES_PER_PAGE 200
-
-#define DEVELOPMENT 1
-#define STAGING 0
-#define PRODUCTION 0
-
-#define DEFAULT_MODE ImageRanker::eMode::cFullAnalytical
-
-#define MIN_DESC_SEARCH_LENGTH 3
-
-//! How many suggestions will be returned when called \ref ImageRanker::GetNearKeywords
-#define NUM_SUGESTIONS 5ULL
-
-#define LOG_DEBUG_HYPERNYMS_EXPANSION 0
-#define LOG_DEBUG_IMAGE_RANKING 0
-#define LOG_DEBUG_RUN_TESTS 0
-
-/*!
- * Set what databases will be used as primary/secondary
- *
- * OPTIONS:
- * 0: localhost "ir_base_test"
- * 1: localhost "image-ranker-collector-data2"
- * 2: localhost data2
- * 3: Herkules --
- * 4: Herkules "image-ranker-collector-data2"
- */
-#define PRIMARY_DB_ID 0
-
-#include "credentials.h"
+/** Number of top classes that will be computed and stored */
+#define NUM_TOP_KWS_LOADED 10

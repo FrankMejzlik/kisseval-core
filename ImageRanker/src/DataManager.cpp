@@ -6,17 +6,7 @@
 
 using namespace image_ranker;
 
-DataManager::DataManager(ImageRanker* p_owner)
-    : _p_owner(p_owner),
-      _db(PRIMARY_DB_HOST, PRIMARY_DB_PORT, PRIMARY_DB_USERNAME, PRIMARY_DB_PASSWORD, PRIMARY_DB_DB_NAME)
-{
-  // Connect to the database
-  auto result = _db.EstablishConnection();
-  if (result != 0)
-  {
-    LOGE("Connecting to primary DB failed.");
-  }
-}
+DataManager::DataManager(ImageRanker* p_owner) : _p_owner(p_owner), _db(DB_FPTH) {}
 
 void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,
                                                 const ::std::string& model_options, size_t user_level,

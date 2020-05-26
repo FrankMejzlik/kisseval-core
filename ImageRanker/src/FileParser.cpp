@@ -299,25 +299,9 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
     // Get ID of current video
     size_t currVideoId = frame.m_video_ID;
 
-#if USE_VIDEOS_AS_SHOTS
-
-    // If this frame is from next video
-    if (currVideoId != prevVideoId)
-
-      // If this frame is from next video
-      if (currVideoId != prevVideoId)
-      {
-        // Process and label all frames from this video
-        ProcessVideoShotsStack(videoFrames);
-
-        // Set new prev video ID
-        prevVideoId = currVideoId;
-      }
-
-#else
-
     // Get ID of current shot
-    size_t currShotId{ pImg->m_shotId };
+    size_t currShotId{ frame.m_shot_ID };
+
     // If this frame is from next video
     if (currShotId != prevShotId || currVideoId != prevVideoId)
     {
@@ -328,8 +312,6 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
       prevShotId = currShotId;
       prevVideoId = currVideoId;
     }
-
-#endif
 
     // Store this frame for future processing
     videoFrames.push(&frame);
@@ -616,9 +598,9 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
     float variance = sqrtf((float)1 / (numFloats - 1) * varSum);
 
     std::vector<std::pair<FrameId, float>> top_KW_frame_IDs;
-    top_KW_frame_IDs.reserve(NUM_TOP_KEYWORDS);
+    top_KW_frame_IDs.reserve(NUM_TOP_KWS_LOADED);
 
-    for (size_t ii{ 0_z }; ii < NUM_TOP_KEYWORDS; ++ii)
+    for (size_t ii{ 0_z }; ii < NUM_TOP_KWS_LOADED; ++ii)
     {
       if (maxHeap.size() <= 0) break;
 
@@ -820,7 +802,7 @@ std::pair<Matrix<float>, DataParseStats> FileParser::ParseRawScoringData_GoogleA
   ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
   uint32_t numKeywords = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
 
-  float sum{ 0.0f };
+  float sum{ 0.0F };
   float min{ std::numeric_limits<float>::max() };
   float max{ -std::numeric_limits<float>::max() };
 
