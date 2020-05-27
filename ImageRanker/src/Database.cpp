@@ -5,37 +5,37 @@ using namespace image_ranker;
 Database::Database(const std::string& db_filepath)
     : _db_fpth(db_filepath),
       // Add custom deleter for this pointer
-      _db(nullptr, [](sqlite3* ptr) { sqlite3_close(ptr); })
+      _p_db(nullptr, [](sqlite3* ptr) { sqlite3_close(ptr); })
 {
   int rc{ ERR_VAL<int>() };
 
   // Instantiate database instance
   sqlite3* p_db{ nullptr };
   rc = sqlite3_open(_db_fpth.c_str(), &p_db);
-  _db.reset(p_db);
+  _p_db.reset(p_db);
 
   if (rc > 0)
   {
-    std::string msg{ "Can't open database: " + std::string{ sqlite3_errmsg(_db.get()) } };
+    std::string msg{ "Can't open database: " + std::string{ sqlite3_errmsg(_p_db.get()) } };
     LOGE(msg);
     PROD_THROW("An error occured!");
   }
 };
 
-std::string Database::GetErrorDescription() const { return std::string{ sqlite3_errmsg(_db.get()) }; }
+std::string Database::get_last_error_msg() const { return std::string{ sqlite3_errmsg(_p_db.get()) }; }
 
-size_t Database::GetErrorCode() const { return static_cast<size_t>(sqlite3_errcode(_db.get())); }
+size_t Database::get_last_err_code() const { return static_cast<size_t>(sqlite3_errcode(_p_db.get())); }
 
-size_t Database::NoResultQuery(const std::string& query) const
+size_t Database::no_result_query(const std::string& query) const
 {
   sqlite3_stmt* stmt;
   // compile sql statement to binary
-  if (sqlite3_prepare_v2(_db.get(), query.c_str(), -1, &stmt, NULL) != SQLITE_OK)
+  if (sqlite3_prepare_v2(_p_db.get(), query.c_str(), -1, &stmt, NULL) != SQLITE_OK)
   {
-    printf("ERROR: while compiling sql: %s\n", sqlite3_errmsg(_db.get()));
-    sqlite3_close(_db.get());
+    printf("ERROR: while compiling sql: %s\n", sqlite3_errmsg(_p_db.get()));
+    sqlite3_close(_p_db.get());
     sqlite3_finalize(stmt);
-    return GetErrorCode();
+    return get_last_err_code();
     PROD_THROW("An error occured!");
   }
 
@@ -43,7 +43,7 @@ size_t Database::NoResultQuery(const std::string& query) const
   if (rc != SQLITE_DONE)
   {
     auto msg{ "SQL statement `"s + std::string(sqlite3_sql(stmt)) +
-              "` failed with error: " + std::string(sqlite3_errmsg(_db.get())) };
+              "` failed with error: " + std::string(sqlite3_errmsg(_p_db.get())) };
     LOGE(msg);
     PROD_THROW("An error occured!");
   }
@@ -51,31 +51,31 @@ size_t Database::NoResultQuery(const std::string& query) const
   // release resources
   sqlite3_finalize(stmt);
 
-  return GetErrorCode();
+  return get_last_err_code();
 }
 
-std::string Database::EscapeString(const std::string& stringToEscape) const
+std::string Database::escape_str(const std::string& stringToEscape) const
 {
   char* zSQL = sqlite3_mprintf("%q", stringToEscape.c_str());
 
   return std::string(zSQL);
 }
 
-size_t Database::GetLastId() const { return static_cast<size_t>(sqlite3_last_insert_rowid(_db.get())); }
+size_t Database::get_last_inserted_ID() const { return static_cast<size_t>(sqlite3_last_insert_rowid(_p_db.get())); }
 
-std::pair<size_t, std::vector<std::vector<std::string>>> Database::ResultQuery(const std::string& query) const
+std::pair<size_t, std::vector<std::vector<std::string>>> Database::result_query(const std::string& query) const
 {
   // Send query to DB and get result
   std::vector<std::vector<std::string>> result;
 
   sqlite3_stmt* stmt;
   // compile sql statement to binary
-  if (sqlite3_prepare_v2(_db.get(), query.c_str(), -1, &stmt, NULL) != SQLITE_OK)
+  if (sqlite3_prepare_v2(_p_db.get(), query.c_str(), -1, &stmt, NULL) != SQLITE_OK)
   {
-    printf("ERROR: while compiling sql: %s\n", sqlite3_errmsg(_db.get()));
-    sqlite3_close(_db.get());
+    printf("ERROR: while compiling sql: %s\n", sqlite3_errmsg(_p_db.get()));
+    sqlite3_close(_p_db.get());
     sqlite3_finalize(stmt);
-    return std::pair(sqlite3_errcode(_db.get()), result);
+    return std::pair(sqlite3_errcode(_p_db.get()), result);
   }
 
   int ret_code = 0;
@@ -95,12 +95,12 @@ std::pair<size_t, std::vector<std::vector<std::string>>> Database::ResultQuery(c
   if (ret_code != SQLITE_DONE)
   {
     // this error handling could be done better, but it works
-    printf("ERROR: while performing sql: %s\n", sqlite3_errmsg(_db.get()));
+    printf("ERROR: while performing sql: %s\n", sqlite3_errmsg(_p_db.get()));
     printf("ret_code = %d\n", ret_code);
   }
 
   // release resources
   sqlite3_finalize(stmt);
 
-  return std::make_pair(GetErrorCode(), result);
+  return std::make_pair(get_last_err_code(), result);
 }

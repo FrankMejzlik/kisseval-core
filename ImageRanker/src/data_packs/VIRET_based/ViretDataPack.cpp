@@ -46,7 +46,7 @@ ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const
 }
 
 HistogramChartData<size_t, float> ViretDataPack::get_histogram_used_labels(
-    const std::vector<UserTestQuery>& test_queries, const std::string& model_commands, size_t num_queries,
+    const std::vector<UserTestQuery>& test_queries, const std::string& model_commands, [[maybe_unused]] size_t num_queries,
     size_t num_points, bool accumulated) const
 {
   // Expand query to vector indices
@@ -380,7 +380,7 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
 }
 
 AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,
-                                                                bool with_example_images,
+                                                                [[maybe_unused]] bool with_example_images,
                                                                 const std::string& model_commands) const
 {
   auto kws = const_cast<const KeywordsContainer&>(_keywords).GetNearKeywordsPtrs(query_prefix, result_size);

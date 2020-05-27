@@ -44,7 +44,7 @@ GoogleVisionDataPack::GoogleVisionDataPack(const BaseImageset* p_is, const Strin
 }
 
 void GoogleVisionDataPack::cache_up_example_images(const std::vector<const Keyword*>& kws,
-                                            const std::string& model_commands) const
+                                                   const std::string& model_commands) const
 {
   auto hasher{ std::hash<std::string>{} };
 
@@ -84,9 +84,8 @@ void GoogleVisionDataPack::cache_up_example_images(const std::vector<const Keywo
   }
 }
 
-std::vector<const Keyword*> GoogleVisionDataPack::get_frame_top_classes(FrameId frame_ID,
-                                                                 const std::vector<ModelKeyValOption>& opt_key_vals,
-                                                                 [[maybe_unused]] bool accumulated) const
+std::vector<const Keyword*> GoogleVisionDataPack::get_frame_top_classes(
+    FrameId frame_ID, const std::vector<ModelKeyValOption>& opt_key_vals, [[maybe_unused]] bool accumulated) const
 {
   bool max_based{ false };
   std::string transform_ID{ "linear_01" };
@@ -117,7 +116,6 @@ std::vector<const Keyword*> GoogleVisionDataPack::get_frame_top_classes(FrameId 
 
   const DataInfo* p_data_info{ nullptr };
 
-
   p_data_info = &transform.data_sum_info();
 
   const auto& kw_IDs{ p_data_info->top_classes[frame_ID] };
@@ -133,8 +131,6 @@ std::vector<const Keyword*> GoogleVisionDataPack::get_frame_top_classes(FrameId 
 const std::string& GoogleVisionDataPack::get_vocab_ID() const { return _keywords.get_ID(); }
 
 const std::string& GoogleVisionDataPack::get_vocab_description() const { return _keywords.get_description(); }
-
-
 
 RankingResult GoogleVisionDataPack::rank_frames(const std::vector<CnfFormula>& user_queries,
                                                 const std::string& model_commands, size_t result_size,
@@ -285,9 +281,9 @@ ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery
   return ranking_model.test_model(transform, _keywords, idx_test_queries, opt_key_vals, num_points);
 }
 
-
 AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std::string& query_prefix,
-                                                                       size_t result_size, bool with_example_image,
+                                                                       size_t result_size,
+                                                                       [[maybe_unused]] bool with_example_image,
                                                                        const std::string& model_commands) const
 {
   auto kws = _keywords.GetNearKeywordsPtrs(query_prefix, result_size);
@@ -330,9 +326,13 @@ AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std
 
 DataPackInfo GoogleVisionDataPack::get_info() const
 {
-  return DataPackInfo{ get_ID(),           get_description(),          get_model_options(), target_imageset_ID(),
-                        _presoftmax_data_raw.size(),
-                       _keywords.get_ID(), _keywords.get_description() };
+  return DataPackInfo{ get_ID(),
+                       get_description(),
+                       get_model_options(),
+                       target_imageset_ID(),
+                       _presoftmax_data_raw.size(),
+                       _keywords.get_ID(),
+                       _keywords.get_description() };
 }
 
 CnfFormula GoogleVisionDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) const

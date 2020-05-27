@@ -104,8 +104,9 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
 }
 
 RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transformed_data,
-                                           const KeywordsContainer& keywords, const std::vector<CnfFormula>& user_query,
-                                           size_t result_size, const Options& opts, FrameId target_frame_ID) const
+                                           [[maybe_unused]] const KeywordsContainer& keywords,
+                                           const std::vector<CnfFormula>& user_query, size_t result_size,
+                                           const Options& opts, FrameId target_frame_ID) const
 {
   using FramePair = std::pair<float, FrameId>;
 
@@ -302,20 +303,20 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
       const std::map<eVocabularyId, KeywordsContainer>& keywordContainers) const override
   {
     std::vector<size_t> ranks;
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
     std::cout << "Running model test ... " << std::endl;
     std::cout << "Result chart will have " << MODEL_TEST_CHART_NUM_X_POINTS << " discrete points on X axis"
               << std::endl;
     std::cout << "=====================================" << std::endl;
-#endif
+#  endif
 
-#if LOG_PRE_AND_PPOST_EXP_RANKS
+#  if LOG_PRE_AND_PPOST_EXP_RANKS
     long long int totalRankMove{0};
     long long int currDelta{0};
 
     size_t origRank{0_z};
     size_t expRank{0_z};
-#endif
+#  endif
 
     uint32_t maxRank = (uint32_t)images.size();
 
@@ -337,7 +338,7 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
     // Iterate over test queries
     for (auto&& singleQuery : testQueries)
     {
-#if LOG_PRE_AND_PPOST_EXP_RANKS
+#  if LOG_PRE_AND_PPOST_EXP_RANKS
       {
         auto singleQueryOrig{testQueriesOrig[iii]};
         auto imgId = std::get<0>(singleQueryOrig[0]);
@@ -356,7 +357,7 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
         std::cout << "-----" << std::endl;
         std::cout << origRank << " => ";
       }
-#endif
+#  endif
       auto imgId = std::get<0>(singleQuery[0]);
 
       std::vector<CnfFormula> formulae;
@@ -376,7 +377,7 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
       // Increment this hit
       ++result[transformedRank].second;
 
-#if LOG_PRE_AND_PPOST_EXP_RANKS
+#  if LOG_PRE_AND_PPOST_EXP_RANKS
       expRank = resultImages.second;
       currDelta = expRank - origRank;
 
@@ -384,9 +385,9 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
 
       std::cout << expRank << " delta = " << currDelta << ", totalRankDelta = " << totalRankMove << std::endl;
 
-#endif
+#  endif
 
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
       std::cout << "----------------------------" << std::endl;
       std::cout << "Image ID " << imgId << "=> " << (resultImages.second - 1) << "/" << maxRank << std::endl;
 
@@ -396,14 +397,14 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
       std::cout << "Add hit to interval [" << from << ", " << to << "] => " << result[transformedRank].second
                 << " found" << std::endl;
 
-#endif
+#  endif
 
       ++iii;
     }
 
     uint32_t currCount{0ULL};
 
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
     std::cout << "=====================================" << std::endl;
     std::cout << "Final hit counts:" << std::endl;
 
@@ -422,7 +423,7 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
 
     std::cout << "=====================================" << std::endl;
     std::cout << "Cumulative number of hits (as rank starting with 1):" << std::endl;
-#endif
+#  endif
 
     {
       size_t ii{0_z};
@@ -433,11 +434,11 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
         r.second = currCount;
         currCount += tmp;
 
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
         size_t to{(ii)*scaleDownFactor};
 
         std::cout << "[0, " << to << "] => " << r.second << " images found" << std::endl;
-#endif
+#  endif
 
         ++ii;
       }
@@ -453,12 +454,12 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
                                  const std::vector<std::unique_ptr<Image>>& images,
                                  const std::map<eVocabularyId, KeywordsContainer>& keywordContainers) const override
   {
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
     std::cout << "Running model test ... " << std::endl;
     std::cout << "Result chart will have " << MODEL_TEST_CHART_NUM_X_POINTS << " discrete points on X axis"
               << std::endl;
     std::cout << "=====================================" << std::endl;
-#endif
+#  endif
 
     uint32_t maxRank = (uint32_t)images.size();
 
@@ -494,7 +495,7 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
       // Increment this hit
       ++result[transformedRank].second;
 
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
       std::cout << "----------------------------" << std::endl;
       std::cout << "Image ID " << imgId << "=> " << (resultImages.second - 1) << "/" << maxRank << std::endl;
 
@@ -504,12 +505,12 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
       std::cout << "Add hit to interval [" << from << ", " << to << "] => " << result[transformedRank].second
                 << " found" << std::endl;
 
-#endif
+#  endif
     }
 
     uint32_t currCount{0ULL};
 
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
     std::cout << "=====================================" << std::endl;
     std::cout << "Final hit counts:" << std::endl;
 
@@ -528,7 +529,7 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
 
     std::cout << "=====================================" << std::endl;
     std::cout << "Cumulative number of hits (as rank starting with 1):" << std::endl;
-#endif
+#  endif
 
     {
       size_t ii{0_z};
@@ -539,11 +540,11 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
         r.second = currCount;
         currCount += tmp;
 
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
         size_t to{(ii)*scaleDownFactor};
 
         std::cout << "[0, " << to << "] => " << r.second << " images found" << std::endl;
-#endif
+#  endif
 
         ++ii;
       }
@@ -639,11 +640,11 @@ ModelTestResult MultSumMaxModel::test_model(const BaseVectorTransform& transform
       // Finalize ranking
       //
 
-#if LOG_DEBUG_IMAGE_RANKING
+#  if LOG_DEBUG_IMAGE_RANKING
       std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
       std::cout << "!!!! FINAL RANK = " << std::to_string(imageRanking) << std::endl;
       std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-#endif
+#  endif
 
       // Insert result to max heap
       maxHeap.push(std::pair(imageRanking, pImg->m_imageId));
@@ -808,7 +809,7 @@ float MultSumMaxModel::rank_frame(const Vector<float>& frame_data, const CnfForm
       // If literal_ranking under the threshold
       if (literal_ranking < options.ignore_below_threshold)
       {
-        continue; 
+        continue;
       }
 
       /********************************************************

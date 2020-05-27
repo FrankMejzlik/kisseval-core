@@ -26,8 +26,8 @@ void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, co
   size_t i = 0;
   for (auto&& query : user_queries)
   {
-    sql_query_ss << "('"s << _db.EscapeString(query.user_query_encoded.at(0)) + "','"s
-                 << _db.EscapeString(query.user_query_readable.at(0)) << "','" << vocab_ID << "','" << data_pack_ID
+    sql_query_ss << "('"s << _db.escape_str(query.user_query_encoded.at(0)) + "','"s
+                 << _db.escape_str(query.user_query_readable.at(0)) << "','" << vocab_ID << "','" << data_pack_ID
                  << "','" + model_options + "'," << std::to_string(query.target_sequence_IDs.at(0)) << ", "s
                  << ex_imgs_str << "," << std::to_string(user_level) << ",0,'" << query.session_ID + "')";
 
@@ -45,7 +45,7 @@ void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, co
   std::string sql_query(sql_query_ss.str());
 
   // Run SQL query
-  auto result = _db.NoResultQuery(sql_query);
+  auto result = _db.no_result_query(sql_query);
   if (result != 0)
   {
     LOGE("SQL query result: "s + sql_query + "\n\t Inserting queries into DB failed with error code: "s +
@@ -76,7 +76,7 @@ std::vector<UserTestQuery> DataManager::fetch_user_test_queries(eUserQueryOrigin
 
   SQL_query_ss << ");";
 
-  auto [res, db_rows] = _db.ResultQuery(SQL_query_ss.str());
+  auto [res, db_rows] = _db.result_query(SQL_query_ss.str());
 
   if (res != 0)
   {
@@ -106,7 +106,7 @@ std::vector<UserTestNativeQuery> DataManager::fetch_user_native_test_queries(eUs
   SQL_query_ss << "SELECT `target_frame_ID`, `user_query` FROM `" << queries_table_name << "` ";
   SQL_query_ss << "WHERE (`user_level` = " << int(queries_origin) << " AND `vocabulary_ID` = 'native_language');";
 
-  auto [res, db_rows] = _db.ResultQuery(SQL_query_ss.str());
+  auto [res, db_rows] = _db.result_query(SQL_query_ss.str());
 
   if (res != 0)
   {
@@ -156,7 +156,7 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
   // Run first query
   auto q1{ query1Ss.str() };
 
-  size_t result1{ _db.NoResultQuery(q1) };
+  size_t result1{ _db.no_result_query(q1) };
   if (result1 != 0)
   {
     std::string msg{ "Failed to insert into: `" + searches_table_name + "!\n\tQuery = '" + q1 + "'" };
@@ -164,7 +164,7 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
     PROD_THROW("Database error!");
   }
   // Currently inserted ID
-  size_t id{ _db.GetLastId() };
+  size_t id{ _db.get_last_inserted_ID() };
 
   /*
    * Insert into "search_sessions_actions" table
@@ -192,7 +192,7 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
   }
 
   auto q2{ query2Ss.str() };
-  size_t result2{ _db.NoResultQuery(q2) };
+  size_t result2{ _db.no_result_query(q2) };
 
   if (result1 != 0 || result2 != 0)
   {
@@ -214,12 +214,12 @@ std::pair<std::vector<SearchSession>, std::vector<SearchSessionAction>> DataMana
   SQL_query_actions_ss << "SELECT `search_session_ID`, `action_index`, `result_target_rank` FROM `"
                        << search_actions_table_name << "` WHERE `action_query_index` = 0  AND `is_initial` = 0;";
 
-  auto [res_code0, rows_sessions] = _db.ResultQuery(SQL_query_sessions_ss.str());
+  auto [res_code0, rows_sessions] = _db.result_query(SQL_query_sessions_ss.str());
   if (res_code0 != 0)
   {
     LOGE("Error fetching user queries from the DB. \n\n Error code: "s + std::to_string(res_code0));
   }
-  auto [res_code1, rows_actions] = _db.ResultQuery(SQL_query_actions_ss.str());
+  auto [res_code1, rows_actions] = _db.result_query(SQL_query_actions_ss.str());
   if (res_code1 != 0)
   {
     LOGE("Error fetching user queries from the DB. \n\n Error code: "s + std::to_string(res_code1));

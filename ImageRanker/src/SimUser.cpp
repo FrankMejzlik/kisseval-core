@@ -139,7 +139,8 @@ std::vector<UserTestQuery> SimUserXToP::augment_with_temp_queries(
 
 CnfFormula SimUserXToP::generate_simulated_query(FrameId frame_ID, const BaseImageset* p_is,
                                                  const BaseVectorTransform& transformed_data,
-                                                 const KeywordsContainer& keywords, const Options& options) const
+                                                 [[maybe_unused]] const KeywordsContainer& keywords,
+                                                 const Options& options) const
 {
   auto frame_fea_vec{ transformed_data.data_linear_raw()[frame_ID] };
 
@@ -168,15 +169,17 @@ CnfFormula SimUserXToP::generate_simulated_query(FrameId frame_ID, const BaseIma
   float scaleCoef{ 1 / totalSum };
 
   // Normalize
-  size_t i{ 0_z };
-  float cummulSum{ 0.0F };
-  for (auto&& value : transformedData)
   {
-    cummulSum += value * scaleCoef;
+    size_t i{ 0_z };
+    float cummulSum{ 0.0F };
+    for (auto&& value : transformedData)
+    {
+      cummulSum += value * scaleCoef;
 
-    transformedData[i] = cummulSum;
+      transformedData[i] = cummulSum;
 
-    ++i;
+      ++i;
+    }
   }
 
   std::random_device randDev;

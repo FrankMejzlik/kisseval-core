@@ -29,10 +29,6 @@ class ViretDataPack : public BaseDataPack
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
                                                    const std::string& model_commands, size_t num_points) const override;
 
-  [[nodiscard]] std::vector<UserTestQuery> process_sim_user(const BaseVectorTransform& transformed_data,
-                                                            const KeywordsContainer& keywords,
-                                                            const std::vector<UserTestQuery>& test_user_queries) const;
-
   [[nodiscard]] virtual HistogramChartData<size_t, float> get_histogram_used_labels(const std::vector<UserTestQuery>& test_queries,
                                                    const std::string& model_commands, size_t num_points, size_t num_queries, bool accumulated) const override;
 

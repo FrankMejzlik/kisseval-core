@@ -128,6 +128,7 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   const auto& ranking_model = *(iter_m->second);
 
   // Choose desired simulated user
+#if 0 // \todo Add sim user for W2VV++.
   auto iter_su = _sim_users.find(sim_user_ID);
   if (iter_su == _sim_users.end())
   {
@@ -135,8 +136,9 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   }
   const auto& sim_user = *(iter_su->second);
 
-  // Process sim user \todo
+  // Process sim user
   // test_queries = sim_user.process_sim_user(_frames_features, _keywords, test_queries, opt_key_vals);
+#endif
 
   return ranking_model.test_model(_features_of_frames, _kw_features, _kw_bias_vec, _kw_PCA_mat, _kw_PCA_mean_vec,
                                   _keywords, test_queries, opt_key_vals, num_points);
