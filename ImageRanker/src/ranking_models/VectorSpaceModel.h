@@ -67,10 +67,6 @@ class VectorSpaceModel : public BaseClassificationModel
                                           size_t result_size, const Options& opts, FrameId target_frame_ID) const;
 
  private:
-  /** Returns ranking for the provided frame data, query and options */
-  [[nodiscard]] float rank_frame(const Vector<float>& frame_data, const CnfFormula& single_query,
-                                 const Options& options) const;
-
   [[nodiscard]] Vector<float> create_user_query_vector(const CnfFormula& single_query, size_t vec_dim) const;
   [[nodiscard]] Vector<float> create_user_query_vector(const CnfFormula& single_query, size_t vec_dim, const Vector<float>& idfs, const Options& options) const;
 };

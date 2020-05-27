@@ -5,7 +5,7 @@
 
 using namespace image_ranker;
 
-Matrix<float> TransformationLinear01::apply(const Matrix<float>& data, const std::string& options)
+Matrix<float> TransformationLinear01::apply(const Matrix<float>& data, [[maybe_unused]] const std::string& options)
 {
   Matrix<float> result_mat;
 
@@ -38,7 +38,7 @@ Matrix<float> TransformationLinear01::apply(const Matrix<float>& data, const std
 }
 
 TransformationLinear01::TransformationLinear01(const KeywordsContainer& keywords, const Matrix<float>& data_mat,
-                                               bool accumulate, const std::string& options)
+                                               bool accumulate, [[maybe_unused]] const std::string& options)
     : BaseVectorTransform(accumulate_hypernyms(keywords, apply(data_mat), HyperAccumType::SUM, true, accumulate),
                           accumulate_hypernyms(keywords, apply(data_mat), HyperAccumType::MAX, true, accumulate),
                           calc_stats(keywords, apply(data_mat)))
@@ -82,7 +82,7 @@ Matrix<float> TransformationLinear01GoogleVision::apply(const Matrix<float>& dat
 
 TransformationLinear01GoogleVision::TransformationLinear01GoogleVision(const KeywordsContainer& keywords,
                                                                        const Matrix<float>& data_mat,
-                                                                       const std::string& options)
+                                                                       [[maybe_unused]] const std::string& options)
     : BaseVectorTransform(calc_stats(keywords, apply(data_mat)), std::pair<Matrix<float>, DataInfo>())
 {
 }

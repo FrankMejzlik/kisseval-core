@@ -25,7 +25,10 @@ class BaseSimUser
       [[maybe_unused]] const KeywordsContainer& keywords, [[maybe_unused]] std::vector<ModelKeyValOption>& options,
       [[maybe_unused]] size_t count, [[maybe_unused]] size_t temporal_count = 1_z) const
   {
-    throw NotSuportedModelOptionExcept("Single queries generation not suported for this options combinations.");
+    std::string msg{ "Single queries generation not suported for this options combinations." };
+    LOGW(msg);
+    PROD_THROW_NOT_SUPP(msg);
+
     return std::vector<UserTestQuery>{};
   };
 };

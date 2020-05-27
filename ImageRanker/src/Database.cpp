@@ -1,6 +1,15 @@
+
 #include "Database.h"
 
+#include "utility.h"
+
 using namespace image_ranker;
+
+std::string Database::escape_str(const std::string& raw_str)
+{
+  char* c_str{ sqlite3_mprintf("%q", raw_str.c_str()) };
+  return std::string{ c_str };
+}
 
 Database::Database(const std::string& db_filepath)
     : _db_fpth(db_filepath),
@@ -14,6 +23,7 @@ Database::Database(const std::string& db_filepath)
   rc = sqlite3_open(_db_fpth.c_str(), &p_db);
   _p_db.reset(p_db);
 
+  // Check for errors
   if (rc > 0)
   {
     std::string msg{ "Can't open database: " + std::string{ sqlite3_errmsg(_p_db.get()) } };
@@ -29,36 +39,26 @@ size_t Database::get_last_err_code() const { return static_cast<size_t>(sqlite3_
 size_t Database::no_result_query(const std::string& query) const
 {
   sqlite3_stmt* stmt;
-  // compile sql statement to binary
+
+  // Compile SQL statement
   if (sqlite3_prepare_v2(_p_db.get(), query.c_str(), -1, &stmt, NULL) != SQLITE_OK)
   {
-    printf("ERROR: while compiling sql: %s\n", sqlite3_errmsg(_p_db.get()));
-    sqlite3_close(_p_db.get());
     sqlite3_finalize(stmt);
-    return get_last_err_code();
+    std::string msg{ "Error while compiling SQL with message '" + get_last_error_msg() + "'\n\t Query: " + query };
+    LOGE(msg);
     PROD_THROW("An error occured!");
   }
+  scope_exit stmt_guard([stmt]() { sqlite3_finalize(stmt); });
 
-  int rc{ sqlite3_step(stmt) };
-  if (rc != SQLITE_DONE)
+  int ret_code{ sqlite3_step(stmt) };
+  if (ret_code != SQLITE_DONE)
   {
-    auto msg{ "SQL statement `"s + std::string(sqlite3_sql(stmt)) +
-              "` failed with error: " + std::string(sqlite3_errmsg(_p_db.get())) };
+    std::string msg{ "Error while stepping SQL with message '" + get_last_error_msg() + "'\n\t Query: " + query };
     LOGE(msg);
     PROD_THROW("An error occured!");
   }
 
-  // release resources
-  sqlite3_finalize(stmt);
-
   return get_last_err_code();
-}
-
-std::string Database::escape_str(const std::string& stringToEscape) const
-{
-  char* zSQL = sqlite3_mprintf("%q", stringToEscape.c_str());
-
-  return std::string(zSQL);
 }
 
 size_t Database::get_last_inserted_ID() const { return static_cast<size_t>(sqlite3_last_insert_rowid(_p_db.get())); }
@@ -69,16 +69,17 @@ std::pair<size_t, std::vector<std::vector<std::string>>> Database::result_query(
   std::vector<std::vector<std::string>> result;
 
   sqlite3_stmt* stmt;
-  // compile sql statement to binary
+
+  // Compile SQL statement
   if (sqlite3_prepare_v2(_p_db.get(), query.c_str(), -1, &stmt, NULL) != SQLITE_OK)
   {
-    printf("ERROR: while compiling sql: %s\n", sqlite3_errmsg(_p_db.get()));
-    sqlite3_close(_p_db.get());
-    sqlite3_finalize(stmt);
-    return std::pair(sqlite3_errcode(_p_db.get()), result);
+    std::string msg{ "Error while compiling SQL with message '" + get_last_error_msg() + "'\n\t Query: " + query };
+    LOGE(msg);
+    PROD_THROW("An error occured!");
   }
+  scope_exit stmt_guard([stmt]() { sqlite3_finalize(stmt); });
 
-  int ret_code = 0;
+  int ret_code{ 0 };
   while ((ret_code = sqlite3_step(stmt)) == SQLITE_ROW)
   {
     // execute sql statement, and while there are rows returned, print ID
@@ -87,20 +88,17 @@ std::pair<size_t, std::vector<std::vector<std::string>>> Database::result_query(
     std::vector<std::string> r;
     for (size_t i{ 0_z }; i < cnt; ++i)
     {
-      auto c = (char*)sqlite3_column_text(stmt, static_cast<int>(i));
+      const char* c = reinterpret_cast<const char*>(sqlite3_column_text(stmt, static_cast<int>(i)));  // NOLINT
       r.emplace_back(std::string(c));
     }
     result.emplace_back(std::move(r));
   }
   if (ret_code != SQLITE_DONE)
   {
-    // this error handling could be done better, but it works
-    printf("ERROR: while performing sql: %s\n", sqlite3_errmsg(_p_db.get()));
-    printf("ret_code = %d\n", ret_code);
+    std::string msg{ "Error while stepping in SQL with message '" + get_last_error_msg() + "'\n\t Query: " + query };
+    LOGE(msg);
+    PROD_THROW("An error occured!");
   }
-
-  // release resources
-  sqlite3_finalize(stmt);
 
   return std::make_pair(get_last_err_code(), result);
 }

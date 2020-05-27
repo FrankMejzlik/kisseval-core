@@ -21,6 +21,34 @@ using json = nlohmann::json;
 
 using namespace image_ranker;
 
+template <typename F>
+struct scope_exit
+{
+  F f_;
+  bool run_;
+  explicit scope_exit(F f) noexcept : f_(std::move(f)), run_(true) {}
+  scope_exit(scope_exit&& rhs) noexcept : f_((rhs.run_ = false, std::move(rhs.f_))), run_(true) {}
+  ~scope_exit()
+  {
+    if (run_) f_();  // RAII semantics apply, expected not to throw
+  }
+
+  // "in place" construction expected, no default ctor provided either
+  // also unclear what should be done with the old functor, should it
+  // be called since it is no longer needed, or not since *this is not
+  // going out of scope just yet...
+  scope_exit& operator=(scope_exit&& rhs) = delete;
+  // to be explicit...
+  scope_exit(scope_exit const&) = delete;
+  scope_exit& operator=(scope_exit const&) = delete;
+};
+
+template <typename F>
+scope_exit<F> make_scope_exit(F&& f) noexcept
+{
+  return scope_exit<F>{ std::forward<F>(f) };
+}
+
 template <typename T>
 inline T rand(T from, T to)
 {

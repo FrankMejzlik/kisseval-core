@@ -144,7 +144,7 @@ RankingResult VectorSpaceModel::rank_frames(const BaseVectorTransform& transform
 }
 
 RankingResult VectorSpaceModel::rank_frames(const BaseVectorTransform& transformed_data,
-                                            const KeywordsContainer& keywords,
+                                            [[maybe_unused]] const KeywordsContainer& keywords,
                                             const std::vector<CnfFormula>& user_query, size_t result_size,
                                             const Options& opts, FrameId target_frame_ID) const
 {
@@ -281,21 +281,13 @@ ModelTestResult VectorSpaceModel::test_model(const BaseVectorTransform& transfor
   return test_results;
 }
 
-float VectorSpaceModel::rank_frame(const Vector<float>& frame_data, const CnfFormula& single_query,
-                                   const Options& options) const
-{
-  float frame_ranking{1.0F};
-
-  return frame_ranking;
-}
-
 Vector<float> VectorSpaceModel::create_user_query_vector(const CnfFormula& single_query, size_t vec_dim) const
 {
   Vector<float> user_query_vec(vec_dim, 0.0F);
 
   for (auto&& clause : single_query)
   {
-    float clause_ranking{0.0F};
+    //float clause_ranking{0.0F};
 
     // \todo All subwords for now
     for (auto&& literal : clause)
@@ -334,7 +326,7 @@ Vector<float> VectorSpaceModel::create_user_query_vector(const CnfFormula& singl
 
   for (auto&& clause : single_query)
   {
-    float clause_ranking{0.0F};
+    //float clause_ranking{0.0F};
 
     for (auto&& literal : clause)
     {

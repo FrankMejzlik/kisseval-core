@@ -166,7 +166,6 @@ std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords,
     for (auto&& [it, i]{ std::tuple(row.begin(), size_t{ 0 }) }; it != row.end(); ++it, ++i)
     {
       auto& bin{ *it };
-      auto pKw{ keywords.GetKeywordConstPtrByVectorIndex(i) };
 
       row_sum += bin;
       row_max = std::max(row_max, bin);

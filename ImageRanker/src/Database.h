@@ -21,6 +21,14 @@ class [[nodiscard]] Database
    * Methods
    */
  public:
+  /**
+   * Escapes the given string and returns new copy of escaped one.
+   *
+   * \param   String to escape.
+   * \return  std::string   New copy of escaped string.
+   */
+  [[nodiscard]] static std::string escape_str(const std::string& raw_str);
+
   // This is non-copyable due to `std::unique_ptr`.
   Database() = delete;
   Database(const Database& other) = delete;
@@ -73,14 +81,6 @@ class [[nodiscard]] Database
    *          Pair with return code and rows itself.
    */
   [[nodiscard]] std::pair<size_t, std::vector<std::vector<std::string>>> result_query(const std::string& query) const;
-
-  /**
-   * Escapes the given string and returns new copy of escaped one.
-   *
-   * \param   String to escape.
-   * \return  std::string   New copy of escaped string.
-   */
-  [[nodiscard]] std::string escape_str(const std::string& raw_str) const;
 
   /*
    * Member variables
