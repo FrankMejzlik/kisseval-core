@@ -137,12 +137,6 @@ std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords,
     Vector<float> new_row;
     new_row.reserve(row.size());
 
-    if (row.size() == 0)
-    {
-      std::cout << row.size() << std::endl;
-      std::cout << iii << std::endl;
-    }
-
     std::vector<KeywordId> row_top_classes;
     row_top_classes.reserve(NUM_TOP_KWS_LOADED);
 
@@ -181,11 +175,6 @@ std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords,
 
       row_max /= row_sum;
       row_min /= row_sum;
-    }
-
-    if (max_prio_queue.empty())
-    {
-      std::cout << "xx" << std::endl;
     }
 
     // Ge top concepts

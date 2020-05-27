@@ -287,7 +287,6 @@ Vector<float> VectorSpaceModel::create_user_query_vector(const CnfFormula& singl
 
   for (auto&& clause : single_query)
   {
-    //float clause_ranking{0.0F};
 
     // \todo All subwords for now
     for (auto&& literal : clause)
@@ -326,8 +325,6 @@ Vector<float> VectorSpaceModel::create_user_query_vector(const CnfFormula& singl
 
   for (auto&& clause : single_query)
   {
-    //float clause_ranking{0.0F};
-
     for (auto&& literal : clause)
     {
       auto i{literal.atom};

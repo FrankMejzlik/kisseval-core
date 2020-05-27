@@ -49,7 +49,7 @@ class DataManager
 
   [[nodiscard]] std::vector<UserTestNativeQuery> fetch_user_native_test_queries(eUserQueryOrigin queries_origin) const;
 
-  bool submit_search_session(const std::string& data_pack_ID, const std::string& vocabulary_ID,
+  void submit_search_session(const std::string& data_pack_ID, const std::string& vocabulary_ID,
                              const std::string& model_commands, size_t user_level, bool with_example_images,
                              FrameId target_frame_ID, eSearchSessionEndStatus end_status, size_t duration,
                              const std::string& sessionId, const std::vector<InteractiveSearchAction>& actions);

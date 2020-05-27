@@ -21,14 +21,7 @@ class [[nodiscard]] Database
    * Methods
    */
  public:
-  /**
-   * Escapes the given string and returns new copy of escaped one.
-   *
-   * \param   String to escape.
-   * \return  std::string   New copy of escaped string.
-   */
-  [[nodiscard]] static std::string escape_str(const std::string& raw_str);
-
+  // --------------------------
   // This is non-copyable due to `std::unique_ptr`.
   Database() = delete;
   Database(const Database& other) = delete;
@@ -36,6 +29,15 @@ class [[nodiscard]] Database
   Database& operator=(const Database& other) = delete;
   Database& operator=(Database&& other) = default;
   ~Database() noexcept = default;
+  // --------------------------
+
+  /**
+   * Escapes the given string and returns new copy of escaped one.
+   *
+   * \param   String to escape.
+   * \return  std::string   New copy of escaped string.
+   */
+  [[nodiscard]] static std::string escape_str(const std::string& raw_str);
 
   /**
    * Main construcotr.

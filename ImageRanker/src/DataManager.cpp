@@ -127,7 +127,7 @@ std::vector<UserTestNativeQuery> DataManager::fetch_user_native_test_queries(eUs
   return result;
 }
 
-bool DataManager::submit_search_session(const std::string& data_pack_ID, const std::string& vocabulary_ID,
+void DataManager::submit_search_session(const std::string& data_pack_ID, const std::string& vocabulary_ID,
                                         const std::string& model_commands, size_t user_level, bool with_example_images,
                                         FrameId target_frame_ID, eSearchSessionEndStatus end_status, size_t duration,
                                         const std::string& session_ID,
@@ -137,7 +137,7 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
   if (actions.empty())
   {
     LOGW("Submitting empty search session. Ignoring it.");
-    return false;
+    return;
   }
 
   /*
@@ -200,7 +200,6 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
     LOGE(msg);
     PROD_THROW("Database error!");
   }
-  return true;
 }
 
 std::pair<std::vector<SearchSession>, std::vector<SearchSessionAction>> DataManager::fetch_search_sessions(
