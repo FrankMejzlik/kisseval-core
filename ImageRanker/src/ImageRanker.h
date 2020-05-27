@@ -23,6 +23,8 @@ namespace image_ranker
  */
 class ImageRanker
 {
+  friend class Tester;
+
   /****************************
    * Subtypes
    ****************************/
@@ -74,13 +76,6 @@ class ImageRanker
                                                        FrameId target_image_ID = ERR_VAL<FrameId>()) const;
 
   [[nodiscard]] virtual ModelTestResult run_model_test(eUserQueryOrigin queries_origin, const DataPackId& data_pack_ID,
-                                                       const PackModelCommands& model_commands,
-                                                       bool native_lang_queries = false,
-                                                       size_t num_points = NUM_MODEL_TEST_RESULT_POINTS,
-                                                       bool normalize_y = true) const;
-
-  /** Only for the given number of generated queries */
-  [[nodiscard]] virtual ModelTestResult run_model_test(size_t test_queries_count, const DataPackId& data_pack_ID,
                                                        const PackModelCommands& model_commands,
                                                        bool native_lang_queries = false,
                                                        size_t num_points = NUM_MODEL_TEST_RESULT_POINTS,

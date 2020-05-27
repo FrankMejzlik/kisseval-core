@@ -26,7 +26,16 @@ struct SearchSession
 
 class DataManager
 {
+  friend class Tester;
+
  public:
+  DataManager() = delete;
+  DataManager(const DataManager& other) = delete;
+  DataManager(DataManager&& other) = default;
+  DataManager& operator=(const DataManager& other) = delete;
+  DataManager& operator=(DataManager&& other) = delete;
+  ~DataManager() noexcept = default;
+
   DataManager(ImageRanker* p_owner);
 
   void submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,
@@ -65,6 +74,8 @@ class DataManager
   [[nodiscard]] MedianLineMultichartData<size_t, float> get_median_multichart_rank_progress_data(
       const std::vector<SearchSession>& sessions, size_t max_sess_len, size_t num_frames_total,
       size_t min_samples_count, bool normalize) const;
+  [[nodiscard]] std::pair<std::vector<SearchSession>, std::vector<SearchSessionAction>> fetch_search_sessions(
+      const std::string& data_pack_ID, size_t max_user_level) const;
 
  private:
   ImageRanker* _p_owner;

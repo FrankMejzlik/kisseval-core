@@ -34,9 +34,9 @@ class Keyword
       : ID(ID),
         m_wordnetId(wordnetId),
         m_vectorIndex(vectorIndex),
-        m_word(std::move(word)),
         m_descStartIndex(descStartIndex),
         m_descEndIndex(descEndIndex),
+        m_word(std::move(word)),
         m_hypernyms(hypernyms),
         m_hyponyms(hyponyms),
         description(std::move(description))
@@ -44,14 +44,7 @@ class Keyword
   {
   }
 
-  std::string description;
   FrameId ID;
-  // ==================================
-
-  bool IsHypernym() const { return !m_hyponyms.empty(); };
-  bool IsInBinVector() const { return m_vectorIndex == ERR_VAL<size_t>(); };
-  bool IsLeafKeyword() const { return (IsHypernym() && IsInBinVector()); }
-
   size_t m_wordnetId;
   size_t m_vectorIndex;
   size_t m_descStartIndex;
@@ -59,6 +52,12 @@ class Keyword
   std::string m_word;
   std::vector<size_t> m_hypernyms;
   std::vector<size_t> m_hyponyms;
+  std::string description;
+  // ==================================
+
+  bool IsHypernym() const { return !m_hyponyms.empty(); };
+  bool IsInBinVector() const { return m_vectorIndex == ERR_VAL<size_t>(); };
+  bool IsLeafKeyword() const { return (IsHypernym() && IsInBinVector()); }
 
   //! Set of indices that are hyponyms of this keyword
   std::unordered_set<size_t> m_hyponymBinIndices;

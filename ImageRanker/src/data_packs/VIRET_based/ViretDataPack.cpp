@@ -22,8 +22,6 @@ ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const
       _softmax_data_raw(std::move(softmax_data)),
       _keywords(vocab_data_refs)
 {
-  std::cout <<accumulated <<std::endl;
-
   // Instantiate all wanted transforms
   std::thread t1([this, accumulated]() {
     _transforms.emplace(enum_label(eTransformationIds::SOFTMAX).first,
@@ -209,25 +207,7 @@ const std::string& ViretDataPack::get_vocab_ID() const { return _keywords.get_ID
 
 const std::string& ViretDataPack::get_vocab_description() const { return _keywords.get_description(); }
 
-[[nodiscard]] std::string ViretDataPack::humanize_and_query(const std::string& and_query) const
-{
-  LOGW("Not implemented!");
 
-  return "I am just dummy query!"s;
-}
-
-[[nodiscard]] std::vector<Keyword*> ViretDataPack::top_frame_keywords(FrameId frame_ID,
-                                                                      const std::string& model_commands,
-                                                                      size_t count) const
-{
-  LOGW("Not implemented!");
-
-  return std::vector({
-      _keywords.GetKeywordPtrByVectorIndex(0),
-      _keywords.GetKeywordPtrByVectorIndex(1),
-      _keywords.GetKeywordPtrByVectorIndex(2),
-  });
-}
 
 RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, const std::string& model_commands,
                                          size_t result_size, FrameId target_image_ID) const
@@ -414,7 +394,7 @@ AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::strin
 }
 
 std::vector<const Keyword*> ViretDataPack::get_frame_top_classes(FrameId frame_ID,
-                                                                 std::vector<ModelKeyValOption> opt_key_vals,
+                                                                 const std::vector<ModelKeyValOption>& opt_key_vals,
                                                                  bool accumulated) const
 {
   bool max_based{ false };

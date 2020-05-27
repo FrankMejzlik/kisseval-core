@@ -81,9 +81,6 @@
     <ClCompile Include="src\ranking_models\PlainBowModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="external\sqlite\shell.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="external\sqlite\sqlite3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -183,6 +180,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Tester.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\macros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

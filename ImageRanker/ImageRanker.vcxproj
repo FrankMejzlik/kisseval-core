@@ -141,7 +141,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -150,7 +150,7 @@
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)external/sqlite/;$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories);$(ProjectDir)external/JSON/</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4996;4820;4061</DisableSpecificWarnings>
       <AdditionalOptions>/experimental:external /external:anglebrackets /external:W0 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -203,7 +203,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -214,7 +214,7 @@
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)external/sqlite/;$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/aggregations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories);$(ProjectDir)external/JSON/</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4996;4820;4061</DisableSpecificWarnings>
       <AdditionalOptions>/experimental:external /external:anglebrackets /external:W0 %(AdditionalOptions)</AdditionalOptions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -233,7 +233,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_debug|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -244,7 +244,7 @@
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)external/sqlite/;$(ProjectDir)external/MariaDB_Connector_C_64-bit/include/;$(ProjectDir)src/ranking_models/;$(ProjectDir)src/transformations/;$(ProjectDir)src/;%(AdditionalIncludeDirectories);$(ProjectDir)external/JSON/</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4996;4820;4061</DisableSpecificWarnings>
       <AdditionalOptions>/experimental:external /external:anglebrackets /external:W0 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -252,12 +252,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libmariadb.lib;Ws2_32.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)external/MariaDB_Connector_C_64-bit/lib/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="external\sqlite\shell.c" />
     <ClCompile Include="external\sqlite\sqlite3.c" />
     <ClCompile Include="src\ranking_models\PlainBowModel.cpp" />
     <ClCompile Include="src\ranking_models\BaseW2vvModel.cpp" />
@@ -283,6 +282,7 @@
     <ClCompile Include="src\transformations\TransformationSoftmax.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\macros.h" />
     <ClInclude Include="src\ranking_models\PlainBowModel.h" />
     <ClInclude Include="src\ranking_models\BaseW2vvModel.h" />
     <ClInclude Include="src\data_packs\Google_based\GoogleVisionDataPack.h" />

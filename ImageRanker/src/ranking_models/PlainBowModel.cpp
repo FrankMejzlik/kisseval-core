@@ -111,11 +111,25 @@ Vector<float> PlainBowModel::embedd_native_user_query(const Matrix<float>& kw_fe
 RankingResult PlainBowModel::rank_frames(const Matrix<float>& data_mat, const Matrix<float>& kw_features,
 
                                          const Vector<float>& kw_bias_vec, const Matrix<float>& kw_PCA_mat,
-                                         const Vector<float>& kw_PCA_mean_vec, const KeywordsContainer& keywords,
+                                         const Vector<float>& kw_PCA_mean_vec, 
+  [[maybe_unused]] const KeywordsContainer& keywords,
                                          const std::vector<CnfFormula>& user_query, size_t result_size,
                                          const Options& opts, FrameId target_frame_ID) const
 {
   using FramePair = std::pair<float, size_t>;
+
+  size_t num_frames{ data_mat.size() };
+
+  // Check valid target ID
+  if (target_frame_ID >= num_frames)
+  {
+    std::string msg{"Invalid `target_frame_ID` = " + std::to_string(target_frame_ID) + "."};
+    LOGE(msg);
+    PROD_THROW("Invalid parameters in function call.");
+  }
+
+  // Adjust desired result size
+  result_size = std::min(result_size, num_frames);
 
   // Comparator for the priority queue
   auto frame_pair_cmptor = [](const FramePair& left, const FramePair& right) { return left.first > right.first; };
@@ -219,18 +233,14 @@ ModelTestResult PlainBowModel::test_model(const Matrix<float>& transformed_data,
   Options opts = parse_options(options);
 
   // Rank them all
-  size_t i{0_z};
   for (auto&& [query, target_frame_ID] : test_user_queries)
   {
-    if (i % 100 == 0) LOGV("test progress: " << i);
-
     auto res = rank_frames(transformed_data, kw_features, kw_bias_vec, kw_PCA_mat, kw_PCA_mean_vec, keywords, query, 0,
                            opts, target_frame_ID);
 
     uint32_t x{uint32_t(res.target_pos / divisor)};
 
     ++(test_results[x].second);
-    ++i;
   }
 
   // Sumarize results into results

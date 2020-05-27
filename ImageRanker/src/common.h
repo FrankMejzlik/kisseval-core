@@ -13,6 +13,7 @@ using namespace std::string_literals;
 #include "config.h"
 #include "custom_exceptions.h"
 #include "log.h"
+#include "macros.h"
 
 namespace image_ranker
 {
@@ -514,8 +515,8 @@ struct AutocompleteInputResult
 
 struct ImagesetInfo
 {
-  const std::string& ID;
-  const std::string& directory;
+  std::string ID;
+  std::string directory;
   size_t num_sel_frames;
 };
 
@@ -526,14 +527,14 @@ struct LoadedImagesetsInfo
 
 struct DataPackInfo
 {
-  const std::string& ID;
-  const std::string& description;
-  const std::string& model_options;
-  const std::string& target_imageset_ID;
+  std::string ID;
+  std::string description;
+  std::string model_options;
+  std::string target_imageset_ID;
   size_t num_frames;
 
-  const std::string& vocabulary_ID;
-  const std::string& vocabulary_description;
+  std::string vocabulary_ID;
+  std::string vocabulary_description;
 };
 
 struct LoadedDataPacksInfo

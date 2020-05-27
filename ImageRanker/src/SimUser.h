@@ -20,11 +20,10 @@ class BaseSimUser
                                                       const std::vector<UserTestQuery>& test_user_queries,
                                                       std::vector<ModelKeyValOption>& options) const = 0;
 
-  virtual std::vector<UserTestQuery> generate_simulated_queries(const BaseImageset* p_is,
-                                                                const BaseVectorTransform& transformed_data,
-                                                                const KeywordsContainer& keywords,
-                                                                std::vector<ModelKeyValOption>& options, size_t count,
-                                                                size_t temporal_count = 1_z) const
+  virtual std::vector<UserTestQuery> generate_simulated_queries(
+      [[maybe_unused]] const BaseImageset* p_is, [[maybe_unused]] const BaseVectorTransform& transformed_data,
+      [[maybe_unused]] const KeywordsContainer& keywords, [[maybe_unused]] std::vector<ModelKeyValOption>& options,
+      [[maybe_unused]] size_t count, [[maybe_unused]] size_t temporal_count = 1_z) const
   {
     throw NotSuportedModelOptionExcept("Single queries generation not suported for this options combinations.");
     return std::vector<UserTestQuery>{};

@@ -22,44 +22,51 @@ class BaseDataPack
         _target_imageset_ID(target_imageset_ID)
   {
     LOGI("Loading data pack: " << ID << std::endl
-                              << "\tdescription:" << description << std::endl
-                              << "\tdefault_options: " << model_options << std::endl);
+                               << "\tdescription:" << description << std::endl
+                               << "\tdefault_options: " << model_options << std::endl);
   }
 
-  [[nodiscard]] virtual RankingResult rank_frames(const std::vector<CnfFormula>& user_queries,
-                                                  const std::string& model_options, size_t result_size,
-                                                  FrameId target_image_ID = ERR_VAL<FrameId>()) const = 0;
-  [[nodiscard]] virtual RankingResult rank_frames(const std::vector<std::string>& user_native_queries,
-                                                  const std::string& model_options, size_t result_size,
-                                                  FrameId target_image_ID = ERR_VAL<FrameId>()) const
+  [[nodiscard]] virtual RankingResult rank_frames(
+      [[maybe_unused]] const std::vector<CnfFormula>& user_queries, [[maybe_unused]] const std::string& model_options,
+      [[maybe_unused]] size_t result_size, [[maybe_unused]] FrameId target_image_ID = ERR_VAL<FrameId>()) const = 0;
+  [[nodiscard]] virtual RankingResult rank_frames([[maybe_unused]] const std::vector<std::string>& user_native_queries,
+                                                  [[maybe_unused]] const std::string& model_options,
+                                                  [[maybe_unused]] size_t result_size,
+                                                  [[maybe_unused]] FrameId target_image_ID = ERR_VAL<FrameId>()) const
   {
     // Datapacks do not have to support this
-    LOGE("Unsupported data pack feature requested.");
-    throw NotSuportedModelOptionExcept("This data pack does not support this.");
+    LOGE("Unsupported data pack feature requested."s);
+    PROD_THROW_NOT_SUPP("This data pack does not support this."s);
+    return RankingResult{};
   };
 
-  [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(FrameId frame_ID,
-                                                                          std::vector<ModelKeyValOption> opt_key_vals,
-                                                                          bool accumulated) const
+  [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(
+      [[maybe_unused]] FrameId frame_ID, [[maybe_unused]] const std::vector<ModelKeyValOption>& opt_key_vals,
+      [[maybe_unused]] bool accumulated) const
   {
     // Datapacks do not have to support this
-    LOGE("Unsupported data pack feature requested.");
-    throw NotSuportedModelOptionExcept("This data pack does not support this.");
+    LOGE("Unsupported data pack feature requested."s);
+    PROD_THROW_NOT_SUPP("This data pack does not support this."s);
+    return std::vector<const Keyword*>{};
   };
 
-  [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
-                                                   const std::string& model_commands, size_t num_points) const = 0;
-  [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestNativeQuery>& test_native_queries,
-                                                   const std::string& model_commands, size_t num_points) const
+  [[nodiscard]] virtual ModelTestResult test_model([[maybe_unused]] const std::vector<UserTestQuery>& test_queries,
+                                                   [[maybe_unused]] const std::string& model_commands,
+                                                   [[maybe_unused]] size_t num_points) const = 0;
+  [[nodiscard]] virtual ModelTestResult test_model(
+      [[maybe_unused]] const std::vector<UserTestNativeQuery>& test_native_queries,
+      [[maybe_unused]] const std::string& model_commands, [[maybe_unused]] size_t num_points) const
   {
     // Datapacks do not have to support this
-    LOGE("Unsupported data pack feature requested.");
-    throw NotSuportedModelOptionExcept("This data pack does not support this.");
+    LOGE("Unsupported data pack feature requested."s);
+    PROD_THROW_NOT_SUPP("This data pack does not support this."s);
+    return ModelTestResult{};
   };
 
   [[nodiscard]] virtual HistogramChartData<size_t, float> get_histogram_used_labels(
-      const std::vector<UserTestQuery>& test_queries, const std::string& model_commands, size_t num_queries,
-      size_t num_points, bool accumulated) const
+      [[maybe_unused]] const std::vector<UserTestQuery>& test_queries,
+      [[maybe_unused]] const std::string& model_commands, [[maybe_unused]] size_t num_queries,
+      [[maybe_unused]] size_t num_points, [[maybe_unused]] bool accumulated) const
   {
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested.");
@@ -71,22 +78,17 @@ class BaseDataPack
 
   [[nodiscard]] virtual const DataPackStats& get_stats() const { return _stats; };
 
-  [[nodiscard]] virtual std::string humanize_and_query(const std::string& and_query) const = 0;
-  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID, const std::string& model_commands,
-                                                                 size_t count) const
-  {
-    LOGE("Unsupported data pack feature requested.");
-    throw NotSuportedModelOptionExcept("This data pack does not support this.");
-  };
+
 
   [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix,
                                                                          size_t result_size, bool with_example_images,
                                                                          const std::string& model_commands) const = 0;
 
-  virtual void cache_up_example_images(const std::vector<const Keyword*>& kws, const std::string& model_commands) const
+  virtual void cache_up_example_images([[maybe_unused]] const std::vector<const Keyword*>& kws,
+                                       [[maybe_unused]] const std::string& model_commands) const
   {
     LOGE("Unsupported data pack feature requested.");
-    throw NotSuportedModelOptionExcept("This data pack does not support this.");
+    PROD_THROW_NOT_SUPP("This data pack does not support this.");
   };
 
   [[nodiscard]] virtual DataPackInfo get_info() const = 0;

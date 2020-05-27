@@ -6,6 +6,7 @@ using namespace std::literals;
 #include <algorithm>
 #include <array>
 #include <charconv>
+#include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -13,16 +14,27 @@ using namespace std::literals;
 #include <sstream>
 #include <vector>
 
-#include "json.hpp"
+#include <json.hpp>
 using json = nlohmann::json;
 
 #include "common.h"
 
 using namespace image_ranker;
 
+template <typename T>
+inline T rand(T from, T to)
+{
+  std::uniform_int_distribution<T> uniform_dist{ from, to };
+  std::random_device rd;
+  std::mt19937 engine(rd());
+  std::function<T()> rand = std::bind(uniform_dist, engine);
+
+  return rand();
+}
+
 inline bool is_arch_LE()
 {
-  if (sizeof(char) >= sizeof(uint32_t))
+  if constexpr (sizeof(char) >= sizeof(uint32_t))
   {
     throw std::runtime_error(
         "This test assumes char type "
@@ -193,8 +205,9 @@ inline int32_t ParseIntegerLE(const std::byte* pFirstByte)
   int32_t signedInteger = 0;
 
   // Construct final BE integer
-  signedInteger = static_cast<uint32_t>(pFirstByte[3]) << 24 | static_cast<uint32_t>(pFirstByte[2]) << 16 |
-                  static_cast<uint32_t>(pFirstByte[1]) << 8 | static_cast<uint32_t>(pFirstByte[0]);
+  signedInteger =
+      static_cast<int32_t>(static_cast<uint32_t>(pFirstByte[3]) << 24 | static_cast<uint32_t>(pFirstByte[2]) << 16 |
+                           static_cast<uint32_t>(pFirstByte[1]) << 8 | static_cast<uint32_t>(pFirstByte[0]));
 
   // Return parsed integer
   return signedInteger;
@@ -466,7 +479,7 @@ inline std::function<float(float, float)> pick_tf_scheme_fn(eTermFrequency tf_sc
 }
 
 template <typename CountType>
-inline float idf_scheme_fn_none(CountType n_i, CountType N)
+inline float idf_scheme_fn_none([[maybe_unused]] CountType n_i, [[maybe_unused]] CountType N)
 {
   return 1.0F;
 }

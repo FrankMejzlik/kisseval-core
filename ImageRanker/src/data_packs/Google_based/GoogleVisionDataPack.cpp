@@ -85,8 +85,8 @@ void GoogleVisionDataPack::cache_up_example_images(const std::vector<const Keywo
 }
 
 std::vector<const Keyword*> GoogleVisionDataPack::get_frame_top_classes(FrameId frame_ID,
-                                                                 std::vector<ModelKeyValOption> opt_key_vals,
-                                                                 bool accumulated) const
+                                                                 const std::vector<ModelKeyValOption>& opt_key_vals,
+                                                                 [[maybe_unused]] bool accumulated) const
 {
   bool max_based{ false };
   std::string transform_ID{ "linear_01" };
@@ -134,24 +134,7 @@ const std::string& GoogleVisionDataPack::get_vocab_ID() const { return _keywords
 
 const std::string& GoogleVisionDataPack::get_vocab_description() const { return _keywords.get_description(); }
 
-std::string GoogleVisionDataPack::humanize_and_query(const std::string& and_query) const
-{
-  LOGW("Not implemented!");
 
-  return "I am just dummy query!"s;
-}
-
-std::vector<Keyword*> GoogleVisionDataPack::top_frame_keywords(FrameId frame_ID, const std::string& model_commands,
-                                                               size_t count) const
-{
-  LOGW("Not implemented!");
-
-  return std::vector({
-      _keywords.GetKeywordPtrByVectorIndex(0),
-      _keywords.GetKeywordPtrByVectorIndex(1),
-      _keywords.GetKeywordPtrByVectorIndex(2),
-  });
-}
 
 RankingResult GoogleVisionDataPack::rank_frames(const std::vector<CnfFormula>& user_queries,
                                                 const std::string& model_commands, size_t result_size,
@@ -302,17 +285,6 @@ ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery
   return ranking_model.test_model(transform, _keywords, idx_test_queries, opt_key_vals, num_points);
 }
 
-HistogramChartData<size_t, float> GoogleVisionDataPack::get_histogram_used_labels(
-    const std::vector<UserTestQuery>& test_queries, const std::string& model_options, size_t num_queries,  size_t num_points,
-    bool accumulated) const
-{
-  LOGW("Not implemented!");
-  HistogramChartData<size_t, float> res;
-
-  res.x = std::vector<size_t>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-  res.fx = std::vector<float>{ 0.1F, 0.2F, 0.05F, 0.05F, 0.05F, 0.01F, 0.005F, 0.0005F, 0.005F, 0.000001F };
-  return res;
-}
 
 AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std::string& query_prefix,
                                                                        size_t result_size, bool with_example_image,

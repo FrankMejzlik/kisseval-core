@@ -6,11 +6,10 @@
 
 using namespace image_ranker;
 
-std::vector<UserTestQuery> SimUserNoSim::process_sim_user(const BaseImageset* p_is,
-                                                          const BaseVectorTransform& transformed_data,
-                                                          const KeywordsContainer& keywords,
-                                                          const std::vector<UserTestQuery>& test_user_queries,
-                                                          std::vector<ModelKeyValOption>& options) const
+std::vector<UserTestQuery> SimUserNoSim::process_sim_user(
+    [[maybe_unused]] const BaseImageset* p_is, [[maybe_unused]] const BaseVectorTransform& transformed_data,
+    [[maybe_unused]] const KeywordsContainer& keywords, const std::vector<UserTestQuery>& test_user_queries,
+    [[maybe_unused]] std::vector<ModelKeyValOption>& options) const
 {
   return test_user_queries;
 }

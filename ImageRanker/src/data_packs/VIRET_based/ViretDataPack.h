@@ -37,14 +37,11 @@ class ViretDataPack : public BaseDataPack
                                                    const std::string& model_commands, size_t num_points, size_t num_queries, bool accumulated) const override;
 
   [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(
-      FrameId frame_ID, std::vector<ModelKeyValOption> opt_key_vals, bool accumulated) const override;
+      FrameId frame_ID, const std::vector<ModelKeyValOption>& opt_key_vals, bool accumulated) const override;
 
   [[nodiscard]] virtual const std::string& get_vocab_ID() const override;
   [[nodiscard]] virtual const std::string& get_vocab_description() const override;
 
-  [[nodiscard]] virtual std::string humanize_and_query(const std::string& and_query) const override;
-  [[nodiscard]] virtual std::vector<Keyword*> top_frame_keywords(FrameId frame_ID, const std::string& model_commands,
-                                                                 size_t count) const override;
 
   [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(
       const std::string& query_prefix, size_t result_size, bool with_example_images,

@@ -10,10 +10,18 @@ namespace image_ranker
 {
 class Database
 {
+  /*
+   * Methods
+   */
  public:
   Database() = delete;
+  Database(const Database& other) = delete;
+  Database(Database&& other) = default;
+  Database& operator=(const Database& other) = delete;
+  Database& operator=(Database&& other) = default;
+  ~Database() noexcept = default;
+
   Database(const std::string& db_filepath);
-  ~Database() noexcept;
 
   size_t GetLastId() const;
   std::string GetErrorDescription() const;
@@ -24,9 +32,14 @@ class Database
 
   std::string EscapeString(const std::string& stringToEscape) const;
 
+  /*
+   * Member variables
+   */
  private:
-  sqlite3* _db;
+  /** Ptr to the database instance */
+  std::unique_ptr<sqlite3, void (*)(sqlite3*)> _db;
 
+  /** Filepath of source database file */
   std::string _db_fpth;
 };
 

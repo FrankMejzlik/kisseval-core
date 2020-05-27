@@ -133,8 +133,10 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
                                         const std::string& session_ID,
                                         const std::vector<InteractiveSearchAction>& actions)
 {
+  // If nothing to do
   if (actions.empty())
   {
+    LOGW("Submitting empty search session. Ignoring it.");
     return false;
   }
 
@@ -153,11 +155,13 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
 
   // Run first query
   auto q1{ query1Ss.str() };
-  std::cout << q1 << std::endl;
+
   size_t result1{ _db.NoResultQuery(q1) };
   if (result1 != 0)
   {
-    LOGE("Failed to insert into:` " + searches_table_name + "!");
+    std::string msg{ "Failed to insert into: `" + searches_table_name + "!\n\tQuery = '" + q1 + "'" };
+    LOGE(msg);
+    PROD_THROW("Database error!");
   }
   // Currently inserted ID
   size_t id{ _db.GetLastId() };
@@ -190,24 +194,22 @@ bool DataManager::submit_search_session(const std::string& data_pack_ID, const s
   auto q2{ query2Ss.str() };
   size_t result2{ _db.NoResultQuery(q2) };
 
-  std::cout << q2 << std::endl;
-
   if (result1 != 0 || result2 != 0)
   {
-    LOGE("Failed to insert into: `" + search_actions_table_name + "!");
+    std::string msg{ "Failed to insert into: `" + search_actions_table_name + "!\n\tQuery = '" + q2 + "'" };
+    LOGE(msg);
+    PROD_THROW("Database error!");
   }
   return true;
 }
 
-SearchSessRankChartData DataManager::get_search_sessions_rank_progress_chart_data(
-    const std::string& data_pack_ID, const std::string& model_options, size_t max_user_level, size_t num_frames,
-    size_t min_samples_count, bool normalize) const
+std::pair<std::vector<SearchSession>, std::vector<SearchSessionAction>> DataManager::fetch_search_sessions(
+    const std::string& data_pack_ID, size_t max_user_level) const
 {
-  LOGW("Not implemented");
-
   std::stringstream SQL_query_sessions_ss;
   SQL_query_sessions_ss << "SELECT `ID`, `target_frame_ID`, `duration`, `result` FROM `" << searches_table_name
-                        << "` WHERE `data_pack_ID` = 'NasNet2019' AND `user_level` <= " << max_user_level << ";";
+                        << "` WHERE `data_pack_ID` = '" << data_pack_ID << "' AND `user_level` <= " << max_user_level
+                        << ";";
   std::stringstream SQL_query_actions_ss;
   SQL_query_actions_ss << "SELECT `search_session_ID`, `action_index`, `result_target_rank` FROM `"
                        << search_actions_table_name << "` WHERE `action_query_index` = 0  AND `is_initial` = 0;";
@@ -248,12 +250,22 @@ SearchSessRankChartData DataManager::get_search_sessions_rank_progress_chart_dat
     all_actions.emplace_back(SearchSessionAction{ search_session_ID, action_index, result_target_rank });
   }
 
-  size_t max_session_len{ 0_z };
+  return std::pair(std::move(sessions), std::move(all_actions));
+}
+
+SearchSessRankChartData DataManager::get_search_sessions_rank_progress_chart_data(
+    const std::string& data_pack_ID, [[maybe_unused]] const std::string& model_options, size_t max_user_level,
+    size_t num_frames, size_t min_samples_count, bool normalize) const
+{
+  // Get data for all sessions
+  auto [sessions, all_actions]{ fetch_search_sessions(data_pack_ID, max_user_level) };
+
+  size_t max_session_len{ 0 };
 
   // Add actions to all loaded sessions
   for (auto&& [ID, target_frame_ID, duration, found, actions] : sessions)
   {
-    size_t counter{ 0_z };
+    size_t counter{ 0 };
     for (auto&& [sess_ID, action_index, rank] : all_actions)
     {
       if (sess_ID != ID)
@@ -272,7 +284,7 @@ SearchSessRankChartData DataManager::get_search_sessions_rank_progress_chart_dat
 
   // Filter out sessions of length we dont have enough samples from
   {
-    size_t i{ 0_z };
+    size_t i{ 0 };
     for (auto&& [ID, target_frame_ID, duration, found, actions] : sessions)
     {
       size_t num_actions{ actions.size() };
@@ -335,6 +347,11 @@ QuantileLineChartData<size_t, float> DataManager::get_aggregate_rank_progress_da
       continue;
     }
 
+    if (rank_vec.size() < min_samples_count)
+    {
+      continue;
+    }
+
     std::sort(rank_vec.begin(), rank_vec.end());
 
     size_t count{ rank_vec.size() };
@@ -378,11 +395,13 @@ MedianLineMultichartData<size_t, float> DataManager::get_median_multichart_rank_
 {
   // Populate rank values into specified vectors
   std::vector<std::vector<std::vector<size_t>>> sess_ranks(max_sess_len + 1);
-  size_t i{ 0_z };
-  for (auto&& vec : sess_ranks)
   {
-    vec.resize(i);
-    ++i;
+    size_t i{ 0_z };
+    for (auto&& vec : sess_ranks)
+    {
+      vec.resize(i);
+      ++i;
+    }
   }
   for (auto&& [ID, target_frame_ID, duration, found, actions] : sessions)
   {
@@ -415,7 +434,7 @@ MedianLineMultichartData<size_t, float> DataManager::get_median_multichart_rank_
       xs_for_len_N.emplace_back(i + 1);
 
       size_t num_samples{ sess_len_N_act_i.size() };
-      if (num_samples <= 0)
+      if (num_samples < min_samples_count)
       {
         continue;
       }

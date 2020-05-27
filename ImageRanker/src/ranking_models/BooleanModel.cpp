@@ -8,7 +8,7 @@ using namespace image_ranker;
 
 BooleanModel::Options BooleanModel::parse_options(const std::vector<ModelKeyValOption>& option_key_val_pairs)
 {
-  auto res{BooleanModel::Options()};
+  auto res{ BooleanModel::Options() };
 
   for (auto&& [key, val] : option_key_val_pairs)
   {
@@ -16,7 +16,8 @@ BooleanModel::Options BooleanModel::parse_options(const std::vector<ModelKeyValO
     {
       res.true_threshold = strTo<float>(val);
     }
-    else {
+    else
+    {
       LOGW("Unknown model option key '" + key + "'");
     }
   }
@@ -25,8 +26,8 @@ BooleanModel::Options BooleanModel::parse_options(const std::vector<ModelKeyValO
 }
 
 RankingResult BooleanModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-                                      const std::vector<CnfFormula>& user_query, size_t result_size,
-                                      const std::vector<ModelKeyValOption>& options, FrameId target_frame_ID) const
+                                        const std::vector<CnfFormula>& user_query, size_t result_size,
+                                        const std::vector<ModelKeyValOption>& options, FrameId target_frame_ID) const
 {
   if (user_query.empty())
   {
@@ -40,11 +41,25 @@ RankingResult BooleanModel::rank_frames(const BaseVectorTransform& transformed_d
   return rank_frames(transformed_data, keywords, user_query, result_size, opts, target_frame_ID);
 }
 
-RankingResult BooleanModel::rank_frames(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-                                      const std::vector<CnfFormula>& user_query, size_t result_size,
-                                      const Options& opts, FrameId target_frame_ID) const
+RankingResult BooleanModel::rank_frames(const BaseVectorTransform& transformed_data,
+                                        [[maybe_unused]] const KeywordsContainer& keywords,
+                                        const std::vector<CnfFormula>& user_query, size_t result_size,
+                                        const Options& opts, FrameId target_frame_ID) const
 {
   using FramePair = std::pair<float, size_t>;
+
+  size_t num_frames{ transformed_data.num_frames() };
+
+  // Check valid target ID
+  if (target_frame_ID >= num_frames)
+  {
+    std::string msg{ "Invalid `target_frame_ID` = " + std::to_string(target_frame_ID) + "." };
+    LOGE(msg);
+    PROD_THROW("Invalid parameters in function call.");
+  }
+
+  // Adjust desired result size
+  result_size = std::min(result_size, num_frames);
 
   // Comparator for the priority queue
   auto frame_pair_cmptor = [](const FramePair& left, const FramePair& right) { return left.first < right.first; };
@@ -64,7 +79,7 @@ RankingResult BooleanModel::rank_frames(const BaseVectorTransform& transformed_d
   const Matrix<float>& data_mat = transformed_data.data_sum();
 
   {
-    size_t i{0};
+    size_t i{ 0 };
     for (auto&& fea_vec : data_mat)
     {
       float prim_ranking = rank_frame(fea_vec, user_query.front(), opts);
@@ -78,14 +93,13 @@ RankingResult BooleanModel::rank_frames(const BaseVectorTransform& transformed_d
       }
       ++i;
     }
-    
   }
 
   {
-    bool found_target{target_frame_ID == ERR_VAL<FrameId>() ? true : false};
-    for (size_t i{0}; i < result_size || !found_target; ++i)
+    bool found_target{ target_frame_ID == ERR_VAL<FrameId>() ? true : false };
+    for (size_t i{ 0 }; i < result_size || !found_target; ++i)
     {
-      auto pair{max_prio_queue.top()};
+      auto pair{ max_prio_queue.top() };
 
       if (pair.second == target_frame_ID)
       {
@@ -104,19 +118,17 @@ RankingResult BooleanModel::rank_frames(const BaseVectorTransform& transformed_d
   return result;
 }
 
-
-ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_data,
-                                          const KeywordsContainer& keywords,
-                                          const std::vector<UserTestQuery>& test_user_queries,
-                                          const std::vector<ModelKeyValOption>& options, size_t num_points) const
+ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+                                         const std::vector<UserTestQuery>& test_user_queries,
+                                         const std::vector<ModelKeyValOption>& options, size_t num_points) const
 {
-  size_t imageset_size{transformed_data.num_frames()};
-  float divisor{float(imageset_size) / num_points};
+  size_t imageset_size{ transformed_data.num_frames() };
+  float divisor{ float(imageset_size) / num_points };
 
   // Prefil result [x,f(x)] values
   std::vector<std::pair<uint32_t, uint32_t>> test_results;
   test_results.reserve(num_points + 1);
-  for (size_t i{0}; i <= num_points; ++i)
+  for (size_t i{ 0 }; i <= num_points; ++i)
   {
     test_results.emplace_back(uint32_t(i * divisor), 0);
   }
@@ -129,16 +141,16 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
   {
     auto res = rank_frames(transformed_data, keywords, query, 0, opts, target_frame_ID);
 
-    uint32_t x{uint32_t(res.target_pos / divisor)};
+    uint32_t x{ uint32_t(res.target_pos / divisor) };
 
     ++(test_results[x].second);
   }
 
   // Sumarize results into results
-  uint32_t sum{0};
+  uint32_t sum{ 0 };
   for (auto&& num_hits : test_results)
   {
-    auto val{num_hits.second};
+    auto val{ num_hits.second };
     num_hits.second = sum;
     sum += val;
   }
@@ -158,20 +170,20 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
       const std::map<eVocabularyId, KeywordsContainer>& keywordContainers) const override
   {
     std::vector<size_t> ranks;
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
     std::cout << "Running model test ... " << std::endl;
     std::cout << "Result chart will have " << MODEL_TEST_CHART_NUM_X_POINTS << " discrete points on X axis"
               << std::endl;
     std::cout << "=====================================" << std::endl;
-#endif
+#  endif
 
-#if LOG_PRE_AND_PPOST_EXP_RANKS
+#  if LOG_PRE_AND_PPOST_EXP_RANKS
     long long int totalRankMove{0};
     long long int currDelta{0};
 
     size_t origRank{0_z};
     size_t expRank{0_z};
-#endif
+#  endif
 
     uint32_t maxRank = (uint32_t)images.size();
 
@@ -193,7 +205,7 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
     // Iterate over test queries
     for (auto&& singleQuery : testQueries)
     {
-#if LOG_PRE_AND_PPOST_EXP_RANKS
+#  if LOG_PRE_AND_PPOST_EXP_RANKS
       {
         auto singleQueryOrig{testQueriesOrig[iii]};
         auto imgId = std::get<0>(singleQueryOrig[0]);
@@ -212,7 +224,7 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
         std::cout << "-----" << std::endl;
         std::cout << origRank << " => ";
       }
-#endif
+#  endif
       auto imgId = std::get<0>(singleQuery[0]);
 
       std::vector<CnfFormula> formulae;
@@ -232,7 +244,7 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
       // Increment this hit
       ++result[transformedRank].second;
 
-#if LOG_PRE_AND_PPOST_EXP_RANKS
+#  if LOG_PRE_AND_PPOST_EXP_RANKS
       expRank = resultImages.second;
       currDelta = expRank - origRank;
 
@@ -240,9 +252,9 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
 
       std::cout << expRank << " delta = " << currDelta << ", totalRankDelta = " << totalRankMove << std::endl;
 
-#endif
+#  endif
 
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
       std::cout << "----------------------------" << std::endl;
       std::cout << "Image ID " << imgId << "=> " << (resultImages.second - 1) << "/" << maxRank << std::endl;
 
@@ -252,14 +264,14 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
       std::cout << "Add hit to interval [" << from << ", " << to << "] => " << result[transformedRank].second
                 << " found" << std::endl;
 
-#endif
+#  endif
 
       ++iii;
     }
 
     uint32_t currCount{0ULL};
 
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
     std::cout << "=====================================" << std::endl;
     std::cout << "Final hit counts:" << std::endl;
 
@@ -278,7 +290,7 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
 
     std::cout << "=====================================" << std::endl;
     std::cout << "Cumulative number of hits (as rank starting with 1):" << std::endl;
-#endif
+#  endif
 
     {
       size_t ii{0_z};
@@ -289,11 +301,11 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
         r.second = currCount;
         currCount += tmp;
 
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
         size_t to{(ii)*scaleDownFactor};
 
         std::cout << "[0, " << to << "] => " << r.second << " images found" << std::endl;
-#endif
+#  endif
 
         ++ii;
       }
@@ -309,12 +321,12 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
                                  const std::vector<std::unique_ptr<Image>>& images,
                                  const std::map<eVocabularyId, KeywordsContainer>& keywordContainers) const override
   {
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
     std::cout << "Running model test ... " << std::endl;
     std::cout << "Result chart will have " << MODEL_TEST_CHART_NUM_X_POINTS << " discrete points on X axis"
               << std::endl;
     std::cout << "=====================================" << std::endl;
-#endif
+#  endif
 
     uint32_t maxRank = (uint32_t)images.size();
 
@@ -350,7 +362,7 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
       // Increment this hit
       ++result[transformedRank].second;
 
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
       std::cout << "----------------------------" << std::endl;
       std::cout << "Image ID " << imgId << "=> " << (resultImages.second - 1) << "/" << maxRank << std::endl;
 
@@ -360,12 +372,12 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
       std::cout << "Add hit to interval [" << from << ", " << to << "] => " << result[transformedRank].second
                 << " found" << std::endl;
 
-#endif
+#  endif
     }
 
     uint32_t currCount{0ULL};
 
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
     std::cout << "=====================================" << std::endl;
     std::cout << "Final hit counts:" << std::endl;
 
@@ -384,7 +396,7 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
 
     std::cout << "=====================================" << std::endl;
     std::cout << "Cumulative number of hits (as rank starting with 1):" << std::endl;
-#endif
+#  endif
 
     {
       size_t ii{0_z};
@@ -395,11 +407,11 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
         r.second = currCount;
         currCount += tmp;
 
-#if LOG_DEBUG_RUN_TESTS
+#  if LOG_DEBUG_RUN_TESTS
         size_t to{(ii)*scaleDownFactor};
 
         std::cout << "[0, " << to << "] => " << r.second << " images found" << std::endl;
-#endif
+#  endif
 
         ++ii;
       }
@@ -495,11 +507,11 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
       // Finalize ranking
       //
 
-#if LOG_DEBUG_IMAGE_RANKING
+#  if LOG_DEBUG_IMAGE_RANKING
       std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
       std::cout << "!!!! FINAL RANK = " << std::to_string(imageRanking) << std::endl;
       std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-#endif
+#  endif
 
       // Insert result to max heap
       maxHeap.push(std::pair(imageRanking, pImg->m_imageId));
@@ -629,17 +641,17 @@ ModelTestResult BooleanModel::test_model(const BaseVectorTransform& transformed_
 #endif
 
 float BooleanModel::rank_frame(const Vector<float>& frame_data, const CnfFormula& single_query,
-                             const Options& options) const
+                               const Options& options) const
 {
-  float frame_ranking{1.0F};
+  float frame_ranking{ 1.0F };
 
   for (auto&& clause : single_query)
   {
-    float clause_ranking{0.0F};
+    float clause_ranking{ 0.0F };
 
     for (auto&& literal : clause)
     {
-      float literal_ranking{frame_data[literal.atom]};
+      float literal_ranking{ frame_data[literal.atom] };
 
       if (literal_ranking >= options.true_threshold)
       {

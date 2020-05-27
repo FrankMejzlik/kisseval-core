@@ -150,6 +150,19 @@ RankingResult VectorSpaceModel::rank_frames(const BaseVectorTransform& transform
 {
   using FramePair = std::pair<float, size_t>;
 
+  size_t num_frames{ transformed_data.num_frames() };
+
+  // Check valid target ID
+  if (target_frame_ID >= num_frames)
+  {
+    std::string msg{"Invalid `target_frame_ID` = " + std::to_string(target_frame_ID) + "."};
+    LOGE(msg);
+    PROD_THROW("Invalid parameters in function call.");
+  }
+
+  // Adjust desired result size
+  result_size = std::min(result_size, num_frames);
+
   // Comparator for the priority queue (we need min-heap)
   auto frame_pair_cmptor = [](const FramePair& left, const FramePair& right) { return left.first > right.first; };
 

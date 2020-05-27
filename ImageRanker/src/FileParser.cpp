@@ -260,7 +260,8 @@ std::vector<ImageIdFilenameTuple> FileParser::GetImageFilenames(const std::strin
 }
 
 std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFilename,
-                                                      const FrameFilenameOffsets& offsets, size_t imageIdStride) const
+                                                      const FrameFilenameOffsets& offsets,
+                                                      [[maybe_unused]] size_t imageIdStride) const
 {
   std::vector<ImageIdFilenameTuple> imageIdFilenameTuples = GetImageFilenames(idToFilename);
 
@@ -372,7 +373,6 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, boo
 
     // Get index that this description starts
     size_t descStartIndex = _allDescriptions.size();
-    size_t descEndIndex = descStartIndex + tokens[5].size() - 1ULL;
 
     // Append description to all of them
     _allDescriptions.append(tokens[5]);
@@ -497,7 +497,7 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
   std::array<std::byte, sizeof(int32_t)> smallBuffer;
 
   // Discard first 36B of data
-  ifs.ignore(36ULL);
+  ifs.ignore(VIRET_FORMAT_NET_DATA_HEADER_SIZE);
 
   // Read number of items in each vector per image
   ifs.read((char*)smallBuffer.data(), sizeof(int32_t));
@@ -517,10 +517,6 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
   // Where rows data start
   size_t currOffset = 40ULL;
 
-  // Initialize video ID counter
-  size_t prevVideoId{ ERR_VAL<size_t>() };
-  size_t prevShotId{ ERR_VAL<size_t>() };
-
   // Create line buffer
   std::vector<std::byte> lineBuffer;
   lineBuffer.resize(byteRowLengths);
@@ -531,9 +527,6 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
   // Iterate until there is something to read from file
   while (ifs.read((char*)lineBuffer.data(), byteRowLengths))
   {
-    // Get picture ID of this row
-    size_t id = ParseIntegerLE(lineBuffer.data());
-
     // Stride in bytes
     currOffset = sizeof(float);
 
@@ -595,7 +588,6 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
       float tmp{ val - mean };
       varSum += (tmp * tmp);
     }
-    float variance = sqrtf((float)1 / (numFloats - 1) * varSum);
 
     std::vector<std::pair<FrameId, float>> top_KW_frame_IDs;
     top_KW_frame_IDs.reserve(NUM_TOP_KWS_LOADED);
@@ -674,10 +666,6 @@ std::pair<Matrix<float>, DataParseStats> FileParser::ParseSoftmaxBinFile_ViretFo
   // Where rows data start
   size_t currOffset = 40ULL;
 
-  // Initialize video ID counter
-  size_t prevVideoId{ ERR_VAL<size_t>() };
-  size_t prevShotId{ ERR_VAL<size_t>() };
-
   // Create line buffer
   std::vector<std::byte> lineBuffer;
   lineBuffer.resize(byteRowLengths);
@@ -737,7 +725,6 @@ std::pair<Matrix<float>, DataParseStats> FileParser::ParseSoftmaxBinFile_ViretFo
       float tmp{ val - mean };
       varSum += (tmp * tmp);
     }
-    float variance = sqrtf((float)1 / (numFloats - 1) * varSum);
 
     result[id] = std::move(rawRankData);
   }
@@ -745,8 +732,8 @@ std::pair<Matrix<float>, DataParseStats> FileParser::ParseSoftmaxBinFile_ViretFo
   return std::pair(result, stats);
 }
 
-std::vector<std::vector<float>> FileParser::ParseDeepFeasBinFile_ViretFormat(const std::string& inputFilepath,
-                                                                             size_t num_frames)
+std::vector<std::vector<float>> FileParser::ParseDeepFeasBinFile_ViretFormat(const std::string& /*inputFilepath*/,
+                                                                             size_t /*num_frames*/)
 {
   LOGW("Not implemented...");
   return std::vector<std::vector<float>>();
@@ -875,7 +862,6 @@ std::pair<Matrix<float>, DataParseStats> FileParser::ParseRawScoringData_GoogleA
       float tmp{ val - mean };
       varSum += (tmp * tmp);
     }
-    float variance = sqrtf((float)1 / (numLabels - 1) * varSum);
 
     result[ID] = std::move(scoringData);
   }

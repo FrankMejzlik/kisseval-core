@@ -4,7 +4,7 @@ BasedOnStyle: Google
 BreakBeforeBraces: Allman
 IndentWidth: 2
 ColumnLimit: 120
-IndentPPDirectives: None
+IndentPPDirectives: AfterHash
 IncludeBlocks: Preserve
 Cpp11BracedListStyle: false
 ...

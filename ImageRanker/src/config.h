@@ -2,9 +2,15 @@
 
 #include <stdint.h>
 
+/** If running in production.
+ *
+ * Errors will throw production exception instead of debugging ones.
+ */
+#define IS_PRODUCTION (1)
+
 /** If basic functionality tests will be executed after initialization.
  *    \see image_ranker::Tester */
-#define RUN_BASIC_TESTS 1
+#define RUN_BASIC_TESTS (1)
 
 /**********************************************
  * Input data
@@ -25,12 +31,18 @@
 /** Delimiter for synonyms in VIRET format keyword classes file */
 #define SYNONYM_DELIMITER_001 '#'
 
+#define VIRET_FORMAT_NET_DATA_HEADER_SIZE 36
+
 /**********************************************
  * Logging
  ***********************************************/
 
 /** If exception will be thrown on LOGE. */
-#define THROW_ON_ERROR 1
+#if IS_PRODUCTION
+#  define THROW_ON_ERROR 0
+#else
+#  define THROW_ON_ERROR 1
+#endif
 
 /** Logging level.
  *

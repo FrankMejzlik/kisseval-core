@@ -29,23 +29,6 @@ const std::string& W2vvDataPack::get_vocab_ID() const { return _keywords.get_ID(
 
 const std::string& W2vvDataPack::get_vocab_description() const { return _keywords.get_description(); }
 
-std::string W2vvDataPack::humanize_and_query(const std::string& and_query) const
-{
-  LOGW("Not implemented!");
-  return ""s;
-}
-
-std::vector<Keyword*> W2vvDataPack::top_frame_keywords(FrameId frame_ID, const std::string& model_commands,
-                                                       size_t count) const
-{
-  LOGW("Not implemented!");
-
-  return std::vector({
-      _keywords.GetKeywordPtrByVectorIndex(0),
-      _keywords.GetKeywordPtrByVectorIndex(1),
-      _keywords.GetKeywordPtrByVectorIndex(2),
-  });
-}
 
 RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, const std::string& model_commands,
                                         size_t result_size, FrameId target_image_ID) const
@@ -179,8 +162,8 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestNativeQuery>&
 };
 
 AutocompleteInputResult W2vvDataPack::get_autocomplete_results(const std::string& query_prefix, size_t result_size,
-                                                               bool with_example_images,
-                                                               const std::string& model_commands) const
+                                                               [[maybe_unused]] bool with_example_images,
+                                                               [[maybe_unused]] const std::string& model_commands) const
 {
   return { _keywords.GetNearKeywordsPtrs(query_prefix, result_size) };
 }

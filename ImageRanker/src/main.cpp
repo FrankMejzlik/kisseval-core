@@ -24,6 +24,8 @@ int main()
   // Instantiate ranker with parsed config
   ImageRanker ranker(cfg);
 
+  PROD_THROW("Dear user, this is bad!");
+
 #if RUN_BASIC_TESTS
   Tester::test_public_methods(ranker, cfg);
 #endif

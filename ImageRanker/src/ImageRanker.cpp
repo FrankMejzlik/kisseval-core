@@ -1,6 +1,6 @@
 
 
-#include "json.hpp"
+#include <json.hpp>
 using json = nlohmann::json;
 
 #include "data_packs/Google_based/GoogleVisionDataPack.h"
@@ -15,14 +15,16 @@ using json = nlohmann::json;
 
 using namespace image_ranker;
 
-ImageRanker::Config ImageRanker::parse_data_config_file(eMode mode, const std::string& filepath,
+ImageRanker::Config ImageRanker::parse_data_config_file([[maybe_unused]] eMode mode, const std::string& filepath,
                                                         const std::string& data_dir)
 {
   // Read the JSON cfg file
   std::ifstream i(filepath);
   if (!i.is_open())
   {
-    LOGE("Error opening file: " + filepath);
+    std::string msg{ "Error opening file '" + filepath + "'." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   json json_data;
@@ -257,20 +259,21 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
   {
     GameSessionQueryResult result;
 
-    result.session_ID = query.session_ID;
-    result.human_readable_query = query.user_query_readable.at(0);
-    result.frame_filename = is[query.target_sequence_IDs.at(0)].m_filename;
+    FrameId target_ID{ query.target_sequence_IDs.at(0) };
 
-    auto top_KWs = dp.top_frame_keywords(query.target_sequence_IDs.at(0), model_options, DEF_NUMBER_OF_TOP_KWS);
-
-    std::stringstream model_top_query_ss;
-
-    for (auto&& KW : top_KWs)
+    // Check target validity
+    if (target_ID >= is.size())
     {
-      model_top_query_ss << KW->m_word << ", ";
+      std::string msg{ "Invalid `target_frame_ID` = " + std::to_string(target_ID) + "." };
+      LOGE(msg);
+      PROD_THROW("Invalid parameters in function call.");
     }
 
-    result.model_top_query = model_top_query_ss.str();
+    result.session_ID = query.session_ID;
+    result.human_readable_query = query.user_query_readable.at(0);
+    result.frame_filename = is[target_ID].m_filename;
+
+    result.model_top_query = "";
 
     userResult.emplace_back(std::move(result));
   }
@@ -377,11 +380,10 @@ SearchSessRankChartData ImageRanker::get_search_sessions_rank_progress_chart_dat
 HistogramChartData<size_t, float> ImageRanker::get_histogram_used_labels(const std::string& data_pack_ID,
                                                                          const std::string& model_options,
                                                                          size_t num_points, bool accumulated,
-                                                                         size_t max_user_level) const
+                                                                         [[maybe_unused]] size_t max_user_level) const
 {
   constexpr eUserQueryOrigin user_query_origin{ eUserQueryOrigin::SEMI_EXPERTS };
   const auto& dp{ data_pack(data_pack_ID) };
-  const auto& is{ imageset(dp.target_imageset_ID()) };
 
   ModelTestResult res;
   size_t num_queries{ ERR_VAL<size_t>() };
@@ -462,7 +464,6 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
                                             size_t num_points, bool normalize_y) const
 {
   const auto& dp{ data_pack(data_pack_ID) };
-  const auto& is{ imageset(dp.target_imageset_ID()) };
 
   ModelTestResult res;
   size_t num_queries{ ERR_VAL<size_t>() };
@@ -495,14 +496,6 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
   return res;
 }
 
-ModelTestResult ImageRanker::run_model_test(size_t test_queries_count, const DataPackId& data_pack_ID,
-                                            const PackModelCommands& model_commands, bool native_lang_queries,
-                                            size_t num_points, bool normalize_y) const
-{
-  LOGW("Not implemented!");
-  return ModelTestResult{};
-};
-
 bool ImageRanker::submit_search_session(const std::string& data_pack_ID, const std::string& model_commands,
                                         size_t user_level, bool with_example_images, FrameId target_frame_ID,
                                         eSearchSessionEndStatus end_status, size_t duration,
@@ -517,19 +510,15 @@ bool ImageRanker::submit_search_session(const std::string& data_pack_ID, const s
 }
 
 FrameDetailData ImageRanker::get_frame_detail_data(FrameId frame_ID, const std::string& data_pack_ID,
-                                                   const std::string& model_commands, bool with_example_frames,
-                                                   bool accumulated)
+                                                   const std::string& model_commands,
+                                                   [[maybe_unused]] bool with_example_frames, bool accumulated)
 {
   const BaseDataPack& dp{ data_pack(data_pack_ID) };
-  const BaseImageset& is{ imageset(dp.target_imageset_ID()) };
 
   // Parse model & transformation
   std::vector<std::string> tokens = split(model_commands, ';');
 
   std::vector<ModelKeyValOption> opt_key_vals;
-
-  std::string transform_ID{ "linear_01" };
-  std::string model_ops{ "mult-sum" };
 
   for (auto&& tok : tokens)
   {
