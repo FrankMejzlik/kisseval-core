@@ -12,3 +12,5 @@ bin/
 *.dat
 *.tmp
 *.log
+
+docs/html/
