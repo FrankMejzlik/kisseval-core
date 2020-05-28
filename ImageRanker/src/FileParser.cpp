@@ -41,8 +41,7 @@ std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string
   size_t row_byte_len = row_dim * sizeof(float);
 
   // Create line buffer
-  std::vector<std::byte> line_byte_buffer;
-  line_byte_buffer.resize(row_byte_len);
+  std::vector<char> line_byte_buffer(row_byte_len);
 
   // Start reading at this offset
   ifs.ignore(begin_offset);
@@ -51,13 +50,13 @@ std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string
   std::vector<std::vector<float>> result_features;
 
   // Read binary "lines" until EOF
-  while (ifs.read((char*)line_byte_buffer.data(), row_byte_len))
+  while (ifs.read(line_byte_buffer.data(), row_byte_len))
   {
     // Initialize vector of floats for this row
     std::vector<float> features_vector;
     features_vector.reserve(row_dim);
 
-    size_t curr_offset = 0;
+    size_t curr_offset{ 0 };
 
     // Iterate through all floats in a row
     for (size_t i{ 0ULL }; i < row_dim; ++i)
@@ -112,8 +111,7 @@ std::vector<float> FileParser::parse_float_vector(const std::string& filepath, s
   size_t row_byte_len = dim * sizeof(float);
 
   // Create line buffer
-  std::vector<std::byte> line_byte_buffer;
-  line_byte_buffer.resize(row_byte_len);
+  std::vector<char> line_byte_buffer(row_byte_len);
 
   // Start reading at this offset
   ifs.ignore(begin_offset);
@@ -123,7 +121,7 @@ std::vector<float> FileParser::parse_float_vector(const std::string& filepath, s
   features_vector.reserve(dim);
 
   // Read binary "lines" until EOF
-  while (ifs.read((char*)line_byte_buffer.data(), row_byte_len))
+  while (ifs.read((char*)line_byte_buffer.data(), row_byte_len))  // NOLINT
   {
     size_t curr_offset = 0;
 
@@ -344,6 +342,13 @@ ViretKeywordClassesParsedData FileParser::parse_VIRET_format_keyword_classes_fil
     PROD_THROW("Error loading the program.");
   }
 
+  constexpr size_t idx_index{ 0 };
+  constexpr size_t idx_wordnet_ID{ 1 };
+  constexpr size_t idx_classname{ 2 };
+  constexpr size_t idx_hyponyms{ 3 };
+  constexpr size_t idx_hypernyms{ 4 };
+  constexpr size_t idx_description{ 5 };
+
   // Declare return variables
   std::string _allDescriptions;
   std::map<size_t, Keyword*> _wordnetIdToKeywords;
@@ -373,22 +378,22 @@ ViretKeywordClassesParsedData FileParser::parse_VIRET_format_keyword_classes_fil
     }
 
     // Index of vector
-    std::stringstream vectIndSs(tokens[0]);
-    std::stringstream wordnetIdSs(tokens[1]);
+    std::stringstream vectIndSs(tokens[idx_index]);
+    std::stringstream wordnetIdSs(tokens[idx_wordnet_ID]);
 
     size_t vectorIndex;
     size_t wordnetId;
-    std::string indexClassname = tokens[2];
+    std::string indexClassname = tokens[idx_classname];
 
     // Get index that this description starts
     size_t descStartIndex = _allDescriptions.size();
 
     // Append description to all of them
-    _allDescriptions.append(tokens[5]);
+    _allDescriptions.append(tokens[idx_description]);
     _allDescriptions.push_back('\0');
 
     // If pure hypernym
-    if (tokens[0] == "H")
+    if (tokens[idx_index] == "H")
     {
       vectorIndex = ERR_VAL<size_t>();
     }
@@ -402,7 +407,7 @@ ViretKeywordClassesParsedData FileParser::parse_VIRET_format_keyword_classes_fil
     // Get all hyponyms
     std::vector<size_t> hyponyms;
 
-    std::stringstream hyponymsSs(tokens[3]);
+    std::stringstream hyponymsSs(tokens[idx_hyponyms]);
     std::string stringHyponym;
 
     while (std::getline(hyponymsSs, stringHyponym, SYNONYM_DELIMITER_001))
@@ -418,7 +423,7 @@ ViretKeywordClassesParsedData FileParser::parse_VIRET_format_keyword_classes_fil
     // Get all hyperyms
     std::vector<size_t> hyperyms;
 
-    std::stringstream hyperymsSs(tokens[4]);
+    std::stringstream hyperymsSs(tokens[idx_hypernyms]);
     std::string stringHypernym;
 
     while (std::getline(hyperymsSs, stringHypernym, SYNONYM_DELIMITER_001))
@@ -446,11 +451,11 @@ ViretKeywordClassesParsedData FileParser::parse_VIRET_format_keyword_classes_fil
     // Insert all synonyms as well
     while (std::getline(classnames, finalWord, SYNONYM_DELIMITER_001))
     {
-      std::string description{ _allDescriptions.data() + descStartIndex };
+      std::string description{ *(_allDescriptions.begin() + descStartIndex) };
 
       // Insert this record into table
       _keywords.emplace_back(std::make_unique<Keyword>(FrameId(frame_ID), wordnetId, vectorIndex, std::move(finalWord),
-                                                       descStartIndex, tokens[3].size(), std::move(hyperyms),
+                                                       descStartIndex, tokens[idx_hyponyms].size(), std::move(hyperyms),
                                                        std::move(hyponyms), std::move(description)));
 
       // Insert into desc -> Keyword
@@ -514,13 +519,13 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_VIRET_format_frame_ve
   }
 
   // Create 4B buffer
-  std::array<std::byte, sizeof(int32_t)> smallBuffer;
+  std::vector<char> buff_4B(sizeof(int32_t));
 
   // Discard first 36B of data
-  ifs.ignore(36ULL);
+  ifs.ignore(VIRET_FORMAT_NET_DATA_HEADER_SIZE);
 
   // Read number of items in each vector per image
-  ifs.read((char*)smallBuffer.data(), sizeof(int32_t));
+  ifs.read(buff_4B.data(), sizeof(int32_t));
 
   // If something happened
   if (!ifs)
@@ -531,26 +536,22 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_VIRET_format_frame_ve
   }
 
   // Parse number of present floats in every row
-  int32_t numFloats = ParseIntegerLE(smallBuffer.data());
+  int32_t numFloats = ParseIntegerLE(buff_4B);
 
   // Calculate byte length of each row
   size_t byteRowLengths = numFloats * sizeof(float) + sizeof(int32_t);
 
-  // Where rows data start
-  size_t currOffset = 40ULL;
-
   // Create line buffer
-  std::vector<std::byte> lineBuffer;
-  lineBuffer.resize(byteRowLengths);
+  std::vector<char> lineBuffer(byteRowLengths);
 
   // Iterate until there is something to read from file
-  while (ifs.read((char*)lineBuffer.data(), byteRowLengths))
+  while (ifs.read(lineBuffer.data(), byteRowLengths))
   {
     // Get picture ID of this row
-    size_t id = ParseIntegerLE(lineBuffer.data());
+    size_t id = ParseIntegerLE(lineBuffer);
 
     // Stride in bytes
-    currOffset = sizeof(float);
+    size_t currOffset = sizeof(float);
 
     // Initialize vector of floats for this row
     std::vector<float> rawRankData;
@@ -558,7 +559,7 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_VIRET_format_frame_ve
     // Reserve exact capacitys
     rawRankData.reserve(numFloats);
 
-    float sum{ 0.0f };
+    float sum{ 0.0F };
     float min{ std::numeric_limits<float>::max() };
     float max{ -std::numeric_limits<float>::max() };
 
@@ -592,7 +593,7 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_VIRET_format_frame_ve
     float mean{ sum / numFloats };
 
     // Calculate variance
-    float varSum{ 0.0f };
+    float varSum{ 0.0F };
     for (auto&& val : rawRankData)
     {
       float tmp{ val - mean };
@@ -638,7 +639,7 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_GoogleVision_format_f
   }
 
   // Create 4B buffer
-  std::array<std::byte, sizeof(uint32_t)> smallBuffer;
+  std::vector<char> smallBuffer(sizeof(uint32_t));
 
   // If something happened
   if (!ifs)
@@ -647,12 +648,12 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_GoogleVision_format_f
   }
 
   // Read number of items in each vector per image
-  ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
+  ifs.read(smallBuffer.data(), sizeof(uint32_t));
   // Parse number of present floats in every row
   uint32_t numRecords = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
 
   // Read number of unique kws in annotation
-  ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
+  ifs.read(smallBuffer.data(), sizeof(uint32_t));
   uint32_t numKeywords = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
 
   float sum{ 0.0F };
@@ -669,10 +670,10 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_GoogleVision_format_f
     std::vector<float> scoringData;
     scoringData.resize(numKeywords, ZERO_WEIGHT);
 
-    ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
+    ifs.read(smallBuffer.data(), sizeof(uint32_t));
     uint32_t ID = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
 
-    ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
+    ifs.read(smallBuffer.data(), sizeof(uint32_t));
     uint32_t numLabels = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
 
     auto cmp = [](const std::pair<size_t, float>& left, const std::pair<size_t, float>& right) {
@@ -692,10 +693,10 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_GoogleVision_format_f
 
     for (size_t iLabel{ 0_z }; iLabel < numLabels; ++iLabel)
     {
-      ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
+      ifs.read(smallBuffer.data(), sizeof(uint32_t));
       uint32_t kwId = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
 
-      ifs.read((char*)smallBuffer.data(), sizeof(uint32_t));
+      ifs.read(smallBuffer.data(), sizeof(uint32_t));
       float score = ParseFloatLE(smallBuffer.data());
 
       // Update this value
@@ -722,7 +723,7 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_GoogleVision_format_f
     float mean{ sum / numLabels };
 
     // Calculate variance
-    float varSum{ 0.0f };
+    float varSum{ 0.0F };
     for (auto&& val : scoringData)
     {
       float tmp{ val - mean };

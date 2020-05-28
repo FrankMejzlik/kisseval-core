@@ -134,7 +134,8 @@ ImageRanker::Config ImageRanker::parse_data_config_file([[maybe_unused]] eMode m
 
   return { ImageRanker::eMode::cFullAnalytical, imagesets, VIRET_data_packs, Google_data_packs, W2VV_data_packs };
 }
-ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _fileParser(), _data_manager(this)
+ImageRanker::ImageRanker(const ImageRanker::Config& cfg)
+    : _settings(cfg), _fileParser(), _data_manager(this), _mode(cfg.mode)
 {
   /*
    * Load all available datasets
@@ -142,7 +143,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
   for (auto&& pack : _settings.config.dataset_packs)
   {
     // Initialize all images
-    auto frames = _fileParser.parse_image_metadata(pack.imgage_to_ID_fpth, pack.offsets, 1);
+    auto frames = FileParser::parse_image_metadata(pack.imgage_to_ID_fpth, pack.offsets, 1);
 
     _imagesets.emplace(pack.ID, std::make_unique<SelFramesDataset>(pack.ID, pack.images_dir, std::move(frames)));
   }
@@ -279,16 +280,16 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
   return userResult;
 }
 
-const std::string& ImageRanker::get_frame_filename(const std::string& imageset_ID, size_t imageId) const
+const std::string& ImageRanker::get_frame_filename(const std::string& imageset_ID, size_t frame_ID) const
 {
-  const SelFrame& img = get_frame(imageset_ID, imageId);
+  const SelFrame& img = get_frame(imageset_ID, frame_ID);
 
   return img.m_filename;
 }
 
-const SelFrame& ImageRanker::get_frame(const std::string& imageset_ID, size_t imageId) const
+const SelFrame& ImageRanker::get_frame(const std::string& imageset_ID, size_t frame_ID) const
 {
-  return imageset(imageset_ID)[imageId];
+  return imageset(imageset_ID)[frame_ID];
 }
 
 std::vector<const SelFrame*> ImageRanker::get_random_frame_sequence(const std::string& imageset_ID,
@@ -458,7 +459,7 @@ RankingResultWithFilenames ImageRanker::rank_frames(const std::vector<std::strin
 }
 
 ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, const DataPackId& data_pack_ID,
-                                            const PackModelCommands& model_commands, bool native_lang_queries,
+                                            const PackModelCommands& model_options, bool native_lang_queries,
                                             size_t num_points, bool normalize_y) const
 {
   const auto& dp{ data_pack(data_pack_ID) };
@@ -473,7 +474,7 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
     auto native_test_queries{ _data_manager.fetch_user_native_test_queries(queries_origin) };
     num_queries = native_test_queries.size();
 
-    res = dp.test_model(native_test_queries, model_commands, num_points);
+    res = dp.test_model(native_test_queries, model_options, num_points);
   }
   else
   {
@@ -481,20 +482,20 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
     auto test_queries{ _data_manager.fetch_user_test_queries(queries_origin, dp.get_vocab_ID()) };
     num_queries = test_queries.size();
 
-    res = dp.test_model(test_queries, model_commands, num_points);
+    res = dp.test_model(test_queries, model_options, num_points);
   }
 
   if (normalize_y)
   {
     std::transform(res.begin(), res.end(), res.begin(), [num_queries](const std::pair<uint32_t, uint32_t>& x) {
-      return std::pair(x.first, uint32_t((float(x.second) / num_queries) * 10000.0F));
+      return std::pair(x.first, uint32_t((float(x.second) / num_queries) * 10000.0F));  // NOLINT
     });
   }
 
   return res;
 }
 
-void ImageRanker::submit_search_session(const std::string& data_pack_ID, const std::string& model_commands,
+void ImageRanker::submit_search_session(const std::string& data_pack_ID, const std::string& model_options,
                                         size_t user_level, bool with_example_images, FrameId target_frame_ID,
                                         eSearchSessionEndStatus end_status, size_t duration,
                                         const std::string& sessionId,
@@ -503,7 +504,7 @@ void ImageRanker::submit_search_session(const std::string& data_pack_ID, const s
   const BaseDataPack& dp{ data_pack(data_pack_ID) };
   const std::string& imageset_ID{ dp.get_vocab_ID() };
 
-  _data_manager.submit_search_session(data_pack_ID, imageset_ID, model_commands, user_level, with_example_images,
+  _data_manager.submit_search_session(data_pack_ID, imageset_ID, model_options, user_level, with_example_images,
                                       target_frame_ID, end_status, duration, sessionId, actions);
 }
 

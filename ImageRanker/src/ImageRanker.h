@@ -194,7 +194,7 @@ class [[nodiscard]] ImageRanker
    * \param actions             Container with sequence of actions that happened during the search.
    * \return  Returns `true` on success.
    */
-  void submit_search_session(const DataPackId& data_pack_ID, const PackModelCommands& model_options, size_t user_level,
+  void submit_search_session(const std::string& data_pack_ID, const std::string& model_options, size_t user_level,
                              bool with_example_images, FrameId target_frame_ID, eSearchSessionEndStatus end_status,
                              size_t duration, const std::string& session_ID,
                              const std::vector<InteractiveSearchAction>& actions);

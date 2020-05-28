@@ -10,24 +10,24 @@
 using namespace image_ranker;
 
 KeywordsContainer::KeywordsContainer(const ViretDataPackRef::VocabData& vocab_data_refs)
-    : _ID(vocab_data_refs.ID),
-      _description(vocab_data_refs.description),
+    : _vocabulary_ID(vocab_data_refs.ID),
+      _vocabulary_desc(vocab_data_refs.description),
       _kw_classes_fpth(vocab_data_refs.keyword_synsets_fpth)
 {
   parse_keywords(_kw_classes_fpth);
 }
 
 KeywordsContainer::KeywordsContainer(const GoogleDataPackRef::VocabData& vocab_data_refs)
-    : _ID(vocab_data_refs.ID),
-      _description(vocab_data_refs.description),
+    : _vocabulary_ID(vocab_data_refs.ID),
+      _vocabulary_desc(vocab_data_refs.description),
       _kw_classes_fpth(vocab_data_refs.keyword_synsets_fpth)
 {
   parse_keywords(_kw_classes_fpth);
 }
 
 KeywordsContainer::KeywordsContainer(const W2vvDataPackRef::VocabData& vocab_data_refs)
-    : _ID(vocab_data_refs.ID),
-      _description(vocab_data_refs.description),
+    : _vocabulary_ID(vocab_data_refs.ID),
+      _vocabulary_desc(vocab_data_refs.description),
       _kw_classes_fpth(vocab_data_refs.keyword_synsets_fpth)
 {
   parse_keywords(_kw_classes_fpth);
@@ -47,43 +47,42 @@ void KeywordsContainer::parse_keywords(const std::string& filepath)
   _ID_to_allkeywords = std::move(res.ID_to_all_keywords);
 
   // Sort keywords
-  std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
+  std::sort(_keywords.begin(), _keywords.end(), kw_less_hierarch_cmp);
 
   for (auto&& kw : _keywords)
   {
     std::unordered_set<size_t> accum_indices;
     // Add self
-    accum_indices.emplace(kw->m_vectorIndex);
+    accum_indices.emplace(kw->classification_index);
 
-    for (auto&& hypo_wordnet_ID : kw->m_hyponyms)
+    for (auto&& hypo_wordnet_ID : kw->hyponyms)
     {
-      GetVectorKeywordsIndicesSet(accum_indices, hypo_wordnet_ID);
+      get_keyword_hyponyms_indices_set(accum_indices, hypo_wordnet_ID);
     }
 
-    kw->m_hyponymBinIndices = std::move(accum_indices);
+    kw->hyponym_class_inidces = std::move(accum_indices);
   }
 }
 
-void KeywordsContainer::GetVectorKeywordsIndicesSet(std::unordered_set<size_t>& destIndicesSetRef,
-                                                    size_t wordnetId) const
+void KeywordsContainer::get_keyword_hyponyms_indices_set(std::unordered_set<size_t>& dest_set, size_t wordnet_ID) const
 {
   // Get this Keyword
-  Keyword* pRootKw = GetKeywordPtrByWordnetId(wordnetId);
+  Keyword* pRootKw = GetKeywordPtrByWordnetId(wordnet_ID);
 
   // If this hypernyms has spot in data vector
-  if (!pRootKw->IsInBinVector())
+  if (!pRootKw->is_classified())
   {
     // Add it to set as well
-    destIndicesSetRef.emplace(pRootKw->m_vectorIndex);
+    dest_set.emplace(pRootKw->classification_index);
   }
 
   // If is hypernym
-  if (pRootKw->IsHypernym())
+  if (pRootKw->is_hypernym())
   {
     // Recursively get hyponyms into provided set
-    for (auto&& hypo : pRootKw->m_hyponyms)
+    for (auto&& hypo : pRootKw->hyponyms)
     {
-      GetVectorKeywordsIndicesSet(destIndicesSetRef, hypo);
+      get_keyword_hyponyms_indices_set(dest_set, hypo);
     }
   }
 }
@@ -95,10 +94,10 @@ void KeywordsContainer::GetVectorKeywordsIndicesSetShallow(std::unordered_set<si
   Keyword* pRootKw = GetKeywordPtrByWordnetId(wordnetId);
 
   // If this hypernyms has spot in data vector
-  if (!pRootKw->IsInBinVector())
+  if (!pRootKw->is_classified())
   {
     // Add it to set as well
-    destIndicesSetRef.emplace(pRootKw->m_vectorIndex);
+    destIndicesSetRef.emplace(pRootKw->classification_index);
   }
   else
   {
@@ -106,7 +105,7 @@ void KeywordsContainer::GetVectorKeywordsIndicesSetShallow(std::unordered_set<si
     if (!skipConstructedHypernyms)
     {
       // Recursively get hyponyms into provided set
-      for (auto&& hypo : pRootKw->m_hyponyms)
+      for (auto&& hypo : pRootKw->hyponyms)
       {
         GetVectorKeywordsIndicesSetShallow(destIndicesSetRef, hypo);
       }
@@ -126,7 +125,7 @@ Keyword* KeywordsContainer::GetKeywordPtrByVectorIndex(size_t index) const
   return result->second;
 }
 
-const Keyword* KeywordsContainer::GetKeywordConstPtrByVectorIndex(size_t index) const
+const Keyword* KeywordsContainer::get_keyword_ptr_by_class_index(size_t index) const
 {
   auto result = _vecIndexToKeyword.find(index);
 
@@ -138,10 +137,10 @@ const Keyword* KeywordsContainer::GetKeywordConstPtrByVectorIndex(size_t index) 
   return result->second;
 }
 
-std::vector<size_t> KeywordsContainer::GetVectorKeywords(size_t wordnetId) const
+std::vector<size_t> KeywordsContainer::get_classified_hyponyms_IDs(size_t wordnet_ID) const
 {
   // Find root keyword
-  auto wordnetIdKeywordPair = _wordnetIdToKeywords.find(wordnetId);
+  auto wordnetIdKeywordPair = _wordnetIdToKeywords.find(wordnet_ID);
 
   if (wordnetIdKeywordPair == _wordnetIdToKeywords.end())
   {
@@ -153,14 +152,14 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywords(size_t wordnetId) const
   Keyword* pRootKeyword = wordnetIdKeywordPair->second;
 
   // It not vector keyword
-  if (pRootKeyword->m_vectorIndex == ERR_VAL<size_t>())
+  if (pRootKeyword->classification_index == ERR_VAL<size_t>())
   {
     std::vector<size_t> result;
 
     // Recursively get hyponyms
-    for (auto&& hypo : pRootKeyword->m_hyponyms)
+    for (auto&& hypo : pRootKeyword->hyponyms)
     {
-      auto recur = GetVectorKeywords(hypo);
+      auto recur = get_classified_hyponyms_IDs(hypo);
       result.reserve(result.size() + recur.size());
       result.insert(result.end(), recur.begin(), recur.end());
     }
@@ -169,41 +168,7 @@ std::vector<size_t> KeywordsContainer::GetVectorKeywords(size_t wordnetId) const
   }
 
   // If vector word, return self
-  return std::vector<size_t>{ pRootKeyword->m_wordnetId };
-}
-
-std::vector<size_t> KeywordsContainer::GetVectorKeywordsIndices(size_t wordnetId) const
-{
-  // Find root keyword
-  auto wordnetIdKeywordPair = _wordnetIdToKeywords.find(wordnetId);
-
-  if (wordnetIdKeywordPair == _wordnetIdToKeywords.end())
-  {
-    LOGE("Keyword not found!");
-
-    return std::vector<size_t>();
-  }
-
-  Keyword* pRootKeyword = wordnetIdKeywordPair->second;
-
-  // It not vector keyword
-  if (pRootKeyword->m_vectorIndex == ERR_VAL<size_t>())
-  {
-    std::vector<size_t> result;
-
-    // Recursively get hyponyms
-    for (auto&& hypo : pRootKeyword->m_hyponyms)
-    {
-      auto recur = GetVectorKeywordsIndices(hypo);
-      result.reserve(result.size() + recur.size());
-      result.insert(result.end(), recur.begin(), recur.end());
-    }
-
-    return result;
-  }
-
-  // If vector word, return self
-  return std::vector<size_t>{ pRootKeyword->m_vectorIndex };
+  return std::vector<size_t>{ pRootKeyword->wordnet_ID };
 }
 
 const Keyword* KeywordsContainer::GetKeywordConstPtrByWordnetId(size_t wordnetId) const
@@ -318,45 +283,21 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool s
   return resultFormula;
 }
 
-std::vector<size_t> KeywordsContainer::GetCanonicalQueryNoRecur(const std::string& query) const
+Keyword* KeywordsContainer::GetKeywordByWord(const std::string& keyword) const
 {
-  // EG: &-8252602+-8256735+-3206282+-4296562+
+  auto item = std::lower_bound(_keywords.begin(), _keywords.end(), keyword,
+                               [](const std::unique_ptr<Keyword>& pWord, const std::string& str) {
+                                 // Compare strings
+                                 auto result = pWord->word.compare(str);
 
-  std::stringstream idSs;
-  size_t wordnetId;
-
-  std::vector<size_t> resultFormula;
-
-  // Parse query
-  // \todo write complete parser
-  for (auto&& c : query)
+                                 return result <= -1;
+                               });
+  if (item == _keywords.cend() || item->get()->word != keyword)
   {
-    // Ignore
-    if (c == '&') continue;
-
-    if (std::isdigit(c))
-    {
-      idSs << c;
-    }
-    // If ss not empty
-    else if (idSs.rdbuf()->in_avail() > 0)
-    {
-      idSs >> wordnetId;
-      idSs.str("");
-      idSs.clear();
-
-      resultFormula.push_back(wordnetId);
-    }
-    else if (c == '-' || c == '+')
-    {
-    }
-    else
-    {
-      LOGE("Parsing query failed");
-    }
+    return nullptr;
   }
 
-  return resultFormula;
+  return item->get();
 }
 
 std::vector<size_t> KeywordsContainer::FindAllNeedles(std::string_view hey, std::string_view needle) const
@@ -404,209 +345,60 @@ std::vector<size_t> KeywordsContainer::FindAllNeedles(std::string_view hey, std:
   return resultIndices;
 }
 
-std::vector<std::tuple<size_t, std::string, std::string>> KeywordsContainer::GetNearKeywords(const std::string& prefix)
+const Keyword* KeywordsContainer::get_keyword_ptr(const std::string& word) const
 {
-  KeywordsContainer::KeywordLessThanStringComparator comparator;
-  size_t left = 0ULL;
-  size_t right = _keywords.size() - 1ULL;
+  auto p_kw{ get_near_keywords(word, 1)[0] };
 
-  size_t i = right / 2;
-
-  while (true)
+  if (p_kw == nullptr)
   {
-    // Test if middle one is less than
-    bool leftIsLess = comparator(_keywords[i]->m_word, prefix);
-
-    if (leftIsLess)
-    {
-      left = i + 1;
-    }
-    else
-    {
-      right = i;
-    }
-
-    if (right - left < 1)
-    {
-      break;
-    }
-
-    i = (right + left) / 2;
+    return nullptr;
   }
 
-  std::vector<std::tuple<size_t, std::string, std::string>> resultWordnetIds;
-  resultWordnetIds.reserve(DEF_NUM_AUTOCOMPLETE_RESULTS);
+  // Force lowercase
+  std::locale loc;
+  std::string lower1;
+  std::string lower2;
 
-  std::vector<std::tuple<size_t, std::string, std::string>> postResultWordnetIds;
-
-  // Get desired number of results
-  for (size_t j = 0ULL; j < DEF_NUM_AUTOCOMPLETE_RESULTS; ++j)
+  // Convert to lowercase
+  for (auto elem : p_kw->word)
   {
-    Keyword* pKeyword{ _keywords[left + j].get() };
-
-    // Check if prefix is equal to searched word
-
-    // Force lowercase
-    std::locale loc;
-    std::string lowerWord;
-    std::string lowerPrefix;
-
-    for (auto elem : pKeyword->m_word)
-    {
-      lowerWord.push_back(std::tolower(elem, loc));
-    }
-
-    for (auto elem : prefix)
-    {
-      lowerPrefix.push_back(std::tolower(elem, loc));
-    }
-
-    auto res = std::mismatch(lowerPrefix.begin(), lowerPrefix.end(), lowerWord.begin());
-
-    if (res.first == lowerPrefix.end())
-    {
-      resultWordnetIds.push_back(std::make_tuple(pKeyword->m_wordnetId, pKeyword->m_word,
-                                                 GetKeywordDescriptionByWordnetId(pKeyword->m_wordnetId)));
-    }
-    else
-    {
-      postResultWordnetIds.push_back(std::make_tuple(pKeyword->m_wordnetId, pKeyword->m_word,
-                                                     GetKeywordDescriptionByWordnetId(pKeyword->m_wordnetId)));
-    }
+    lower1.push_back(std::tolower(elem, loc));
   }
 
-  // If we need to add up desc search results
-  if (resultWordnetIds.size() < DEF_NUM_AUTOCOMPLETE_RESULTS && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
+  // Convert to lowercase
+  for (auto elem : word)
   {
-    std::vector<size_t> needleIndices = FindAllNeedles(_allDescriptions, prefix);
-
-    for (auto&& index : needleIndices)
-    {
-      Keyword* pKeyword = MapDescIndexToKeyword(index);
-
-      resultWordnetIds.push_back(std::make_tuple(pKeyword->m_wordnetId, pKeyword->m_word,
-                                                 GetKeywordDescriptionByWordnetId(pKeyword->m_wordnetId)));
-    }
+    lower2.push_back(std::tolower(elem, loc));
   }
 
-  size_t j = 0ULL;
-  while (resultWordnetIds.size() < DEF_NUM_AUTOCOMPLETE_RESULTS)
+  // The nearest kw must be the exact match
+  if (lower1 != lower2)
   {
-    resultWordnetIds.push_back(postResultWordnetIds[j]);
-
-    ++j;
+    return nullptr;
   }
 
-  return resultWordnetIds;
+  return p_kw;
 }
 
-std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsConstPtrs(const std::string& prefix) const
+std::string KeywordsContainer::CNF_index_formula_to_string(const CnfFormula& fml) const
 {
-  KeywordsContainer::KeywordLessThanStringComparator comparator;
-  size_t left = 0ULL;
-  size_t right = _keywords.size() - 1ULL;
+  std::string result;
 
-  size_t i = right / 2;
-
-  while (true)
+  for (auto&& clause : fml)
   {
-    // Test if middle one is less than
-    bool leftIsLess = comparator(_keywords[i]->m_word, prefix);
-
-    if (leftIsLess)
+    result += "( ";
+    for (auto&& [idx, is_negated] : clause)
     {
-      left = i + 1;
+      result += get_keyword_ptr_by_class_index(idx)->word + "|";
     }
-    else
-    {
-      right = i;
-    }
-
-    if (right - left < 1)
-    {
-      break;
-    }
-
-    i = (right + left) / 2;
+    result += " )&";
   }
 
-  std::vector<const Keyword*> resultKeywords;
-  resultKeywords.reserve(DEF_NUM_AUTOCOMPLETE_RESULTS);
-  std::vector<const Keyword*> postResultKeywords;
-
-  // Get desired number of results
-  for (size_t j = 0ULL; j < DEF_NUM_AUTOCOMPLETE_RESULTS; ++j)
-  {
-    size_t idx{ left + j };
-
-    if (idx >= _keywords.size())
-    {
-      break;
-    }
-
-    Keyword* pKeyword{ _keywords[idx].get() };
-
-    // Check if prefix is equal to searched word
-
-    // Force lowercase
-    std::locale loc;
-    std::string lowerWord;
-    std::string lowerPrefix;
-
-    for (auto elem : pKeyword->m_word)
-    {
-      lowerWord.push_back(std::tolower(elem, loc));
-    }
-
-    for (auto elem : prefix)
-    {
-      lowerPrefix.push_back(std::tolower(elem, loc));
-    }
-
-    auto res = std::mismatch(lowerPrefix.begin(), lowerPrefix.end(), lowerWord.begin());
-
-    if (res.first == lowerPrefix.end())
-    {
-      resultKeywords.emplace_back(pKeyword);
-    }
-    else
-    {
-      postResultKeywords.emplace_back(pKeyword);
-    }
-  }
-
-  // If we need to add up desc search results
-  if (resultKeywords.size() < DEF_NUM_AUTOCOMPLETE_RESULTS && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
-  {
-    std::vector<size_t> needleIndices = FindAllNeedles(_allDescriptions, prefix);
-
-    for (auto&& index : needleIndices)
-    {
-      Keyword* pKeyword = MapDescIndexToKeyword(index);
-
-      resultKeywords.emplace_back(pKeyword);
-    }
-  }
-
-  size_t j = 0ULL;
-  while (resultKeywords.size() < DEF_NUM_AUTOCOMPLETE_RESULTS)
-  {
-    if (j >= postResultKeywords.size())
-    {
-      break;
-    }
-
-    resultKeywords.push_back(postResultKeywords[j]);
-
-    ++j;
-  }
-
-  return resultKeywords;
+  return result;
 }
 
-std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& prefix, size_t numResults) const
+std::vector<const Keyword*> KeywordsContainer::get_near_keywords(const std::string& prefix, size_t numResults) const
 {
-  KeywordsContainer::KeywordLessThanStringComparator comparator;
   size_t left = 0ULL;
   size_t right = _keywords.size() - 1ULL;
 
@@ -615,7 +407,7 @@ std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::st
   while (true)
   {
     // Test if middle one is less than
-    bool leftIsLess = comparator(_keywords[i]->m_word, prefix);
+    bool leftIsLess = kw_string_less_cmp(_keywords[i]->word, prefix);
 
     if (leftIsLess)
     {
@@ -657,7 +449,7 @@ std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::st
     std::string lowerWord;
     std::string lowerPrefix;
 
-    for (auto elem : pKeyword->m_word)
+    for (auto elem : pKeyword->word)
     {
       lowerWord.push_back(std::tolower(elem, loc));
     }
@@ -708,9 +500,8 @@ std::vector<const Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::st
   return resultKeywords;
 }
 
-std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& prefix, size_t numResults)
+std::vector<Keyword*> KeywordsContainer::get_near_keywords(const std::string& prefix, size_t numResults)
 {
-  KeywordsContainer::KeywordLessThanStringComparator comparator;
   size_t left = 0ULL;
   size_t right = _keywords.size() - 1ULL;
 
@@ -719,7 +510,7 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
   while (true)
   {
     // Test if middle one is less than
-    bool leftIsLess = comparator(_keywords[i]->m_word, prefix);
+    bool leftIsLess = kw_string_less_cmp(_keywords[i]->word, prefix);
 
     if (leftIsLess)
     {
@@ -761,7 +552,7 @@ std::vector<Keyword*> KeywordsContainer::GetNearKeywordsPtrs(const std::string& 
     std::string lowerWord;
     std::string lowerPrefix;
 
-    for (auto elem : pKeyword->m_word)
+    for (auto elem : pKeyword->word)
     {
       lowerWord.push_back(std::tolower(elem, loc));
     }
@@ -859,7 +650,7 @@ std::string KeywordsContainer::GetKeywordDescriptionByWordnetId(size_t wordnetId
     std::string("NOT FOUND");
   }
 
-  size_t startDescIndex = resultIt->second->m_descStartIndex;
+  size_t startDescIndex = resultIt->second->description_begin_idx;
 
   const char* pDesc = (_allDescriptions.data()) + startDescIndex;
 

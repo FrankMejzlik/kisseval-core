@@ -27,9 +27,9 @@
 
 /** Macro used for throwing not supported exception. */
 #if THROW_ON_ERROR
-#  define PROD_THROW_NOT_SUPP(x) throw NotSuportedModelOptionExcept(x);
-#else
 #  define PROD_THROW_NOT_SUPP(x)  // To avoid unreachable code
+#else
+#  define PROD_THROW_NOT_SUPP(x) throw NotSuportedModelOptionExcept(x);
 #endif
 
 /**

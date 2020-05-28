@@ -37,7 +37,6 @@ class BaseDataPack
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested."s);
     PROD_THROW_NOT_SUPP("This data pack does not support this."s);
-    return RankingResult{};
   };
 
   [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(
@@ -47,7 +46,6 @@ class BaseDataPack
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested."s);
     PROD_THROW_NOT_SUPP("This data pack does not support this."s);
-    return std::vector<const Keyword*>{};
   };
 
   [[nodiscard]] virtual ModelTestResult test_model([[maybe_unused]] const std::vector<UserTestQuery>& test_queries,
@@ -60,7 +58,6 @@ class BaseDataPack
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested."s);
     PROD_THROW_NOT_SUPP("This data pack does not support this."s);
-    return ModelTestResult{};
   };
 
   [[nodiscard]] virtual HistogramChartData<size_t, float> get_histogram_used_labels(
@@ -70,7 +67,7 @@ class BaseDataPack
   {
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested.");
-    throw NotSuportedModelOptionExcept("This data pack does not support this.");
+    PROD_THROW_NOT_SUPP("Unsupported data pack feature requested.");
   };
 
   [[nodiscard]] virtual const std::string& get_vocab_ID() const = 0;

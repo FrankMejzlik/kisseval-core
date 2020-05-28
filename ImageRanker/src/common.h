@@ -19,7 +19,7 @@ using namespace std::string_literals;
 
 namespace image_ranker
 {
-class Keyword;
+struct Keyword;
 
 /**********************************************
  * Name definitions
@@ -81,7 +81,7 @@ const std::array<std::pair<std::string, std::string>, size_t(eModelIds::_COUNT)>
     std::pair("w2vv_bow_plain", "BoW model by Xirong."),
 } };
 
-inline const std::pair<std::string, std::string>& enum_label(eModelIds val) { return eModelIds_labels[size_t(val)]; }
+inline const std::pair<std::string, std::string>& enum_label(eModelIds val) { return eModelIds_labels.at(size_t(val)); }
 
 enum class eSimUserIds
 {
@@ -96,7 +96,7 @@ const std::array<std::pair<std::string, std::string>, size_t(eSimUserIds::_COUNT
 
 inline const std::pair<std::string, std::string>& enum_label(eSimUserIds val)
 {
-  return eSimUserIds_labels[size_t(val)];
+  return eSimUserIds_labels.at(size_t(val));
 }
 
 enum class eTransformationIds
@@ -117,7 +117,7 @@ const std::array<std::pair<std::string, std::string>, size_t(eTransformationIds:
 
 inline const std::pair<std::string, std::string>& enum_label(eTransformationIds val)
 {
-  return eTransformationIds_labels[size_t(val)];
+  return eTransformationIds_labels.at(size_t(val));
 }
 
 enum class eModelOptsKeys
@@ -152,39 +152,35 @@ const std::array<std::pair<std::string, std::string>, size_t(eModelOptsKeys::_CO
 
 inline const std::pair<std::string, std::string>& enum_label(eModelOptsKeys val)
 {
-  return eModelOptsKeys_labels[size_t(val)];
+  return eModelOptsKeys_labels.at(size_t(val));
 }
-
-constexpr std::size_t operator""_z(unsigned long long n) { return n; }
-
-using ModelKeyValOption = std::pair<std::string, std::string>;
-
-/**********************************************
- **********************************************
- ***********************************************/
 
 struct UserQueriesStats
 {
-  float median_num_labels_asigned = std::numeric_limits<float>().quiet_NaN();
-  float avg_num_labels_asigned = std::numeric_limits<float>().quiet_NaN();
+  float median_num_labels_asigned{ std::numeric_limits<float>::quiet_NaN() };
+  float avg_num_labels_asigned{ std::numeric_limits<float>::quiet_NaN() };
 };
 
 struct DataParseStats
 {
-  float median_num_labels_asigned = std::numeric_limits<float>().quiet_NaN();
-  float avg_num_labels_asigned = std::numeric_limits<float>().quiet_NaN();
+  float median_num_labels_asigned{ std::numeric_limits<float>::quiet_NaN() };
+  float avg_num_labels_asigned{ std::numeric_limits<float>::quiet_NaN() };
 };
 
 struct DataPackStats
 {
-  float median_num_labels_asigned = std::numeric_limits<float>().quiet_NaN();
-  float avg_num_labels_asigned = std::numeric_limits<float>().quiet_NaN();
+  float median_num_labels_asigned{ std::numeric_limits<float>::quiet_NaN() };
+  float avg_num_labels_asigned{ std::numeric_limits<float>::quiet_NaN() };
 
-  float median_num_labels_used_in_query = std::numeric_limits<float>().quiet_NaN();
-  float avg_num_labels_used_in_query = std::numeric_limits<float>().quiet_NaN();
+  float median_num_labels_used_in_query{ std::numeric_limits<float>::quiet_NaN() };
+  float avg_num_labels_used_in_query{ std::numeric_limits<float>::quiet_NaN() };
 
-  float label_hit_prob = std::numeric_limits<float>().quiet_NaN();
+  float label_hit_prob{ std::numeric_limits<float>::quiet_NaN() };
 };
+
+/**
+ * Basic typenames
+ */
 
 using KeywordId = size_t;
 
@@ -197,9 +193,6 @@ struct Literal
 using Clause = std::vector<Literal<KeywordId>>;
 using CnfFormula = std::vector<Clause>;
 
-/**
- * Basic typenames
- */
 using DataName = std::string;
 using FrameId = uint32_t;
 using VideoId = uint32_t;
@@ -216,6 +209,8 @@ using Matrix = std::vector<Vector<T>>;
  *  FORMAT: (user_query, target_frame_ID) */
 using UserTestQuery = std::pair<std::vector<CnfFormula>, FrameId>;
 using UserTestNativeQuery = std::pair<std::vector<std::string>, FrameId>;
+
+using ModelKeyValOption = std::pair<std::string, std::string>;
 
 template <typename T>
 constexpr T ERR_VAL()
@@ -295,7 +290,7 @@ struct ViretDataPackRef : public BaseDataPackRef
    */
   VocabData vocabulary_data;
   ScoreData score_data;
-  bool accumulated;
+  bool accumulated{ false };
 };
 
 using VecMat = std::vector<std::vector<float>>;
@@ -401,6 +396,9 @@ struct ModelInfo
   std::vector<ModelOption> options;
 };
 
+/**
+ * Represents one selected frame in some imageset.
+ */
 struct SelFrame
 {
   SelFrame(FrameId ID, FrameId external_ID, const std::string& filename, VideoId videoId, ShotId shotId,
@@ -415,19 +413,22 @@ struct SelFrame
   {
   }
 
-  FrameId m_ID;
-  FrameId m_external_ID;
+  FrameId m_ID{ ERR_VAL<FrameId>() };
+  FrameId m_external_ID{ ERR_VAL<FrameId>() };
 
-  VideoId m_video_ID;
-  ShotId m_shot_ID;
-  FrameNumber m_frame_number;
+  VideoId m_video_ID{ ERR_VAL<VideoId>() };
+  ShotId m_shot_ID{ ERR_VAL<ShotId>() };
+  FrameNumber m_frame_number{ ERR_VAL<FrameNumber>() };
 
-  size_t m_num_successors;
-  std::string m_filename;
+  size_t m_num_successors{ ERR_VAL<size_t>() };
+  std::string m_filename{};
 };
 
 using ImageIdFilenameTuple = std::tuple<FrameId, std::string>;
 
+/**
+ *  Result of rank_query call.
+ */
 struct RankingResult
 {
   std::vector<FrameId> m_frames;
@@ -435,6 +436,9 @@ struct RankingResult
   size_t target_pos;
 };
 
+/**
+ *  Result of rank_query call with filenames included.
+ */
 struct RankingResultWithFilenames
 {
   std::vector<std::pair<FrameId, std::string>> m_frames;
@@ -628,4 +632,7 @@ struct ViretKeywordClassesParsedData
 };
 
 }  // namespace image_ranker
+
+constexpr std::size_t operator""_z(unsigned long long n) { return n; }
+
 #endif  // _IR_COMMON_H_

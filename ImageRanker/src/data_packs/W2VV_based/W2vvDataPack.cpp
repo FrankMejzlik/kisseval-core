@@ -167,7 +167,7 @@ AutocompleteInputResult W2vvDataPack::get_autocomplete_results(const std::string
                                                                [[maybe_unused]] bool with_example_images,
                                                                [[maybe_unused]] const std::string& model_commands) const
 {
-  return { _keywords.GetNearKeywordsPtrs(query_prefix, result_size) };
+  return { _keywords.get_near_keywords(query_prefix, result_size) };
 }
 
 DataPackInfo W2vvDataPack::get_info() const

@@ -116,7 +116,7 @@ std::vector<UserTestNativeQuery> DataManager::fetch_user_native_test_queries(eUs
 }
 
 void DataManager::submit_search_session(const std::string& data_pack_ID, const std::string& vocabulary_ID,
-                                        const std::string& model_commands, size_t user_level, bool with_example_images,
+                                        const std::string& model_options, size_t user_level, bool with_example_images,
                                         FrameId target_frame_ID, eSearchSessionEndStatus end_status, size_t duration,
                                         const std::string& session_ID,
                                         const std::vector<InteractiveSearchAction>& actions)
@@ -136,7 +136,7 @@ void DataManager::submit_search_session(const std::string& data_pack_ID, const s
   query1Ss << "(`target_frame_ID`,`vocabulary_ID`,`data_pack_ID`,`model_options`,`duration`,`result`,";
   query1Ss << "`with_example_images`,`user_level`,`session_ID`,`manually_validated`) VALUES ";
 
-  query1Ss << "(" << target_frame_ID << ",'" << vocabulary_ID << "','" << data_pack_ID << "','" << model_commands
+  query1Ss << "(" << target_frame_ID << ",'" << vocabulary_ID << "','" << data_pack_ID << "','" << model_options
            << "',";
   query1Ss << duration << "," << int(end_status) << "," << with_example_images << "," << user_level;
   query1Ss << ",'" << session_ID << "'," << int(false) << ");";

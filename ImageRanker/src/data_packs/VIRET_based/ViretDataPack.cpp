@@ -383,7 +383,7 @@ AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::strin
                                                                 [[maybe_unused]] bool with_example_images,
                                                                 const std::string& model_commands) const
 {
-  auto kws = const_cast<const KeywordsContainer&>(_keywords).GetNearKeywordsPtrs(query_prefix, result_size);
+  auto kws = const_cast<const KeywordsContainer&>(_keywords).get_near_keywords(query_prefix, result_size);
 
   // Cache it up if needed
   cache_up_example_images(kws, model_commands);
@@ -458,7 +458,7 @@ void ViretDataPack::cache_up_example_images(const std::vector<const Keyword*>& k
 
     // Check if images are already cached
     Keyword& kw{ **all_kws_with_ID.begin() };
-    if (curr_opts_hash == kw.lastExampleFramesHash)
+    if (curr_opts_hash == kw.last_examples_hash)
     {
       continue;
     }
@@ -473,15 +473,15 @@ void ViretDataPack::cache_up_example_images(const std::vector<const Keyword*>& k
     // Store them in all keyword synonyms
     for (auto&& p_kw : all_kws_with_ID)
     {
-      p_kw->m_exampleImageFilenames.clear();
+      p_kw->example_frames_filenames.clear();
       for (auto&& f_ID : ranked_frames.m_frames)
       {
         std::string filename{ get_imageset_ptr()->operator[](f_ID).m_filename };
-        p_kw->m_exampleImageFilenames.emplace_back(std::move(filename));
+        p_kw->example_frames_filenames.emplace_back(std::move(filename));
       }
 
       // Update hash
-      p_kw->lastExampleFramesHash = curr_opts_hash;
+      p_kw->last_examples_hash = curr_opts_hash;
     }
   }
 }
@@ -504,7 +504,7 @@ CnfFormula ViretDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) con
     const Keyword& kw{ _keywords[kw_ID] };
 
     std::unordered_set<size_t> vecIds;
-    _keywords.GetVectorKeywordsIndicesSetShallow(vecIds, kw.m_wordnetId);
+    _keywords.GetVectorKeywordsIndicesSetShallow(vecIds, kw.wordnet_ID);
 
     ID_clause.clear();
     for (auto&& id : vecIds)

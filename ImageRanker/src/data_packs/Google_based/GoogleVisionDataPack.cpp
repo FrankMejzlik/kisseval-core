@@ -56,7 +56,7 @@ void GoogleVisionDataPack::cache_up_example_images(const std::vector<const Keywo
 
     // Check if images are already cached
     Keyword& kw{ **all_kws_with_ID.begin() };
-    if (curr_opts_hash == kw.lastExampleFramesHash)
+    if (curr_opts_hash == kw.last_examples_hash)
     {
       continue;
     }
@@ -71,15 +71,15 @@ void GoogleVisionDataPack::cache_up_example_images(const std::vector<const Keywo
     // Store them in all keyword synonyms
     for (auto&& p_kw : all_kws_with_ID)
     {
-      p_kw->m_exampleImageFilenames.clear();
+      p_kw->example_frames_filenames.clear();
       for (auto&& f_ID : ranked_frames.m_frames)
       {
         std::string filename{ get_imageset_ptr()->operator[](f_ID).m_filename };
-        p_kw->m_exampleImageFilenames.emplace_back(std::move(filename));
+        p_kw->example_frames_filenames.emplace_back(std::move(filename));
       }
 
       // Update hash
-      p_kw->lastExampleFramesHash = curr_opts_hash;
+      p_kw->last_examples_hash = curr_opts_hash;
     }
   }
 }
@@ -286,7 +286,7 @@ AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std
                                                                        [[maybe_unused]] bool with_example_image,
                                                                        const std::string& model_commands) const
 {
-  auto kws = _keywords.GetNearKeywordsPtrs(query_prefix, result_size);
+  auto kws = _keywords.get_near_keywords(query_prefix, result_size);
 
   std::vector<const Keyword*> res_kws;
 
@@ -296,7 +296,7 @@ AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std
 
   for (auto&& p_kw : kws)
   {
-    if (curr_opts_hash != p_kw->lastExampleFramesHash)
+    if (curr_opts_hash != p_kw->last_examples_hash)
     {
       CnfFormula fml{ Clause{ Literal<KeywordId>{ p_kw->ID } } };
 
@@ -305,15 +305,15 @@ AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std
       // Rank frames with query "this_kw"
       auto ranked_frames{ rank_frames(v, model_commands, NUM_EXAMPLE_FRAMES) };
 
-      p_kw->m_exampleImageFilenames.clear();
+      p_kw->example_frames_filenames.clear();
       for (auto&& f_ID : ranked_frames.m_frames)
       {
         std::string filename{ get_imageset_ptr()->operator[](f_ID).m_filename };
-        p_kw->m_exampleImageFilenames.emplace_back(std::move(filename));
+        p_kw->example_frames_filenames.emplace_back(std::move(filename));
       }
 
       // Update hash
-      p_kw->lastExampleFramesHash = curr_opts_hash;
+      p_kw->last_examples_hash = curr_opts_hash;
     }
 
     res_kws.emplace_back(p_kw);

@@ -46,7 +46,7 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
     for (auto&& [it, i]{ std::tuple(row.begin(), size_t{ 0 }) }; it != row.end(); ++it, ++i)
     {
       auto& bin{ *it };
-      auto pKw{ keywords.GetKeywordConstPtrByVectorIndex(i) };
+      auto pKw{ keywords.get_keyword_ptr_by_class_index(i) };
 
       float new_cell_value{ 0.0F };
 
@@ -54,7 +54,7 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
       if (accumulate)
       {
         // Iterate over all indices this keyword interjoins
-        for (auto&& kwIndex : pKw->m_hyponymBinIndices)
+        for (auto&& kwIndex : pKw->hyponym_class_inidces)
         {
           if (type == HyperAccumType::MAX)
           {
@@ -71,7 +71,7 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
         new_cell_value = bin;
 
         // Deaccumulate them 
-        for (auto&& kwIndex : pKw->m_hyponymBinIndices)
+        for (auto&& kwIndex : pKw->hyponym_class_inidces)
         {
           if (type == HyperAccumType::MAX)
           {
@@ -110,7 +110,7 @@ std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer&
         break;
       }
 
-      auto ID{ keywords.GetKeywordConstPtrByVectorIndex(idx)->ID };
+      auto ID{ keywords.get_keyword_ptr_by_class_index(idx)->ID };
 
       row_top_classes.emplace_back(ID);
       max_prio_queue.pop();
@@ -182,7 +182,7 @@ std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords,
     {
       auto&& [score, idx]{ max_prio_queue.top() };
 
-      auto ID{ keywords.GetKeywordConstPtrByVectorIndex(idx)->ID };
+      auto ID{ keywords.get_keyword_ptr_by_class_index(idx)->ID };
 
       row_top_classes.emplace_back(ID);
       max_prio_queue.pop();

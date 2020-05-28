@@ -7,7 +7,7 @@ using namespace image_ranker;
 
 std::string Database::escape_str(const std::string& raw_str)
 {
-  char* c_str{ sqlite3_mprintf("%q", raw_str.c_str()) };
+  char* c_str{ sqlite3_mprintf("%q", raw_str.c_str()) };  // NOLINT
   return std::string{ c_str };
 }
 

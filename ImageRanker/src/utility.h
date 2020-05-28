@@ -69,15 +69,8 @@ inline bool is_arch_LE()
         "smaller than uint32_t.");
   }
 
-  uint32_t num{ 1ULL };
-  if (*(reinterpret_cast<char*>(&num)) == 1)
-  {
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+  uint32_t num{ 1 };
+  return *(reinterpret_cast<char*>(&num)) == 1;  // NOLINT
 }
 
 /**
@@ -196,62 +189,106 @@ inline std::vector<std::string> split(const std::string& str, const std::string&
   return result;
 }
 
-/***********************************
-***************************************/
-
 inline std::array<char, 4> floatToBytesLE(float number)
 {
-  std::array<char, 4> byteArray;
+  char* bit_number{ reinterpret_cast<char*>(&number) };  // NOLINT
 
-  char* bitNumber{ reinterpret_cast<char*>(&number) };
+  std::array<char, 4> buff{ bit_number[0], bit_number[1], bit_number[2], bit_number[3] };  // NOLINT
 
-  std::get<0>(byteArray) = bitNumber[0];
-  std::get<1>(byteArray) = bitNumber[1];
-  std::get<2>(byteArray) = bitNumber[2];
-  std::get<3>(byteArray) = bitNumber[3];
+  if (!is_arch_LE())
+  {
+    buff[0] = bit_number[3];  // NOLINT
+    buff[1] = bit_number[2];  // NOLINT
+    buff[2] = bit_number[1];  // NOLINT
+    buff[3] = bit_number[0];  // NOLINT
+  }
 
-  return byteArray;
+  return buff;
 }
 
 inline std::array<char, 4> uint32ToBytesLE(uint32_t number)
 {
-  std::array<char, 4> byteArray;
+  char* bit_number{ reinterpret_cast<char*>(&number) };  // NOLINT
 
-  char* bitNumber{ reinterpret_cast<char*>(&number) };
+  std::array<char, 4> buff{ bit_number[0], bit_number[1], bit_number[2], bit_number[3] };  // NOLINT
 
-  std::get<0>(byteArray) = bitNumber[0];
-  std::get<1>(byteArray) = bitNumber[1];
-  std::get<2>(byteArray) = bitNumber[2];
-  std::get<3>(byteArray) = bitNumber[3];
+  if (!is_arch_LE())
+  {
+    buff[0] = bit_number[3];  // NOLINT
+    buff[1] = bit_number[2];  // NOLINT
+    buff[2] = bit_number[1];  // NOLINT
+    buff[3] = bit_number[0];  // NOLINT
+  }
 
-  return byteArray;
+  return buff;
 }
 
-inline int32_t ParseIntegerLE(const std::byte* pFirstByte)
+inline int32_t ParseIntegerLE(const char* buff)
 {
-  // Initialize value
-  int32_t signedInteger = 0;
+  int32_t sign_num{ *(reinterpret_cast<const int32_t*>(buff)) };  // NOLINT
 
-  // Construct final BE integer
-  signedInteger =
-      static_cast<int32_t>(static_cast<uint32_t>(pFirstByte[3]) << 24 | static_cast<uint32_t>(pFirstByte[2]) << 16 |
-                           static_cast<uint32_t>(pFirstByte[1]) << 8 | static_cast<uint32_t>(pFirstByte[0]));
+  // If BE
+  if (!is_arch_LE())
+  {
+    sign_num =
+        static_cast<int32_t>(static_cast<uint32_t>(buff[0]) << 24 | static_cast<uint32_t>(buff[1]) << 16 |  // NOLINT
+                             static_cast<uint32_t>(buff[2]) << 8 | static_cast<uint32_t>(buff[3]));         // NOLINT
+  }
 
   // Return parsed integer
-  return signedInteger;
+  return sign_num;
 }
 
-inline float ParseFloatLE(const std::byte* pFirstByte)
+inline int32_t ParseIntegerLE(const std::vector<char>& buff)
 {
-  // Initialize temp value
-  uint32_t byteFloat = 0;
+  int32_t sign_num{ *(reinterpret_cast<const int32_t*>(buff.data())) };  // NOLINT
+
+  // Construct final BE integer
+  if (!is_arch_LE())
+  {
+    sign_num =
+        static_cast<int32_t>(static_cast<uint32_t>(buff[0]) << 24 | static_cast<uint32_t>(buff[1]) << 16 |  // NOLINT
+                             static_cast<uint32_t>(buff[2]) << 8 | static_cast<uint32_t>(buff[3]));         // NOLINT
+  }
+
+  // Return parsed integer
+  return sign_num;
+}
+
+inline float ParseFloatLE(const char* buff)
+{
+  if (is_arch_LE())
+  {
+    float num{ *(reinterpret_cast<const float*>(buff)) };  // NOLINT
+    return num;
+  }
+
+  uint32_t byte_float = 0;
 
   // Get correct unsigned value of float data
-  byteFloat = static_cast<uint32_t>(pFirstByte[3]) << 24 | static_cast<uint32_t>(pFirstByte[2]) << 16 |
-              static_cast<uint32_t>(pFirstByte[1]) << 8 | static_cast<uint32_t>(pFirstByte[0]);
+  byte_float = static_cast<uint32_t>(buff[3]) << 24 | static_cast<uint32_t>(buff[2]) << 16 |  // NOLINT
+               static_cast<uint32_t>(buff[1]) << 8 | static_cast<uint32_t>(buff[0]);          // NOLINT
 
   // Return reinterpreted data
-  return *(reinterpret_cast<float*>(&byteFloat));
+  return *(reinterpret_cast<float*>(&byte_float));  // NOLINT
+}
+
+inline float ParseFloatLE(const std::vector<char>& buff)
+{
+  if (is_arch_LE())
+  {
+    float num{ *(reinterpret_cast<const float*>(buff.data())) };  // NOLINT
+    return num;
+  }
+
+  uint32_t byte_float = 0;
+
+  // Get correct unsigned value of float data
+  byte_float = static_cast<uint32_t>(buff[3]) << 24 | static_cast<uint32_t>(buff[2]) << 16 |  // NOLINT
+               static_cast<uint32_t>(buff[1]) << 8 | static_cast<uint32_t>(buff[0]);          // NOLINT
+
+  // Return reinterpreted data
+  return *(reinterpret_cast<float*>(&byte_float));  // NOLINT
 }
 
 inline std::vector<std::string> SplitString(const std::string& s, char delimiter)
@@ -266,23 +303,12 @@ inline std::vector<std::string> SplitString(const std::string& s, char delimiter
   return tokens;
 }
 
-inline unsigned int FastAtoU(const char* str)
-{
-  unsigned int val = 0;
-  while (*str)
-  {
-    val = (val << 1) + (val << 3) + *(str++) - 48;
-  }
-  return val;
-}
-
 /**
  * Returns ingeger sampled from uniform distribution from the interval [from, to].
  */
 template <typename T>
 inline T rand_integral(T from, T to)
 {
-  // Create random generator
   std::random_device dev;
   std::mt19937 rng(dev());
   std::uniform_int_distribution<T> randFromDistribution(from, to);
@@ -298,23 +324,8 @@ inline float strToFloat(const std::string& str)
 
   ss >> result;
   return result;
-
-  /*
-  // Convert and check if successful
-  if (
-    auto[p, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
-    ec == std::errc()
-    )
-  {
-    return result;
-  }
-  // If failed
-  else
-  {
-    LOG_ERROR("Conversion of string '"s + str +"' failed with error code "s + std::to_string((int)ec) +".");
-  }
-  */
 }
+
 /**
  * Converts provided string into the `T` type.
  *
@@ -334,8 +345,9 @@ inline T strTo(const std::string& str)
   // If failed
   else
   {
-    LOGE("Conversion of string '"s + str + "' failed with error code "s + std::to_string((int)ec) + ".");
-    return T();
+    std::string msg{ "Conversion of string '"s + str + "' failed with error code "s + std::to_string((int)ec) + "." };
+    LOGE(msg);
+    PROD_THROW("Data error!");
   }
 }
 
@@ -483,7 +495,7 @@ inline float tf_scheme_fn_logarithmic(CountType freq_i, CountType max_freq)
 template <typename CountType>
 inline float tf_scheme_fn_augmented(CountType freq_i, CountType max_freq)
 {
-  return 0.5F + 0.5F * (float(freq_i) / max_freq);
+  return 0.5F + 0.5F * (float(freq_i) / max_freq);  // NOLINT
 }
 
 inline std::function<float(float, float)> pick_tf_scheme_fn(eTermFrequency tf_scheme_ID)

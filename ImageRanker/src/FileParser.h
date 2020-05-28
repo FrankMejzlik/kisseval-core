@@ -88,6 +88,6 @@ class FileParser
 
   static void process_shot_stack(std::stack<SelFrame*>& videoFrames);
 
-  static std::vector<ImageIdFilenameTuple> get_image_filenames(const std::string& _imageToIdMapFilepath);
+  static std::vector<ImageIdFilenameTuple> get_image_filenames(const std::string& frame_to_ID_map_fpth);
 };
 }  // namespace image_ranker
