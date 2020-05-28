@@ -242,7 +242,8 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
     return std::vector<GameSessionQueryResult>();
   }
 
-  _data_manager.submit_annotator_user_queries(data_pack_ID, res->second->get_vocab_ID(), model_options, user_level,
+  _data_manager.submit_annotator_user_queries(data_pack_ID, res->second->get_vocab_ID(),
+                                              res->second->target_imageset_ID(), model_options, user_level,
                                               with_example_images, user_queries);
 
   /*
@@ -471,15 +472,16 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
   if (native_lang_queries)
   {
     // Fetch queries from the DB
-    auto native_test_queries{ _data_manager.fetch_user_native_test_queries(queries_origin, dp.get_vocab_ID()) };
+    auto native_test_queries{ _data_manager.fetch_user_native_test_queries(queries_origin, dp.target_imageset_ID()) };
     num_queries = native_test_queries.size();
+    std::cout << "num " << num_queries << std::endl;
 
     res = dp.test_model(native_test_queries, model_options, num_points);
   }
   else
   {
     // Fetch queries from the DB
-    auto test_queries{ _data_manager.fetch_user_test_queries(queries_origin, dp.get_vocab_ID()) };
+    auto test_queries{ _data_manager.fetch_user_test_queries(queries_origin, dp.get_vocab_ID(), data_pack_ID) };
     num_queries = test_queries.size();
 
     res = dp.test_model(test_queries, model_options, num_points);

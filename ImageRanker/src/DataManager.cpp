@@ -8,7 +8,7 @@ using namespace image_ranker;
 
 DataManager::DataManager(ImageRanker* p_owner) : _p_owner(p_owner), _db(DB_FPTH) {}
 
-void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,
+void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID, const StringId& imageset_ID,
                                                 const ::std::string& model_options, size_t user_level,
                                                 bool with_example_images,
                                                 const std::vector<AnnotatorUserQuery>& user_queries)
@@ -16,7 +16,7 @@ void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, co
   std::stringstream sql_query_ss;
   sql_query_ss << ("INSERT INTO `" + queries_table_name +
                    "`"
-                   "(`user_query`,`readable_user_query`,`vocabulary_ID`,`data_pack_ID`,`model_options`,`target_frame_"
+                   "(`user_query`,`readable_user_query`,`vocabulary_ID`,`data_pack_ID`,`imageset_ID`,`model_options`,`target_frame_"
                    "ID`,`with_example_images`,`user_level`,`manually_validated`,`session_ID`) VALUES ");
 
   std::string ex_imgs_str{ "0" };
@@ -31,7 +31,7 @@ void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, co
   {
     sql_query_ss << "('"s << Database::escape_str(query.user_query_encoded.at(0)) + "','"s
                  << Database::escape_str(query.user_query_readable.at(0)) << "','" << vocab_ID << "','" << data_pack_ID
-                 << "','" + model_options + "'," << std::to_string(query.target_sequence_IDs.at(0)) << ", "s
+                 << "','" + imageset_ID + "','" + model_options + "'," << std::to_string(query.target_sequence_IDs.at(0)) << ", "s
                  << ex_imgs_str << "," << std::to_string(user_level) << ",0,'" << query.session_ID + "')";
 
     if (i < (user_queries.size() - 1))
@@ -60,8 +60,7 @@ std::vector<UserTestQuery> DataManager::fetch_user_test_queries(eUserQueryOrigin
 
   std::stringstream SQL_query_ss;
   SQL_query_ss << "SELECT `target_frame_ID`, `user_query` FROM `" << queries_table_name << "` ";
-  SQL_query_ss << "WHERE (`user_level` = " << int(queries_origin) << " AND `vocabulary_ID` = '" << vocabulary_ID
-               << "' AND `data_pack_ID` = '" << data_pack_ID << "'";
+  SQL_query_ss << "WHERE (`user_level` = " << int(queries_origin) << " AND `vocabulary_ID` = '" << vocabulary_ID << "'";
 
   if (!data_pack_ID.empty())
   {
@@ -73,6 +72,8 @@ std::vector<UserTestQuery> DataManager::fetch_user_test_queries(eUserQueryOrigin
   }
 
   SQL_query_ss << ");";
+
+  auto str{SQL_query_ss.str()};
 
   auto db_rows = _db.result_query(SQL_query_ss.str());
 
@@ -102,7 +103,9 @@ std::vector<UserTestNativeQuery> DataManager::fetch_user_native_test_queries(eUs
                << " AND `vocabulary_ID` = 'native_language' AND `imageset_ID` = '" << imageset_ID << "');";
 
   auto db_rows = _db.result_query(SQL_query_ss.str());
+  auto str{SQL_query_ss.str()};
 
+  std::cout << str << std::endl;
   // Parse DB results
   for (auto&& row : db_rows)
   {

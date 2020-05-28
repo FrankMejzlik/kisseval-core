@@ -54,7 +54,7 @@ class DataManager
   /** Main ctor */
   DataManager(ImageRanker* p_owner);
 
-  void submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,
+  void submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,const StringId& imageset_ID,
                                      const ::std::string& model_options, size_t user_level, bool with_example_images,
                                      const std::vector<AnnotatorUserQuery>& user_queries);
 
