@@ -444,18 +444,20 @@ struct RankingResultWithFilenames
 struct AnnotatorUserQuery
 {
   std::string session_ID;
-  /** Query containing unique identifiers (ID, or unique string repre)
-        EXAMPLE: "&-1+-31+>&-13+-43+" */
+
+  /** Query containing unique identifiers (ID, or unique string repre).
+      EXAMPLE: "&-1+-31+>&-13+-43+" */
   std::vector<std::string> user_query_encoded;
 
-  /** Query in the same form user entered it (cause the same wordnet ID can have multiple string repres)
-        EXAMPLE: "cat dog food > grass owl" */
+  /** Query in the same form user entered it (cause the same wordnet ID can have multiple string repres).
+      EXAMPLE: "cat dog food > grass owl" */
   std::vector<std::string> user_query_readable;
 
   /** Sequence of images user described */
   std::vector<FrameId> target_sequence_IDs;
 };
 
+/** Data that describe user annotations vs classifier annotations */
 struct GameSessionQueryResult
 {
   std::string session_ID;
@@ -464,6 +466,7 @@ struct GameSessionQueryResult
   std::string model_top_query;
 };
 
+/** Data needed for frame detail. */
 struct FrameDetailData
 {
   FrameId frame_ID;
@@ -472,6 +475,7 @@ struct FrameDetailData
   std::vector<const Keyword*> top_keywords;
 };
 
+/** Data type for holding quantile aggregated plot data. */
 template <typename XType, typename FXType>
 struct QuantileLineChartData
 {
@@ -487,21 +491,28 @@ struct QuantileLineChartData
 template <typename XType, typename FXType>
 struct MedianLineMultichartData
 {
-  /** Charts  */
+  /** X values.*/
   std::vector<std::vector<XType>> x;
+
+  /** Y values. */
   std::vector<std::vector<FXType>> medians;
 };
 
+/** Holds data for median & quantile chart plotting */
 struct SearchSessRankChartData
 {
   MedianLineMultichartData<size_t, float> median_multichart;
   QuantileLineChartData<size_t, float> aggregate_quantile_chart;
 };
 
+/** Data type for holding histogram data for plitting */
 template <typename XType, typename FXType>
 struct HistogramChartData
 {
+  /** X values.*/
   std::vector<XType> x;
+
+  /** Y values. */
   std::vector<FXType> fx;
 };
 
@@ -513,6 +524,7 @@ struct AutocompleteInputResult
   std::vector<const Keyword*> top_keywords;
 };
 
+/** Data representing one loaded imageset. */
 struct ImagesetInfo
 {
   std::string ID;
@@ -520,11 +532,13 @@ struct ImagesetInfo
   size_t num_sel_frames;
 };
 
+/** Data representing all loaded imagesets. */
 struct LoadedImagesetsInfo
 {
   std::vector<ImagesetInfo> imagesets_info;
 };
 
+/** Data representing one loaded data pack. */
 struct DataPackInfo
 {
   std::string ID;
@@ -537,17 +551,28 @@ struct DataPackInfo
   std::string vocabulary_description;
 };
 
+/** Data representing all loaded data packs. */
 struct LoadedDataPacksInfo
 {
   std::vector<DataPackInfo> data_packs_info;
 };
 
+/**
+ * Operations to be used to aggregate main and secondary scorings.
+ *
+ * \see image_ranker::MultSumMaxModel
+ */
 enum class eMainTempRankingAggregation
 {
   cSum,
   cProduct
 };
 
+/**
+ * Operations to be used as operation while walking main frame successors in Mult/Sum/Max model.
+ *
+ * \see image_ranker::MultSumMaxModel
+ */
 enum class eSuccesorAggregation
 {
   cSum,
@@ -556,25 +581,32 @@ enum class eSuccesorAggregation
 };
 
 /**
- * Output data for drawing chart
+ * Output data for drawing chart.
  */
 using ModelTestResult = std::vector<std::pair<uint32_t, uint32_t>>;
 
+/** Supported levels of users */
 enum class eUserQueryOrigin
 {
+  /** Wild public users. */
   PUBLIC = 5,
+  /** Non-experts but are close to the field. */
   SEMI_EXPERTS = 10,
+  /** Experts - ones working with these tools and data on daily basis. */
   EXPERTS = 15
 };
 
+/**
+ *  Represents one search action done in interactive search tool in the KISSEval system.
+ */
 struct InteractiveSearchAction
 {
-  size_t query_idx;
+  size_t query_idx = ERR_VAL<size_t>();
   std::string action;
   std::string operand;
   std::string operand_readable;
-  size_t final_rank;
-  size_t time;
+  size_t final_rank = ERR_VAL<size_t>();
+  size_t time = ERR_VAL<size_t>();
   bool is_initial = true;
 };
 

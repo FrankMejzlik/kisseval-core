@@ -70,19 +70,21 @@ class [[nodiscard]] Database
   /**
    * Runs SQL against the database and returns return code.
    *
+   * \throws std::runtime_error   If communication with the DB fails.
+   *
    * \param   SQL query to run.
-   * \return  size_t Return code (0 means success).
    */
-  [[nodiscard]] size_t no_result_query(const std::string& query) const;
+  void no_result_query(const std::string& query) const;
 
   /**
    * Runs SQL against the database and returns return results.
    *
+   * \throws std::runtime_error   If communication with the DB fails.
+   *
    * \param   SQL query to run.
-   * \return  std::pair<size_t, std::vector<std::vector<std::string>>>
-   *          Pair with return code and rows itself.
+   * \return  std::vector<std::vector<std::string>> Returned rows.
    */
-  [[nodiscard]] std::pair<size_t, std::vector<std::vector<std::string>>> result_query(const std::string& query) const;
+  std::vector<std::vector<std::string>> result_query(const std::string& query) const;
 
   /*
    * Member variables

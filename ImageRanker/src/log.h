@@ -14,14 +14,15 @@
  ***********************************/
 /** Macro used for throwing exceptions in production mode. */
 #if THROW_ON_ERROR
+#  define PROD_THROW(x)  // To avoid unreachable code
+
+#else
 #  define PROD_THROW(x)                                                                                        \
     do                                                                                                         \
     {                                                                                                          \
       std::string msg{ std::string{ x } + "| Report it with code '" + std::to_string(UNIX_timestamp) + "'." }; \
       throw std::runtime_error(msg);                                                                           \
     } while (false)
-#else
-#  define PROD_THROW(x)  // To avoid unreachable code
 #endif
 
 /** Macro used for throwing not supported exception. */

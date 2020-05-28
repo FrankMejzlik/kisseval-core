@@ -36,7 +36,7 @@ std::string Database::get_last_error_msg() const { return std::string{ sqlite3_e
 
 size_t Database::get_last_err_code() const { return static_cast<size_t>(sqlite3_errcode(_p_db.get())); }
 
-size_t Database::no_result_query(const std::string& query) const
+void Database::no_result_query(const std::string& query) const
 {
   sqlite3_stmt* stmt;
 
@@ -57,13 +57,11 @@ size_t Database::no_result_query(const std::string& query) const
     LOGE(msg);
     PROD_THROW("An error occured!");
   }
-
-  return get_last_err_code();
 }
 
 size_t Database::get_last_inserted_ID() const { return static_cast<size_t>(sqlite3_last_insert_rowid(_p_db.get())); }
 
-std::pair<size_t, std::vector<std::vector<std::string>>> Database::result_query(const std::string& query) const
+std::vector<std::vector<std::string>> Database::result_query(const std::string& query) const
 {
   // Send query to DB and get result
   std::vector<std::vector<std::string>> result;
@@ -100,5 +98,5 @@ std::pair<size_t, std::vector<std::vector<std::string>>> Database::result_query(
     PROD_THROW("An error occured!");
   }
 
-  return std::make_pair(get_last_err_code(), result);
+  return result;
 }

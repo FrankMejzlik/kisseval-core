@@ -6,7 +6,7 @@
  *
  * Errors will throw production exception instead of debugging ones.
  */
-#define IS_PRODUCTION (1)
+#define IS_PRODUCTION (0)
 
 /** If basic functionality tests will be executed after initialization.
  *    \see image_ranker::Tester */
@@ -85,8 +85,17 @@
 /*
  * Ranker
  */
-/** top_frame_keywords will return this ammount by default */
+/** top_frame_keywords will return this ammount by default. */
 #define DEF_NUMBER_OF_TOP_KWS 10
+
+/*
+ * Statistics
+ */
+/** Maximum user leve that will be used when generating data for statistics. */
+#define DEF_MAX_USER_LEVEL_FOR_DATA 9
+
+/** Minimum number of samples for search session charts. */
+#define DEF_MIN_SAMPLES_SS_CHART 20
 
 /**********************************************
  * Data packs & Models

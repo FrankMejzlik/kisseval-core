@@ -1,5 +1,16 @@
 #pragma once
 
+/**
+ * \file ImageRanker.h
+ *
+ * Header of the main evaluation library.
+ *
+ * \see image_ranker::ImageRanker
+ * \see image_ranker::Config
+ * \see image_ranker::Settings
+ * \see image_ranker::eMode
+ */
+
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -16,15 +27,17 @@ using namespace std::string_literals;
 #include "data_packs/BaseDataPack.h"
 #include "datasets/SelFramesDataset.h"
 
+/**
+ * Namespace that all ImageRanker custom code is wrapped in.
+ */
 namespace image_ranker
 {
 /**
  * Public API for evaluation library used for keyword-based models.
  *
- * On instantiation it loads all cofigured data packs and preprocesses
- * them for later usage. When instantiated it handles SEQUENTIAL requests
- * and provides results back. It also accepts submit request and stores them
- * inside the database.
+ * On instantiation it loads all cofigured data packs defined in the file at \ref DATA_INFO_FPTH and preprocesses them
+ * for later usage. When instantiated it handles SEQUENTIAL requests on loaded models and imagesets. It also accepts
+ * submit request and stores them inside the database.
  */
 class [[nodiscard]] ImageRanker
 {
@@ -37,17 +50,26 @@ class [[nodiscard]] ImageRanker
   /**
    * ImageRanker modes of operation.
    *
-   * Currently not used - only fully analytical version is used.
+   * Currently not used - only `cFullAnalytical` version is used.
+   *
+   * \see image_ranker::ImageRanker::Settings
    */
   enum class eMode
   {
+    /** Holds all the configured data in memory for fast evaluations. */
     cFullAnalytical = 0,
+
+    /** Only collecotr mode - no data packs are loaded. */
     cCollector = 1,
+
+    /** One specific data pack loaded and works as a search tool. */
     cSearchTool = 2
   };
 
   /**
    * Config structure needed used for instantiation of ImageRanker.
+   *
+   * \see image_ranker::ImageRanker
    */
   struct Config
   {
@@ -193,7 +215,7 @@ class [[nodiscard]] ImageRanker
                                                               size_t num_succs) const;
 
   /**
-   * Returns struct containing chart data showing Q1, Q2, Q3 for progress of ranks for currently collected search
+   * Returns a struct containing the chart data showing Q1, Q2, Q3 for progress of ranks for currently collected search
    * sessions.
    *
    * \param   data_pack_ID    Collected data over this `data_pack_ID` will be used for the chart generation.
@@ -202,22 +224,46 @@ class [[nodiscard]] ImageRanker
    * \return                  Struct with data needed for plotting the chart.
    */
   [[nodiscard]] SearchSessRankChartData get_search_sessions_rank_progress_chart_data(
-      const std::string& data_pack_ID, const std::string& model_options = ""s, size_t max_user_level = 9,
-      size_t min_samples = 50, bool normalize = true) const;
+      const std::string& data_pack_ID, const std::string& model_options = ""s,
+      size_t max_user_level = DEF_MAX_USER_LEVEL_FOR_DATA, size_t min_samples = DEF_MIN_SAMPLES_SS_CHART,
+      bool normalize = true) const;
 
+  /**
+   * Returns a struct containing the data for histogram plot describing how accurate labels users provided w.r.t.
+   * classifier.
+   *
+   * \param   data_pack_ID    Collected data over this `data_pack_ID` will be used for the histogram data generation.
+   * \param   model_options   Additional specification on what data will be used as source data.
+   * \param   num_points      Number of x points in result chart data.
+   * \param   accumulated     If data should be generated over data with accumulated hypernyms.
+   * \param   max_user_level  Maximum user level records that will be used for generating the data.
+   * \return                  Struct with data needed for plotting the histogram.
+   */
   [[nodiscard]] HistogramChartData<size_t, float> get_histogram_used_labels(
       const std::string& data_pack_ID, const std::string& model_options, size_t num_points, bool accumulated = false,
-      size_t max_user_level = 9) const;
+      size_t max_user_level = DEF_MAX_USER_LEVEL_FOR_DATA) const;
 
   [[nodiscard]] LoadedImagesetsInfo get_loaded_imagesets_info() const;
   [[nodiscard]] LoadedDataPacksInfo get_loaded_data_packs_info() const;
 
   [[nodiscard]] const std::string& get_frame_filename(const std::string& imageset_ID, size_t imageId) const;
-  [[nodiscard]] const SelFrame& get_frame(const std::string& imageset_ID, size_t imageId) const;
+
+  /**
+   * Returns reference to the frame with the provided ID.
+   *
+   * \throws std::out_of_range  If either `imageset_ID` or `frame_ID` does not correspond to any record.
+   *
+   * \param  imageset_ID Target imageset ID.
+   * \param  frame_ID   Desired frame ID.
+   * \return Reference to the frame. Throws if not found or invalid params.
+   */
+  [[nodiscard]] const SelFrame& get_frame(const std::string& imageset_ID, size_t frame_ID) const;
 
  private:
   /**
-   * Returns reference to loaded imageset with provided imageset_ID.
+   * Returns reference to the loaded imageset with provided imageset_ID.
+   *
+   * \throws std::out_of_range  If `imageset_ID` does not correspond to any record.
    *
    * \param  imageset_ID Imageset ID we want reference to.
    * \return Reference to desired imageset. Throws if not found.
@@ -229,6 +275,8 @@ class [[nodiscard]] ImageRanker
 
   /**
    * Returns reference to loaded data pack with provided data_pack_ID.
+   *
+   * \throws std::out_of_range  Throws if `data_pack_ID` does not correspond to any record.
    *
    * \param  data_pack_ID Data pack ID we want reference to.
    * \return Reference to desired data pack. Throws if not found.
@@ -242,7 +290,7 @@ class [[nodiscard]] ImageRanker
    * Member variables
    */
  private:
-  /** Instance holding ImageRanker settings. */
+  /** Instance holding the main settings. */
   Settings _settings;
 
   /** File parser used for data parsing. */

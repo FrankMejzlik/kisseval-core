@@ -496,7 +496,7 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
   return res;
 }
 
-bool ImageRanker::submit_search_session(const std::string& data_pack_ID, const std::string& model_commands,
+void ImageRanker::submit_search_session(const std::string& data_pack_ID, const std::string& model_commands,
                                         size_t user_level, bool with_example_images, FrameId target_frame_ID,
                                         eSearchSessionEndStatus end_status, size_t duration,
                                         const std::string& sessionId,
@@ -505,8 +505,8 @@ bool ImageRanker::submit_search_session(const std::string& data_pack_ID, const s
   const BaseDataPack& dp{ data_pack(data_pack_ID) };
   const std::string& imageset_ID{ dp.get_vocab_ID() };
 
-  return _data_manager.submit_search_session(data_pack_ID, imageset_ID, model_commands, user_level, with_example_images,
-                                             target_frame_ID, end_status, duration, sessionId, actions);
+  _data_manager.submit_search_session(data_pack_ID, imageset_ID, model_commands, user_level, with_example_images,
+                                      target_frame_ID, end_status, duration, sessionId, actions);
 }
 
 FrameDetailData ImageRanker::get_frame_detail_data(FrameId frame_ID, const std::string& data_pack_ID,

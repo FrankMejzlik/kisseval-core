@@ -18,7 +18,9 @@ std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string
   // If failed to open file
   if (!ifs)
   {
-    throw std::runtime_error("Error opening file: " + filepath);
+    std::string msg{ "Error opening file '" + filepath + "'." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   // Get end of file
@@ -33,7 +35,9 @@ std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string
   // If emtpy file
   if (size == 0)
   {
-    throw std::runtime_error("Empty file opened!");
+    std::string msg{ "File '" + filepath + "' is empty." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   // Calculate byte length of each row (dim_N * sizeof(float))
@@ -85,7 +89,9 @@ std::vector<float> FileParser::parse_float_vector(const std::string& filepath, s
   // If failed to open file
   if (!ifs)
   {
-    throw std::runtime_error("Error opening file: " + filepath);
+    std::string msg{ "Error opening file '" + filepath + "'." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   // Get end of file
@@ -100,7 +106,9 @@ std::vector<float> FileParser::parse_float_vector(const std::string& filepath, s
   // If emtpy file
   if (size == 0)
   {
-    throw std::runtime_error("Empty file opened!");
+    std::string msg{ "File '" + filepath + "' is empty." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   // Calculate byte length of each row (dim_N * sizeof(float))
@@ -150,7 +158,9 @@ std::map<std::string, size_t> FileParser::parse_w2vv_word_to_idx_file(const std:
   // If failed to open file
   if (!inFile)
   {
-    throw std::runtime_error("Error opening file: " + filepath);
+    std::string msg{ "Error opening file '" + filepath + "'." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   std::string line_text_buffer;
@@ -233,7 +243,9 @@ std::vector<ImageIdFilenameTuple> FileParser::GetImageFilenames(const std::strin
   // If failed to open file
   if (!inFile)
   {
-    LOGE(std::string("Error opening file: ") + _imageToIdMapFilepath);
+    std::string msg{ "Error opening file '" + _imageToIdMapFilepath + "'." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   std::vector<ImageIdFilenameTuple> result;
@@ -332,7 +344,9 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, boo
   // If failed to open file
   if (!inFile)
   {
-    LOGE(std::string("Error opening file :") + filepath);
+    std::string msg{ "Error opening file '" + filepath + "'." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   // Declare return variables
@@ -475,7 +489,9 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
   // If failed to open file
   if (!ifs)
   {
-    LOGE("Error opening file: "s + inputFilepath);
+    std::string msg{ "Error opening file '" + inputFilepath + "'." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   // Get end of file
@@ -490,7 +506,9 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
   // If emtpy file
   if (size == 0)
   {
-    LOGE("Empty file opened!");
+    std::string msg{ "File '" + inputFilepath + "' is empty." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   // Create 4B buffer
@@ -505,7 +523,9 @@ FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
   // If something happened
   if (!ifs)
   {
-    LOGE("Error reading file: "s + inputFilepath);
+    std::string msg{ "Error reading file '" + inputFilepath + "'." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   // Parse number of present floats in every row
@@ -624,7 +644,9 @@ std::pair<Matrix<float>, DataParseStats> FileParser::ParseSoftmaxBinFile_ViretFo
   // If failed to open file
   if (!ifs)
   {
-    LOGE("Error opening file: "s + inputFilepath);
+    std::string msg{ "Error opening file '" + inputFilepath + "'." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   // Get end of file
@@ -639,7 +661,9 @@ std::pair<Matrix<float>, DataParseStats> FileParser::ParseSoftmaxBinFile_ViretFo
   // If emtpy file
   if (size == 0)
   {
-    LOGE("Empty file opened!");
+    std::string msg{ "File '" + inputFilepath + "' is empty." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   // Create 4B buffer
@@ -654,7 +678,9 @@ std::pair<Matrix<float>, DataParseStats> FileParser::ParseSoftmaxBinFile_ViretFo
   // If something happened
   if (!ifs)
   {
-    LOGE("Error reading file: "s + inputFilepath);
+    std::string msg{ "Error reading file '" + inputFilepath + "'." };
+    LOGE(msg);
+    PROD_THROW("Error loading the program.");
   }
 
   // Parse number of present floats in every row
