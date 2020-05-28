@@ -252,7 +252,7 @@ RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_que
   if (iter_m == _models.end())
   {
     LOGE("Uknown model_ID: '" + model_ID + "'.");
-    return RankingResult{};
+    PROD_THROW("Data error.")
   }
   const auto& ranking_model = *(iter_m->second);
 
@@ -261,7 +261,7 @@ RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_que
   if (iter_t == _transforms.end())
   {
     LOGE("Uknown transform_ID: '" + transform_ID + "'.");
-    return RankingResult{};
+    PROD_THROW("Data error.")
   }
   const auto& transform = *(iter_t->second);
 
@@ -332,7 +332,7 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
     else
     {
       LOGE("Uknown models!");
-      return ModelTestResult{};
+      PROD_THROW("Data error.")
     }
   }
   const auto& ranking_model = *(iter_m->second);
@@ -349,7 +349,7 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
     else
     {
       LOGE("No transformations!");
-      return ModelTestResult{};
+      PROD_THROW("Data error.")
     }
   }
   const auto& transform = *(iter_t->second);
@@ -365,7 +365,7 @@ ModelTestResult ViretDataPack::test_model(const std::vector<UserTestQuery>& test
     else
     {
       LOGE("No sim users!");
-      return ModelTestResult{};
+      PROD_THROW("Data error.")
     }
   }
   const auto& sim_user = *(iter_su->second);

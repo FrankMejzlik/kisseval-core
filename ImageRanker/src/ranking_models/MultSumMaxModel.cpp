@@ -148,8 +148,9 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
       break;
 
     default:
-      LOGE("Unknown scoring operation.");
-      return RankingResult{};
+      std::string msg{"Unknown scoring operation '" + std::to_string(static_cast<int>(opts.scoring_operations)) + "'."};
+      LOGE(msg);
+      PROD_THROW("Data error.");
   }
 
   assert(p_data_mat->size() > 0 && "There must be some data! `p_data_mat` pointing to empty data.");

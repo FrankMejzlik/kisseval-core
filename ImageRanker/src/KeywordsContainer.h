@@ -83,6 +83,8 @@ class KeywordsContainer
   KeywordsContainer(const GoogleDataPackRef::VocabData& vocab_data_refs);
   KeywordsContainer(const W2vvDataPackRef::VocabData& vocab_data_refs);
 
+  void parse_keywords(const std::string& filepath);
+
   const std::string& get_ID() const { return _ID; }
   const std::string& get_description() const { return _description; }
 

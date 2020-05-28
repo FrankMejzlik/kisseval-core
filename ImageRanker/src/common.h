@@ -6,6 +6,8 @@
 #define _IR_COMMON_H_
 
 #include <array>
+#include <map>
+#include <set>
 #include <string>
 #include <vector>
 using namespace std::string_literals;
@@ -608,6 +610,21 @@ struct InteractiveSearchAction
   size_t final_rank = ERR_VAL<size_t>();
   size_t time = ERR_VAL<size_t>();
   bool is_initial = true;
+};
+
+/** Structure holding data after VIRET classnames file parsing.
+ *
+ * \see image_ranker::FileParser::parse_VIRET_format_keyword_classes_file
+ */
+struct ViretKeywordClassesParsedData
+{
+  std::string all_descriptions;
+  std::map<size_t, Keyword*> vec_idx_to_keyword;
+  std::map<size_t, Keyword*> wordnet_ID_to_keyword;
+  std::vector<std::pair<size_t, Keyword*>> desc_index_to_keyword;
+  std::vector<std::unique_ptr<Keyword>> keywords;
+  std::map<KeywordId, Keyword*> ID_to_keyword;
+  std::map<KeywordId, std::set<Keyword*>> ID_to_all_keywords;
 };
 
 }  // namespace image_ranker

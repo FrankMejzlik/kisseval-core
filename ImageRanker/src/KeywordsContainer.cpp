@@ -9,6 +9,61 @@
 
 using namespace image_ranker;
 
+KeywordsContainer::KeywordsContainer(const ViretDataPackRef::VocabData& vocab_data_refs)
+    : _ID(vocab_data_refs.ID),
+      _description(vocab_data_refs.description),
+      _kw_classes_fpth(vocab_data_refs.keyword_synsets_fpth)
+{
+  parse_keywords(_kw_classes_fpth);
+}
+
+KeywordsContainer::KeywordsContainer(const GoogleDataPackRef::VocabData& vocab_data_refs)
+    : _ID(vocab_data_refs.ID),
+      _description(vocab_data_refs.description),
+      _kw_classes_fpth(vocab_data_refs.keyword_synsets_fpth)
+{
+  parse_keywords(_kw_classes_fpth);
+}
+
+KeywordsContainer::KeywordsContainer(const W2vvDataPackRef::VocabData& vocab_data_refs)
+    : _ID(vocab_data_refs.ID),
+      _description(vocab_data_refs.description),
+      _kw_classes_fpth(vocab_data_refs.keyword_synsets_fpth)
+{
+  parse_keywords(_kw_classes_fpth);
+}
+
+void KeywordsContainer::parse_keywords(const std::string& filepath)
+{
+  ViretKeywordClassesParsedData res = FileParser::parse_VIRET_format_keyword_classes_file(filepath);
+
+  // Store results
+  _allDescriptions = std::move(res.all_descriptions);
+  _vecIndexToKeyword = std::move(res.vec_idx_to_keyword);
+  _wordnetIdToKeywords = std::move(res.wordnet_ID_to_keyword);
+  _descIndexToKeyword = std::move(res.desc_index_to_keyword);
+  _keywords = std::move(res.keywords);
+  _ID_to_keyword = std::move(res.ID_to_keyword);
+  _ID_to_allkeywords = std::move(res.ID_to_all_keywords);
+
+  // Sort keywords
+  std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
+
+  for (auto&& kw : _keywords)
+  {
+    std::unordered_set<size_t> accum_indices;
+    // Add self
+    accum_indices.emplace(kw->m_vectorIndex);
+
+    for (auto&& hypo_wordnet_ID : kw->m_hyponyms)
+    {
+      GetVectorKeywordsIndicesSet(accum_indices, hypo_wordnet_ID);
+    }
+
+    kw->m_hyponymBinIndices = std::move(accum_indices);
+  }
+}
+
 void KeywordsContainer::GetVectorKeywordsIndicesSet(std::unordered_set<size_t>& destIndicesSetRef,
                                                     size_t wordnetId) const
 {
@@ -56,112 +111,6 @@ void KeywordsContainer::GetVectorKeywordsIndicesSetShallow(std::unordered_set<si
         GetVectorKeywordsIndicesSetShallow(destIndicesSetRef, hypo);
       }
     }
-  }
-}
-
-/******************************************************************
-********************************************************************/
-
-KeywordsContainer::KeywordsContainer(const ViretDataPackRef::VocabData& vocab_data_refs)
-    : _ID(vocab_data_refs.ID),
-      _description(vocab_data_refs.description),
-      _kw_classes_fpth(vocab_data_refs.keyword_synsets_fpth)
-{
-  auto res = FileParser::ParseKeywordClassesFile_ViretFormat(_kw_classes_fpth);
-
-  // Store results
-  _allDescriptions = std::move(std::get<0>(res));
-  _vecIndexToKeyword = std::move(std::get<1>(res));
-  _wordnetIdToKeywords = std::move(std::get<2>(res));
-  _descIndexToKeyword = std::move(std::get<3>(res));
-  _keywords = std::move(std::get<4>(res));
-  _ID_to_keyword = std::move(std::get<5>(res));
-  _ID_to_allkeywords = std::move(std::get<6>(res));
-
-  // Sort keywords
-  std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
-
-  for (auto&& kw : _keywords)
-  {
-    std::unordered_set<size_t> accum_indices;
-    // Add self
-    accum_indices.emplace(kw->m_vectorIndex);
-
-    for (auto&& hypo_wordnet_ID : kw->m_hyponyms)
-    {
-      GetVectorKeywordsIndicesSet(accum_indices, hypo_wordnet_ID);
-    }
-
-    kw->m_hyponymBinIndices = std::move(accum_indices);
-  }
-}
-
-KeywordsContainer::KeywordsContainer(const GoogleDataPackRef::VocabData& vocab_data_refs)
-    : _ID(vocab_data_refs.ID),
-      _description(vocab_data_refs.description),
-      _kw_classes_fpth(vocab_data_refs.keyword_synsets_fpth)
-{
-  // Input file has first coumn as ID
-  auto res = FileParser::ParseKeywordClassesFile_ViretFormat(_kw_classes_fpth, true);
-
-  // Store results
-  _allDescriptions = std::move(std::get<0>(res));
-  _vecIndexToKeyword = std::move(std::get<1>(res));
-  _wordnetIdToKeywords = std::move(std::get<2>(res));
-  _descIndexToKeyword = std::move(std::get<3>(res));
-  _keywords = std::move(std::get<4>(res));
-  _ID_to_keyword = std::move(std::get<5>(res));
-  _ID_to_allkeywords = std::move(std::get<6>(res));
-
-  // Sort keywords
-  std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
-
-  for (auto&& kw : _keywords)
-  {
-    std::unordered_set<size_t> accum_indices;
-    // Add self
-    accum_indices.emplace(kw->m_vectorIndex);
-
-    for (auto&& hypo_wordnet_ID : kw->m_hyponyms)
-    {
-      GetVectorKeywordsIndicesSet(accum_indices, hypo_wordnet_ID);
-    }
-
-    kw->m_hyponymBinIndices = std::move(accum_indices);
-  }
-}
-
-KeywordsContainer::KeywordsContainer(const W2vvDataPackRef::VocabData& vocab_data_refs)
-    : _ID(vocab_data_refs.ID),
-      _description(vocab_data_refs.description),
-      _kw_classes_fpth(vocab_data_refs.keyword_synsets_fpth)
-{
-  // Input file has first coumn as ID
-  auto res = FileParser::ParseKeywordClassesFile_ViretFormat(_kw_classes_fpth, true);
-
-  // Store results
-  _allDescriptions = std::move(std::get<0>(res));
-  _vecIndexToKeyword = std::move(std::get<1>(res));
-  _wordnetIdToKeywords = std::move(std::get<2>(res));
-  _descIndexToKeyword = std::move(std::get<3>(res));
-  _keywords = std::move(std::get<4>(res));
-  _ID_to_keyword = std::move(std::get<5>(res));
-
-  // Sort keywords
-  std::sort(_keywords.begin(), _keywords.end(), keywordLessThan);
-
-  for (auto&& kw : _keywords)
-  {
-    std::unordered_set<size_t> accum_indices;
-    // Add self
-    accum_indices.emplace(kw->m_vectorIndex);
-
-    for (auto&& hypo_wordnet_ID : kw->m_hyponyms)
-    {
-      GetVectorKeywordsIndicesSet(accum_indices, hypo_wordnet_ID);
-    }
-
-    kw->m_hyponymBinIndices = std::move(accum_indices);
   }
 }
 
@@ -281,7 +230,7 @@ Keyword* KeywordsContainer::GetKeywordPtrByWordnetId(size_t wordnetId) const
   if (pairIt == _wordnetIdToKeywords.end())
   {
     LOGE("Keyword with ID "s + std::to_string(wordnetId) + " not found!");
-    return nullptr;
+    PROD_THROW("Data error.");
   }
 
   return pairIt->second;
@@ -289,9 +238,7 @@ Keyword* KeywordsContainer::GetKeywordPtrByWordnetId(size_t wordnetId) const
 
 CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool skipConstructedHypernyms) const
 {
-  // \todo implement properly
   // skipConstructedHypernyms = IGNORE_CONSTRUCTED_HYPERNYMS;
-
   // EG: &-8252602+-8256735+-3206282+-4296562+
 
   std::stringstream idSs;
@@ -305,7 +252,10 @@ CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool s
   for (auto&& c : query)
   {
     // Ignore
-    if (c == '&') continue;
+    if (c == '&')
+    {
+      continue;
+    }
 
     if (c == '~')
     {

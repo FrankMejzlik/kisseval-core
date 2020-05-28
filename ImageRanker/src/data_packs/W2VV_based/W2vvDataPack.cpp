@@ -65,7 +65,7 @@ RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_quer
   if (iter_m == _models.end())
   {
     LOGE("Uknown model_ID: '" + model_ID + "'.");
-    return RankingResult{};
+    PROD_THROW("Data error.")
   }
   const auto& ranking_model = *(iter_m->second);
 
@@ -123,7 +123,7 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   if (iter_m == _models.end())
   {
     LOGE("Uknown model_ID: '" + model_ID + "'.");
-    return ModelTestResult{};
+    PROD_THROW("Data error.")
   }
   const auto& ranking_model = *(iter_m->second);
 

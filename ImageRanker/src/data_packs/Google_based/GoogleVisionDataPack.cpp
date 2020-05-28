@@ -176,7 +176,7 @@ RankingResult GoogleVisionDataPack::rank_frames(const std::vector<CnfFormula>& u
   if (iter_m == _models.end())
   {
     LOGE("Uknown model_ID: '" + model_ID + "'.");
-    return RankingResult{};
+    PROD_THROW("Data error.")
   }
   const auto& ranking_model = *(iter_m->second);
 
@@ -185,7 +185,7 @@ RankingResult GoogleVisionDataPack::rank_frames(const std::vector<CnfFormula>& u
   if (iter_t == _transforms.end())
   {
     LOGE("Uknown transform_ID: '" + transform_ID + "'.");
-    return RankingResult{};
+    PROD_THROW("Data error.")
   }
   const auto& transform = *(iter_t->second);
 
@@ -256,7 +256,7 @@ ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery
     else
     {
       LOGE("Uknown models!");
-      return ModelTestResult{};
+      PROD_THROW("Data error.")
     }
   }
   const auto& ranking_model = *(iter_m->second);
@@ -273,7 +273,7 @@ ModelTestResult GoogleVisionDataPack::test_model(const std::vector<UserTestQuery
     else
     {
       LOGE("No transformations!");
-      return ModelTestResult{};
+      PROD_THROW("Data error.")
     }
   }
   const auto& transform = *(iter_t->second);

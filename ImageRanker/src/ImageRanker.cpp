@@ -134,7 +134,7 @@ ImageRanker::Config ImageRanker::parse_data_config_file([[maybe_unused]] eMode m
 
   return { ImageRanker::eMode::cFullAnalytical, imagesets, VIRET_data_packs, Google_data_packs, W2VV_data_packs };
 }
-ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _fileParser(this), _data_manager(this)
+ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _fileParser(), _data_manager(this)
 {
   /*
    * Load all available datasets
@@ -142,7 +142,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
   for (auto&& pack : _settings.config.dataset_packs)
   {
     // Initialize all images
-    auto frames = _fileParser.ParseImagesMetaData(pack.imgage_to_ID_fpth, pack.offsets, 1);
+    auto frames = _fileParser.parse_image_metadata(pack.imgage_to_ID_fpth, pack.offsets, 1);
 
     _imagesets.emplace(pack.ID, std::make_unique<SelFramesDataset>(pack.ID, pack.images_dir, std::move(frames)));
   }
@@ -159,13 +159,11 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
 
     // Initialize all images
     auto [presoft_data, parse_stats] =
-        FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.presoftmax_scorings_fpth, is.size());
+        FileParser::parse_VIRET_format_frame_vector_file(pack.score_data.presoftmax_scorings_fpth, is.size());
     stats.avg_num_labels_asigned = parse_stats.avg_num_labels_asigned;
     stats.median_num_labels_asigned = parse_stats.median_num_labels_asigned;
 
     // We don't need these yet
-    // auto soft_data = FileParser::ParseSoftmaxBinFile_ViretFormat(pack.score_data.softmax_scorings_fpth);
-    // auto deep_features = FileParser::ParseDeepFeasBinFile_ViretFormat(pack.score_data.deep_features_fpth);
     auto deep_features{ Matrix<float>{} };
     auto soft_data{ Matrix<float>{} };
 
@@ -186,7 +184,7 @@ ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _file
     // \todo Use transparent sparse matrix representation for Google data
 
     auto [presoft_data, parse_stats] =
-        FileParser::ParseRawScoringData_GoogleAiVisionFormat(pack.score_data.presoftmax_scorings_fpth, is.size());
+        FileParser::parse_GoogleVision_format_frame_vector_file(pack.score_data.presoftmax_scorings_fpth, is.size());
     stats.avg_num_labels_asigned = parse_stats.avg_num_labels_asigned;
     stats.median_num_labels_asigned = parse_stats.median_num_labels_asigned;
 

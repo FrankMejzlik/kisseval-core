@@ -8,6 +8,9 @@ namespace image_ranker
 {
 class ImageRanker;
 
+/** Data representing one search session's action.
+ * \see image_ranker::SearchSession
+ */
 struct SearchSessionAction
 {
   size_t session_ID;
@@ -15,6 +18,7 @@ struct SearchSessionAction
   size_t rank;
 };
 
+/** Data representing one search session. */
 struct SearchSession
 {
   size_t ID;
@@ -24,18 +28,30 @@ struct SearchSession
   std::vector<SearchSessionAction> actions;
 };
 
+/**
+ * Class responsible for manipulation with the data.
+ *
+ * It communicates with the database. Stores and loads data on demand and provides it to a caller.
+ */
 class DataManager
 {
   friend class Tester;
 
+  /*
+   * Methods
+   */
  public:
+  // -----------------------------------------
+  // No moving or copying.
   DataManager() = delete;
   DataManager(const DataManager& other) = delete;
-  DataManager(DataManager&& other) = default;
+  DataManager(DataManager&& other) = delete;
   DataManager& operator=(const DataManager& other) = delete;
   DataManager& operator=(DataManager&& other) = delete;
   ~DataManager() noexcept = default;
+  // -----------------------------------------
 
+  /** Main ctor */
   DataManager(ImageRanker* p_owner);
 
   void submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,
@@ -68,21 +84,34 @@ class DataManager
       size_t min_samples_count, bool normalize) const;
 
  private:
-  [[nodiscard]] QuantileLineChartData<size_t, float> get_aggregate_rank_progress_data(
+  [[nodiscard]] static QuantileLineChartData<size_t, float> get_aggregate_rank_progress_data(
       const std::vector<SearchSession>& sessions, size_t max_sess_len, size_t num_frames_total,
-      size_t min_samples_count, bool normalize) const;
-  [[nodiscard]] MedianLineMultichartData<size_t, float> get_median_multichart_rank_progress_data(
+      size_t min_samples_count, bool normalize);
+
+  [[nodiscard]] static MedianLineMultichartData<size_t, float> get_median_multichart_rank_progress_data(
       const std::vector<SearchSession>& sessions, size_t max_sess_len, size_t num_frames_total,
-      size_t min_samples_count, bool normalize) const;
+      size_t min_samples_count, bool normalize);
+
   [[nodiscard]] std::pair<std::vector<SearchSession>, std::vector<SearchSessionAction>> fetch_search_sessions(
       const std::string& data_pack_ID, size_t max_user_level) const;
 
+  /*
+   * Member variables
+   */
  private:
+  /** Pointer to this class's owner. */
   ImageRanker* _p_owner;
+
+  /** Database for the user data. */
   Database _db;
 
+  /** Table name where to store user queries. */
   const std::string queries_table_name = "user_queries";
+
+  /** Table name where to store search sessions. */
   const std::string searches_table_name = "search_sessions";
+
+  /** Table name where to store actions for search sessions. */
   const std::string search_actions_table_name = "search_sessions_actions";
 };
 }  // namespace image_ranker

@@ -19,15 +19,18 @@ void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, co
                    "(`user_query`,`readable_user_query`,`vocabulary_ID`,`data_pack_ID`,`model_options`,`target_frame_"
                    "ID`,`with_example_images`,`user_level`,`manually_validated`,`session_ID`) VALUES ");
 
-  std::string ex_imgs_str(with_example_images ? "1" : "0");
+  std::string ex_imgs_str{ "0" };
+  if (with_example_images)
+  {
+    ex_imgs_str = "1";
+  }
 
-  /* \todo This is now taking only single query.
-            We need to add temp query support. */
+  /* \todo This is now taking only simple query. We need to add temp query support. */
   size_t i = 0;
   for (auto&& query : user_queries)
   {
-    sql_query_ss << "('"s << _db.escape_str(query.user_query_encoded.at(0)) + "','"s
-                 << _db.escape_str(query.user_query_readable.at(0)) << "','" << vocab_ID << "','" << data_pack_ID
+    sql_query_ss << "('"s << Database::escape_str(query.user_query_encoded.at(0)) + "','"s
+                 << Database::escape_str(query.user_query_readable.at(0)) << "','" << vocab_ID << "','" << data_pack_ID
                  << "','" + model_options + "'," << std::to_string(query.target_sequence_IDs.at(0)) << ", "s
                  << ex_imgs_str << "," << std::to_string(user_level) << ",0,'" << query.session_ID + "')";
 
@@ -175,48 +178,6 @@ void DataManager::submit_search_session(const std::string& data_pack_ID, const s
   _db.no_result_query(q2);
 }
 
-std::pair<std::vector<SearchSession>, std::vector<SearchSessionAction>> DataManager::fetch_search_sessions(
-    const std::string& data_pack_ID, size_t max_user_level) const
-{
-  std::stringstream SQL_query_sessions_ss;
-  SQL_query_sessions_ss << "SELECT `ID`, `target_frame_ID`, `duration`, `result` FROM `" << searches_table_name
-                        << "` WHERE `data_pack_ID` = '" << data_pack_ID << "' AND `user_level` <= " << max_user_level
-                        << ";";
-  std::stringstream SQL_query_actions_ss;
-  SQL_query_actions_ss << "SELECT `search_session_ID`, `action_index`, `result_target_rank` FROM `"
-                       << search_actions_table_name << "` WHERE `action_query_index` = 0  AND `is_initial` = 0;";
-
-  auto rows_sessions = _db.result_query(SQL_query_sessions_ss.str());
-  auto rows_actions = _db.result_query(SQL_query_actions_ss.str());
-
-  // Create all sessions
-  std::vector<SearchSession> sessions;
-  sessions.reserve(rows_sessions.size());
-  for (auto&& row : rows_sessions)
-  {
-    size_t ID{ strTo<size_t>(row[0]) };
-    FrameId target_frame_ID{ strTo<FrameId>(row[1]) };
-    size_t duration{ strTo<size_t>(row[2]) };
-    bool found{ static_cast<bool>(strTo<unsigned char>(row[3])) };
-
-    sessions.emplace_back(SearchSession{ ID, target_frame_ID, duration, found });
-  }
-
-  // Parse all actions
-  std::vector<SearchSessionAction> all_actions;
-  all_actions.reserve(rows_actions.size());
-  for (auto&& row : rows_actions)
-  {
-    size_t search_session_ID{ strTo<size_t>(row[0]) };
-    size_t action_index{ strTo<size_t>(row[1]) };
-    size_t result_target_rank{ strTo<size_t>(row[2]) };
-
-    all_actions.emplace_back(SearchSessionAction{ search_session_ID, action_index, result_target_rank });
-  }
-
-  return std::pair(std::move(sessions), std::move(all_actions));
-}
-
 SearchSessRankChartData DataManager::get_search_sessions_rank_progress_chart_data(
     const std::string& data_pack_ID, [[maybe_unused]] const std::string& model_options, size_t max_user_level,
     size_t num_frames, size_t min_samples_count, bool normalize) const
@@ -285,7 +246,7 @@ SearchSessRankChartData DataManager::get_search_sessions_rank_progress_chart_dat
 
 QuantileLineChartData<size_t, float> DataManager::get_aggregate_rank_progress_data(
     const std::vector<SearchSession>& sessions, size_t max_sess_len, size_t num_frames_total, size_t min_samples_count,
-    bool normalize) const
+    bool normalize)
 {
   QuantileLineChartData<size_t, float> res;
 
@@ -325,9 +286,9 @@ QuantileLineChartData<size_t, float> DataManager::get_aggregate_rank_progress_da
       continue;
     }
 
-    size_t q1_idx{ static_cast<size_t>(round(count * 0.25F)) };
-    size_t q2_idx{ static_cast<size_t>(round(count * 0.5F)) };
-    size_t q3_idx{ static_cast<size_t>(round(count * 0.75F)) };
+    size_t q1_idx{ static_cast<size_t>(round(count * 0.25F)) };  // NOLINT
+    size_t q2_idx{ static_cast<size_t>(round(count * 0.5F)) };   // NOLINT
+    size_t q3_idx{ static_cast<size_t>(round(count * 0.75F)) };  // NOLINT
 
     res.x.emplace_back(i);
     if (normalize)
@@ -355,7 +316,7 @@ QuantileLineChartData<size_t, float> DataManager::get_aggregate_rank_progress_da
 
 MedianLineMultichartData<size_t, float> DataManager::get_median_multichart_rank_progress_data(
     const std::vector<SearchSession>& sessions, size_t max_sess_len, size_t num_frames_total, size_t min_samples_count,
-    bool normalize) const
+    bool normalize)
 {
   // Populate rank values into specified vectors
   std::vector<std::vector<std::vector<size_t>>> sess_ranks(max_sess_len + 1);
@@ -394,7 +355,6 @@ MedianLineMultichartData<size_t, float> DataManager::get_median_multichart_rank_
     {
       std::sort(sess_len_N_act_i.begin(), sess_len_N_act_i.end());
 
-      // Get Q2
       xs_for_len_N.emplace_back(i + 1);
 
       size_t num_samples{ sess_len_N_act_i.size() };
@@ -403,9 +363,10 @@ MedianLineMultichartData<size_t, float> DataManager::get_median_multichart_rank_
         continue;
       }
 
-      size_t median_idx{ size_t(round(num_samples / 2.0F)) };
-
+      // Get median index
+      size_t median_idx{ size_t(round(num_samples / 2.0F)) };  // NOLINT
       float median = float(sess_len_N_act_i[median_idx]);
+
       if (normalize)
       {
         median /= num_frames_total;
@@ -415,7 +376,8 @@ MedianLineMultichartData<size_t, float> DataManager::get_median_multichart_rank_
 
       ++i;
     }
-    if (medians_for_len_N.size() > 0)
+
+    if (!medians_for_len_N.empty())
     {
       x.emplace_back(xs_for_len_N);
       medians.emplace_back(medians_for_len_N);
@@ -423,4 +385,46 @@ MedianLineMultichartData<size_t, float> DataManager::get_median_multichart_rank_
   }
 
   return MedianLineMultichartData<size_t, float>{ x, medians };
+}
+
+std::pair<std::vector<SearchSession>, std::vector<SearchSessionAction>> DataManager::fetch_search_sessions(
+    const std::string& data_pack_ID, size_t max_user_level) const
+{
+  std::stringstream SQL_query_sessions_ss;
+  SQL_query_sessions_ss << "SELECT `ID`, `target_frame_ID`, `duration`, `result` FROM `" << searches_table_name
+                        << "` WHERE `data_pack_ID` = '" << data_pack_ID << "' AND `user_level` <= " << max_user_level
+                        << ";";
+  std::stringstream SQL_query_actions_ss;
+  SQL_query_actions_ss << "SELECT `search_session_ID`, `action_index`, `result_target_rank` FROM `"
+                       << search_actions_table_name << "` WHERE `action_query_index` = 0  AND `is_initial` = 0;";
+
+  auto rows_sessions = _db.result_query(SQL_query_sessions_ss.str());
+  auto rows_actions = _db.result_query(SQL_query_actions_ss.str());
+
+  // Create all sessions
+  std::vector<SearchSession> sessions;
+  sessions.reserve(rows_sessions.size());
+  for (auto&& row : rows_sessions)
+  {
+    size_t ID{ strTo<size_t>(row[0]) };
+    FrameId target_frame_ID{ strTo<FrameId>(row[1]) };
+    size_t duration{ strTo<size_t>(row[2]) };
+    bool found{ static_cast<bool>(strTo<unsigned char>(row[3])) };
+
+    sessions.emplace_back(SearchSession{ ID, target_frame_ID, duration, found });
+  }
+
+  // Parse all actions
+  std::vector<SearchSessionAction> all_actions;
+  all_actions.reserve(rows_actions.size());
+  for (auto&& row : rows_actions)
+  {
+    size_t search_session_ID{ strTo<size_t>(row[0]) };
+    size_t action_index{ strTo<size_t>(row[1]) };
+    size_t result_target_rank{ strTo<size_t>(row[2]) };
+
+    all_actions.emplace_back(SearchSessionAction{ search_session_ID, action_index, result_target_rank });
+  }
+
+  return std::pair(std::move(sessions), std::move(all_actions));
 }

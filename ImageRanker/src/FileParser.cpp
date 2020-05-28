@@ -1,13 +1,10 @@
+
 #include "FileParser.h"
 
 #include "ImageRanker.h"
 #include "KeywordsContainer.h"
 
-#include <queue>
-
 using namespace image_ranker;
-
-FileParser::FileParser(ImageRanker* pRanker) : _pRanker(pRanker) {}
 
 std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string& filepath, size_t row_dim,
                                                                size_t begin_offset)
@@ -153,10 +150,10 @@ std::map<std::string, size_t> FileParser::parse_w2vv_word_to_idx_file(const std:
   std::map<std::string, size_t> result_map;
 
   // Open file with list of files in  images dir
-  std::ifstream inFile(filepath.data(), std::ios::in);
+  std::ifstream ifs(filepath.data(), std::ios::in);
 
   // If failed to open file
-  if (!inFile)
+  if (!ifs)
   {
     std::string msg{ "Error opening file '" + filepath + "'." };
     LOGE(msg);
@@ -166,7 +163,7 @@ std::map<std::string, size_t> FileParser::parse_w2vv_word_to_idx_file(const std:
   std::string line_text_buffer;
 
   // While there is something to read
-  while (std::getline(inFile, line_text_buffer))
+  while (std::getline(ifs, line_text_buffer))
   {
     if (line_text_buffer.empty())
     {
@@ -202,8 +199,8 @@ std::map<std::string, size_t> FileParser::parse_w2vv_word_to_idx_file(const std:
   return result_map;
 };
 
-std::tuple<VideoId, ShotId, FrameNumber> FileParser::ParseVideoFilename(const std::string& filename,
-                                                                        const FrameFilenameOffsets& offsets) const
+std::tuple<VideoId, ShotId, FrameNumber> FileParser::parse_video_filename_string(const std::string& filename,
+                                                                                 const FrameFilenameOffsets& offsets)
 {
   // Extract string representing video ID
   std::string videoIdString = filename.substr(offsets.v_ID_off, offsets.v_ID_len);
@@ -217,7 +214,7 @@ std::tuple<VideoId, ShotId, FrameNumber> FileParser::ParseVideoFilename(const st
   return std::tuple(strTo<VideoId>(videoIdString), strTo<ShotId>(shotIdString), strTo<FrameNumber>(frameNumberString));
 }
 
-void FileParser::ProcessVideoShotsStack(std::stack<SelFrame*>& videoFrames) const
+void FileParser::process_shot_stack(std::stack<SelFrame*>& videoFrames)
 {
   size_t i{ 0_z };
 
@@ -235,15 +232,15 @@ void FileParser::ProcessVideoShotsStack(std::stack<SelFrame*>& videoFrames) cons
   }
 }
 
-std::vector<ImageIdFilenameTuple> FileParser::GetImageFilenames(const std::string& _imageToIdMapFilepath) const
+std::vector<ImageIdFilenameTuple> FileParser::get_image_filenames(const std::string& frame_to_ID_map_fpth)
 {
   // Open file with list of files in images dir
-  std::ifstream inFile(_imageToIdMapFilepath, std::ios::in);
+  std::ifstream ifs(frame_to_ID_map_fpth, std::ios::in);
 
   // If failed to open file
-  if (!inFile)
+  if (!ifs)
   {
-    std::string msg{ "Error opening file '" + _imageToIdMapFilepath + "'." };
+    std::string msg{ "Error opening file '" + frame_to_ID_map_fpth + "'." };
     LOGE(msg);
     PROD_THROW("Error loading the program.");
   }
@@ -253,29 +250,29 @@ std::vector<ImageIdFilenameTuple> FileParser::GetImageFilenames(const std::strin
   std::string line;
 
   // While there are lines in file
-  while (std::getline(inFile, line))
+  while (std::getline(ifs, line))
   {
     // Extract file name
     std::stringstream ss(line);
 
     // FILE FORMAT: filename   imageId
-    FrameId imageId;
+    FrameId frame_ID;
     std::string filename;
 
     ss >> filename;
-    ss >> imageId;
+    ss >> frame_ID;
 
-    result.emplace_back(imageId, std::move(filename));
+    result.emplace_back(frame_ID, std::move(filename));
   }
 
   return result;
 }
 
-std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFilename,
-                                                      const FrameFilenameOffsets& offsets,
-                                                      [[maybe_unused]] size_t imageIdStride) const
+std::vector<SelFrame> FileParser::parse_image_metadata(const std::string& idToFilename,
+                                                       const FrameFilenameOffsets& offsets,
+                                                       [[maybe_unused]] size_t imageIdStride)
 {
-  std::vector<ImageIdFilenameTuple> imageIdFilenameTuples = GetImageFilenames(idToFilename);
+  std::vector<ImageIdFilenameTuple> imageIdFilenameTuples = get_image_filenames(idToFilename);
 
   // Create result variable
   std::vector<SelFrame> resultImages;
@@ -287,7 +284,7 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
   for (auto&& [imageId, filename] : imageIdFilenameTuples)
   {
     // Parse filename
-    auto [videoId, shotId, frameNumber] = ParseVideoFilename(filename, offsets);
+    auto [videoId, shotId, frameNumber] = parse_video_filename_string(filename, offsets);
 
     // Create new Image instance
     resultImages.emplace_back(SelFrame(FrameId(resultImages.size()), imageId, filename, videoId, shotId, frameNumber));
@@ -319,7 +316,7 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
     if (currShotId != prevShotId || currVideoId != prevVideoId)
     {
       // Process and label all frames from this video
-      ProcessVideoShotsStack(videoFrames);
+      process_shot_stack(videoFrames);
 
       // Set new prev video ID
       prevShotId = currShotId;
@@ -333,10 +330,8 @@ std::vector<SelFrame> FileParser::ParseImagesMetaData(const std::string& idToFil
   return resultImages;
 }
 
-std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
-           std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>,
-           std::map<KeywordId, Keyword*>, std::map<KeywordId, std::set<Keyword*>>>
-FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, bool first_col_is_ID)
+ViretKeywordClassesParsedData FileParser::parse_VIRET_format_keyword_classes_file(const std::string& filepath,
+                                                                                  bool first_col_is_ID)
 {
   // Open file with list of files in images dir
   std::ifstream inFile(filepath, std::ios::in);
@@ -475,163 +470,15 @@ FileParser::ParseKeywordClassesFile_ViretFormat(const std::string& filepath, boo
     ++iii;
   }
 
-  return std::tuple{ std::move(_allDescriptions),    std::move(_vecIndexToKeyword), std::move(_wordnetIdToKeywords),
-                     std::move(_descIndexToKeyword), std::move(_keywords),          std::move(ID_to_keyword),
-                     std::move(ID_to_allkeywords) };
+  return ViretKeywordClassesParsedData{
+    std::move(_allDescriptions),    std::move(_vecIndexToKeyword), std::move(_wordnetIdToKeywords),
+    std::move(_descIndexToKeyword), std::move(_keywords),          std::move(ID_to_keyword),
+    std::move(ID_to_allkeywords)
+  };
 }
 
-std::pair<std::vector<std::vector<float>>, std::vector<std::vector<std::pair<FrameId, float>>>>
-FileParser::ParseRawScoringData_ViretFormat(const std::string& inputFilepath)
-{
-  // Open file for reading as binary from the end side
-  std::ifstream ifs(inputFilepath, std::ios::binary | std::ios::ate);
-
-  // If failed to open file
-  if (!ifs)
-  {
-    std::string msg{ "Error opening file '" + inputFilepath + "'." };
-    LOGE(msg);
-    PROD_THROW("Error loading the program.");
-  }
-
-  // Get end of file
-  auto end = ifs.tellg();
-
-  // Get iterator to begining
-  ifs.seekg(0, std::ios::beg);
-
-  // Compute size of file
-  auto size = std::size_t(end - ifs.tellg());
-
-  // If emtpy file
-  if (size == 0)
-  {
-    std::string msg{ "File '" + inputFilepath + "' is empty." };
-    LOGE(msg);
-    PROD_THROW("Error loading the program.");
-  }
-
-  // Create 4B buffer
-  std::array<std::byte, sizeof(int32_t)> smallBuffer;
-
-  // Discard first 36B of data
-  ifs.ignore(VIRET_FORMAT_NET_DATA_HEADER_SIZE);
-
-  // Read number of items in each vector per image
-  ifs.read((char*)smallBuffer.data(), sizeof(int32_t));
-
-  // If something happened
-  if (!ifs)
-  {
-    std::string msg{ "Error reading file '" + inputFilepath + "'." };
-    LOGE(msg);
-    PROD_THROW("Error loading the program.");
-  }
-
-  // Parse number of present floats in every row
-  int32_t numFloats = ParseIntegerLE(smallBuffer.data());
-
-  // Calculate byte length of each row
-  size_t byteRowLengths = numFloats * sizeof(float) + sizeof(int32_t);
-
-  // Where rows data start
-  size_t currOffset = 40ULL;
-
-  // Create line buffer
-  std::vector<std::byte> lineBuffer;
-  lineBuffer.resize(byteRowLengths);
-
-  std::vector<std::vector<float>> result_data;
-  std::vector<std::vector<std::pair<FrameId, float>>> result_top_KWs;
-
-  // Iterate until there is something to read from file
-  while (ifs.read((char*)lineBuffer.data(), byteRowLengths))
-  {
-    // Stride in bytes
-    currOffset = sizeof(float);
-
-    auto cmp = [](const std::pair<size_t, float>& left, const std::pair<size_t, float>& right) {
-      return left.second < right.second;
-    };
-
-    // Initialize vector of floats for this row
-    std::vector<float> rawRankData;
-
-    // Reserve enough space in container
-    std::vector<std::pair<size_t, float>> container;
-
-    std::priority_queue<std::pair<size_t, float>, std::vector<std::pair<size_t, float>>, decltype(cmp)> maxHeap(
-        cmp, std::move(container));
-
-    // Reserve exact capacitys
-    rawRankData.reserve(numFloats);
-
-    float sum{ 0.0f };
-    float min{ std::numeric_limits<float>::max() };
-    float max{ -std::numeric_limits<float>::max() };
-
-    // Iterate through all floats in row
-    for (size_t i = 0ULL; i < numFloats; ++i)
-    {
-      float rankValue{ ParseFloatLE(&lineBuffer[currOffset]) };
-
-      // Update min
-      if (rankValue < min)
-      {
-        min = rankValue;
-      }
-      // Update max
-      if (rankValue > max)
-      {
-        max = rankValue;
-      }
-
-      // Add to sum
-      sum += rankValue;
-
-      // Push float value in
-      rawRankData.emplace_back(rankValue);
-
-      maxHeap.push(std::pair(i, rankValue));
-
-      // Stride in bytes
-      currOffset += sizeof(float);
-    }
-
-    // Calculate mean value
-    float mean{ sum / numFloats };
-
-    // Calculate variance
-    float varSum{ 0.0f };
-    for (auto&& val : rawRankData)
-    {
-      float tmp{ val - mean };
-      varSum += (tmp * tmp);
-    }
-
-    std::vector<std::pair<FrameId, float>> top_KW_frame_IDs;
-    top_KW_frame_IDs.reserve(NUM_TOP_KWS_LOADED);
-
-    for (size_t ii{ 0_z }; ii < NUM_TOP_KWS_LOADED; ++ii)
-    {
-      if (maxHeap.size() <= 0) break;
-
-      std::pair<size_t, float> pair{ maxHeap.top() };
-      maxHeap.pop();
-
-      top_KW_frame_IDs.emplace_back(FrameId(pair.first), pair.second);
-    }
-
-    result_top_KWs.emplace_back(std::move(top_KW_frame_IDs));
-    result_data.emplace_back(std::move(rawRankData));
-  }
-
-  return std::pair<std::vector<std::vector<float>>, std::vector<std::vector<std::pair<FrameId, float>>>>(
-      result_data, result_top_KWs);
-}
-
-std::pair<Matrix<float>, DataParseStats> FileParser::ParseSoftmaxBinFile_ViretFormat(const std::string& inputFilepath,
-                                                                                     size_t num_frames)
+std::pair<Matrix<float>, DataParseStats> FileParser::parse_VIRET_format_frame_vector_file(
+    const std::string& inputFilepath, size_t num_frames)
 {
   DataParseStats stats{};
 
@@ -758,14 +605,7 @@ std::pair<Matrix<float>, DataParseStats> FileParser::ParseSoftmaxBinFile_ViretFo
   return std::pair(result, stats);
 }
 
-std::vector<std::vector<float>> FileParser::ParseDeepFeasBinFile_ViretFormat(const std::string& /*inputFilepath*/,
-                                                                             size_t /*num_frames*/)
-{
-  LOGW("Not implemented...");
-  return std::vector<std::vector<float>>();
-}
-
-std::pair<Matrix<float>, DataParseStats> FileParser::ParseRawScoringData_GoogleAiVisionFormat(
+std::pair<Matrix<float>, DataParseStats> FileParser::parse_GoogleVision_format_frame_vector_file(
     const std::string& inputFilepath, size_t num_frames)
 {
   DataParseStats stats{};
@@ -898,17 +738,6 @@ std::pair<Matrix<float>, DataParseStats> FileParser::ParseRawScoringData_GoogleA
   std::sort(labels.begin(), labels.end(),
             [](const std::pair<size_t, size_t>& l, const std::pair<size_t, size_t>& r) { return l.first < r.first; });
 
-  // std::ofstream ofs("query_hits.txt");
-  // if (!ofs.is_open())
-  //{
-  //  assert(false);
-  //}
-  // for (auto&& [ID, num_labels] : labels)
-  //{
-  //  ofs << ID << "," << num_labels << std::endl;
-  //}
-  // ofs.close();
-
   auto median_num_classes{ float(num_label_cnter[num_label_cnter.size() / 2]) };
   float avg_num_classes{ float(num_labels_sum) / num_label_cnter.size() };
 
@@ -917,260 +746,3 @@ std::pair<Matrix<float>, DataParseStats> FileParser::ParseRawScoringData_GoogleA
 
   return std::pair(result, stats);
 }
-
-#if 0
-
-bool FileParser::LowMem_ParseRawScoringData_ViretFormat(std::vector<std::unique_ptr<Image>>& imagesCont,
-                                                        DataName data_name,
-                                                        const std::string& inputFilepath) const
-{
-  // Open file for reading as binary from the end side
-  std::ifstream ifs(inputFilepath, std::ios::binary | std::ios::ate);
-
-  // If failed to open file
-  if (!ifs)
-  {
-    LOG_ERROR("Error opening file: "s + inputFilepath);
-  }
-
-  // Get end of file
-  auto end = ifs.tellg();
-
-  // Get iterator to begining
-  ifs.seekg(0, std::ios::beg);
-
-  // Compute size of file
-  auto size = std::size_t(end - ifs.tellg());
-
-  // If emtpy file
-  if (size == 0)
-  {
-    LOG_ERROR("Empty file opened!");
-  }
-
-  // Create 4B buffer
-  std::array<std::byte, sizeof(int32_t)> smallBuffer;
-
-  // Discard first 36B of data
-  ifs.ignore(36ULL);
-
-  // Read number of items in each vector per image
-  ifs.read((char*)smallBuffer.data(), sizeof(int32_t));
-
-  // If something happened
-  if (!ifs)
-  {
-    LOG_ERROR("Error reading file: "s + inputFilepath);
-  }
-
-  // Parse number of present floats in every row
-  int32_t numFloats = ParseIntegerLE(smallBuffer.data());
-
-  // Calculate byte length of each row
-  size_t byteRowLengths = numFloats * sizeof(float) + sizeof(int32_t);
-
-  // Where rows data start
-  size_t currOffset = 40ULL;
-
-  // Create line buffer
-  std::vector<std::byte> lineBuffer;
-  lineBuffer.resize(byteRowLengths);
-
-  // Iterate until there is something to read from file
-  while (ifs.read((char*)lineBuffer.data(), byteRowLengths))
-  {
-    // Get picture ID of this row
-    size_t id = ParseIntegerLE(lineBuffer.data());
-
-    // Stride in bytes
-    currOffset = sizeof(float);
-
-    // Initialize vector of floats for this row
-    std::vector<float> rawRankData;
-
-    // Reserve exact capacitys
-    rawRankData.reserve(numFloats);
-
-    float sum{0.0f};
-    float min{std::numeric_limits<float>::max()};
-    float max{-std::numeric_limits<float>::max()};
-
-    // Iterate through all floats in row
-    for (size_t i = 0ULL; i < numFloats; ++i)
-    {
-      float rankValue{ParseFloatLE(&lineBuffer[currOffset])};
-
-      // Update min
-      if (rankValue < min)
-      {
-        min = rankValue;
-      }
-      // Update max
-      if (rankValue > max)
-      {
-        max = rankValue;
-      }
-
-      // Add to sum
-      sum += rankValue;
-
-      // Push float value in
-      rawRankData.emplace_back(rankValue);
-
-      // Stride in bytes
-      currOffset += sizeof(float);
-    }
-
-    // Calculate mean value
-    float mean{sum / numFloats};
-
-    // Calculate variance
-    float varSum{0.0f};
-    for (auto&& val : rawRankData)
-    {
-      float tmp{val - mean};
-      varSum += (tmp * tmp);
-    }
-    float variance = sqrtf((float)1 / (numFloats - 1) * varSum);
-
-    Image* pImg{imagesCont[_pRanker->MapIdToVectorIndex(id)].get()};
-
-    // Push parsed data into the Image instance
-    pImg->_rawImageScoringData.emplace(data_ID, std::move(rawRankData));
-
-    // Push parsed data info into the Image instance
-    pImg->_rawImageScoringDataInfo.emplace(data_ID, Image::ScoringDataInfo{min, max, mean, variance});
-  }
-
-  return true;
-}
-
-
-bool FileParser::ParseSoftmaxBinFile_GoogleAiVisionFormat(std::vector<std::unique_ptr<Image>>& imagesCont,
-                                                          DataId data_ID,
-                                                          const std::string& inputFilepath) const
-{
-  LOG_ERROR("Not implemented!"s);
-  return false;
-}
-
-
-
-//
-// bool FileParser::ParseSoftmaxBinFile_ViretFormat(
-//  const std::string& inputFilepath,
-//  const std::vector<std::string>& imageFilenames,
-//  size_t imageIdStride
-//) const
-//{
-//  if (_softmaxFilepath.empty())
-//  {
-//    return false;
-//  }
-//
-//  // Open file for reading as binary from the end side
-//  std::ifstream ifs(_softmaxFilepath, std::ios::binary | std::ios::ate);
-//
-//  // If failed to open file
-//  if (!ifs)
-//  {
-//    LOG_ERROR("Error opening file: "s + _softmaxFilepath);
-//    return false;
-//  }
-//
-//  // Get end of file
-//  auto end = ifs.tellg();
-//
-//  // Get iterator to begining
-//  ifs.seekg(0, std::ios::beg);
-//
-//  // Compute size of file
-//  auto size = std::size_t(end - ifs.tellg());
-//
-//  // If emtpy file
-//  if (size == 0)
-//  {
-//    LOG_ERROR("Empty file opened!");
-//    return false;
-//  }
-//
-//
-//  // Create 4B buffer
-//  std::array<std::byte, sizeof(int32_t)>  smallBuffer;
-//
-//  // Discard first 36B of data
-//  ifs.ignore(36ULL);
-//
-//  // Read number of items in each vector per image
-//  ifs.read((char*)smallBuffer.data(), sizeof(int32_t));
-//
-//  // If something happened
-//  if (!ifs)
-//  {
-//    LOG_ERROR("Error reading file: "s + _softmaxFilepath);
-//    return false;
-//  }
-//
-//  // Parse number of present floats in every row
-//  int32_t numFloats = ParseIntegerLE(smallBuffer.data());
-//
-//  // Calculate byte length of each row
-//  size_t byteRowLengths = numFloats * sizeof(float) + sizeof(int32_t);
-//
-//  // Where rows data start
-//  size_t currOffset = 40ULL;
-//
-//
-//
-//  // Create line buffer
-//  std::vector<std::byte>  lineBuffer;
-//  lineBuffer.resize(byteRowLengths);
-//
-//  // Iterate until there is something to read from file
-//  while (ifs.read((char*)lineBuffer.data(), byteRowLengths))
-//  {
-//    // Get picture ID of this row
-//    size_t id = ParseIntegerLE(lineBuffer.data());
-//
-//    // Get this image
-//    auto imageIt = _images.find(id);
-//
-//    // Stride in bytes
-//    currOffset = sizeof(float);
-//
-//    std::vector<float> softmaxVector;
-//    softmaxVector.reserve(numFloats);
-//
-//    // Iterate through all floats in row
-//    for (size_t i = 0ULL; i < numFloats; ++i)
-//    {
-//      float rankValue{ ParseFloatLE(&lineBuffer[currOffset]) };
-//
-//      softmaxVector.emplace_back(rankValue);
-//
-//      // Stride in bytes
-//      currOffset += sizeof(float);
-//    }
-//
-//    // Store  vector of floats
-//    auto&& [pair, result]
-//    {imageIt->second->m_aggVectors.insert(std::pair(static_cast<size_t>(InputDataTransformId::cSoftmax),
-//    std::move(softmaxVector)))};
-//
-//    // Recalculate all hypernyms in this vector
-//    RecalculateHypernymsInVectorUsingSum(pair->second);
-//  }
-//
-//  return true;
-//}
-
-
-
-std::tuple<std::string, std::map<size_t, Keyword*>, std::map<size_t, Keyword*>,
-           std::vector<std::pair<size_t, Keyword*>>, std::vector<std::unique_ptr<Keyword>>>
-FileParser::ParseKeywordClassesFile_GoogleAiVisionFormat(const std::string& filepath) const
-{
-  return ParseKeywordClassesFile_ViretFormat(filepath);
-}
-
-#endif
