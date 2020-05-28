@@ -63,7 +63,8 @@ class DataManager
                                                                    const StringId& data_pack_ID = ""s,
                                                                    const StringId& model_options = ""s) const;
 
-  [[nodiscard]] std::vector<UserTestNativeQuery> fetch_user_native_test_queries(eUserQueryOrigin queries_origin) const;
+  [[nodiscard]] std::vector<UserTestNativeQuery> fetch_user_native_test_queries(eUserQueryOrigin queries_origin,
+                                                                                const std::string& imageset_ID) const;
 
   void submit_search_session(const std::string& data_pack_ID, const std::string& vocabulary_ID,
                              const std::string& model_options, size_t user_level, bool with_example_images,

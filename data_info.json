@@ -111,7 +111,7 @@
         ],
         "W2VV_based": [
             {
-                "active": false,
+                "active": true,
                 "ID": "W2VV_BoW_Dec2019",
                 "name": "W2VV_BoW_Dec2019",
                 "type": "W2VV_based",

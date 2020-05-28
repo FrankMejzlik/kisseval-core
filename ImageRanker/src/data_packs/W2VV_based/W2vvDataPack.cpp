@@ -211,7 +211,7 @@ CnfFormula W2vvDataPack::native_query_to_CNF_formula(const std::string& native_q
     }
 
     Clause c;
-    c.emplace_back(Literal<KeywordId>{ p_kw->ID, false });
+    c.emplace_back(Literal<KeywordId>{ p_kw->classification_index, false });
 
     res.emplace_back(std::move(c));
   }

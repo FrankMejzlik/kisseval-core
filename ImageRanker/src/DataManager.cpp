@@ -91,13 +91,15 @@ std::vector<UserTestQuery> DataManager::fetch_user_test_queries(eUserQueryOrigin
   return result;
 }
 
-std::vector<UserTestNativeQuery> DataManager::fetch_user_native_test_queries(eUserQueryOrigin queries_origin) const
+std::vector<UserTestNativeQuery> DataManager::fetch_user_native_test_queries(eUserQueryOrigin queries_origin,
+                                                                             const std::string& imageset_ID) const
 {
   std::vector<UserTestNativeQuery> result;
 
   std::stringstream SQL_query_ss;
   SQL_query_ss << "SELECT `target_frame_ID`, `user_query` FROM `" << queries_table_name << "` ";
-  SQL_query_ss << "WHERE (`user_level` = " << int(queries_origin) << " AND `vocabulary_ID` = 'native_language');";
+  SQL_query_ss << "WHERE (`user_level` = " << int(queries_origin)
+               << " AND `vocabulary_ID` = 'native_language' AND `imageset_ID` = '" << imageset_ID << "');";
 
   auto db_rows = _db.result_query(SQL_query_ss.str());
 

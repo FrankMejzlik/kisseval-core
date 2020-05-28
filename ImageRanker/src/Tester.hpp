@@ -570,6 +570,11 @@ class Tester
       auto rr{ranker.rank_frames(std::vector<std::string>{ "Duck." },
         "ITECTiny_W2VV_BoW_Dec2019", "model=w2vv_bow_plain;", 10, true, 504)};
 
+      auto re{ranker.rank_frames(std::vector<std::string>{ "Duck." },
+        "W2VV_BoW_Dec2019", "model=w2vv_bow_plain;", 10, true, 504)};
+
+      
+
       std::string m1_opts =
           "model=boolean;model_true_threshold=0.000598;model_IDF_method_idf_coef=6;transform=linear_01;sim_user=no_sim_"
           "user;";

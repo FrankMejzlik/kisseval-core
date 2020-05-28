@@ -471,7 +471,7 @@ ModelTestResult ImageRanker::run_model_test(eUserQueryOrigin queries_origin, con
   if (native_lang_queries)
   {
     // Fetch queries from the DB
-    auto native_test_queries{ _data_manager.fetch_user_native_test_queries(queries_origin) };
+    auto native_test_queries{ _data_manager.fetch_user_native_test_queries(queries_origin, dp.get_vocab_ID()) };
     num_queries = native_test_queries.size();
 
     res = dp.test_model(native_test_queries, model_options, num_points);
