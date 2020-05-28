@@ -187,31 +187,73 @@ class [[nodiscard]] ImageRanker
    * \param model_options       Model options string (e.g. "model=w2vv_bow_plain;").
    * \param user_level          What level has the user that provied tese queries.
    * \param with_example_images If example images were presented during annotation.
-   * \param target_image_ID
-   * \param end_status
-   * \param duration
-   * \param sessionId
-   * \param actions
+   * \param target_image_ID     Frame ID user searched.
+   * \param end_status          If search terminated in finding frame or giving up.
+   * \param duration            Duration of the search session in miliseconds.
+   * \param session_ID          Session ID string of the user that searched.
+   * \param actions             Container with sequence of actions that happened during the search.
    * \return  Returns `true` on success.
    */
   void submit_search_session(const DataPackId& data_pack_ID, const PackModelCommands& model_options, size_t user_level,
                              bool with_example_images, FrameId target_frame_ID, eSearchSessionEndStatus end_status,
-                             size_t duration, const std::string& sessionId,
+                             size_t duration, const std::string& session_ID,
                              const std::vector<InteractiveSearchAction>& actions);
 
+  /**
+   * Retrieves data about provided frame.
+   *
+   * \param frame_ID        ID of the frame.
+   * \param data_pack_ID        Data pack ID we want to data from.
+   * \param model_options       Model options string (e.g. "model=w2vv_bow_plain;").
+   * \param user_level          What level has the user that provied tese queries.
+   * \param with_example_images If example images were presented during annotation.
+   * \param accumulated     If data should be provided from the data with accumulated hypernyms.
+   * \return  Structure containing data about the frame.
+   */
   [[nodiscard]] FrameDetailData get_frame_detail_data(FrameId frame_ID, const std::string& data_pack_ID,
-                                                      const std::string& model_commands, bool with_example_frames,
+                                                      const std::string& model_options, bool with_example_frames,
                                                       bool accumulated = false);
-
+  /**
+   * Returns sequence of random (uniform distribution) successor frames from the provided imageset.
+   *
+   * \param imageset_ID    ID of imageset to sample from.
+   * \param seq_len        Length of the result sequence.
+   * \return  Sequence of random frame sequence.
+   */
   [[nodiscard]] std::vector<const SelFrame*> get_random_frame_sequence(const std::string& imageset_ID, size_t seq_len)
       const;
+
+  /**
+   * Returns a random (uniform distribution) frame from the provided imageset.
+   *
+   * \param imageset_ID    ID of imageset to sample from.
+   * \return  Pointer to the random frame.
+   */
   [[nodiscard]] const SelFrame* get_random_frame(const std::string& imageset_ID) const;
 
+  /**
+   * Returns the nearest keywords (classes) for the provided prefix.
+   *
+   * \param data_pack_ID    ID of the target data pack.
+   * \param query_prefix  Keyword prefix.
+   * \param result_size   Number of the desired results.
+   * \param with_example_images  If example images should be part of the results.
+   * \param model_options  Other model options.
+   * \return  Structure containing autocomplete results.
+   */
   [[nodiscard]] AutocompleteInputResult get_autocomplete_results(
       const std::string& data_pack_ID, const std::string& query_prefix, size_t result_size, bool with_example_images,
       const std::string& model_options) const;
 
-  [[nodiscard]] std::vector<const SelFrame*> frame_successors(const std::string& imageset_ID, FrameId ID,
+  /**
+   * Gets successor frames for provided frame.
+   *
+   * \param imageset_ID   Target imageset.
+   * \param frame_ID  Target frame ID.
+   * \param num_succs Number of successors to be returned.
+   * \return  Container with frame succesors (excluding the main one).
+   */
+  [[nodiscard]] std::vector<const SelFrame*> frame_successors(const std::string& imageset_ID, FrameId frame_ID,
                                                               size_t num_succs) const;
 
   /**
@@ -243,10 +285,28 @@ class [[nodiscard]] ImageRanker
       const std::string& data_pack_ID, const std::string& model_options, size_t num_points, bool accumulated = false,
       size_t max_user_level = DEF_MAX_USER_LEVEL_FOR_DATA) const;
 
+  /**
+   * Returns all loaded imagesets.
+   *
+   * \return Structure containing info about all loaded imagesets.
+   */
   [[nodiscard]] LoadedImagesetsInfo get_loaded_imagesets_info() const;
+
+  /**
+   * Returns all loaded data packs.
+   *
+   * \return Structure containing info about all loaded data packs.
+   */
   [[nodiscard]] LoadedDataPacksInfo get_loaded_data_packs_info() const;
 
-  [[nodiscard]] const std::string& get_frame_filename(const std::string& imageset_ID, size_t imageId) const;
+  /**
+   * Returns the filename of frame with provided image ID in the given imageset.
+   *
+   * \param imageset_ID ID of imageset this frame is contained in.
+   * \param frame_ID    ID of frame in question.
+   * \return Reference to string containing filename.
+   */
+  [[nodiscard]] const std::string& get_frame_filename(const std::string& imageset_ID, size_t frame_ID) const;
 
   /**
    * Returns reference to the frame with the provided ID.
