@@ -504,7 +504,7 @@ CnfFormula ViretDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) con
     const Keyword& kw{ _keywords[kw_ID] };
 
     std::unordered_set<size_t> vecIds;
-    _keywords.GetVectorKeywordsIndicesSetShallow(vecIds, kw.wordnet_ID);
+    _keywords.get_keyword_hyponyms_indices_set_nearest(vecIds, kw.wordnet_ID);
 
     ID_clause.clear();
     for (auto&& id : vecIds)
@@ -524,7 +524,7 @@ CnfFormula ViretDataPack::wordnetIDs_to_vector_indices(CnfFormula ID_query) cons
     KeywordId kw_ID{ ID_clause[0].atom };
 
     std::unordered_set<size_t> vecIds;
-    _keywords.GetVectorKeywordsIndicesSetShallow(vecIds, kw_ID);
+    _keywords.get_keyword_hyponyms_indices_set_nearest(vecIds, kw_ID);
 
     ID_clause.clear();
     for (auto&& id : vecIds)

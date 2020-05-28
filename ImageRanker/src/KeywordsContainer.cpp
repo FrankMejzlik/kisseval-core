@@ -39,9 +39,9 @@ void KeywordsContainer::parse_keywords(const std::string& filepath)
 
   // Store results
   _allDescriptions = std::move(res.all_descriptions);
-  _vecIndexToKeyword = std::move(res.vec_idx_to_keyword);
-  _wordnetIdToKeywords = std::move(res.wordnet_ID_to_keyword);
-  _descIndexToKeyword = std::move(res.desc_index_to_keyword);
+  class_idx_to_keyword = std::move(res.vec_idx_to_keyword);
+  _wordnet_ID_to_keyword = std::move(res.wordnet_ID_to_keyword);
+  _desc_indext_to_keyword = std::move(res.desc_index_to_keyword);
   _keywords = std::move(res.keywords);
   _ID_to_keyword = std::move(res.ID_to_keyword);
   _ID_to_allkeywords = std::move(res.ID_to_all_keywords);
@@ -67,57 +67,57 @@ void KeywordsContainer::parse_keywords(const std::string& filepath)
 void KeywordsContainer::get_keyword_hyponyms_indices_set(std::unordered_set<size_t>& dest_set, size_t wordnet_ID) const
 {
   // Get this Keyword
-  Keyword* pRootKw = GetKeywordPtrByWordnetId(wordnet_ID);
+  const Keyword* p_root_kw = get_keyword_by_wordnet_ID(wordnet_ID);
 
   // If this hypernyms has spot in data vector
-  if (!pRootKw->is_classified())
+  if (!p_root_kw->is_classified())
   {
     // Add it to set as well
-    dest_set.emplace(pRootKw->classification_index);
+    dest_set.emplace(p_root_kw->classification_index);
   }
 
   // If is hypernym
-  if (pRootKw->is_hypernym())
+  if (p_root_kw->is_hypernym())
   {
     // Recursively get hyponyms into provided set
-    for (auto&& hypo : pRootKw->hyponyms)
+    for (auto&& hypo : p_root_kw->hyponyms)
     {
       get_keyword_hyponyms_indices_set(dest_set, hypo);
     }
   }
 }
 
-void KeywordsContainer::GetVectorKeywordsIndicesSetShallow(std::unordered_set<size_t>& destIndicesSetRef,
-                                                           size_t wordnetId, bool skipConstructedHypernyms) const
+void KeywordsContainer::get_keyword_hyponyms_indices_set_nearest(std::unordered_set<size_t>& dest_set,
+                                                                 size_t wordnet_ID, bool skip_pure_hypers) const
 {
   // Get this Keyword
-  Keyword* pRootKw = GetKeywordPtrByWordnetId(wordnetId);
+  const Keyword* p_root_kw = get_keyword_by_wordnet_ID(wordnet_ID);
 
   // If this hypernyms has spot in data vector
-  if (!pRootKw->is_classified())
+  if (!p_root_kw->is_classified())
   {
     // Add it to set as well
-    destIndicesSetRef.emplace(pRootKw->classification_index);
+    dest_set.emplace(p_root_kw->classification_index);
   }
   else
   {
     // If we want to include subsets of constructed hypernyms
-    if (!skipConstructedHypernyms)
+    if (!skip_pure_hypers)
     {
       // Recursively get hyponyms into provided set
-      for (auto&& hypo : pRootKw->hyponyms)
+      for (auto&& hypo : p_root_kw->hyponyms)
       {
-        GetVectorKeywordsIndicesSetShallow(destIndicesSetRef, hypo);
+        get_keyword_hyponyms_indices_set_nearest(dest_set, hypo);
       }
     }
   }
 }
 
-Keyword* KeywordsContainer::GetKeywordPtrByVectorIndex(size_t index) const
+Keyword* KeywordsContainer::get_keyword_by_class_index(size_t index)
 {
-  auto result = _vecIndexToKeyword.find(index);
+  auto result = class_idx_to_keyword.find(index);
 
-  if (result == _vecIndexToKeyword.end())
+  if (result == class_idx_to_keyword.end())
   {
     return nullptr;
   }
@@ -127,9 +127,9 @@ Keyword* KeywordsContainer::GetKeywordPtrByVectorIndex(size_t index) const
 
 const Keyword* KeywordsContainer::get_keyword_ptr_by_class_index(size_t index) const
 {
-  auto result = _vecIndexToKeyword.find(index);
+  auto result = class_idx_to_keyword.find(index);
 
-  if (result == _vecIndexToKeyword.end())
+  if (result == class_idx_to_keyword.end())
   {
     return nullptr;
   }
@@ -140,9 +140,9 @@ const Keyword* KeywordsContainer::get_keyword_ptr_by_class_index(size_t index) c
 std::vector<size_t> KeywordsContainer::get_classified_hyponyms_IDs(size_t wordnet_ID) const
 {
   // Find root keyword
-  auto wordnetIdKeywordPair = _wordnetIdToKeywords.find(wordnet_ID);
+  auto wordnetIdKeywordPair = _wordnet_ID_to_keyword.find(wordnet_ID);
 
-  if (wordnetIdKeywordPair == _wordnetIdToKeywords.end())
+  if (wordnetIdKeywordPair == _wordnet_ID_to_keyword.end())
   {
     LOGE("Keyword not found!");
 
@@ -171,28 +171,13 @@ std::vector<size_t> KeywordsContainer::get_classified_hyponyms_IDs(size_t wordne
   return std::vector<size_t>{ pRootKeyword->wordnet_ID };
 }
 
-const Keyword* KeywordsContainer::GetKeywordConstPtrByWordnetId(size_t wordnetId) const
+const Keyword* KeywordsContainer::get_keyword_by_wordnet_ID(size_t wordnetId) const
 {
   // Find root keyword
-  auto pairIt = _wordnetIdToKeywords.find(wordnetId);
+  auto pairIt = _wordnet_ID_to_keyword.find(wordnetId);
 
   // If this key was not found
-  if (pairIt == _wordnetIdToKeywords.end())
-  {
-    LOGE("Keyword with ID "s + std::to_string(wordnetId) + " not found!");
-    return nullptr;
-  }
-
-  return pairIt->second;
-}
-
-Keyword* KeywordsContainer::GetKeywordPtrByWordnetId(size_t wordnetId) const
-{
-  // Find root keyword
-  auto pairIt = _wordnetIdToKeywords.find(wordnetId);
-
-  // If this key was not found
-  if (pairIt == _wordnetIdToKeywords.end())
+  if (pairIt == _wordnet_ID_to_keyword.end())
   {
     LOGE("Keyword with ID "s + std::to_string(wordnetId) + " not found!");
     PROD_THROW("Data error.");
@@ -201,98 +186,31 @@ Keyword* KeywordsContainer::GetKeywordPtrByWordnetId(size_t wordnetId) const
   return pairIt->second;
 }
 
-CnfFormula KeywordsContainer::GetCanonicalQuery(const std::string& query, bool skipConstructedHypernyms) const
+Keyword* KeywordsContainer::get_keyword_by_wordnet_ID(size_t wordnetId)
 {
-  // skipConstructedHypernyms = IGNORE_CONSTRUCTED_HYPERNYMS;
-  // EG: &-8252602+-8256735+-3206282+-4296562+
+  // Find root keyword
+  auto pairIt = _wordnet_ID_to_keyword.find(wordnetId);
 
-  std::stringstream idSs;
-  size_t wordnetId;
-  bool nextIdNegate{ false };
-
-  std::vector<Clause> resultFormula;
-
-  // Parse query
-  // \todo write complete parser
-  for (auto&& c : query)
+  // If this key was not found
+  if (pairIt == _wordnet_ID_to_keyword.end())
   {
-    // Ignore
-    if (c == '&')
-    {
-      continue;
-    }
-
-    if (c == '~')
-    {
-      nextIdNegate = true;
-    }
-    else if (std::isdigit(c))
-    {
-      idSs << c;
-    }
-    // If ss not empty
-    else if (idSs.rdbuf()->in_avail() > 0)
-    {
-      idSs >> wordnetId;
-      idSs.str("");
-      idSs.clear();
-
-      std::unordered_set<size_t> vecIds;
-      GetVectorKeywordsIndicesSetShallow(vecIds, wordnetId, skipConstructedHypernyms);
-
-      // If empty set returned
-      if (vecIds.empty())
-      {
-        break;
-      }
-
-      // If this Clause should be negated
-      if (nextIdNegate)
-      {
-        // Add their negations as ANDs
-        for (auto&& id : vecIds)
-        {
-          Clause tmp{ { id, true } };
-
-          resultFormula.push_back(tmp);
-        }
-      }
-      else
-      {
-        Clause tmp;
-        // Add their
-        for (auto&& id : vecIds)
-        {
-          tmp.emplace_back(Literal<KeywordId>{ id, false });
-        }
-
-        resultFormula.emplace_back(tmp);
-      }
-
-      nextIdNegate = false;
-    }
-    else if (c == '-' || c == '+')
-    {
-    }
-    else
-    {
-      LOGE("Parsing query failed");
-    }
+    LOGE("Keyword with ID "s + std::to_string(wordnetId) + " not found!");
+    PROD_THROW("Data error.");
   }
 
-  return resultFormula;
+  return pairIt->second;
 }
 
-Keyword* KeywordsContainer::GetKeywordByWord(const std::string& keyword) const
+Keyword* KeywordsContainer::get_keyword_by_word(const std::string& word)
 {
-  auto item = std::lower_bound(_keywords.begin(), _keywords.end(), keyword,
+  auto item = std::lower_bound(_keywords.begin(), _keywords.end(), word,
                                [](const std::unique_ptr<Keyword>& pWord, const std::string& str) {
                                  // Compare strings
                                  auto result = pWord->word.compare(str);
 
                                  return result <= -1;
                                });
-  if (item == _keywords.cend() || item->get()->word != keyword)
+  if (item == _keywords.cend() || item->get()->word != word)
   {
     return nullptr;
   }
@@ -300,7 +218,7 @@ Keyword* KeywordsContainer::GetKeywordByWord(const std::string& keyword) const
   return item->get();
 }
 
-std::vector<size_t> KeywordsContainer::FindAllNeedles(std::string_view hey, std::string_view needle) const
+std::vector<size_t> KeywordsContainer::find_all_needles(std::string_view hey, std::string_view needle) const
 {
   // Step 0. Should not be empty heying
   if (hey.size() == 0 || needle.size() == 0)
@@ -345,7 +263,7 @@ std::vector<size_t> KeywordsContainer::FindAllNeedles(std::string_view hey, std:
   return resultIndices;
 }
 
-const Keyword* KeywordsContainer::get_keyword_ptr(const std::string& word) const
+const Keyword* KeywordsContainer::get_keyword_by_word(const std::string& word) const
 {
   auto p_kw{ get_near_keywords(word, 1)[0] };
 
@@ -474,11 +392,11 @@ std::vector<const Keyword*> KeywordsContainer::get_near_keywords(const std::stri
   // If we need to add up desc search results
   if (resultKeywords.size() < numResults && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
   {
-    std::vector<size_t> needleIndices = FindAllNeedles(_allDescriptions, prefix);
+    std::vector<size_t> needleIndices = find_all_needles(_allDescriptions, prefix);
 
     for (auto&& index : needleIndices)
     {
-      const Keyword* pKeyword = MapDescIndexToKeyword(index);
+      const Keyword* pKeyword = desc_index_to_keyword(index);
 
       resultKeywords.emplace_back(pKeyword);
     }
@@ -577,11 +495,11 @@ std::vector<Keyword*> KeywordsContainer::get_near_keywords(const std::string& pr
   // If we need to add up desc search results
   if (resultKeywords.size() < numResults && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
   {
-    std::vector<size_t> needleIndices = FindAllNeedles(_allDescriptions, prefix);
+    std::vector<size_t> needleIndices = find_all_needles(_allDescriptions, prefix);
 
     for (auto&& index : needleIndices)
     {
-      Keyword* pKeyword = MapDescIndexToKeyword(index);
+      Keyword* pKeyword = desc_index_to_keyword(index);
 
       resultKeywords.emplace_back(pKeyword);
     }
@@ -603,17 +521,17 @@ std::vector<Keyword*> KeywordsContainer::get_near_keywords(const std::string& pr
   return resultKeywords;
 }
 
-Keyword* KeywordsContainer::MapDescIndexToKeyword(size_t descIndex) const
+Keyword* KeywordsContainer::desc_index_to_keyword(size_t descIndex) const
 {
   size_t left = 0ULL;
-  size_t right = _descIndexToKeyword.size() - 1;
+  size_t right = _desc_indext_to_keyword.size() - 1;
 
   size_t i = (right + left) / 2;
 
   while (true)
   {
     // Test if middle one is less than
-    bool pivotLess = descIndex < _descIndexToKeyword[i].first;
+    bool pivotLess = descIndex < _desc_indext_to_keyword[i].first;
 
     if (pivotLess)
     {
@@ -626,13 +544,13 @@ Keyword* KeywordsContainer::MapDescIndexToKeyword(size_t descIndex) const
 
     if (right - left <= 1)
     {
-      if (descIndex < _descIndexToKeyword[right].first)
+      if (descIndex < _desc_indext_to_keyword[right].first)
       {
-        return _descIndexToKeyword[left].second;
+        return _desc_indext_to_keyword[left].second;
       }
       else
       {
-        return _descIndexToKeyword[right].second;
+        return _desc_indext_to_keyword[right].second;
       }
       break;
     }
@@ -643,9 +561,9 @@ Keyword* KeywordsContainer::MapDescIndexToKeyword(size_t descIndex) const
 
 std::string KeywordsContainer::GetKeywordDescriptionByWordnetId(size_t wordnetId) const
 {
-  auto resultIt = _wordnetIdToKeywords.find(wordnetId);
+  auto resultIt = _wordnet_ID_to_keyword.find(wordnetId);
 
-  if (resultIt == _wordnetIdToKeywords.end())
+  if (resultIt == _wordnet_ID_to_keyword.end())
   {
     std::string("NOT FOUND");
   }

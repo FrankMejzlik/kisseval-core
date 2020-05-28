@@ -451,7 +451,7 @@ ViretKeywordClassesParsedData FileParser::parse_VIRET_format_keyword_classes_fil
     // Insert all synonyms as well
     while (std::getline(classnames, finalWord, SYNONYM_DELIMITER_001))
     {
-      std::string description{ *(_allDescriptions.begin() + descStartIndex) };
+      std::string description{ &(*(_allDescriptions.begin() + descStartIndex)) };
 
       // Insert this record into table
       _keywords.emplace_back(std::make_unique<Keyword>(FrameId(frame_ID), wordnetId, vectorIndex, std::move(finalWord),

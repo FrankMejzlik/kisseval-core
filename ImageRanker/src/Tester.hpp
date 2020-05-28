@@ -471,7 +471,7 @@ class Tester
       else
       {
         LOGP("+++++++++++++++++++++++++++++++");
-        LOGP(tname + " => OK");
+        LOGP("TEST OK");
         LOGP("+++++++++++++++++++++++++++++++");
       }
     }
@@ -527,24 +527,64 @@ class Tester
       else
       {
         LOGP("+++++++++++++++++++++++++++++++");
-        LOGP(tname + " => OK");
+        LOGP("TEST OK");
         LOGP("+++++++++++++++++++++++++++++++");
       }
     }
-    {
 
-    } {
-      std::string m5_opts =
-          "model=vector_space;transform=linear_01;model_dist_fn=cosine;model_term_tf=natural;model_term_idf=idf;model_query_tf=log;model_query_idf=none;model_IDF_method_idf_coef=6.0f"s;
-      auto r5 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "ITECTiny_NasNet2019", m5_opts);
+    /*
+     * Get autocomplete.
+     */
+    {
+      const std::string tname{ "TEST '" + data_pack_ID + "': get_autocomplete_results" };
+      LOGP("-------------------------------");
+      LOGP("Running test: " + tname);
+
+      auto r1{ ranker.get_autocomplete_results(
+          data_pack_ID, "cat furniture", 20, true,
+          "model=mult-sum-max;transform=softmax;model_operations=mult-sum;model_ignore_treshold=0.0") };
+
+      auto r2{ ranker.get_autocomplete_results(
+          data_pack_ID, "we", 20, true,
+          "model=mult-sum-max;transform=linear_01;model_operations=mult-sum;model_ignore_treshold=0.0") };
+
+      // Check post-condition
+      if (true)
+      {
+        LOGP("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        LOGP("!!!!!!! Test failed !!!!!!!!!!!");
+        LOGP("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      }
+      else
+      {
+        LOGP("+++++++++++++++++++++++++++++++");
+        LOGP("TEST OK");
+        LOGP("+++++++++++++++++++++++++++++++");
+      }
     }
-    {
-      auto r1 = ranker.run_model_test(
-          eUserQueryOrigin::SEMI_EXPERTS, "ITECTiny_NasNet2019",
-          "model=mult-sum-max;transform=softmax;model_operations=mult-max;model_ignore_treshold=0.0");
 
-      auto r2 =
-          ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, "ITECTiny_W2VV_BoW_Dec2019", "model=w2vv_bow_plain;");
+    /*
+     * Run model tests
+     */
+    {
+      auto rr{ranker.rank_frames(std::vector<std::string>{ "Duck." },
+        "ITECTiny_W2VV_BoW_Dec2019", "model=w2vv_bow_plain;", 10, true, 504)};
+
+      std::string m1_opts =
+          "model=boolean;model_true_threshold=0.000598;model_IDF_method_idf_coef=6;transform=linear_01;sim_user=no_sim_"
+          "user;";
+      auto r1 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, data_pack_ID, m1_opts);
+
+      std::string m2_opts =
+          "model=vector_space;model_term_tf=natural;model_term_idf=idf;model_query_tf=augmented;model_query_idf=idf;"
+          "model_dist_fn=cosine;model_IDF_method=score_adding;model_IDF_method_idf_coef=6;transform=linear_01;sim_user="
+          "no_sim_user;";
+      auto r2 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, data_pack_ID, m2_opts);
+
+      std::string m3_opts =
+          "model=mult-sum-max;model_ignore_treshold=0;model_operations=mult-sum;model_outter_op=mult;model_inner_op="
+          "max;transform=linear_01;sim_user=no_sim_user;";
+      auto r3 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, data_pack_ID, m3_opts);
     }
   }
 

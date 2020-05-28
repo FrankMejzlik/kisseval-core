@@ -203,7 +203,7 @@ CnfFormula W2vvDataPack::native_query_to_CNF_formula(const std::string& native_q
   size_t ignore_cnt{ 0_z };
   while (query_ss >> token_str)
   {
-    auto p_kw = _keywords.GetKeywordByWord(token_str);
+    auto p_kw = _keywords.get_keyword_by_word(token_str);
     if (!p_kw)
     {
       ++ignore_cnt;

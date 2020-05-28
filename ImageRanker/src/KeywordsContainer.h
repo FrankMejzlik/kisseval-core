@@ -180,7 +180,27 @@ class [[nodiscard]] KeywordsContainer
   /**
    * Returns set of pointers to all keywords with this ID (synonyms).
    */
-  [[nodiscard]] const Keyword* get_keyword_ptr(const std::string& word) const;
+  [[nodiscard]] const Keyword* get_keyword_by_word(const std::string& word) const;
+  [[nodiscard]] Keyword* get_keyword_by_word(const std::string& word);
+
+  [[nodiscard]] const Keyword* get_keyword_by_wordnet_ID(size_t wordnetId) const;
+  [[nodiscard]] Keyword* get_keyword_by_wordnet_ID(size_t wordnetId);
+
+  [[nodiscard]] const Keyword* get_keyword_ptr_by_class_index(size_t index) const;
+  [[nodiscard]] Keyword* get_keyword_by_class_index(size_t index);
+
+  [[nodiscard]] std::vector<const Keyword*> get_near_keywords(const std::string& prefix, size_t numResults) const;
+  [[nodiscard]] std::vector<Keyword*> get_near_keywords(const std::string& prefix, size_t numResults);
+
+  [[nodiscard]] Keyword* desc_index_to_keyword(size_t descIndex) const;
+  [[nodiscard]] std::string GetKeywordDescriptionByWordnetId(size_t wordnetId) const;
+
+  /*!
+   * Returns vector of keywords that are present in ranking vector of images.
+   *
+   * \return
+   */
+  [[nodiscard]] std::vector<size_t> get_classified_hyponyms_IDs(size_t wordnet_ID) const;
 
   /**
    * Converts CNF formula (containing keyword indices) into the readable string.
@@ -190,47 +210,22 @@ class [[nodiscard]] KeywordsContainer
    */
   [[nodiscard]] std::string CNF_index_formula_to_string(const CnfFormula& fml) const;
 
-  [[nodiscard]] std::vector<const Keyword*> get_near_keywords(const std::string& prefix, size_t numResults) const;
-  [[nodiscard]] std::vector<Keyword*> get_near_keywords(const std::string& prefix, size_t numResults);
-
-  [[nodiscard]] const Keyword* GetKeywordConstPtrByWordnetId(size_t wordnetId) const;
-
-  [[nodiscard]] Keyword* GetKeywordPtrByWordnetId(size_t wordnetId) const;
-
-  [[nodiscard]] Keyword* MapDescIndexToKeyword(size_t descIndex) const;
-
-  [[nodiscard]] Keyword* GetKeywordPtrByVectorIndex(size_t index) const;
-  [[nodiscard]] const Keyword* get_keyword_ptr_by_class_index(size_t index) const;
-
-  [[nodiscard]] std::string GetKeywordDescriptionByWordnetId(size_t wordnetId) const;
-
-  [[nodiscard]] CnfFormula GetCanonicalQuery(const std::string& query, bool skipConstructedHypernyms = false) const;
-
-  [[nodiscard]] Keyword* GetKeywordByWord(const std::string& keyword) const;
-
-  /*!
-   * Returns vector of keywords that are present in ranking vector of images.
-   *
-   * \return
-   */
-  [[nodiscard]] std::vector<size_t> get_classified_hyponyms_IDs(size_t wordnet_ID) const;
-
   [[nodiscard]] void get_keyword_hyponyms_indices_set(std::unordered_set<size_t> & dest_set, size_t wordnet_ID) const;
-  [[nodiscard]] void GetVectorKeywordsIndicesSetShallow(std::unordered_set<size_t> & destIndicesSetRef,
-                                                        size_t wordnetId, bool skipConstructedHypernyms = false) const;
+  [[nodiscard]] void get_keyword_hyponyms_indices_set_nearest(std::unordered_set<size_t> & dest_set, size_t wordnet_ID,
+                                                              bool skip_pure_hypers = false) const;
 
-  [[nodiscard]] size_t GetNetVectorSize() const { return _vecIndexToKeyword.size(); }
+  [[nodiscard]] size_t GetNetVectorSize() const { return class_idx_to_keyword.size(); }
+  [[nodiscard]] std::vector<size_t> find_all_needles(std::string_view hey, std::string_view needle) const;
 
   /*
    * Member variables
    */
  public:
-  std::vector<size_t> FindAllNeedles(std::string_view hey, std::string_view needle) const;
-  //! Keywords
+  /** Supported keywords. */
   std::vector<std::unique_ptr<Keyword>> _keywords;
 
-  //! Maps wordnetID to Keyword
-  std::map<size_t, Keyword*> _wordnetIdToKeywords;
+  /** Maps wordnetID to Keyword. */
+  std::map<size_t, Keyword*> _wordnet_ID_to_keyword;
 
  private:
   std::string _vocabulary_ID;
@@ -244,8 +239,8 @@ class [[nodiscard]] KeywordsContainer
   std::string _allDescriptions;
 
   //! Maps index from probability vector to Keyword
-  std::map<size_t, Keyword*> _vecIndexToKeyword;
+  std::map<size_t, Keyword*> class_idx_to_keyword;
 
-  std::vector<std::pair<size_t, Keyword*>> _descIndexToKeyword;
+  std::vector<std::pair<size_t, Keyword*>> _desc_indext_to_keyword;
 };
 }  // namespace image_ranker
