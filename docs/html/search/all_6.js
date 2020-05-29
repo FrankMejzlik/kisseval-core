@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['fetch_5fsearch_5fsessions_214',['fetch_search_sessions',['../classimage__ranker_1_1_data_manager.html#a9964d4e1f301fa3bdf1a07d5cca09264',1,'image_ranker::DataManager']]],
+  ['fetch_5fuser_5fnative_5ftest_5fqueries_215',['fetch_user_native_test_queries',['../classimage__ranker_1_1_data_manager.html#abebecac0350c216ba74fa9659d2ae7a6',1,'image_ranker::DataManager']]],
+  ['fetch_5fuser_5ftest_5fqueries_216',['fetch_user_test_queries',['../classimage__ranker_1_1_data_manager.html#ad12ab219a3d896ded5c3dfb8ab570dc3',1,'image_ranker::DataManager']]],
+  ['fileparser_217',['FileParser',['../classimage__ranker_1_1_file_parser.html',1,'image_ranker']]],
+  ['fileparser_2ecpp_218',['FileParser.cpp',['../_file_parser_8cpp.html',1,'']]],
+  ['fileparser_2eh_219',['FileParser.h',['../_file_parser_8h.html',1,'']]],
+  ['final_5frank_220',['final_rank',['../structimage__ranker_1_1_interactive_search_action.html#a862f52efbd356af4b799624187719516',1,'image_ranker::InteractiveSearchAction']]],
+  ['find_5fall_5fneedles_221',['find_all_needles',['../utility_8h.html#a8604d11b25d5e082eddec998e484ed62',1,'utility.h']]],
+  ['float_222',['FLOAT',['../namespaceimage__ranker.html#a6fc4eb7177f5dd0641a146f7da9f5896ae738c26bf4ce1037fa81b039a915cbf6',1,'image_ranker']]],
+  ['floattobytesle_223',['floatToBytesLE',['../utility_8h.html#af320324f46629415950d827a015463d2',1,'utility.h']]],
+  ['fn_5fid_5flen_224',['fn_ID_len',['../structimage__ranker_1_1_frame_filename_offsets.html#acd546c9164a0ce557d588798a11693b1',1,'image_ranker::FrameFilenameOffsets']]],
+  ['fn_5fid_5foff_225',['fn_ID_off',['../structimage__ranker_1_1_frame_filename_offsets.html#a14e3340b9108a65417dab17f9761acc8',1,'image_ranker::FrameFilenameOffsets']]],
+  ['found_226',['found',['../structimage__ranker_1_1_search_session.html#a998631e3775cd493e9d41fcd34023b85',1,'image_ranker::SearchSession']]],
+  ['found_5ftarget_227',['FOUND_TARGET',['../namespaceimage__ranker.html#a7293b2d700d5a8ed302cf8a7078fc2bea137596af53769becd19aea18a7e44c42',1,'image_ranker']]],
+  ['frame_5ffilename_228',['frame_filename',['../structimage__ranker_1_1_game_session_query_result.html#a2421a853fd3c7abb10c3ccb8b5e74ba7',1,'image_ranker::GameSessionQueryResult']]],
+  ['frame_5fid_229',['frame_ID',['../structimage__ranker_1_1_frame_detail_data.html#ae1befec404e289a8adc4a6dab9def0c9',1,'image_ranker::FrameDetailData']]],
+  ['frame_5fsuccessors_230',['frame_successors',['../classimage__ranker_1_1_image_ranker.html#a70dc5b7e6f5d31a509e8c5474a30756a',1,'image_ranker::ImageRanker']]],
+  ['framedetaildata_231',['FrameDetailData',['../structimage__ranker_1_1_frame_detail_data.html',1,'image_ranker']]],
+  ['framefilenameoffsets_232',['FrameFilenameOffsets',['../structimage__ranker_1_1_frame_filename_offsets.html',1,'image_ranker']]],
+  ['frameid_233',['FrameId',['../namespaceimage__ranker.html#a2927372ac2f62ac6f825fa87116832ef',1,'image_ranker']]],
+  ['framenumber_234',['FrameNumber',['../namespaceimage__ranker.html#ab80323518f91a3c99a808742990b9e40',1,'image_ranker']]],
+  ['fx_235',['fx',['../structimage__ranker_1_1_histogram_chart_data.html#a4d7734283b07b111eed044cc5d2fc548',1,'image_ranker::HistogramChartData']]]
+];

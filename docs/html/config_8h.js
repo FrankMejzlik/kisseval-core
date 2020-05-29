@@ -1,0 +1,27 @@
+var config_8h =
+[
+    [ "CSV_DELIMITER_001", "config_8h.html#a05c18dfe8f5beda3efd9d6ebf162274c", null ],
+    [ "DATA_DIR", "config_8h.html#a48cc0a91e8f54c62f3341c21c8cc74e8", null ],
+    [ "DATA_INFO_FPTH", "config_8h.html#aeda7781c2e9e35d13ee173eb9e74323f", null ],
+    [ "DB_FPTH", "config_8h.html#a65e8a4921afd02b444ab43caf1690c8b", null ],
+    [ "DEF_MAX_USER_LEVEL_FOR_DATA", "config_8h.html#a7d4c907e30690a89653052db401c3cb1", null ],
+    [ "DEF_MIN_SAMPLES_SS_CHART", "config_8h.html#a6e18fc81fb16b278cc94b48d935a1aa1", null ],
+    [ "DEF_NUM_AUTOCOMPLETE_RESULTS", "config_8h.html#af05cb02f57d36706cbecf43569704db2", null ],
+    [ "DEF_NUMBER_OF_TOP_KWS", "config_8h.html#a10e4b570d4b9cdfbf199247cb66d4d17", null ],
+    [ "DEF_SIM_USER_EXPONENT", "config_8h.html#ad43c67ebb4526b4d4097ee5b1605dd0b", null ],
+    [ "DEF_SIM_USER_NUM_WORDS_FROM", "config_8h.html#a9af6bf3155069b52c1f1818ef90ce029", null ],
+    [ "DEF_SIM_USER_NUM_WORDS_TO", "config_8h.html#aa12e15d5deaf0acb02753b5ac1384771", null ],
+    [ "DEF_SIM_USER_TARGET", "config_8h.html#af5fecda6e2e39d4fa4d2eee33e0919a2", null ],
+    [ "IS_PRODUCTION", "config_8h.html#a1f641808b55b0ec3eee115f613bc2ca0", null ],
+    [ "LOG_LEVEL", "config_8h.html#a0b87e0d3bf5853bcbb0b66a7c48fdc05", null ],
+    [ "MIN_DESC_SEARCH_LENGTH", "config_8h.html#a36352da2336f3b18486a2998e7bb0bcd", null ],
+    [ "NUM_EXAMPLE_FRAMES", "config_8h.html#ab00f536827e1e716b1dc8383b3556a3b", null ],
+    [ "NUM_MODEL_TEST_RESULT_POINTS", "config_8h.html#ad0dd35a8ddae69aa9c3af5c146555d92", null ],
+    [ "NUM_TOP_KWS_LOADED", "config_8h.html#a65b1521b4e8929723439c1ee24a82731", null ],
+    [ "RUN_BASIC_TESTS", "config_8h.html#a1831b6743c5bf53ae62e5b43e197a603", null ],
+    [ "SYNONYM_DELIMITER_001", "config_8h.html#a71964d71d58877ff76f76ea2b3c7507c", null ],
+    [ "TEMP_CONTEXT_LOOKUP_LENGTH", "config_8h.html#a73a5ec26c7ce8de6c6e7e33e0a2474fc", null ],
+    [ "THROW_ON_ERROR", "config_8h.html#ac91b45d16d5fe10abdad30d5284987cf", null ],
+    [ "VIRET_FORMAT_NET_DATA_HEADER_SIZE", "config_8h.html#a56a546d678b628d76ef493a26590a1fa", null ],
+    [ "ZERO_WEIGHT", "config_8h.html#ad7b7910c47f0b6b0ff33433187939103", null ]
+];

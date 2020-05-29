@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['v_5fid_5flen_584',['v_ID_len',['../structimage__ranker_1_1_frame_filename_offsets.html#a9c13e0e9e03e72ce60ea0e2420ecf8f9',1,'image_ranker::FrameFilenameOffsets']]],
+  ['v_5fid_5foff_585',['v_ID_off',['../structimage__ranker_1_1_frame_filename_offsets.html#ac50849ea34f94d0a939d085437c76af7',1,'image_ranker::FrameFilenameOffsets']]],
+  ['vec_5fadd_586',['vec_add',['../utility_8h.html#aafa143a00d67ddb0512180bdd4ba78f9',1,'utility.h']]],
+  ['vec_5fidx_5fto_5fkeyword_587',['vec_idx_to_keyword',['../structimage__ranker_1_1_viret_keyword_classes_parsed_data.html#a1d81f5f85703f1eaac6ac7efe4aad701',1,'image_ranker::ViretKeywordClassesParsedData']]],
+  ['vec_5fmult_588',['vec_mult',['../utility_8h.html#a807c75ad1450bf414872464d8c2d3426',1,'vec_mult(const std::vector&lt; T &gt; &amp;left, S right):&#160;utility.h'],['../utility_8h.html#a3415e8ce6429dcd30763254a112f6052',1,'vec_mult(const std::vector&lt; T &gt; &amp;left, const std::vector&lt; T &gt; &amp;right):&#160;utility.h']]],
+  ['vec_5fsub_589',['vec_sub',['../utility_8h.html#a5a523f6f34afd4d387ba17c361fd8594',1,'utility.h']]],
+  ['vecmat_590',['VecMat',['../namespaceimage__ranker.html#a81c66cc4d91c6f063d4ac905eb2953b9',1,'image_ranker']]],
+  ['vector_591',['Vector',['../namespaceimage__ranker.html#a29293ad3d7c8bd287a5a3fe9b6bb0bb8',1,'image_ranker']]],
+  ['vector_5fspace_592',['VECTOR_SPACE',['../namespaceimage__ranker.html#ad60b0b4f0d317c0aaef4fe1fd86f312fac50943f7dcd619ad166eb2369ba82a99',1,'image_ranker']]],
+  ['vectorspacemodel_593',['VectorSpaceModel',['../classimage__ranker_1_1_vector_space_model.html',1,'image_ranker']]],
+  ['vectorspacemodel_2ecpp_594',['VectorSpaceModel.cpp',['../_vector_space_model_8cpp.html',1,'']]],
+  ['vectorspacemodel_2eh_595',['VectorSpaceModel.h',['../_vector_space_model_8h.html',1,'']]],
+  ['videoid_596',['VideoId',['../namespaceimage__ranker.html#a34cf09e5c3dd73116139c9610aee62b3',1,'image_ranker']]],
+  ['viret_597',['VIRET',['../namespaceimage__ranker.html#aea259e8d4a9f97d65a62ef72e5821bd0ac9a992cfa02d64f7c278ee3d79e87588',1,'image_ranker']]],
+  ['viret_5fformat_5fnet_5fdata_5fheader_5fsize_598',['VIRET_FORMAT_NET_DATA_HEADER_SIZE',['../config_8h.html#a56a546d678b628d76ef493a26590a1fa',1,'config.h']]],
+  ['viret_5fpacks_599',['VIRET_packs',['../structimage__ranker_1_1_image_ranker_1_1_config.html#a5b8e1cfe751d1f09b630f37a141ed26f',1,'image_ranker::ImageRanker::Config']]],
+  ['viretdatapack_600',['ViretDataPack',['../classimage__ranker_1_1_viret_data_pack.html',1,'image_ranker::ViretDataPack'],['../classimage__ranker_1_1_viret_data_pack.html#a400cae484684ecd33606662257f7b5e1',1,'image_ranker::ViretDataPack::ViretDataPack()']]],
+  ['viretdatapack_2ecpp_601',['ViretDataPack.cpp',['../_viret_data_pack_8cpp.html',1,'']]],
+  ['viretdatapack_2eh_602',['ViretDataPack.h',['../_viret_data_pack_8h.html',1,'']]],
+  ['viretdatapackref_603',['ViretDataPackRef',['../structimage__ranker_1_1_viret_data_pack_ref.html',1,'image_ranker']]],
+  ['viretkeywordclassesparseddata_604',['ViretKeywordClassesParsedData',['../structimage__ranker_1_1_viret_keyword_classes_parsed_data.html',1,'image_ranker']]],
+  ['vocabdata_605',['VocabData',['../structimage__ranker_1_1_w2vv_data_pack_ref_1_1_vocab_data.html',1,'image_ranker::W2vvDataPackRef::VocabData'],['../structimage__ranker_1_1_viret_data_pack_ref_1_1_vocab_data.html',1,'image_ranker::ViretDataPackRef::VocabData'],['../structimage__ranker_1_1_google_data_pack_ref_1_1_vocab_data.html',1,'image_ranker::GoogleDataPackRef::VocabData']]],
+  ['vocabulary_5fdata_606',['vocabulary_data',['../structimage__ranker_1_1_viret_data_pack_ref.html#ad7bedd17fd26dbf20a363e68a18d687b',1,'image_ranker::ViretDataPackRef::vocabulary_data()'],['../structimage__ranker_1_1_google_data_pack_ref.html#a1a0c8529bd3fa3ac336d58a672140b09',1,'image_ranker::GoogleDataPackRef::vocabulary_data()'],['../structimage__ranker_1_1_w2vv_data_pack_ref.html#a24244219eab473cd3630bf3122878a9d',1,'image_ranker::W2vvDataPackRef::vocabulary_data()']]],
+  ['vocabulary_5fdescription_607',['vocabulary_description',['../structimage__ranker_1_1_data_pack_info.html#a7c29477bba135374349ff5346773c208',1,'image_ranker::DataPackInfo']]],
+  ['vocabulary_5fid_608',['vocabulary_ID',['../structimage__ranker_1_1_data_pack_info.html#aaf3b15f0ffade034f6846a1f2cf55e13',1,'image_ranker::DataPackInfo']]]
+];

@@ -1,0 +1,6 @@
+var searchData=
+[
+  ['keyword_862',['Keyword',['../structimage__ranker_1_1_keyword.html#a09a389c3ac45b833a41860a27c55d735',1,'image_ranker::Keyword']]],
+  ['keyword_5fids_5fto_5fvector_5findices_863',['keyword_IDs_to_vector_indices',['../classimage__ranker_1_1_google_vision_data_pack.html#a274be2b96a2478d3f72463bbe43ed5d4',1,'image_ranker::GoogleVisionDataPack::keyword_IDs_to_vector_indices()'],['../classimage__ranker_1_1_viret_data_pack.html#a81a5c66ecf52ce47e35e332137b2912f',1,'image_ranker::ViretDataPack::keyword_IDs_to_vector_indices()']]],
+  ['keywordscontainer_864',['KeywordsContainer',['../classimage__ranker_1_1_keywords_container.html#a996f6e733ae7b582dd62bd2673c511a9',1,'image_ranker::KeywordsContainer::KeywordsContainer()=delete'],['../classimage__ranker_1_1_keywords_container.html#ab4d17101fd6a211ec78dffdc01cc5c57',1,'image_ranker::KeywordsContainer::KeywordsContainer(const ViretDataPackRef::VocabData &amp;vocab_data_refs)'],['../classimage__ranker_1_1_keywords_container.html#af2bd4934ed9cf3ac151ec17c0b221c94',1,'image_ranker::KeywordsContainer::KeywordsContainer(const GoogleDataPackRef::VocabData &amp;vocab_data_refs)'],['../classimage__ranker_1_1_keywords_container.html#a2f8befb4c2f9cf47b715e2e8eb05d725',1,'image_ranker::KeywordsContainer::KeywordsContainer(const W2vvDataPackRef::VocabData &amp;vocab_data_refs)']]]
+];

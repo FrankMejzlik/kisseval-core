@@ -1,0 +1,20 @@
+var searchData=
+[
+  ['data_5fdir_1257',['DATA_DIR',['../config_8h.html#a48cc0a91e8f54c62f3341c21c8cc74e8',1,'config.h']]],
+  ['data_5finfo_5ffpth_1258',['DATA_INFO_FPTH',['../config_8h.html#aeda7781c2e9e35d13ee173eb9e74323f',1,'config.h']]],
+  ['db_5ffpth_1259',['DB_FPTH',['../config_8h.html#a65e8a4921afd02b444ab43caf1690c8b',1,'config.h']]],
+  ['def_5fmax_5fuser_5flevel_5ffor_5fdata_1260',['DEF_MAX_USER_LEVEL_FOR_DATA',['../config_8h.html#a7d4c907e30690a89653052db401c3cb1',1,'config.h']]],
+  ['def_5fmin_5fsamples_5fss_5fchart_1261',['DEF_MIN_SAMPLES_SS_CHART',['../config_8h.html#a6e18fc81fb16b278cc94b48d935a1aa1',1,'config.h']]],
+  ['def_5fnum_5fautocomplete_5fresults_1262',['DEF_NUM_AUTOCOMPLETE_RESULTS',['../config_8h.html#af05cb02f57d36706cbecf43569704db2',1,'config.h']]],
+  ['def_5fnumber_5fof_5ftop_5fkws_1263',['DEF_NUMBER_OF_TOP_KWS',['../config_8h.html#a10e4b570d4b9cdfbf199247cb66d4d17',1,'config.h']]],
+  ['def_5fsim_5fuser_5fexponent_1264',['DEF_SIM_USER_EXPONENT',['../config_8h.html#ad43c67ebb4526b4d4097ee5b1605dd0b',1,'config.h']]],
+  ['def_5fsim_5fuser_5fnum_5fwords_5ffrom_1265',['DEF_SIM_USER_NUM_WORDS_FROM',['../config_8h.html#a9af6bf3155069b52c1f1818ef90ce029',1,'config.h']]],
+  ['def_5fsim_5fuser_5fnum_5fwords_5fto_1266',['DEF_SIM_USER_NUM_WORDS_TO',['../config_8h.html#aa12e15d5deaf0acb02753b5ac1384771',1,'config.h']]],
+  ['def_5fsim_5fuser_5ftarget_1267',['DEF_SIM_USER_TARGET',['../config_8h.html#af5fecda6e2e39d4fa4d2eee33e0919a2',1,'config.h']]],
+  ['disable_5fall_5fwarnings_5fpush_1268',['DISABLE_ALL_WARNINGS_PUSH',['../macros_8h.html#a5a99a78ec71a3ab8f1f508cbbaf59362',1,'macros.h']]],
+  ['disable_5fwarning_1269',['DISABLE_WARNING',['../macros_8h.html#a807b889b00653a54f0ed6fd492fd021b',1,'macros.h']]],
+  ['disable_5fwarning_5fpop_1270',['DISABLE_WARNING_POP',['../macros_8h.html#aa38484cb49798c69a90b8a8dcd050087',1,'macros.h']]],
+  ['disable_5fwarning_5fpush_1271',['DISABLE_WARNING_PUSH',['../macros_8h.html#a24b263e8b4b7f2ebc6534700f8157a48',1,'macros.h']]],
+  ['disable_5fwarning_5funreferenced_5fformal_5fparameter_1272',['DISABLE_WARNING_UNREFERENCED_FORMAL_PARAMETER',['../macros_8h.html#ac6a18f92ec02d9408a25a2b00a50e8b9',1,'macros.h']]],
+  ['disable_5fwarning_5funreferenced_5ffunction_1273',['DISABLE_WARNING_UNREFERENCED_FUNCTION',['../macros_8h.html#abfee3a930a0fb68c46bb174ce26bd0e5',1,'macros.h']]]
+];

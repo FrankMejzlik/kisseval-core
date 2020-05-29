@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['manhattan_1221',['MANHATTAN',['../namespaceimage__ranker.html#ad343eaa0ca0f07a6c8ef1a7d59ae03a6a20548c3a17d5b27db0c2995b6646a792',1,'image_ranker']]],
+  ['max_1222',['MAX',['../namespaceimage__ranker.html#abd545ebd6eda666758feb50c396e5e74a26a4b44a837bf97b972628509912b4a5',1,'image_ranker']]],
+  ['model_5fdist_5ffn_1223',['MODEL_DIST_FN',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1da35598a6afdf62e9ae7ad37069524bf66',1,'image_ranker']]],
+  ['model_5fid_1224',['MODEL_ID',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1da418812cc6f69bcc5f961ddfd4310edeb',1,'image_ranker']]],
+  ['model_5fidf_5fcoef_1225',['MODEL_IDF_COEF',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1da59a20198eab845e89c00e01fc6841be1',1,'image_ranker']]],
+  ['model_5fignore_5fthreshold_1226',['MODEL_IGNORE_THRESHOLD',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1da8d1014c73c6f5f067ee3537659d2bc4c',1,'image_ranker']]],
+  ['model_5finner_5fop_1227',['MODEL_INNER_OP',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1da167bbaaadd9b7703c97f8d85439513b3',1,'image_ranker']]],
+  ['model_5foperations_1228',['MODEL_OPERATIONS',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1da9f4b9043127f4ecd67bcc7588a9328e5',1,'image_ranker']]],
+  ['model_5foutter_5fop_1229',['MODEL_OUTTER_OP',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1da15cdcc70211b4e9881d4d468ff0eb8b9',1,'image_ranker']]],
+  ['model_5fquery_5fidf_1230',['MODEL_QUERY_IDF',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1da7ef8b5771e0401d0a301621e5a4e51e1',1,'image_ranker']]],
+  ['model_5fquery_5ftf_1231',['MODEL_QUERY_TF',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1daf91670080f28e62c89c6d37daff18849',1,'image_ranker']]],
+  ['model_5fsub_5fpca_5fmean_1232',['MODEL_SUB_PCA_MEAN',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1dabe81967ae1411b91e495b5d1e9ebff07',1,'image_ranker']]],
+  ['model_5fterm_5fidf_1233',['MODEL_TERM_IDF',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1dab982a30a88138cba226949b5c12fab6c',1,'image_ranker']]],
+  ['model_5fterm_5ftf_1234',['MODEL_TERM_TF',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1da4a07197f4ffd02699c26bf7513f580df',1,'image_ranker']]],
+  ['model_5ftrue_5fthreshold_1235',['MODEL_TRUE_THRESHOLD',['../namespaceimage__ranker.html#a7cbe7f4dce40292a88f4677f0ca90f1da8a60e19adb3202d949f0f780c0b2e6a8',1,'image_ranker']]],
+  ['mult_5fsum_5fmax_1236',['MULT_SUM_MAX',['../namespaceimage__ranker.html#ad60b0b4f0d317c0aaef4fe1fd86f312fa1d3981585163163eedb6f2c41ac86619',1,'image_ranker']]]
+];
