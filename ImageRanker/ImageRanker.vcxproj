@@ -155,6 +155,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996;4820;4061;4710;4514;4266;5045</DisableSpecificWarnings>
       <AdditionalOptions>/experimental:external /external:anglebrackets /external:W0 %(AdditionalOptions)</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -223,6 +224,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -249,6 +251,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4996;4820;4061;4710;4514;4266;5045</DisableSpecificWarnings>
       <AdditionalOptions>/experimental:external /external:anglebrackets /external:W0 %(AdditionalOptions)</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -311,7 +314,6 @@
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\config.h" />
     <ClInclude Include="src\Database.h" />
-    <ClInclude Include="src\Image.hpp" />
     <ClInclude Include="src\ImageRanker.h" />
     <ClInclude Include="src\KeywordsContainer.h" />
     <ClInclude Include="src\transformations\TransformationLinear.h" />

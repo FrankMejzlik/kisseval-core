@@ -41,22 +41,21 @@ class [[nodiscard]] BaseSimUser
   };
 };
 
-class SimUserNoSim : public BaseSimUser
+class [[nodiscard]] SimUserNoSim : public BaseSimUser
 {
  public:
-  virtual std::vector<UserTestQuery> process_sim_user(const BaseImageset* p_is,
-                                                      const BaseVectorTransform& transformed_data,
-                                                      const KeywordsContainer& keywords,
-                                                      const std::vector<UserTestQuery>& test_user_queries,
-                                                      std::vector<ModelKeyValOption>& options) const override;
+  [[nodiscard]] virtual std::vector<UserTestQuery> process_sim_user(
+      const BaseImageset* p_is, const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+      const std::vector<UserTestQuery>& test_user_queries, std::vector<ModelKeyValOption>& options) const override;
 };
 
-class SimUserXToP : public BaseSimUser
+class [[nodiscard]] SimUserXToP : public BaseSimUser
 {
  public:
+  /** Options for the given SimUser instance. */
   struct Options
   {
-    float exponent_p{ 5.0F };
+    float exponent_p{ DEF_SIM_USER_EXPONENT };
     eSimUserTarget target{ DEF_SIM_USER_TARGET };
     size_t num_words_from{ DEF_SIM_USER_NUM_WORDS_FROM };
     size_t num_words_to{ DEF_SIM_USER_NUM_WORDS_TO };
@@ -65,7 +64,7 @@ class SimUserXToP : public BaseSimUser
   /**
    * Warning: Parsed pairs from \param options are removed.
    */
-  static Options parse_options(std::vector<ModelKeyValOption>& options)
+  [[nodiscard]] static Options parse_options(std::vector<ModelKeyValOption> & options)
   {
     std::vector<ModelKeyValOption> forwarded_options;
 
@@ -116,35 +115,27 @@ class SimUserXToP : public BaseSimUser
     return opts;
   }
 
-  virtual std::vector<UserTestQuery> process_sim_user(const BaseImageset* p_is,
-                                                      const BaseVectorTransform& transformed_data,
-                                                      const KeywordsContainer& keywords,
-                                                      const std::vector<UserTestQuery>& test_user_queries,
-                                                      std::vector<ModelKeyValOption>& options) const override;
+  [[nodiscard]] virtual std::vector<UserTestQuery> process_sim_user(
+      const BaseImageset* p_is, const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+      const std::vector<UserTestQuery>& test_user_queries, std::vector<ModelKeyValOption>& options) const override;
 
-  virtual std::vector<UserTestQuery> generate_simulated_queries(const BaseImageset* p_is,
-                                                                const BaseVectorTransform& transformed_data,
-                                                                const KeywordsContainer& keywords,
-                                                                std::vector<ModelKeyValOption>& options, size_t count,
-                                                                size_t temporal_count = 1_z) const override;
+  [[nodiscard]] virtual std::vector<UserTestQuery> generate_simulated_queries(
+      const BaseImageset* p_is, const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+      std::vector<ModelKeyValOption>& options, size_t count, size_t temporal_count = 1) const override;
 
  private:
-  std::vector<UserTestQuery> generate_whole_queries(const BaseImageset* p_is,
+  [[nodiscard]] std::vector<UserTestQuery> generate_whole_queries(
+      const BaseImageset* p_is, const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+      const std::vector<UserTestQuery>& test_user_queries, const Options& options, size_t num_queries = 1) const;
+
+  [[nodiscard]] std::vector<UserTestQuery> augment_with_temp_queries(
+      const BaseImageset* p_is, const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+      const std::vector<UserTestQuery>& test_user_queries, const Options& options, size_t count_additional_queries = 1)
+      const;
+
+  [[nodiscard]] CnfFormula generate_simulated_query(FrameId frame_ID, const BaseImageset* p_is,
                                                     const BaseVectorTransform& transformed_data,
-                                                    const KeywordsContainer& keywords,
-                                                    const std::vector<UserTestQuery>& test_user_queries,
-                                                    const Options& options, size_t num_queries = 1_z) const;
-
-  std::vector<UserTestQuery> augment_with_temp_queries(const BaseImageset* p_is,
-                                                       const BaseVectorTransform& transformed_data,
-                                                       const KeywordsContainer& keywords,
-                                                       const std::vector<UserTestQuery>& test_user_queries,
-                                                       const Options& options,
-                                                       size_t count_additional_queries = 1_z) const;
-
-  CnfFormula generate_simulated_query(FrameId frame_ID, const BaseImageset* p_is,
-                                      const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
-                                      const Options& options) const;
+                                                    const KeywordsContainer& keywords, const Options& options) const;
 };
 
 };  // namespace image_ranker

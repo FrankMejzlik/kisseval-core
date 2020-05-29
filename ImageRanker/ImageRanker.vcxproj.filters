@@ -104,9 +104,6 @@
     <ClInclude Include="src\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Image.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\FileParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>

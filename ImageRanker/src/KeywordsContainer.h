@@ -16,8 +16,6 @@ using namespace std::literals::string_literals;
 #include "common.h"
 #include "utility.h"
 
-#include "Database.h"
-
 namespace image_ranker
 {
 class ImageRanker;
@@ -47,9 +45,9 @@ struct [[nodiscard]] Keyword
   {
   }
 
-  bool is_hypernym() const { return !hyponyms.empty(); };
-  bool is_classified() const { return classification_index == ERR_VAL<size_t>(); };
-  bool is_leaf_keyword() const { return (is_hypernym() && is_classified()); }
+  [[nodiscard]] bool is_hypernym() const { return !hyponyms.empty(); };
+  [[nodiscard]] bool is_classified() const { return classification_index == ERR_VAL<size_t>(); };
+  [[nodiscard]] bool is_leaf_keyword() const { return (is_hypernym() && is_classified()); }
 
   /*
    * Member variables
@@ -88,9 +86,9 @@ class [[nodiscard]] KeywordsContainer
   /**
    * Hierarchical less than coparator.
    */
-  struct KeywordLessThanComparator
+  struct [[nodiscard]] KeywordLessThanComparator
   {
-    bool operator()(const std::unique_ptr<Keyword>& a, const std::unique_ptr<Keyword>& b) const
+    [[nodiscard]] bool operator()(const std::unique_ptr<Keyword>& a, const std::unique_ptr<Keyword>& b) const
     {
       // Force lowercase
       std::locale loc;
@@ -111,14 +109,15 @@ class [[nodiscard]] KeywordsContainer
 
       return result <= -1;
     }
-  } kw_less_hierarch_cmp;
+  }
+  kw_less_hierarch_cmp;
 
   /**
    * Alphabetical comparator.
    */
-  struct KeywordLessThanStringComparator
+  struct [[nodiscard]] KeywordLessThanStringComparator
   {
-    bool operator()(const std::string& a, const std::string& b) const
+    [[nodiscard]] bool operator()(const std::string& a, const std::string& b) const
     {
       // Compare strings
 
@@ -133,7 +132,8 @@ class [[nodiscard]] KeywordsContainer
 
       return result <= -1;
     }
-  } kw_string_less_cmp;
+  }
+  kw_string_less_cmp;
 
  public:
   /** Not default-constructible */

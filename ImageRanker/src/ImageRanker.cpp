@@ -134,8 +134,7 @@ ImageRanker::Config ImageRanker::parse_data_config_file([[maybe_unused]] eMode m
 
   return { ImageRanker::eMode::cFullAnalytical, imagesets, VIRET_data_packs, Google_data_packs, W2VV_data_packs };
 }
-ImageRanker::ImageRanker(const ImageRanker::Config& cfg)
-    : _settings(cfg), _fileParser(), _data_manager(), _mode(cfg.mode)
+ImageRanker::ImageRanker(const ImageRanker::Config& cfg) : _settings(cfg), _fileParser(), _mode(cfg.mode)
 {
   /*
    * Load all available datasets

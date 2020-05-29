@@ -11,7 +11,6 @@ using namespace std::literals;
 #include <tuple>
 #include <vector>
 
-#include "KeywordsContainer.h"
 #include "common.h"
 #include "config.h"
 #include "utility.h"
@@ -23,7 +22,7 @@ class ImageRanker;
 /**
  * Purely static class providing functions for file parsing.
  */
-class FileParser
+class [[nodiscard]] FileParser
 {
  public:
   /**
@@ -41,7 +40,8 @@ class FileParser
    * \param begin_offset   Offset where actual matrix data start.
    * \return  Parsed matrix.
    */
-  static Matrix<float> parse_float_matrix(const std::string& filepath, size_t row_dim, size_t begin_offset = 0);
+  [[nodiscard]] static Matrix<float> parse_float_matrix(const std::string& filepath, size_t row_dim,
+                                                        size_t begin_offset = 0);
 
   /**
    * Parses float vector from a binary file that starts at `begin_offset` offset.
@@ -58,7 +58,8 @@ class FileParser
    * \param begin_offset   Offset where actual matrix data start.
    * \return  Parsed vector.
    */
-  static std::vector<float> parse_float_vector(const std::string& filepath, size_t dim, size_t begin_offset = 0);
+  [[nodiscard]] static std::vector<float> parse_float_vector(const std::string& filepath, size_t dim,
+                                                             size_t begin_offset = 0);
 
   /**
    * Parses text file mapping words to their indices (IDs).
@@ -69,25 +70,25 @@ class FileParser
    * \param filepath Target file filepath.
    * \return  Parsed dictionary `word -> ID`.
    */
-  static std::map<std::string, size_t> parse_w2vv_word_to_idx_file(const std::string& filepath);
+  [[nodiscard]] static std::map<std::string, size_t> parse_w2vv_word_to_idx_file(const std::string& filepath);
 
-  static std::pair<Matrix<float>, DataParseStats> parse_VIRET_format_frame_vector_file(const std::string& inputFilepath,
-                                                                                       size_t num_frames);
-
-  static std::pair<Matrix<float>, DataParseStats> parse_GoogleVision_format_frame_vector_file(
+  [[nodiscard]] static std::pair<Matrix<float>, DataParseStats> parse_VIRET_format_frame_vector_file(
       const std::string& inputFilepath, size_t num_frames);
 
-  static ViretKeywordClassesParsedData parse_VIRET_format_keyword_classes_file(const std::string& filepath,
-                                                                               bool first_col_is_ID = false);
+  [[nodiscard]] static std::pair<Matrix<float>, DataParseStats> parse_GoogleVision_format_frame_vector_file(
+      const std::string& inputFilepath, size_t num_frames);
 
-  static std::tuple<VideoId, ShotId, FrameNumber> parse_video_filename_string(const std::string& filename,
-                                                                              const FrameFilenameOffsets& offsets);
+  [[nodiscard]] static ViretKeywordClassesParsedData parse_VIRET_format_keyword_classes_file(
+      const std::string& filepath, bool first_col_is_ID = false);
 
-  static std::vector<SelFrame> parse_image_metadata(const std::string& idToFilename,
-                                                    const FrameFilenameOffsets& offsets, size_t imageIdStride = 1);
+  [[nodiscard]] static std::tuple<VideoId, ShotId, FrameNumber> parse_video_filename_string(
+      const std::string& filename, const FrameFilenameOffsets& offsets);
 
-  static void process_shot_stack(std::stack<SelFrame*>& videoFrames);
+  [[nodiscard]] static std::vector<SelFrame> parse_image_metadata(
+      const std::string& idToFilename, const FrameFilenameOffsets& offsets, size_t imageIdStride = 1);
 
-  static std::vector<ImageIdFilenameTuple> get_image_filenames(const std::string& frame_to_ID_map_fpth);
+  [[nodiscard]] static void process_shot_stack(std::stack<SelFrame*> & videoFrames);
+
+  [[nodiscard]] static std::vector<ImageIdFilenameTuple> get_image_filenames(const std::string& frame_to_ID_map_fpth);
 };
 }  // namespace image_ranker
