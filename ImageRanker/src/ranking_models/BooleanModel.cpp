@@ -14,7 +14,7 @@ BooleanModel::Options BooleanModel::parse_options(const std::vector<ModelKeyValO
   {
     if (key == enum_label(eModelOptsKeys::MODEL_TRUE_THRESHOLD).first)
     {
-      res.true_threshold = str_to<float>(val);
+      res.true_threshold = str_to_float(val);
     }
     else
     {

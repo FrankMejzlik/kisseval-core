@@ -159,7 +159,7 @@ CnfFormula SimUserXToP::generate_simulated_query(FrameId frame_ID, const BaseIma
   std::vector<float> transformedData;
   for (auto&& value : linBinVector)
   {
-    float newValue{ pow(value, epxonent) };
+    float newValue{ static_cast<float>(pow(value, epxonent)) };
     transformedData.push_back(newValue);
 
     totalSum += newValue;

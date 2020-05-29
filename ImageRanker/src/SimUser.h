@@ -82,7 +82,7 @@ class [[nodiscard]] SimUserXToP : public BaseSimUser
       }
       else if (key == "sim_ustr_toaremeter_p")
       {
-        opts.exponent_p = str_to<float>(val);
+        opts.exponent_p = str_to_float(val);
       }
       else if (key == "simstr_to_target")
       {

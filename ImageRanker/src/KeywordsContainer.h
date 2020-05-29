@@ -212,8 +212,8 @@ class [[nodiscard]] KeywordsContainer
    */
   [[nodiscard]] std::string CNF_index_formula_to_string(const CnfFormula& fml) const;
 
-  [[nodiscard]] void get_keyword_hyponyms_indices_set(std::unordered_set<size_t> & dest_set, size_t wordnet_ID) const;
-  [[nodiscard]] void get_keyword_hyponyms_indices_set_nearest(std::unordered_set<size_t> & dest_set, size_t wordnet_ID,
+  void get_keyword_hyponyms_indices_set(std::unordered_set<size_t> & dest_set, size_t wordnet_ID) const;
+  void get_keyword_hyponyms_indices_set_nearest(std::unordered_set<size_t> & dest_set, size_t wordnet_ID,
                                                               bool skip_pure_hypers = false) const;
 
   [[nodiscard]] size_t GetNetVectorSize() const { return class_idx_to_keyword.size(); }

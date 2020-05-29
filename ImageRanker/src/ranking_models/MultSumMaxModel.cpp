@@ -75,7 +75,7 @@ MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelK
     }
     else if (key == enum_label(eModelOptsKeys::MODEL_IGNORE_THRESHOLD).first)
     {
-      res.ignore_below_threshold = str_to<float>(val);
+      res.ignore_below_threshold = str_to_float(val);
     }
     else
     {
@@ -180,6 +180,7 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
 
           case eSuccesorAggregation::cProduct:
             secondary_ranking = 1.0F;
+            break;
 
           default:
             LOGW("Uknown option!");
@@ -204,6 +205,7 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
 
             case eSuccesorAggregation::cProduct:
               secondary_ranking *= ranking;
+              break;
 
             default:
               LOGW("Uknown option!");

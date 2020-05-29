@@ -2,7 +2,6 @@
 #include "ViretDataPack.h"
 
 #include <algorithm>
-#include <execution>
 #include <thread>
 
 #include "./datasets/BaseImageset.h"
@@ -101,7 +100,7 @@ HistogramChartData<size_t, float> ViretDataPack::get_histogram_used_labels(
   tagged_sorted_mat.resize(data_mat.size());
 
   std::transform(
-      std::execution::par, data_mat.cbegin(), data_mat.cend(), tagged_sorted_mat.begin(),
+      data_mat.cbegin(), data_mat.cend(), tagged_sorted_mat.begin(),
       [](const std::vector<float>& v) {
         // Ptr to the first elem for index calculation
         auto base{ &v.front() };
@@ -109,7 +108,7 @@ HistogramChartData<size_t, float> ViretDataPack::get_histogram_used_labels(
         // Tag each element with the according index
         std::vector<std::pair<size_t, float>> tagged_sorted_vec;
         tagged_sorted_vec.resize(v.size());
-        std::transform(std::execution::par, v.cbegin(), v.cend(), tagged_sorted_vec.begin(), [base](const float& v) {
+        std::transform(v.cbegin(), v.cend(), tagged_sorted_vec.begin(), [base](const float& v) {
           size_t idx{ size_t(&v - base) };
           return std::pair(idx, v);
         });
@@ -117,7 +116,7 @@ HistogramChartData<size_t, float> ViretDataPack::get_histogram_used_labels(
         // Sort this vector
         std::sort(tagged_sorted_vec.begin(), tagged_sorted_vec.end(),
                   [](const std::pair<size_t, float>& l, std::pair<size_t, float>& r) { return l.second > r.second; });
-        return std::move(tagged_sorted_vec);
+        return tagged_sorted_vec;
       });
 
   std::vector<size_t> label_hits;

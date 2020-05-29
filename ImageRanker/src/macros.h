@@ -22,7 +22,12 @@
 #elif defined(__GNUC__) || defined(__clang__)
 #  define DO_PRAGMA(X) _Pragma(#  X)
 #  define DISABLE_WARNING_PUSH DO_PRAGMA(GCC diagnostic push)
-#  define DISABLE_WARNING_PUSH DO_PRAGMA(GCC diagnostic push) DO_PRAGMA(GCC diagnostic ignored "-Wall")
+
+// We have to name the warnings unfortunetely
+#  define DISABLE_ALL_WARNINGS_PUSH DO_PRAGMA(GCC diagnostic push) \
+    DO_PRAGMA(GCC diagnostic ignored "-Wimplicit-fallthrough=")\
+    DO_PRAGMA(GCC diagnostic ignored "-Wcast-function-type")
+
 #  define DISABLE_WARNING_POP DO_PRAGMA(GCC diagnostic pop)
 #  define DISABLE_WARNING(warn_name) DO_PRAGMA(GCC diagnostic ignored #  warn_name)
 
