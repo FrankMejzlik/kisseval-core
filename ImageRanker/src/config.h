@@ -31,13 +31,14 @@
 /** Delimiter for synonyms in VIRET format keyword classes file */
 #define SYNONYM_DELIMITER_001 '#'
 
+/** Size of uninteresting header in VIRET network data file formats */
 #define VIRET_FORMAT_NET_DATA_HEADER_SIZE 36
 
 /**********************************************
  * Logging
  ***********************************************/
 
-/** If exception will be thrown on LOGE. */
+/** If exception will be thrown on LOGE macro. */
 #if IS_PRODUCTION
 #  define THROW_ON_ERROR 0
 #else
@@ -82,6 +83,9 @@
 /** Minimal length of prefix to return any aytocomplete suggestions. */
 #define MIN_DESC_SEARCH_LENGTH 2
 
+/** Number of exmple frame shown in autocomplete. */
+#define NUM_EXAMPLE_FRAMES 10
+
 /*
  * Ranker
  */
@@ -104,8 +108,8 @@
 /** Value that zero values will be substitued with */
 #define ZERO_WEIGHT 0.01F
 
+/** Number of successor frames to be inspected while computing temporal frame score. */
 #define TEMP_CONTEXT_LOOKUP_LENGTH 3
-#define NUM_EXAMPLE_FRAMES 10
 
 /** Number of top classes that will be computed and stored */
 #define NUM_TOP_KWS_LOADED 10

@@ -238,8 +238,9 @@ std::vector<GameSessionQueryResult> ImageRanker::submit_annotator_user_queries(
   auto res = _data_packs.find(data_pack_ID);
   if (res == _data_packs.end())
   {
-    LOGW("Accessing non-existent data pack '" << data_pack_ID << "'");
-    return std::vector<GameSessionQueryResult>();
+    std::string msg{ "Accessing non-existent data pack '" + data_pack_ID + "'." };
+    LOGE(msg);
+    PROD_THROW("Data error!");
   }
 
   _data_manager.submit_annotator_user_queries(data_pack_ID, res->second->get_vocab_ID(),

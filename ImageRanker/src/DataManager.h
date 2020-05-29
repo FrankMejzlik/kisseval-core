@@ -51,12 +51,8 @@ class DataManager
   ~DataManager() noexcept = default;
   // -----------------------------------------
 
-  /** Main ctor */
+  /** Main ctor. */
   DataManager(ImageRanker* p_owner);
-
-  void submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,const StringId& imageset_ID,
-                                     const ::std::string& model_options, size_t user_level, bool with_example_images,
-                                     const std::vector<AnnotatorUserQuery>& user_queries);
 
   [[nodiscard]] std::vector<UserTestQuery> fetch_user_test_queries(eUserQueryOrigin queries_origin,
                                                                    const StringId& vocabulary_ID,
@@ -65,6 +61,9 @@ class DataManager
 
   [[nodiscard]] std::vector<UserTestNativeQuery> fetch_user_native_test_queries(eUserQueryOrigin queries_origin,
                                                                                 const std::string& imageset_ID) const;
+  void submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,
+                                     const StringId& imageset_ID, const ::std::string& model_options, size_t user_level,
+                                     bool with_example_images, const std::vector<AnnotatorUserQuery>& user_queries);
 
   void submit_search_session(const std::string& data_pack_ID, const std::string& vocabulary_ID,
                              const std::string& model_options, size_t user_level, bool with_example_images,

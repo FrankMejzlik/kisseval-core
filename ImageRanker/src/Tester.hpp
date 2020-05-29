@@ -567,17 +567,15 @@ class Tester
      * Run model tests
      */
     {
-      auto rr{ranker.rank_frames(std::vector<std::string>{ "Duck." },
-        "ITECTiny_W2VV_BoW_Dec2019", "model=w2vv_bow_plain;", 10, true, 504)};
+      auto rr{ ranker.rank_frames(std::vector<std::string>{ "Duck." }, "ITECTiny_W2VV_BoW_Dec2019",
+                                  "model=w2vv_bow_plain;", 10, true, 504) };
 
-      auto re{ranker.rank_frames(std::vector<std::string>{ "Duck." },
-        "W2VV_BoW_Dec2019", "model=w2vv_bow_plain;", 10, true, 504)};
+      auto re{ ranker.rank_frames(std::vector<std::string>{ "Duck." }, "W2VV_BoW_Dec2019", "model=w2vv_bow_plain;", 10,
+                                  true, 504) };
 
-      
-
-      //std::string m12_opts =
+      // std::string m12_opts =
       //    "model=w2vv_bow_plain;";
-      //auto r21 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, data_pack_ID, m12_opts, true);
+      // auto r21 = ranker.run_model_test(eUserQueryOrigin::SEMI_EXPERTS, data_pack_ID, m12_opts, true);
 
       std::string m1_opts =
           "model=boolean;model_true_threshold=0.000598;model_IDF_method_idf_coef=6;transform=linear_01;sim_user=no_sim_"

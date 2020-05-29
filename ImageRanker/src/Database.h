@@ -32,19 +32,19 @@ class [[nodiscard]] Database
   // --------------------------
 
   /**
+   * Main construcotr.
+   *
+   * \param Filepath to database file.
+   */
+  Database(const std::string& db_filepath);
+
+  /**
    * Escapes the given string and returns new copy of escaped one.
    *
    * \param   String to escape.
    * \return  std::string   New copy of escaped string.
    */
   [[nodiscard]] static std::string escape_str(const std::string& raw_str);
-
-  /**
-   * Main construcotr.
-   *
-   * \param Filepath to database file.
-   */
-  Database(const std::string& db_filepath);
 
   /**
    * Returns the ID of last row that was inserted into the database.
