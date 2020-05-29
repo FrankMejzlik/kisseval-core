@@ -13,7 +13,7 @@
 
 namespace image_ranker
 {
-class W2vvDataPack : public BaseDataPack
+class [[nodiscard]] W2vvDataPack : public BaseDataPack
 {
  public:
   W2vvDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID, const std::string& model_options,
@@ -48,18 +48,28 @@ class W2vvDataPack : public BaseDataPack
   CnfFormula native_query_to_CNF_formula(const std::string& native_query) const;
 
  private:
+  /** This data pack's vocabulary. */
   KeywordsContainer _keywords;
 
+  /** Vectors for each supported keyword. */
   Matrix<float> _kw_features;
+
+  /** Bias vector for keywords. */
   Vector<float> _kw_bias_vec;
+
+  /** PCA matrix for query vectors. */
   Matrix<float> _kw_PCA_mat;
+
+  /** PCA mean vector for query vectors. */
   Vector<float> _kw_PCA_mean_vec;
 
+  /** Features for each selected frame. */
   Matrix<float> _features_of_frames;
 
   /** Models for this data pack - only classification ones */
   std::unordered_map<std::string, std::unique_ptr<BaseW2vvModel>> _models;
 
+  /** Sumilated users for this data pack. */
   std::unordered_map<std::string, std::unique_ptr<BaseSimUser>> _sim_users;
 };
 }  // namespace image_ranker

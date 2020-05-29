@@ -38,11 +38,11 @@ VectorSpaceModel::Options VectorSpaceModel::parse_options(const std::vector<Mode
     }
     else if (key == "model_IDF_method_true_threshold")
     {
-      res.true_threshold = strTo<float>(val);
+      res.true_threshold = str_to<float>(val);
     }
     else if (key == "model_IDF_method_idf_coef")
     {
-      res.idf_coef = strTo<float>(val);
+      res.idf_coef = str_to<float>(val);
     }
     // Weighing TERM term frequency
     else if (key == enum_label(eModelOptsKeys::MODEL_TERM_TF).first)

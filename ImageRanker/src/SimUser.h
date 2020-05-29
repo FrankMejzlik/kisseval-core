@@ -74,17 +74,17 @@ class [[nodiscard]] SimUserXToP : public BaseSimUser
     {
       if (key == "sim_user_num_words_from")
       {
-        opts.num_words_from = strTo<size_t>(val);
+        opts.num_words_from = str_to<size_t>(val);
       }
-      else if (key == "sim_user_num_words_to")
+      else if (key == "sim_usestr_to_words_to")
       {
-        opts.num_words_to = strTo<size_t>(val);
+        opts.num_words_to = str_to<size_t>(val);
       }
-      else if (key == "sim_user_paremeter_p")
+      else if (key == "sim_ustr_toaremeter_p")
       {
-        opts.exponent_p = strTo<float>(val);
+        opts.exponent_p = str_to<float>(val);
       }
-      else if (key == "sim_user_target")
+      else if (key == "simstr_to_target")
       {
         if (val == "single_queries")
         {

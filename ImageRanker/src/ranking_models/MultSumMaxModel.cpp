@@ -75,7 +75,7 @@ MultSumMaxModel::Options MultSumMaxModel::parse_options(const std::vector<ModelK
     }
     else if (key == enum_label(eModelOptsKeys::MODEL_IGNORE_THRESHOLD).first)
     {
-      res.ignore_below_threshold = strTo<float>(val);
+      res.ignore_below_threshold = str_to<float>(val);
     }
     else
     {

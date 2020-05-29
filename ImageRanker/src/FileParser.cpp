@@ -62,7 +62,7 @@ std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string
     for (size_t i{ 0ULL }; i < row_dim; ++i)
     {
       // ParseFloatLE(&lineBuffer[currOffset])
-      float feature_value = ParseFloatLE(&line_byte_buffer[curr_offset]);
+      float feature_value = parse_float32_LE(&line_byte_buffer[curr_offset]);
 
       // Push float value in
       features_vector.emplace_back(feature_value);
@@ -128,7 +128,7 @@ std::vector<float> FileParser::parse_float_vector(const std::string& filepath, s
     // Iterate through all floats in a row
     for (size_t i{ 0ULL }; i < dim; ++i)
     {
-      float feature_value = ParseFloatLE(&line_byte_buffer[curr_offset]);
+      float feature_value = parse_float32_LE(&line_byte_buffer[curr_offset]);
 
       // Push float value in
       features_vector.emplace_back(feature_value);
@@ -209,7 +209,8 @@ std::tuple<VideoId, ShotId, FrameNumber> FileParser::parse_video_filename_string
   // Extract string representing frame number
   std::string frameNumberString = filename.substr(offsets.fn_ID_off, offsets.fn_ID_len);
 
-  return std::tuple(strTo<VideoId>(videoIdString), strTo<ShotId>(shotIdString), strTo<FrameNumber>(frameNumberString));
+  return std::tuple(str_to<VideoId>(videoIdString), str_to<ShotId>(shotIdString),
+                    str_to<FrameNumber>(frameNumberString));
 }
 
 void FileParser::process_shot_stack(std::stack<SelFrame*>& videoFrames)
@@ -536,7 +537,7 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_VIRET_format_frame_ve
   }
 
   // Parse number of present floats in every row
-  size_t numFloats = static_cast<size_t>(ParseIntegerLE(buff_4B));
+  size_t numFloats = static_cast<size_t>(parse_int32_LE(buff_4B));
 
   // Calculate byte length of each row
   size_t byteRowLengths = numFloats * sizeof(float) + sizeof(int32_t);
@@ -548,7 +549,7 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_VIRET_format_frame_ve
   while (ifs.read(lineBuffer.data(), std::streamsize(byteRowLengths)))
   {
     // Get picture ID of this row
-    size_t id = static_cast<size_t>(ParseIntegerLE(lineBuffer));
+    size_t id = static_cast<size_t>(parse_int32_LE(lineBuffer));
 
     // Stride in bytes
     size_t currOffset = sizeof(float);
@@ -566,7 +567,7 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_VIRET_format_frame_ve
     // Iterate through all floats in row
     for (size_t i = 0ULL; i < numFloats; ++i)
     {
-      float rankValue{ ParseFloatLE(&lineBuffer[currOffset]) };
+      float rankValue{ parse_float32_LE(&lineBuffer[currOffset]) };
 
       // Update min
       if (rankValue < min)
@@ -650,11 +651,11 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_GoogleVision_format_f
   // Read number of items in each vector per image
   ifs.read(smallBuffer.data(), sizeof(uint32_t));
   // Parse number of present floats in every row
-  uint32_t numRecords = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
+  uint32_t numRecords = static_cast<uint32_t>(parse_int32_LE(smallBuffer.data()));
 
   // Read number of unique kws in annotation
   ifs.read(smallBuffer.data(), sizeof(uint32_t));
-  uint32_t numKeywords = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
+  uint32_t numKeywords = static_cast<uint32_t>(parse_int32_LE(smallBuffer.data()));
 
   float sum{ 0.0F };
   float min{ std::numeric_limits<float>::max() };
@@ -671,10 +672,10 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_GoogleVision_format_f
     scoringData.resize(numKeywords, ZERO_WEIGHT);
 
     ifs.read(smallBuffer.data(), sizeof(uint32_t));
-    uint32_t ID = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
+    uint32_t ID = static_cast<uint32_t>(parse_int32_LE(smallBuffer.data()));
 
     ifs.read(smallBuffer.data(), sizeof(uint32_t));
-    uint32_t numLabels = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
+    uint32_t numLabels = static_cast<uint32_t>(parse_int32_LE(smallBuffer.data()));
 
     auto cmp = [](const std::pair<size_t, float>& left, const std::pair<size_t, float>& right) {
       return left.second < right.second;
@@ -694,10 +695,10 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_GoogleVision_format_f
     for (size_t iLabel{ 0_z }; iLabel < numLabels; ++iLabel)
     {
       ifs.read(smallBuffer.data(), sizeof(uint32_t));
-      uint32_t kwId = static_cast<uint32_t>(ParseIntegerLE(smallBuffer.data()));
+      uint32_t kwId = static_cast<uint32_t>(parse_int32_LE(smallBuffer.data()));
 
       ifs.read(smallBuffer.data(), sizeof(uint32_t));
-      float score = ParseFloatLE(smallBuffer.data());
+      float score = parse_float32_LE(smallBuffer.data());
 
       // Update this value
       scoringData[kwId] = score;

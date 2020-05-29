@@ -82,7 +82,7 @@ std::vector<UserTestQuery> DataManager::fetch_user_test_queries(eUserQueryOrigin
   // Parse DB results
   for (auto&& row : db_rows)
   {
-    FrameId target_frame_ID{ strTo<FrameId>(row[0]) };
+    FrameId target_frame_ID{ str_to<FrameId>(row[0]) };
     CnfFormula single_query{ parse_cnf_string(row[1]) };
 
     std::vector<CnfFormula> query;
@@ -111,7 +111,7 @@ std::vector<UserTestNativeQuery> DataManager::fetch_user_native_test_queries(eUs
   // Parse DB results
   for (auto&& row : db_rows)
   {
-    FrameId target_frame_ID{ strTo<FrameId>(row[0]) };
+    FrameId target_frame_ID{ str_to<FrameId>(row[0]) };
 
     std::vector<std::string> query;
     query.emplace_back(row[1]);
@@ -413,10 +413,10 @@ std::pair<std::vector<SearchSession>, std::vector<SearchSessionAction>> DataMana
   sessions.reserve(rows_sessions.size());
   for (auto&& row : rows_sessions)
   {
-    size_t ID{ strTo<size_t>(row[0]) };
-    FrameId target_frame_ID{ strTo<FrameId>(row[1]) };
-    size_t duration{ strTo<size_t>(row[2]) };
-    bool found{ static_cast<bool>(strTo<unsigned char>(row[3])) };
+    size_t ID{ str_to<size_t>(row[0]) };
+    FrameId target_frame_ID{ str_to<FrameId>(row[1]) };
+    size_t duration{ str_to<size_t>(row[2]) };
+    bool found{ static_cast<bool>(str_to<unsigned char>(row[3])) };
 
     sessions.emplace_back(SearchSession{ ID, target_frame_ID, duration, found });
   }
@@ -426,9 +426,9 @@ std::pair<std::vector<SearchSession>, std::vector<SearchSessionAction>> DataMana
   all_actions.reserve(rows_actions.size());
   for (auto&& row : rows_actions)
   {
-    size_t search_session_ID{ strTo<size_t>(row[0]) };
-    size_t action_index{ strTo<size_t>(row[1]) };
-    size_t result_target_rank{ strTo<size_t>(row[2]) };
+    size_t search_session_ID{ str_to<size_t>(row[0]) };
+    size_t action_index{ str_to<size_t>(row[1]) };
+    size_t result_target_rank{ str_to<size_t>(row[2]) };
 
     all_actions.emplace_back(SearchSessionAction{ search_session_ID, action_index, result_target_rank });
   }

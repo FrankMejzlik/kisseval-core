@@ -21,36 +21,43 @@ using json = nlohmann::json;
 
 using namespace image_ranker;
 
-template <typename F>
+/**
+ * Scope exit guard.
+ *
+ * Temporary substitution for https://en.cppreference.com/w/cpp/experimental/scope_exit.
+ */
+template <typename FnType>
 struct scope_exit
 {
-  F f_;
-  bool run_;
-  explicit scope_exit(F f) noexcept : f_(std::move(f)), run_(true) {}
-  scope_exit(scope_exit&& rhs) noexcept : f_((rhs.run_ = false, std::move(rhs.f_))), run_(true) {}
-  ~scope_exit()
+ public:
+  explicit scope_exit(FnType fn) noexcept : _fn(std::move(fn)), _active(true) {}
+  scope_exit(scope_exit&& other) noexcept
+      // Deactivate the old one and than move the function
+      : _fn((other._active = false, std::move(other._fn))), _active(true)
   {
-    if (run_) f_();  // RAII semantics apply, expected not to throw
   }
 
-  // "in place" construction expected, no default ctor provided either
-  // also unclear what should be done with the old functor, should it
-  // be called since it is no longer needed, or not since *this is not
-  // going out of scope just yet...
-  scope_exit& operator=(scope_exit&& rhs) = delete;
-  // to be explicit...
-  scope_exit(scope_exit const&) = delete;
-  scope_exit& operator=(scope_exit const&) = delete;
+  scope_exit& operator=(scope_exit&& other) = delete;
+  scope_exit(scope_exit const& other) = delete;
+  scope_exit& operator=(scope_exit const& other) = delete;
+  ~scope_exit() noexcept
+  {
+    if (_active) _fn();
+  }
+
+ private:
+  FnType _fn;
+  bool _active;
 };
 
 template <typename F>
-scope_exit<F> make_scope_exit(F&& f) noexcept
+[[nodiscard]] scope_exit<F> make_scope_exit(F&& f) noexcept
 {
   return scope_exit<F>{ std::forward<F>(f) };
 }
 
 template <typename T>
-inline T rand(T from, T to)
+[[nodiscard]] inline T rand(T from, T to)
 {
   std::uniform_int_distribution<T> uniform_dist{ from, to };
   std::random_device rd;
@@ -60,7 +67,7 @@ inline T rand(T from, T to)
   return rand();
 }
 
-inline bool is_arch_LE()
+[[nodiscard]] inline bool is_arch_LE()
 {
   if constexpr (sizeof(char) >= sizeof(uint32_t))
   {
@@ -76,7 +83,7 @@ inline bool is_arch_LE()
 /**
  * Computes outer sum of discrete function defined by given chart data
  */
-inline float calc_chart_area(const ModelTestResult& chart_data)
+[[nodiscard]] inline float calc_chart_area(const ModelTestResult& chart_data)
 {
   float area{ 0.0F };
   uint32_t prev_x{ 0 };
@@ -95,7 +102,7 @@ inline float calc_chart_area(const ModelTestResult& chart_data)
  *
  * EXAMPLE INPUT: &-20+--1+-3++-55+-333+
  */
-inline CnfFormula parse_cnf_string(const std::string& string)
+[[nodiscard]] inline CnfFormula parse_cnf_string(const std::string& string)
 {
   std::vector<Clause> result;
 
@@ -156,7 +163,7 @@ inline CnfFormula parse_cnf_string(const std::string& string)
   return result;
 }
 
-inline std::vector<std::string> split(const std::string& str, char delim)
+[[nodiscard]] inline std::vector<std::string> split(const std::string& str, char delim)
 {
   std::vector<std::string> result;
   std::stringstream ss(str);
@@ -170,7 +177,7 @@ inline std::vector<std::string> split(const std::string& str, char delim)
   return result;
 }
 
-inline std::vector<std::string> split(const std::string& str, const std::string& delim)
+[[nodiscard]] inline std::vector<std::string> split(const std::string& str, const std::string& delim)
 {
   std::vector<std::string> result;
 
@@ -189,7 +196,7 @@ inline std::vector<std::string> split(const std::string& str, const std::string&
   return result;
 }
 
-inline std::array<char, 4> floatToBytesLE(float number)
+[[nodiscard]] inline std::array<char, 4> floatToBytesLE(float number)
 {
   char* bit_number{ reinterpret_cast<char*>(&number) };  // NOLINT
 
@@ -206,7 +213,7 @@ inline std::array<char, 4> floatToBytesLE(float number)
   return buff;
 }
 
-inline std::array<char, 4> uint32ToBytesLE(uint32_t number)
+[[nodiscard]] inline std::array<char, 4> uint32ToBytesLE(uint32_t number)
 {
   char* bit_number{ reinterpret_cast<char*>(&number) };  // NOLINT
 
@@ -223,7 +230,7 @@ inline std::array<char, 4> uint32ToBytesLE(uint32_t number)
   return buff;
 }
 
-inline int32_t ParseIntegerLE(const char* buff)
+[[nodiscard]] inline int32_t parse_int32_LE(const char* buff)
 {
   int32_t sign_num{ *(reinterpret_cast<const int32_t*>(buff)) };  // NOLINT
 
@@ -239,7 +246,7 @@ inline int32_t ParseIntegerLE(const char* buff)
   return sign_num;
 }
 
-inline int32_t ParseIntegerLE(const std::vector<char>& buff)
+[[nodiscard]] inline int32_t parse_int32_LE(const std::vector<char>& buff)
 {
   int32_t sign_num{ *(reinterpret_cast<const int32_t*>(buff.data())) };  // NOLINT
 
@@ -255,7 +262,7 @@ inline int32_t ParseIntegerLE(const std::vector<char>& buff)
   return sign_num;
 }
 
-inline float ParseFloatLE(const char* buff)
+[[nodiscard]] inline float parse_float32_LE(const char* buff)
 {
   if (is_arch_LE())
   {
@@ -273,7 +280,7 @@ inline float ParseFloatLE(const char* buff)
   return *(reinterpret_cast<float*>(&byte_float));  // NOLINT
 }
 
-inline float ParseFloatLE(const std::vector<char>& buff)
+[[nodiscard]] inline float parse_float32_LE(const std::vector<char>& buff)
 {
   if (is_arch_LE())
   {
@@ -291,39 +298,17 @@ inline float ParseFloatLE(const std::vector<char>& buff)
   return *(reinterpret_cast<float*>(&byte_float));  // NOLINT
 }
 
-inline std::vector<std::string> SplitString(const std::string& s, char delimiter)
-{
-  std::vector<std::string> tokens;
-  std::string token;
-  std::istringstream tokenStream(s);
-  while (std::getline(tokenStream, token, delimiter))
-  {
-    tokens.push_back(token);
-  }
-  return tokens;
-}
-
 /**
  * Returns ingeger sampled from uniform distribution from the interval [from, to].
  */
 template <typename T>
-inline T rand_integral(T from, T to)
+[[nodiscard]] inline T rand_integral(T from, T to)
 {
   std::random_device dev;
   std::mt19937 rng(dev());
   std::uniform_int_distribution<T> randFromDistribution(from, to);
 
   return randFromDistribution(rng);
-}
-
-inline float strToFloat(const std::string& str)
-{
-  float result;
-
-  std::stringstream ss{ str };
-
-  ss >> result;
-  return result;
 }
 
 /**
@@ -333,7 +318,7 @@ inline float strToFloat(const std::string& str)
  * Therefore we assume T to be default constructible.
  */
 template <typename T>
-inline T strTo(const std::string& str)
+[[nodiscard]] inline T str_to(const std::string& str)
 {
   T result;
 
@@ -389,7 +374,7 @@ inline T strTo(const std::string& str)
   return result_encoded_query;
 }
 
-inline float dist_manhattan(const Vector<float>& left, const Vector<float>& right)
+[[nodiscard]] inline float dist_manhattan(const Vector<float>& left, const Vector<float>& right)
 {
   float res{ 0.0F };
 
@@ -402,7 +387,7 @@ inline float dist_manhattan(const Vector<float>& left, const Vector<float>& righ
   return res;
 }
 
-inline float dist_cos(const Vector<float>& left, const Vector<float>& right)
+[[nodiscard]] inline float dist_cos(const Vector<float>& left, const Vector<float>& right)
 {
   float res{ 0.0F };
 
@@ -423,7 +408,7 @@ inline float dist_cos(const Vector<float>& left, const Vector<float>& right)
   return 1 - res;
 }
 
-inline float dist_cos_norm(const Vector<float>& left, const Vector<float>& right)
+[[nodiscard]] inline float dist_cos_norm(const Vector<float>& left, const Vector<float>& right)
 {
   float res{ 0.0F };
 
@@ -436,7 +421,7 @@ inline float dist_cos_norm(const Vector<float>& left, const Vector<float>& right
   return 1 - res;
 }
 
-inline float dist_sq_eucl(const Vector<float>& left, const Vector<float>& right)
+[[nodiscard]] inline float dist_sq_eucl(const Vector<float>& left, const Vector<float>& right)
 {
   float res{ 0.0F };
 
@@ -449,12 +434,12 @@ inline float dist_sq_eucl(const Vector<float>& left, const Vector<float>& right)
   return res;
 }
 
-inline float dist_eucl(const Vector<float>& left, const Vector<float>& right)
+[[nodiscard]] inline float dist_eucl(const Vector<float>& left, const Vector<float>& right)
 {
   return sqrtf(dist_sq_eucl(left, right));
 }
 
-inline std::function<float(const Vector<float>&, const Vector<float>&)> get_dist_fn(eDistFunction fn_type)
+[[nodiscard]] inline std::function<float(const Vector<float>&, const Vector<float>&)> get_dist_fn(eDistFunction fn_type)
 {
   switch (fn_type)
   {
@@ -481,24 +466,24 @@ inline std::function<float(const Vector<float>&, const Vector<float>&)> get_dist
 }
 
 template <typename CountType>
-inline float tf_scheme_fn_natural(CountType freq_i, CountType max_freq)
+[[nodiscard]] inline float tf_scheme_fn_natural(CountType freq_i, CountType max_freq)
 {
   return float(freq_i) / max_freq;
 }
 
 template <typename CountType>
-inline float tf_scheme_fn_logarithmic(CountType freq_i, CountType max_freq)
+[[nodiscard]] inline float tf_scheme_fn_logarithmic(CountType freq_i, CountType max_freq)
 {
   return log(1.0F + (float(freq_i) / max_freq));
 }
 
 template <typename CountType>
-inline float tf_scheme_fn_augmented(CountType freq_i, CountType max_freq)
+[[nodiscard]] inline float tf_scheme_fn_augmented(CountType freq_i, CountType max_freq)
 {
   return 0.5F + 0.5F * (float(freq_i) / max_freq);  // NOLINT
 }
 
-inline std::function<float(float, float)> pick_tf_scheme_fn(eTermFrequency tf_scheme_ID)
+[[nodiscard]] inline std::function<float(float, float)> pick_tf_scheme_fn(eTermFrequency tf_scheme_ID)
 {
   switch (tf_scheme_ID)
   {
@@ -519,18 +504,18 @@ inline std::function<float(float, float)> pick_tf_scheme_fn(eTermFrequency tf_sc
 }
 
 template <typename CountType>
-inline float idf_scheme_fn_none([[maybe_unused]] CountType n_i, [[maybe_unused]] CountType N)
+[[nodiscard]] inline float idf_scheme_fn_none([[maybe_unused]] CountType n_i, [[maybe_unused]] CountType N)
 {
   return 1.0F;
 }
 
 template <typename CountType>
-inline float idf_scheme_fn_IDF(CountType n_i, CountType N)
+[[nodiscard]] inline float idf_scheme_fn_IDF(CountType n_i, CountType N)
 {
   return log(float(N) / n_i);
 }
 
-inline std::function<float(float, float)> pick_idf_scheme_fn(eInvDocumentFrequency idf_scheme_ID)
+[[nodiscard]] inline std::function<float(float, float)> pick_idf_scheme_fn(eInvDocumentFrequency idf_scheme_ID)
 {
   switch (idf_scheme_ID)
   {
@@ -548,7 +533,7 @@ inline std::function<float(float, float)> pick_idf_scheme_fn(eInvDocumentFrequen
 }
 
 template <typename T>
-inline std::vector<T> vec_sub(const std::vector<T>& left, const std::vector<T>& right)
+[[nodiscard]] inline std::vector<T> vec_sub(const std::vector<T>& left, const std::vector<T>& right)
 {
   if (left.size() != right.size())
   {
@@ -569,7 +554,7 @@ inline std::vector<T> vec_sub(const std::vector<T>& left, const std::vector<T>& 
 }
 
 template <typename T>
-inline std::vector<T> vec_add(const std::vector<T>& left, const std::vector<T>& right)
+[[nodiscard]] inline std::vector<T> vec_add(const std::vector<T>& left, const std::vector<T>& right)
 {
   if (left.size() != right.size())
   {
@@ -590,7 +575,7 @@ inline std::vector<T> vec_add(const std::vector<T>& left, const std::vector<T>& 
 }
 
 template <typename T, typename S>
-inline std::vector<T> vec_mult(const std::vector<T>& left, S right)
+[[nodiscard]] inline std::vector<T> vec_mult(const std::vector<T>& left, S right)
 {
   std::vector<T> result(left.size());
 
@@ -600,7 +585,7 @@ inline std::vector<T> vec_mult(const std::vector<T>& left, S right)
 }
 
 template <typename T>
-inline std::vector<T> vec_mult(const std::vector<T>& left, const std::vector<T>& right)
+[[nodiscard]] inline std::vector<T> vec_mult(const std::vector<T>& left, const std::vector<T>& right)
 {
   if (left.size() != right.size())
   {
@@ -616,7 +601,7 @@ inline std::vector<T> vec_mult(const std::vector<T>& left, const std::vector<T>&
 }
 
 template <typename T>
-inline T dot_prod(const std::vector<T>& left, const std::vector<T>& right)
+[[nodiscard]] inline T dot_prod(const std::vector<T>& left, const std::vector<T>& right)
 {
   if (left.size() != right.size())
   {
@@ -629,7 +614,7 @@ inline T dot_prod(const std::vector<T>& left, const std::vector<T>& right)
 }
 
 template <typename T>
-inline std::vector<T> mat_vec_prod(const std::vector<std::vector<T>>& mat, const std::vector<T>& vec)
+[[nodiscard]] inline std::vector<T> mat_vec_prod(const std::vector<std::vector<T>>& mat, const std::vector<T>& vec)
 {
   if (mat.empty() || mat[0].size() != vec.size())
   {
@@ -647,13 +632,13 @@ inline std::vector<T> mat_vec_prod(const std::vector<std::vector<T>>& mat, const
 }
 
 template <typename T>
-inline float length(const std::vector<T>& left)
+[[nodiscard]] inline float length(const std::vector<T>& left)
 {
   return sqrtf(dot_prod(left, left));
 }
 
 template <typename T>
-inline std::vector<T> normalize(const std::vector<T>& left)
+[[nodiscard]] inline std::vector<T> normalize(const std::vector<T>& left)
 {
   float vec_size = length(left);
 
@@ -664,7 +649,7 @@ inline std::vector<T> normalize(const std::vector<T>& left)
 }
 
 template <typename T>
-inline Matrix<T> normalize_matrix_rows(const Matrix<T>& orig_mat)
+[[nodiscard]] inline Matrix<T> normalize_matrix_rows(const Matrix<T>& orig_mat)
 {
   Matrix<T> res;
 
@@ -674,14 +659,14 @@ inline Matrix<T> normalize_matrix_rows(const Matrix<T>& orig_mat)
 }
 
 template <typename T>
-inline Matrix<T> normalize_matrix_rows(Matrix<T>&& orig_mat)
+[[nodiscard]] inline Matrix<T> normalize_matrix_rows(Matrix<T>&& orig_mat)
 {
   std::transform(orig_mat.begin(), orig_mat.end(), orig_mat.begin(), normalize<T>);
 
   return orig_mat;
 }
 
-inline std::vector<size_t> find_all_needles(const std::string& hey, const std::string& needle)
+[[nodiscard]] inline std::vector<size_t> find_all_needles(const std::string& hey, const std::string& needle)
 {
   if (hey.empty() || needle.empty())
   {
