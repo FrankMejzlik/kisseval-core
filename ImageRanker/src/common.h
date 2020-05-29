@@ -1,5 +1,7 @@
 /**
- * Common defines, typedefs and types.
+ * \file common.h
+ *
+ * Common defines, typedefs and types used througout the whole program.
  */
 
 #ifndef _IR_COMMON_H_
@@ -20,6 +22,44 @@ using namespace std::string_literals;
 namespace image_ranker
 {
 struct Keyword;
+
+/**********************************************
+ * Typedefs
+ ***********************************************/
+using KeywordId = size_t;
+using DataName = std::string;
+using FrameId = uint32_t;
+using VideoId = uint32_t;
+using ShotId = uint32_t;
+using FrameNumber = uint32_t;
+using ModelKeyValOption = std::pair<std::string, std::string>;
+
+template <typename T>
+using Vector = std::vector<T>;
+
+template <typename T>
+using Matrix = std::vector<Vector<T>>;
+
+template <typename T>
+struct Literal
+{
+  T atom;
+  bool neg;
+};
+using Clause = std::vector<Literal<KeywordId>>;
+using CnfFormula = std::vector<Clause>;
+
+/** User query for testing models.
+ *  FORMAT: (user_query, target_frame_ID) */
+using UserTestQuery = std::pair<std::vector<CnfFormula>, FrameId>;
+using UserTestNativeQuery = std::pair<std::vector<std::string>, FrameId>;
+
+/** Value indicating error/invalid/"NULL" value for the given type. */
+template <typename T>
+constexpr T ERR_VAL()
+{
+  return std::numeric_limits<T>::max();
+}
 
 /**********************************************
  * Name definitions
@@ -177,46 +217,6 @@ struct DataPackStats
 
   float label_hit_prob{ std::numeric_limits<float>::quiet_NaN() };
 };
-
-/**
- * Basic typenames
- */
-
-using KeywordId = size_t;
-
-template <typename T>
-struct Literal
-{
-  T atom;
-  bool neg;
-};
-using Clause = std::vector<Literal<KeywordId>>;
-using CnfFormula = std::vector<Clause>;
-
-using DataName = std::string;
-using FrameId = uint32_t;
-using VideoId = uint32_t;
-using ShotId = uint32_t;
-using FrameNumber = uint32_t;
-
-template <typename T>
-using Vector = std::vector<T>;
-
-template <typename T>
-using Matrix = std::vector<Vector<T>>;
-
-/** User query for testing models.
- *  FORMAT: (user_query, target_frame_ID) */
-using UserTestQuery = std::pair<std::vector<CnfFormula>, FrameId>;
-using UserTestNativeQuery = std::pair<std::vector<std::string>, FrameId>;
-
-using ModelKeyValOption = std::pair<std::string, std::string>;
-
-template <typename T>
-constexpr T ERR_VAL()
-{
-  return std::numeric_limits<T>::max();
-}
 
 struct DataInfo
 {
