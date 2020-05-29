@@ -19,6 +19,7 @@ NoTransform::NoTransform(const KeywordsContainer& keywords, Matrix<float>& data_
 
 Matrix<float> NoTransformGoogleVision::apply(const Matrix<float>& data, [[maybe_unused]] const std::string& options)
 {
+  // We apply no transform
   return data;
 }
 

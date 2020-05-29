@@ -10,6 +10,7 @@ namespace image_ranker
 {
 class KeywordsContainer;
 
+/** Structure representing unique key for TF-IDF scheme */
 using TfidfCacheKey = std::tuple<eTermFrequency, eInvDocumentFrequency, float, float>;
 
 /**
@@ -21,6 +22,7 @@ template <class TransformClass>
   return TransformClass::apply(data, options);
 }
 
+/** Types of accumulation of hyponyms for hypernyms */
 enum class HyperAccumType
 {
   SUM,
@@ -28,10 +30,12 @@ enum class HyperAccumType
   _COUNT
 };
 
+/** Accumulates values of all hyponyms for each hypernym. */
 [[nodiscard]] std::pair<Matrix<float>, DataInfo> accumulate_hypernyms(const KeywordsContainer& keywords,
                                                                       Matrix<float>&& data, HyperAccumType type,
                                                                       bool normalize = true, bool accumulate = true);
 
+/** Calculates statistics for the given data. */
 [[nodiscard]] std::pair<Matrix<float>, DataInfo> calc_stats(const KeywordsContainer& keywords, Matrix<float>&& data,
                                                             bool normalize = true);
 
@@ -41,19 +45,23 @@ enum class HyperAccumType
  */
 class [[nodiscard]] BaseVectorTransform
 {
+  /*
+   * Methods
+   */
  public:
   // -----------------------------------------
   // We need virtual dctor.
   BaseVectorTransform() = default;
   BaseVectorTransform(const BaseVectorTransform& other) = default;
-  BaseVectorTransform(BaseVectorTransform&& other) = default;
+  BaseVectorTransform(BaseVectorTransform && other) = default;
   BaseVectorTransform& operator=(const BaseVectorTransform& other) = default;
   BaseVectorTransform& operator=(BaseVectorTransform&& other) = default;
   virtual ~BaseVectorTransform() noexcept = default;
   // -----------------------------------------
 
-  BaseVectorTransform(std::pair<Matrix<float>, DataInfo>&& data_sum_mat,
-    std::pair<Matrix<float>, DataInfo>&& data_max_mat, std::pair<Matrix<float>, DataInfo>&& data_lin_raw = std::pair<Matrix<float>, DataInfo>{})
+  BaseVectorTransform(std::pair<Matrix<float>, DataInfo> && data_sum_mat,
+                      std::pair<Matrix<float>, DataInfo> && data_max_mat,
+                      std::pair<Matrix<float>, DataInfo>&& data_lin_raw = std::pair<Matrix<float>, DataInfo>{})
       : _data_sum_mat(std::move(data_sum_mat.first)),
         _data_sum_mat_info(std::move(data_sum_mat.second)),
         _data_max_mat(std::move(data_max_mat.first)),
@@ -79,6 +87,9 @@ class [[nodiscard]] BaseVectorTransform
   [[nodiscard]] virtual size_t num_frames() const { return _data_sum_mat.size(); }
   [[nodiscard]] virtual size_t num_dims() const { return _data_sum_mat.at(0).size(); }
 
+  /*
+   * Member variables
+   */
  private:
   /** Data with precomputed hypernyms as a sum of all hyponyms
    *  Used for models with SUM inner operation. */

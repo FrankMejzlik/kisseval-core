@@ -1,8 +1,8 @@
 #pragma once
 
-// ===================================
-// Include user-defined aggregations
-// ==================================
+/*************************************
+ * Include user-defined aggregations
+ *************************************/
 
 #include "BaseVectorTransform.h"
 #include "NoTransform.h"

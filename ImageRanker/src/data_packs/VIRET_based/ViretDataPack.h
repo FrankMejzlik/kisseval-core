@@ -15,6 +15,9 @@ namespace image_ranker
 {
 class [[nodiscard]] ViretDataPack : public BaseDataPack
 {
+  /*
+   * Methods
+   */
  public:
   ViretDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID, bool accumulated,
                 const std::string& model_options, const std::string& description, const DataPackStats& stats,
@@ -53,6 +56,9 @@ class [[nodiscard]] ViretDataPack : public BaseDataPack
   /** Converts CNF query using wordnet IDs to the one using only valid vector indices. */
   CnfFormula wordnet_IDs_to_vector_indices(CnfFormula ID_query) const;
 
+  /*
+   * Member varibales
+   */
  private:
   /** Data pack's supported vocabulary. */
   mutable KeywordsContainer _keywords;

@@ -9,35 +9,40 @@ namespace image_ranker
 class KeywordsContainer;
 
 /**
- * Row-wise transformation that ONLY HOLDS Softmax transformed data.
- *
- * \remark Please note that this class assumes that already softmax-ed data will be passed into it's contructor.
+ * Transformation that represents no transformation whatsoever.
  */
-class NoTransform : public BaseVectorTransform
+class [[nodiscard]] NoTransform : public BaseVectorTransform
 {
  public:
   struct Options
   {
+    // No options needed here
   };
 
  public:
-  [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, [[maybe_unused]] const std::string& options = "");
-
   NoTransform(const KeywordsContainer& keywords, Matrix<float>& data_mat,
-                        [[maybe_unused]] const std::string& options = "");
+              [[maybe_unused]] const std::string& options = "");
+
+  /** Applies this transformation on the data with the provided options. */
+  [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, [[maybe_unused]] const std::string& options = "");
 };
 
-class NoTransformGoogleVision : public BaseVectorTransform
+/**
+ * Transformation that represents no transformation whatsoever for GoogleVision AI data.
+ */
+class [[nodiscard]] NoTransformGoogleVision : public BaseVectorTransform
 {
  public:
   struct Options
   {
+    // No options needed here
   };
 
  public:
-  [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, [[maybe_unused]] const std::string& options = "");
-
   NoTransformGoogleVision(const KeywordsContainer& keywords, Matrix<float>& data_mat,
-                        [[maybe_unused]] const std::string& options = "");
+                          [[maybe_unused]] const std::string& options = "");
+
+  /** Applies this transformation on the data with the provided options. */
+  [[nodiscard]] static Matrix<float> apply(const Matrix<float>& data, [[maybe_unused]] const std::string& options = "");
 };
 }  // namespace image_ranker

@@ -9,15 +9,14 @@ namespace image_ranker
 class KeywordsContainer;
 
 /**
- * Row-wise transformation that ONLY HOLDS Softmax transformed data.
- *
- * \remark Please note that this class assumes that already softmax-ed data will be passed into it's contructor.
+ * Row-wise transformation representing SOFTMAX transformation.
  */
-class TransformationSoftmax : public BaseVectorTransform
+class [[nodiscard]] TransformationSoftmax : public BaseVectorTransform
 {
  public:
   struct Options
   {
+    // None needed
   };
 
  public:
@@ -28,11 +27,15 @@ class TransformationSoftmax : public BaseVectorTransform
                         [[maybe_unused]] const std::string& options = "");
 };
 
-class TransformationSoftmaxGoogleVision : public BaseVectorTransform
+/**
+ * Row-wise transformation representing SOFTMAX transformation for Google Vision AI.
+ */
+class [[nodiscard]] TransformationSoftmaxGoogleVision : public BaseVectorTransform
 {
  public:
   struct Options
   {
+    // None needed
   };
 
  public:

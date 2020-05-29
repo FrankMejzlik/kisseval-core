@@ -4,9 +4,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "KeywordsContainer.h"
 #include "BaseClassificationModel.h"
 #include "BaseVectorTransform.h"
+#include "KeywordsContainer.h"
 #include "SimUser.h"
 
 #include "data_packs/BaseDataPack.h"
@@ -15,6 +15,9 @@ namespace image_ranker
 {
 class [[nodiscard]] GoogleVisionDataPack : public BaseDataPack
 {
+  /*
+   * Methods
+   */
  public:
   GoogleVisionDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
                        const std::string& model_options, const std::string& description, const DataPackStats& stats,
@@ -27,15 +30,15 @@ class [[nodiscard]] GoogleVisionDataPack : public BaseDataPack
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
                                                    const std::string& model_options, size_t num_points) const override;
 
-  [[nodiscard]] void cache_up_example_images(const std::vector<const Keyword*>& kws,
-                                             const std::string& model_commands) const;
+  [[nodiscard]] void cache_up_example_images(const std::vector<const Keyword*>& kws, const std::string& model_commands)
+      const;
 
   [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(
       FrameId frame_ID, const std::vector<ModelKeyValOption>& opt_key_vals, bool accumulated) const override;
 
   [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(
-      const std::string& query_prefix, size_t result_size, bool with_example_images,
-      const std::string& model_commands) const override;
+      const std::string& query_prefix, size_t result_size, bool with_example_images, const std::string& model_commands)
+      const override;
 
   [[nodiscard]] virtual const std::string& get_vocab_ID() const override;
   [[nodiscard]] virtual const std::string& get_vocab_description() const override;
@@ -43,8 +46,11 @@ class [[nodiscard]] GoogleVisionDataPack : public BaseDataPack
 
  private:
   /** Converts CNF query using keyword IDs to the one using only valid vector indices */
-  CnfFormula keyword_IDs_to_vector_indices(CnfFormula ID_query) const;
+  [[nodiscard]] static CnfFormula keyword_IDs_to_vector_indices(CnfFormula ID_query);
 
+  /*
+   * Member variables
+   */
  private:
   /** Data pack's supported vocabulary. */
   mutable KeywordsContainer _keywords;

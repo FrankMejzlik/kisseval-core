@@ -11,7 +11,7 @@
 
 namespace image_ranker
 {
-class SelFramesDataset : public BaseImageset
+class [[nodiscard]] SelFramesDataset : public BaseImageset
 {
  public:
   SelFramesDataset(const std::string& name, const std::string& images_dir, std::vector<SelFrame>&& frames)

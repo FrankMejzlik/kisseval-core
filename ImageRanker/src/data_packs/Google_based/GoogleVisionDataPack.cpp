@@ -24,11 +24,7 @@ GoogleVisionDataPack::GoogleVisionDataPack(const BaseImageset* p_is, const Strin
     _transforms.emplace(enum_label(eTransformationIds::LINEAR_01).first,
                         std::make_unique<TransformationLinear01GoogleVision>(_keywords, _presoftmax_data_raw));
   });
-  /*std::thread t3([this]() {
-    _transforms.emplace(enum_label(eTransformationIds::NO_TRANSFORM).first,
-                        std::make_unique<NoTransformGoogleVision>(_keywords, _presoftmax_data_raw));
-  });*/
-
+  
   std::thread t3([this]() {
     _transforms.emplace(enum_label(eTransformationIds::SOFTMAX).first,
                         std::make_unique<TransformationSoftmaxGoogleVision>(_keywords, _presoftmax_data_raw));
@@ -87,7 +83,8 @@ void GoogleVisionDataPack::cache_up_example_images(const std::vector<const Keywo
 std::vector<const Keyword*> GoogleVisionDataPack::get_frame_top_classes(
     FrameId frame_ID, const std::vector<ModelKeyValOption>& opt_key_vals, [[maybe_unused]] bool accumulated) const
 {
-  bool max_based{ false };
+  // Not yet used.
+  //bool max_based{ false };
   std::string transform_ID{ "linear_01" };
 
   for (auto&& [key, val] : opt_key_vals)
@@ -99,10 +96,11 @@ std::vector<const Keyword*> GoogleVisionDataPack::get_frame_top_classes(
     else if (key == "model_operations")
     {
       // If max-based model
-      if (val == "mult-max" || val == "sum-max" || val == "max-max")
+      // Not yet used.
+      /*if (val == "mult-max" || val == "sum-max" || val == "max-max")
       {
         max_based = true;
-      }
+      }*/
     }
   }
 
@@ -335,7 +333,7 @@ DataPackInfo GoogleVisionDataPack::get_info() const
                        _keywords.get_description() };
 }
 
-CnfFormula GoogleVisionDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) const
+CnfFormula GoogleVisionDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query)
 {
   // Google vocabulary has no hypernyms
   return ID_query;
