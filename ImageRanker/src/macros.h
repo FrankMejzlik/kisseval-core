@@ -24,8 +24,9 @@
 #  define DISABLE_WARNING_PUSH DO_PRAGMA(GCC diagnostic push)
 
 // We have to name the warnings unfortunetely
-#  define DISABLE_ALL_WARNINGS_PUSH DO_PRAGMA(GCC diagnostic push) \
-    DO_PRAGMA(GCC diagnostic ignored "-Wimplicit-fallthrough=")\
+#  define DISABLE_ALL_WARNINGS_PUSH                             \
+    DO_PRAGMA(GCC diagnostic push)                              \
+    DO_PRAGMA(GCC diagnostic ignored "-Wimplicit-fallthrough=") \
     DO_PRAGMA(GCC diagnostic ignored "-Wcast-function-type")
 
 #  define DISABLE_WARNING_POP DO_PRAGMA(GCC diagnostic pop)

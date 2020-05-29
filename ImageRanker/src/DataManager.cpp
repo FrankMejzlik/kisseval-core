@@ -418,7 +418,7 @@ std::pair<std::vector<SearchSession>, std::vector<SearchSessionAction>> DataMana
     size_t duration{ str_to<size_t>(row[2]) };
     bool found{ static_cast<bool>(str_to<unsigned char>(row[3])) };
 
-    sessions.emplace_back(SearchSession{ ID, target_frame_ID, duration, found, std::vector<SearchSessionAction>{}});
+    sessions.emplace_back(SearchSession{ ID, target_frame_ID, duration, found, std::vector<SearchSessionAction>{} });
   }
 
   // Parse all actions
