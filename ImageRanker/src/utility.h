@@ -77,7 +77,9 @@ template <typename T>
   }
 
   uint32_t num{ 1 };
-  return *(reinterpret_cast<char*>(&num)) == 1;  // NOLINT
+
+  auto v{reinterpret_cast<char*>(&num)};
+  return *v == 1;  // NOLINT
 }
 
 /**
@@ -277,7 +279,8 @@ template <typename T>
                static_cast<uint32_t>(buff[1]) << 8 | static_cast<uint32_t>(buff[0]);          // NOLINT
 
   // Return reinterpreted data
-  return *(reinterpret_cast<float*>(&byte_float));  // NOLINT
+  auto pfl{reinterpret_cast<float*>(&byte_float)};
+  return *pfl;  // NOLINT
 }
 
 [[nodiscard]] inline float parse_float32_LE(const std::vector<char>& buff)
@@ -295,7 +298,8 @@ template <typename T>
                static_cast<uint32_t>(buff[1]) << 8 | static_cast<uint32_t>(buff[0]);          // NOLINT
 
   // Return reinterpreted data
-  return *(reinterpret_cast<float*>(&byte_float));  // NOLINT
+  auto a {reinterpret_cast<float*>(&byte_float)}; // NOLINT
+  return *a;  
 }
 
 /**
@@ -334,6 +338,21 @@ template <typename T>
     LOGE(msg);
     PROD_THROW("Data error!");
   }
+}
+
+[[nodiscard]] inline float str_to_float(const std::string& str)
+{
+  std::stringstream ss_fl{str};
+
+  float f;
+  if (!(ss_fl >> f))
+  {
+    std::string msg{ "Conversion of string '"s + str + "'." };
+    LOGE(msg);
+    PROD_THROW("Data error!");
+  }
+
+  return f;
 }
 
 [[nodiscard]] inline std::vector<std::string> tokenize_query_and(std::string_view query)

@@ -30,7 +30,7 @@ class [[nodiscard]] GoogleVisionDataPack : public BaseDataPack
   [[nodiscard]] virtual ModelTestResult test_model(const std::vector<UserTestQuery>& test_queries,
                                                    const std::string& model_options, size_t num_points) const override;
 
-  [[nodiscard]] void cache_up_example_images(const std::vector<const Keyword*>& kws, const std::string& model_commands)
+  void cache_up_example_images(const std::vector<const Keyword*>& kws, const std::string& model_commands)
       const;
 
   [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(

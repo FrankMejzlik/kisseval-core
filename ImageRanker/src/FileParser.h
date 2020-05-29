@@ -87,7 +87,7 @@ class [[nodiscard]] FileParser
   [[nodiscard]] static std::vector<SelFrame> parse_image_metadata(
       const std::string& idToFilename, const FrameFilenameOffsets& offsets, size_t imageIdStride = 1);
 
-  [[nodiscard]] static void process_shot_stack(std::stack<SelFrame*> & videoFrames);
+  static void process_shot_stack(std::stack<SelFrame*> & videoFrames);
 
   [[nodiscard]] static std::vector<ImageIdFilenameTuple> get_image_filenames(const std::string& frame_to_ID_map_fpth);
 };

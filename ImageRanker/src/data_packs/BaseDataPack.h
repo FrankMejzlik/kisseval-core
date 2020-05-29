@@ -71,6 +71,7 @@ class [[nodiscard]] BaseDataPack
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested."s);
     PROD_THROW_NOT_SUPP("This data pack does not support this."s);
+    return RankingResult{};
   };
 
   /**
@@ -88,6 +89,7 @@ class [[nodiscard]] BaseDataPack
     // Datapacks do not have to support this
     LOGE("Unsupported data pack feature requested."s);
     PROD_THROW_NOT_SUPP("This data pack does not support this."s);
+    return std::vector<const Keyword*>{};
   };
 
   /**

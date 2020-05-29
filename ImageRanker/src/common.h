@@ -11,6 +11,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <memory>
 #include <vector>
 using namespace std::string_literals;
 
@@ -44,7 +45,7 @@ template <typename T>
 struct Literal
 {
   T atom;
-  bool neg;
+  bool neg{false};
 };
 using Clause = std::vector<Literal<KeywordId>>;
 using CnfFormula = std::vector<Clause>;
