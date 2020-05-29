@@ -18,14 +18,6 @@ class BaseW2vvModel : public BaseSpaceModel
    * Methods
    */
  public:
-   BaseW2vvModel() = default;
-   BaseW2vvModel(const BaseW2vvModel& other) = default;
-   BaseW2vvModel(BaseW2vvModel&& other) = default;
-   virtual ~BaseW2vvModel() noexcept = default;
-
-   BaseW2vvModel& operator=(const BaseW2vvModel& other) = default;
-   BaseW2vvModel& operator=(BaseW2vvModel&& other) = default;
-
   /**
    * Returns sorted vector of ranked images based on provided data for the given query.
    *

@@ -214,7 +214,8 @@ RankingResult VectorSpaceModel::rank_frames(const BaseVectorTransform& transform
   }
 
   {
-    bool found_target{target_frame_ID == ERR_VAL<FrameId>() ? true : false};
+    bool found_target{target_frame_ID == ERR_VAL<FrameId>()};
+
     for (size_t i{0}; i < result_size || !found_target; ++i)
     {
       auto pair{max_prio_queue.top()};

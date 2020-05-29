@@ -8,7 +8,7 @@ using namespace std::string_literals;
 
 namespace image_ranker
 {
-
+  //
 template <typename ModelType>
 auto parse_model_options(const std::vector<ModelKeyValOption>& option_key_val_pairs) -> decltype(ModelType::Options)
 {
@@ -18,14 +18,25 @@ auto parse_model_options(const std::vector<ModelKeyValOption>& option_key_val_pa
 class KeywordsContainer;
 class BaseVectorTransform;
 
-class BaseModel {
-
+/** Base model for all models. */
+class BaseModel
+{
+protected:
+  // -----------------------------------------
+  // We need virtual dctor and abstract class.
+  BaseModel() = default;
+  BaseModel(const BaseModel& other) = default;
+  BaseModel(BaseModel&& other) = default;
+  BaseModel& operator=(const BaseModel& other) = default;
+  BaseModel& operator=(BaseModel&& other) = default;
+  virtual ~BaseModel() noexcept = default;
+  // -----------------------------------------
 };
 
-class BaseClassificationModel : public BaseModel
+class [[nodiscard]] BaseClassificationModel : public BaseModel
 {
  public:
-  /**
+    /**
    * Returns sorted vector of ranked images based on provided data for the given query.
    *
    * Query in format: "1&3&4" where numbers are indices to scoring vector.
@@ -35,7 +46,6 @@ class BaseClassificationModel : public BaseModel
       const std::vector<CnfFormula>& user_query, size_t result_size,
       const std::vector<ModelKeyValOption>& options = std::vector<ModelKeyValOption>(),
       FrameId target_frame_ID = ERR_VAL<FrameId>()) const = 0;
-
 
   /**
    * Returns results of this model after running provided test queries .

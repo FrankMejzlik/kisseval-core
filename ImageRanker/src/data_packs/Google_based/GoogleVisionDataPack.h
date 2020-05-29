@@ -60,6 +60,7 @@ class GoogleVisionDataPack : public BaseDataPack
   /** Transformations for this data pack - only classification ones */
   std::unordered_map<std::string, std::unique_ptr<BaseVectorTransform>> _transforms;
 
+  /** Loaded models for simulated users. */
   std::unordered_map<std::string, std::unique_ptr<BaseSimUser>> _sim_users;
 };
 }  // namespace image_ranker

@@ -11,14 +11,22 @@ class BaseVectorTransform;
 class KeywordsContainer;
 class BaseImageset;
 
-class BaseSimUser
+class [[nodiscard]] BaseSimUser
 {
  public:
-  virtual std::vector<UserTestQuery> process_sim_user(const BaseImageset* p_is,
-                                                      const BaseVectorTransform& transformed_data,
-                                                      const KeywordsContainer& keywords,
-                                                      const std::vector<UserTestQuery>& test_user_queries,
-                                                      std::vector<ModelKeyValOption>& options) const = 0;
+  // -----------------------------------------
+  // We need virtual dctor.
+  BaseSimUser() = default;
+  BaseSimUser(const BaseSimUser& other) = default;
+  BaseSimUser(BaseSimUser && other) = default;
+  BaseSimUser& operator=(const BaseSimUser& other) = default;
+  BaseSimUser& operator=(BaseSimUser&& other) = default;
+  virtual ~BaseSimUser() noexcept = default;
+  // -----------------------------------------
+
+  virtual std::vector<UserTestQuery> process_sim_user(
+      const BaseImageset* p_is, const BaseVectorTransform& transformed_data, const KeywordsContainer& keywords,
+      const std::vector<UserTestQuery>& test_user_queries, std::vector<ModelKeyValOption>& options) const = 0;
 
   virtual std::vector<UserTestQuery> generate_simulated_queries(
       [[maybe_unused]] const BaseImageset* p_is, [[maybe_unused]] const BaseVectorTransform& transformed_data,

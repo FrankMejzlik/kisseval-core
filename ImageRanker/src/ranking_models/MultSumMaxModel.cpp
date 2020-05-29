@@ -186,7 +186,7 @@ RankingResult MultSumMaxModel::rank_frames(const BaseVectorTransform& transforme
             break;
         }
 
-        for (size_t ii{ 0_z }; ii < TEMP_CONTEXT_LOOKUP_LENGTH && (ii + i) < data_mat.size(); ++ii)
+        for (size_t ii{ 0 }; (ii < TEMP_CONTEXT_LOOKUP_LENGTH) && ((ii + i) < data_mat.size()); ++ii)
         {
           auto features_vec{ data_mat[ii + i] };
 

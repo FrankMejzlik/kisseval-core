@@ -3,7 +3,9 @@
 #define _IR_CUSTOM_EXCEPTIONS_H_
 
 /**
- * Custom exceptions.
+ * \file custom_exceptions.h
+ *
+ * Custom exceptions for signaling errors.
  */
 
 #include <exception>
@@ -11,12 +13,9 @@
 
 namespace image_ranker
 {
-class UnableToCreateFileExcept : public std::runtime_error
-{
- public:
-  UnableToCreateFileExcept(const std::string& msg) : std::runtime_error(msg) {}
-};
-
+/**
+ * Representing unsupported feature for the given reuqest.
+ */
 class NotSuportedModelOptionExcept : public std::runtime_error
 {
  public:

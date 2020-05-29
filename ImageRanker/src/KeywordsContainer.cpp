@@ -145,19 +145,18 @@ std::vector<size_t> KeywordsContainer::get_classified_hyponyms_IDs(size_t wordne
   if (wordnetIdKeywordPair == _wordnet_ID_to_keyword.end())
   {
     LOGE("Keyword not found!");
-
-    return std::vector<size_t>();
+    PROD_THROW("Data error!");
   }
 
-  Keyword* pRootKeyword = wordnetIdKeywordPair->second;
+  Keyword* p_root_kw = wordnetIdKeywordPair->second;
 
   // It not vector keyword
-  if (pRootKeyword->classification_index == ERR_VAL<size_t>())
+  if (p_root_kw->classification_index == ERR_VAL<size_t>())
   {
     std::vector<size_t> result;
 
     // Recursively get hyponyms
-    for (auto&& hypo : pRootKeyword->hyponyms)
+    for (auto&& hypo : p_root_kw->hyponyms)
     {
       auto recur = get_classified_hyponyms_IDs(hypo);
       result.reserve(result.size() + recur.size());
@@ -168,7 +167,7 @@ std::vector<size_t> KeywordsContainer::get_classified_hyponyms_IDs(size_t wordne
   }
 
   // If vector word, return self
-  return std::vector<size_t>{ pRootKeyword->wordnet_ID };
+  return std::vector<size_t>{ p_root_kw->wordnet_ID };
 }
 
 const Keyword* KeywordsContainer::get_keyword_by_wordnet_ID(size_t wordnetId) const
@@ -216,51 +215,6 @@ Keyword* KeywordsContainer::get_keyword_by_word(const std::string& word)
   }
 
   return item->get();
-}
-
-std::vector<size_t> KeywordsContainer::find_all_needles(std::string_view hey, std::string_view needle) const
-{
-  // Step 0. Should not be empty heying
-  if (hey.size() == 0 || needle.size() == 0)
-  {
-    return std::vector<size_t>();
-  }
-
-  std::vector<size_t> resultIndices;
-
-  // Step 1. Compute failure function
-  std::vector<int> failure(needle.size(), -1);
-
-  for (int r = 1, l = -1; r < needle.size(); ++r)
-  {
-    while (l != -1 && needle[l + 1] != needle[r]) l = failure[l];
-
-    // assert( l == -1 || needle[l+1] == needle[r]);
-    if (needle[l + 1] == needle[r]) failure[r] = ++l;
-  }
-
-  // Step 2. Search needle
-  int tail = -1;
-  for (int i = 0; i < hey.size(); i++)
-  {
-    while (tail != -1 && hey[i] != needle[tail + 1]) tail = failure[tail];
-
-    if (hey[i] == needle[tail + 1]) tail++;
-
-    if (tail == needle.size() - 1)
-    {
-      resultIndices.push_back(i - tail);
-      tail = -1;
-    }
-
-    // Gather maximum of needles
-    if (resultIndices.size() >= DEF_NUMBER_OF_TOP_KWS)
-    {
-      return resultIndices;
-    }
-  }
-
-  return resultIndices;
 }
 
 const Keyword* KeywordsContainer::get_keyword_by_word(const std::string& word) const
@@ -495,17 +449,16 @@ std::vector<Keyword*> KeywordsContainer::get_near_keywords(const std::string& pr
   // If we need to add up desc search results
   if (resultKeywords.size() < numResults && prefix.size() >= MIN_DESC_SEARCH_LENGTH)
   {
-    std::vector<size_t> needleIndices = find_all_needles(_allDescriptions, prefix);
+    std::vector<size_t> needleIndices{ find_all_needles(_allDescriptions, prefix) };
 
     for (auto&& index : needleIndices)
     {
-      Keyword* pKeyword = desc_index_to_keyword(index);
-
-      resultKeywords.emplace_back(pKeyword);
+      Keyword* p_kw{ desc_index_to_keyword(index) };
+      resultKeywords.emplace_back(p_kw);
     }
   }
 
-  size_t j = 0ULL;
+  size_t j{ 0 };
   while (resultKeywords.size() < numResults)
   {
     if (j >= postResultKeywords.size())
@@ -523,10 +476,10 @@ std::vector<Keyword*> KeywordsContainer::get_near_keywords(const std::string& pr
 
 Keyword* KeywordsContainer::desc_index_to_keyword(size_t descIndex) const
 {
-  size_t left = 0ULL;
-  size_t right = _desc_indext_to_keyword.size() - 1;
+  size_t left{ 0 };
+  size_t right{ _desc_indext_to_keyword.size() - 1 };
 
-  size_t i = (right + left) / 2;
+  size_t i{ (right + left) / 2 };
 
   while (true)
   {
@@ -542,16 +495,14 @@ Keyword* KeywordsContainer::desc_index_to_keyword(size_t descIndex) const
       left = i;
     }
 
-    if (right - left <= 1)
+    if ((right - left) <= 1)
     {
       if (descIndex < _desc_indext_to_keyword[right].first)
       {
         return _desc_indext_to_keyword[left].second;
       }
-      else
-      {
-        return _desc_indext_to_keyword[right].second;
-      }
+
+      return _desc_indext_to_keyword[right].second;
       break;
     }
 
@@ -565,12 +516,13 @@ std::string KeywordsContainer::GetKeywordDescriptionByWordnetId(size_t wordnetId
 
   if (resultIt == _wordnet_ID_to_keyword.end())
   {
-    std::string("NOT FOUND");
+    LOGW("Not found description for wordnet ID '" + std::to_string(wordnetId) + "'.");
+    return std::string("");
   }
 
   size_t startDescIndex = resultIt->second->description_begin_idx;
 
-  const char* pDesc = (_allDescriptions.data()) + startDescIndex;
+  const char* kw_desc{ &(*(_allDescriptions.begin() + static_cast<ptrdiff_t>(startDescIndex))) };
 
-  return std::string(pDesc);
+  return std::string(kw_desc);
 }

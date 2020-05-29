@@ -6,7 +6,7 @@
 
 using namespace image_ranker;
 
-DataManager::DataManager(ImageRanker* p_owner) : _p_owner(p_owner), _db(DB_FPTH) {}
+DataManager::DataManager() : _db(DB_FPTH) {}
 
 void DataManager::submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,
                                                 const StringId& imageset_ID, const ::std::string& model_options,

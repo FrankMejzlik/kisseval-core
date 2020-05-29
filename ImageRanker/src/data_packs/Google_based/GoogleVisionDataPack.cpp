@@ -15,8 +15,8 @@ GoogleVisionDataPack::GoogleVisionDataPack(const BaseImageset* p_is, const Strin
                                            const GoogleDataPackRef::VocabData& vocab_data_refs,
                                            std::vector<std::vector<float>>&& presoft)
     : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description, stats),
-      _presoftmax_data_raw(std::move(presoft)),
-      _keywords(vocab_data_refs)
+      _keywords(vocab_data_refs),
+      _presoftmax_data_raw(std::move(presoft))
 {
   // Instantiate all wanted transforms
 

@@ -124,8 +124,10 @@ class [[nodiscard]] KeywordsContainer
 
       std::string aa{ a };
       std::string bb{ b };
-      std::transform(aa.begin(), aa.end(), aa.begin(), ::tolower);
-      std::transform(bb.begin(), bb.end(), bb.begin(), ::tolower);
+      std::transform(aa.begin(), aa.end(), aa.begin(),
+                     [](char c) { return static_cast<char>(tolower(static_cast<int>(c))); });
+      std::transform(bb.begin(), bb.end(), bb.begin(),
+                     [](char c) { return static_cast<char>(tolower(static_cast<int>(c))); });
 
       auto result = aa.compare(bb);
 
@@ -215,7 +217,6 @@ class [[nodiscard]] KeywordsContainer
                                                               bool skip_pure_hypers = false) const;
 
   [[nodiscard]] size_t GetNetVectorSize() const { return class_idx_to_keyword.size(); }
-  [[nodiscard]] std::vector<size_t> find_all_needles(std::string_view hey, std::string_view needle) const;
 
   /*
    * Member variables

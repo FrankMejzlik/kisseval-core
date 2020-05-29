@@ -3,10 +3,10 @@
 /**********************************
  * Compiler settings
  ***********************************/
+
 /**
  * Macros to manage error warning levels.
  */
-
 // MSVC compiler
 #if defined(_MSC_VER)
 #  define DISABLE_WARNING_PUSH __pragma(warning(push))

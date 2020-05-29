@@ -7,7 +7,7 @@
 
 namespace image_ranker
 {
-class PlainBowModel : public BaseW2vvModel
+class [[nodiscard]] PlainBowModel : public BaseW2vvModel
 {
  public:
   struct Options

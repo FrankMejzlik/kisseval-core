@@ -43,7 +43,7 @@ class DataManager
  public:
   // -----------------------------------------
   // No moving or copying.
-  DataManager() = delete;
+  DataManager();
   DataManager(const DataManager& other) = delete;
   DataManager(DataManager&& other) = delete;
   DataManager& operator=(const DataManager& other) = delete;
@@ -51,20 +51,22 @@ class DataManager
   ~DataManager() noexcept = default;
   // -----------------------------------------
 
-  /** Main ctor. */
-  DataManager(ImageRanker* p_owner);
-
+  /** Retrieves user queries from the database. */
   [[nodiscard]] std::vector<UserTestQuery> fetch_user_test_queries(eUserQueryOrigin queries_origin,
                                                                    const StringId& vocabulary_ID,
                                                                    const StringId& data_pack_ID = ""s,
                                                                    const StringId& model_options = ""s) const;
 
+  /** Retrieves search sessions from the database. */
   [[nodiscard]] std::vector<UserTestNativeQuery> fetch_user_native_test_queries(eUserQueryOrigin queries_origin,
                                                                                 const std::string& imageset_ID) const;
+
+  /** Submits user queries into the database. */
   void submit_annotator_user_queries(const StringId& data_pack_ID, const StringId& vocab_ID,
                                      const StringId& imageset_ID, const ::std::string& model_options, size_t user_level,
                                      bool with_example_images, const std::vector<AnnotatorUserQuery>& user_queries);
 
+  /** Submits search session into the database. */
   void submit_search_session(const std::string& data_pack_ID, const std::string& vocabulary_ID,
                              const std::string& model_options, size_t user_level, bool with_example_images,
                              FrameId target_frame_ID, eSearchSessionEndStatus end_status, size_t duration,
@@ -99,9 +101,6 @@ class DataManager
    * Member variables
    */
  private:
-  /** Pointer to this class's owner. */
-  ImageRanker* _p_owner;
-
   /** Database for the user data. */
   Database _db;
 

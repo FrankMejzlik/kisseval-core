@@ -17,10 +17,10 @@ ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const
                              std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
                              std::vector<std::vector<float>>&& feas_data)
     : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description, stats),
+      _keywords(vocab_data_refs),
       _feas_data_raw(std::move(feas_data)),
       _presoftmax_data_raw(std::move(presoft)),
-      _softmax_data_raw(std::move(softmax_data)),
-      _keywords(vocab_data_refs)
+      _softmax_data_raw(std::move(softmax_data))
 {
   // Instantiate all wanted transforms
   std::thread t1([this, accumulated]() {

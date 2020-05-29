@@ -9,9 +9,19 @@ namespace image_ranker
 {
 class BaseImageset;
 
-class BaseDataPack
+class [[nodiscard]] BaseDataPack
 {
  public:
+  // -----------------------------------------
+  // We need virtual dctor.
+  BaseDataPack() = default;
+  BaseDataPack(const BaseDataPack& other) = default;
+  BaseDataPack(BaseDataPack&& other) = default;
+  BaseDataPack& operator=(const BaseDataPack& other) = default;
+  BaseDataPack& operator=(BaseDataPack&& other) = default;
+  virtual ~BaseDataPack() noexcept = default;
+  // -----------------------------------------
+
   BaseDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
                const std::string& model_options, const std::string& description, const DataPackStats& stats)
       : _stats(stats),
@@ -29,6 +39,7 @@ class BaseDataPack
   [[nodiscard]] virtual RankingResult rank_frames(
       [[maybe_unused]] const std::vector<CnfFormula>& user_queries, [[maybe_unused]] const std::string& model_options,
       [[maybe_unused]] size_t result_size, [[maybe_unused]] FrameId target_image_ID = ERR_VAL<FrameId>()) const = 0;
+
   [[nodiscard]] virtual RankingResult rank_frames([[maybe_unused]] const std::vector<std::string>& user_native_queries,
                                                   [[maybe_unused]] const std::string& model_options,
                                                   [[maybe_unused]] size_t result_size,
@@ -51,6 +62,7 @@ class BaseDataPack
   [[nodiscard]] virtual ModelTestResult test_model([[maybe_unused]] const std::vector<UserTestQuery>& test_queries,
                                                    [[maybe_unused]] const std::string& model_commands,
                                                    [[maybe_unused]] size_t num_points) const = 0;
+
   [[nodiscard]] virtual ModelTestResult test_model(
       [[maybe_unused]] const std::vector<UserTestNativeQuery>& test_native_queries,
       [[maybe_unused]] const std::string& model_commands, [[maybe_unused]] size_t num_points) const
@@ -74,8 +86,6 @@ class BaseDataPack
   [[nodiscard]] virtual const std::string& get_vocab_description() const = 0;
 
   [[nodiscard]] virtual const DataPackStats& get_stats() const { return _stats; };
-
-
 
   [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(const std::string& query_prefix,
                                                                          size_t result_size, bool with_example_images,

@@ -12,9 +12,9 @@ std::string Database::escape_str(const std::string& raw_str)
 }
 
 Database::Database(const std::string& db_filepath)
-    : _db_fpth(db_filepath),
-      // Add custom deleter for this pointer
-      _p_db(nullptr, [](sqlite3* ptr) { sqlite3_close(ptr); })
+    :  // Add custom deleter for this pointer
+      _p_db(nullptr, [](sqlite3* ptr) { sqlite3_close(ptr); }),
+      _db_fpth(db_filepath)
 {
   int rc{ ERR_VAL<int>() };
 
@@ -81,7 +81,7 @@ std::vector<std::vector<std::string>> Database::result_query(const std::string& 
   while ((ret_code = sqlite3_step(stmt)) == SQLITE_ROW)
   {
     // execute sql statement, and while there are rows returned, print ID
-    auto cnt = sqlite3_data_count(stmt);
+    auto cnt = static_cast<size_t>(sqlite3_data_count(stmt));
 
     std::vector<std::string> r;
     for (size_t i{ 0_z }; i < cnt; ++i)

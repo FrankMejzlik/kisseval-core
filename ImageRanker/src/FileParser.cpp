@@ -44,13 +44,13 @@ std::vector<std::vector<float>> FileParser::parse_float_matrix(const std::string
   std::vector<char> line_byte_buffer(row_byte_len);
 
   // Start reading at this offset
-  ifs.ignore(begin_offset);
+  ifs.ignore(std::streamsize(begin_offset));
 
   // Declare result structure
   std::vector<std::vector<float>> result_features;
 
   // Read binary "lines" until EOF
-  while (ifs.read(line_byte_buffer.data(), row_byte_len))
+  while (ifs.read(line_byte_buffer.data(), std::streamsize(row_byte_len)))
   {
     // Initialize vector of floats for this row
     std::vector<float> features_vector;
@@ -114,14 +114,14 @@ std::vector<float> FileParser::parse_float_vector(const std::string& filepath, s
   std::vector<char> line_byte_buffer(row_byte_len);
 
   // Start reading at this offset
-  ifs.ignore(begin_offset);
+  ifs.ignore(std::streamsize(begin_offset));
 
   // Initialize vector of floats for this row
   std::vector<float> features_vector;
   features_vector.reserve(dim);
 
   // Read binary "lines" until EOF
-  while (ifs.read((char*)line_byte_buffer.data(), row_byte_len))  // NOLINT
+  while (ifs.read((char*)line_byte_buffer.data(), std::streamsize(row_byte_len)))  // NOLINT
   {
     size_t curr_offset = 0;
 
@@ -451,7 +451,7 @@ ViretKeywordClassesParsedData FileParser::parse_VIRET_format_keyword_classes_fil
     // Insert all synonyms as well
     while (std::getline(classnames, finalWord, SYNONYM_DELIMITER_001))
     {
-      std::string description{ &(*(_allDescriptions.begin() + descStartIndex)) };
+      std::string description{ &(*(_allDescriptions.begin() + static_cast<ptrdiff_t>(descStartIndex))) };
 
       // Insert this record into table
       _keywords.emplace_back(std::make_unique<Keyword>(FrameId(frame_ID), wordnetId, vectorIndex, std::move(finalWord),
@@ -536,7 +536,7 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_VIRET_format_frame_ve
   }
 
   // Parse number of present floats in every row
-  int32_t numFloats = ParseIntegerLE(buff_4B);
+  size_t numFloats = static_cast<size_t>(ParseIntegerLE(buff_4B));
 
   // Calculate byte length of each row
   size_t byteRowLengths = numFloats * sizeof(float) + sizeof(int32_t);
@@ -545,10 +545,10 @@ std::pair<Matrix<float>, DataParseStats> FileParser::parse_VIRET_format_frame_ve
   std::vector<char> lineBuffer(byteRowLengths);
 
   // Iterate until there is something to read from file
-  while (ifs.read(lineBuffer.data(), byteRowLengths))
+  while (ifs.read(lineBuffer.data(), std::streamsize(byteRowLengths)))
   {
     // Get picture ID of this row
-    size_t id = ParseIntegerLE(lineBuffer);
+    size_t id = static_cast<size_t>(ParseIntegerLE(lineBuffer));
 
     // Stride in bytes
     size_t currOffset = sizeof(float);

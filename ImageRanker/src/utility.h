@@ -680,3 +680,56 @@ inline Matrix<T> normalize_matrix_rows(Matrix<T>&& orig_mat)
 
   return orig_mat;
 }
+
+inline std::vector<size_t> find_all_needles(const std::string& hey, const std::string& needle)
+{
+  if (hey.empty() || needle.empty())
+  {
+    return std::vector<size_t>{};
+  }
+
+  std::vector<size_t> res_indices;
+  std::vector<int> failure(needle.size(), -1);
+
+  int needle_size{ static_cast<int>(needle.size()) };
+  for (int r = 1, l = -1; r < needle_size; ++r)
+  {
+    while ((l != -1) && (needle[size_t(l + 1)] != needle[size_t(r)]))
+    {
+      l = failure[size_t(l)];
+    }
+
+    if (needle[size_t(l + 1)] == needle[size_t(r)])
+    {
+      failure[size_t(r)] = ++l;
+    }
+  }
+
+  int tail = -1;
+  for (size_t i{ 0 }; i < hey.size(); i++)
+  {
+    while (tail != -1 && hey[i] != needle[size_t(tail + 1)])
+    {
+      tail = failure[size_t(tail)];
+    }
+
+    if (hey[i] == needle[size_t(tail + 1)])
+    {
+      tail++;
+    }
+
+    if (tail == static_cast<int>(needle.size()) - 1)
+    {
+      res_indices.push_back(static_cast<size_t>(i - tail));
+      tail = -1;
+    }
+
+    // Gather maximum of needles
+    if (res_indices.size() >= DEF_NUMBER_OF_TOP_KWS)
+    {
+      return res_indices;
+    }
+  }
+
+  return res_indices;
+}

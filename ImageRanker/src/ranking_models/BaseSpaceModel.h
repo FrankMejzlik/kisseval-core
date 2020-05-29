@@ -1,8 +1,10 @@
 #pragma once
 
+#include "BaseClassificationModel.h"
+
 namespace image_ranker
 {
-class BaseSpaceModel
+class [[nodiscard]] BaseSpaceModel : public BaseModel
 {
 };
 

@@ -60,12 +60,13 @@ class ViretDataPack : public BaseDataPack
   std::vector<std::vector<float>> _presoftmax_data_raw;
   std::vector<std::vector<float>> _softmax_data_raw;
 
-  /** Models for this data pack - only classification ones */
+  /** Models for this data pack - only classification ones. */
   std::unordered_map<std::string, std::unique_ptr<BaseClassificationModel>> _models;
 
-  /** Transformations for this data pack - only classification ones */
+  /** Transformations for this data pack - only classification ones. */
   std::unordered_map<std::string, std::unique_ptr<BaseVectorTransform>> _transforms;
 
+  /** Models of supported simulated users. */
   std::unordered_map<std::string, std::unique_ptr<BaseSimUser>> _sim_users;
 };
 }  // namespace image_ranker

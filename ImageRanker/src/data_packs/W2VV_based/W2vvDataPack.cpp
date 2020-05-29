@@ -14,12 +14,12 @@ W2vvDataPack::W2vvDataPack(const BaseImageset* p_is, const StringId& ID, const S
                            std::vector<std::vector<float>>&& frame_features, Matrix<float>&& kw_features,
                            Vector<float>&& kw_bias_vec, Matrix<float>&& kw_PCA_mat, Vector<float>&& kw_PCA_mean_vec)
     : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description, stats),
-      _features_of_frames(std::move(frame_features)),
       _keywords(vocab_data_refs),
       _kw_features(std::move(kw_features)),
       _kw_bias_vec(std::move(kw_bias_vec)),
       _kw_PCA_mat(std::move(kw_PCA_mat)),
-      _kw_PCA_mean_vec(std::move(kw_PCA_mean_vec))
+      _kw_PCA_mean_vec(std::move(kw_PCA_mean_vec)),
+      _features_of_frames(std::move(frame_features))
 {
   // Instantiate all wanted models
   _models.emplace(enum_label(eModelIds::W2VV_BOW_VBS2020).first, std::make_unique<PlainBowModel>());

@@ -17,11 +17,9 @@
 using namespace std::string_literals;
 
 #include "common.h"
-#include "config.h"
 #include "utility.h"
 
 #include "DataManager.h"
-#include "Database.h"
 #include "FileParser.h"
 
 #include "data_packs/BaseDataPack.h"
@@ -161,10 +159,10 @@ class [[nodiscard]] ImageRanker
    * \param normalize_y         If y values should be normalized into percentage.
    * \return              Returns data needed for visualisation of effectivity chart.
    */
-  [[nodiscard]] virtual ModelTestResult run_model_test(
-      eUserQueryOrigin queries_origin, const std::string& data_pack_ID, const std::string& model_options,
-      bool native_lang_queries = false, size_t num_points = NUM_MODEL_TEST_RESULT_POINTS, bool normalize_y = true)
-      const;
+  [[nodiscard]] ModelTestResult run_model_test(eUserQueryOrigin queries_origin, const std::string& data_pack_ID,
+                                               const std::string& model_options, bool native_lang_queries = false,
+                                               size_t num_points = NUM_MODEL_TEST_RESULT_POINTS,
+                                               bool normalize_y = true) const;
 
   /**
    * This processes input queries that come from users, generates results and sends them back.

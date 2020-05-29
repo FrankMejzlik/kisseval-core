@@ -39,16 +39,26 @@ enum class HyperAccumType
  * Class representing transformed data matrix, but this serves mainly as base class and theferoe is "no_transform"
  * transformation.
  */
-class BaseVectorTransform
+class [[nodiscard]] BaseVectorTransform
 {
  public:
+  // -----------------------------------------
+  // We need virtual dctor.
+  BaseVectorTransform() = default;
+  BaseVectorTransform(const BaseVectorTransform& other) = default;
+  BaseVectorTransform(BaseVectorTransform&& other) = default;
+  BaseVectorTransform& operator=(const BaseVectorTransform& other) = default;
+  BaseVectorTransform& operator=(BaseVectorTransform&& other) = default;
+  virtual ~BaseVectorTransform() noexcept = default;
+  // -----------------------------------------
+
   BaseVectorTransform(std::pair<Matrix<float>, DataInfo>&& data_sum_mat,
     std::pair<Matrix<float>, DataInfo>&& data_max_mat, std::pair<Matrix<float>, DataInfo>&& data_lin_raw = std::pair<Matrix<float>, DataInfo>{})
       : _data_sum_mat(std::move(data_sum_mat.first)),
-        _data_max_mat(std::move(data_max_mat.first)),
-        _data_linear_raw(std::move(data_lin_raw.first)),
         _data_sum_mat_info(std::move(data_sum_mat.second)),
+        _data_max_mat(std::move(data_max_mat.first)),
         _data_max_mat_info(std::move(data_max_mat.second)),
+        _data_linear_raw(std::move(data_lin_raw.first)),
         _data_linear_raw_info(std::move(data_lin_raw.second))
   {
   }
