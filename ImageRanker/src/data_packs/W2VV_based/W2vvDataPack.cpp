@@ -29,7 +29,6 @@ const std::string& W2vvDataPack::get_vocab_ID() const { return _keywords.get_ID(
 
 const std::string& W2vvDataPack::get_vocab_description() const { return _keywords.get_description(); }
 
-
 RankingResult W2vvDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, const std::string& model_commands,
                                         size_t result_size, FrameId target_image_ID) const
 {
@@ -79,6 +78,7 @@ RankingResult W2vvDataPack::rank_frames(const std::vector<std::string>& user_nat
                                         FrameId target_image_ID) const
 {
   std::vector<CnfFormula> cnf_queries;
+  cnf_queries.reserve(user_native_queries.size());
   for (auto&& nat_q : user_native_queries)
   {
     cnf_queries.emplace_back(native_query_to_CNF_formula(nat_q));
@@ -128,7 +128,7 @@ ModelTestResult W2vvDataPack::test_model(const std::vector<UserTestQuery>& test_
   const auto& ranking_model = *(iter_m->second);
 
   // Choose desired simulated user
-#if 0 // \todo Add sim user for W2VV++.
+#if 0  // \todo Add sim user for W2VV++.
   auto iter_su = _sim_users.find(sim_user_ID);
   if (iter_su == _sim_users.end())
   {
@@ -190,7 +190,10 @@ CnfFormula W2vvDataPack::native_query_to_CNF_formula(const std::string& native_q
   std::string illegal_chars = "\\/?!,.'\"";
   std::transform(native_query.begin(), native_query.end(), nat_query.begin(), [&illegal_chars](char c) {
     // If found in illegal, make it space
-    if (illegal_chars.find(c) != std::string::npos) return ' ';
+    if (illegal_chars.find(c) != std::string::npos)
+    {
+      return ' ';
+    };
 
     return char(std::tolower(c));
   });
@@ -204,7 +207,7 @@ CnfFormula W2vvDataPack::native_query_to_CNF_formula(const std::string& native_q
   while (query_ss >> token_str)
   {
     auto p_kw = _keywords.get_keyword_by_word(token_str);
-    if (!p_kw)
+    if (p_kw == nullptr)
     {
       ++ignore_cnt;
       continue;

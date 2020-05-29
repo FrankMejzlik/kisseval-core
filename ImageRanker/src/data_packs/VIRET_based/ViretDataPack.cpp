@@ -11,14 +11,14 @@
 
 using namespace image_ranker;
 
-ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,bool accumulated,
-                             const std::string& model_options, const std::string& description, const DataPackStats& stats,
-                             const ViretDataPackRef::VocabData& vocab_data_refs,
+ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
+                             bool accumulated, const std::string& model_options, const std::string& description,
+                             const DataPackStats& stats, const ViretDataPackRef::VocabData& vocab_data_refs,
                              std::vector<std::vector<float>>&& presoft, std::vector<std::vector<float>>&& softmax_data,
                              std::vector<std::vector<float>>&& feas_data)
     : BaseDataPack(p_is, ID, target_imageset_ID, model_options, description, stats),
       _keywords(vocab_data_refs),
-      _feas_data_raw(std::move(feas_data)),
+      _deep_feas_data_raw(std::move(feas_data)),
       _presoftmax_data_raw(std::move(presoft)),
       _softmax_data_raw(std::move(softmax_data))
 {
@@ -46,8 +46,8 @@ ViretDataPack::ViretDataPack(const BaseImageset* p_is, const StringId& ID, const
 }
 
 HistogramChartData<size_t, float> ViretDataPack::get_histogram_used_labels(
-    const std::vector<UserTestQuery>& test_queries, const std::string& model_commands, [[maybe_unused]] size_t num_queries,
-    size_t num_points, bool accumulated) const
+    const std::vector<UserTestQuery>& test_queries, const std::string& model_commands,
+    [[maybe_unused]] size_t num_queries, size_t num_points, bool accumulated) const
 {
   // Expand query to vector indices
   std::vector<UserTestQuery> idx_test_queries;
@@ -168,7 +168,7 @@ HistogramChartData<size_t, float> ViretDataPack::get_histogram_used_labels(
       // \todo What function here?
       scaled_label_hits[scaled_idx] = std::max(scaled_label_hits[scaled_idx], hits);
       // AVG?
-      //scaled_label_hits[scaled_idx] +=  hits;
+      // scaled_label_hits[scaled_idx] +=  hits;
 
       ++ii;
     }
@@ -206,8 +206,6 @@ HistogramChartData<size_t, float> ViretDataPack::get_histogram_used_labels(
 const std::string& ViretDataPack::get_vocab_ID() const { return _keywords.get_ID(); }
 
 const std::string& ViretDataPack::get_vocab_description() const { return _keywords.get_description(); }
-
-
 
 RankingResult ViretDataPack::rank_frames(const std::vector<CnfFormula>& user_queries, const std::string& model_commands,
                                          size_t result_size, FrameId target_image_ID) const
@@ -383,7 +381,7 @@ AutocompleteInputResult ViretDataPack::get_autocomplete_results(const std::strin
                                                                 [[maybe_unused]] bool with_example_images,
                                                                 const std::string& model_commands) const
 {
-  auto kws = const_cast<const KeywordsContainer&>(_keywords).get_near_keywords(query_prefix, result_size);
+  auto kws = const_cast<const KeywordsContainer&>(_keywords).get_near_keywords(query_prefix, result_size); // NOLINT
 
   // Cache it up if needed
   cache_up_example_images(kws, model_commands);
@@ -488,9 +486,13 @@ void ViretDataPack::cache_up_example_images(const std::vector<const Keyword*>& k
 
 DataPackInfo ViretDataPack::get_info() const
 {
-  return DataPackInfo{ get_ID(),           get_description(),          get_model_options(), target_imageset_ID(),
-    _presoftmax_data_raw.size(),
-                       _keywords.get_ID(), _keywords.get_description() };
+  return DataPackInfo{ get_ID(),
+                       get_description(),
+                       get_model_options(),
+                       target_imageset_ID(),
+                       _presoftmax_data_raw.size(),
+                       _keywords.get_ID(),
+                       _keywords.get_description() };
 }
 
 CnfFormula ViretDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) const
@@ -515,7 +517,7 @@ CnfFormula ViretDataPack::keyword_IDs_to_vector_indices(CnfFormula ID_query) con
   return ID_query;
 }
 
-CnfFormula ViretDataPack::wordnetIDs_to_vector_indices(CnfFormula ID_query) const
+CnfFormula ViretDataPack::wordnet_IDs_to_vector_indices(CnfFormula ID_query) const
 {
   for (auto&& ID_clause : ID_query)
   {

@@ -45,7 +45,7 @@ class [[nodiscard]] W2vvDataPack : public BaseDataPack
   [[nodiscard]] virtual DataPackInfo get_info() const override;
 
  private:
-  CnfFormula native_query_to_CNF_formula(const std::string& native_query) const;
+  [[nodiscard]] CnfFormula native_query_to_CNF_formula(const std::string& native_query) const;
 
  private:
   /** This data pack's vocabulary. */

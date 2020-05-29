@@ -5,16 +5,15 @@
 #include <vector>
 
 #include "KeywordsContainer.h"
-
-#include "data_packs/BaseDataPack.h"
-
 #include "BaseClassificationModel.h"
 #include "BaseVectorTransform.h"
 #include "SimUser.h"
 
+#include "data_packs/BaseDataPack.h"
+
 namespace image_ranker
 {
-class GoogleVisionDataPack : public BaseDataPack
+class [[nodiscard]] GoogleVisionDataPack : public BaseDataPack
 {
  public:
   GoogleVisionDataPack(const BaseImageset* p_is, const StringId& ID, const StringId& target_imageset_ID,
@@ -34,15 +33,12 @@ class GoogleVisionDataPack : public BaseDataPack
   [[nodiscard]] virtual std::vector<const Keyword*> get_frame_top_classes(
       FrameId frame_ID, const std::vector<ModelKeyValOption>& opt_key_vals, bool accumulated) const override;
 
-  [[nodiscard]] virtual const std::string& get_vocab_ID() const override;
-  [[nodiscard]] virtual const std::string& get_vocab_description() const override;
-
-  
-
   [[nodiscard]] virtual AutocompleteInputResult get_autocomplete_results(
       const std::string& query_prefix, size_t result_size, bool with_example_images,
       const std::string& model_commands) const override;
 
+  [[nodiscard]] virtual const std::string& get_vocab_ID() const override;
+  [[nodiscard]] virtual const std::string& get_vocab_description() const override;
   [[nodiscard]] virtual DataPackInfo get_info() const override;
 
  private:
@@ -50,8 +46,10 @@ class GoogleVisionDataPack : public BaseDataPack
   CnfFormula keyword_IDs_to_vector_indices(CnfFormula ID_query) const;
 
  private:
+  /** Data pack's supported vocabulary. */
   mutable KeywordsContainer _keywords;
 
+  /** Raw DCNN network data. */
   std::vector<std::vector<float>> _presoftmax_data_raw;
 
   /** Models for this data pack - only classification ones */
