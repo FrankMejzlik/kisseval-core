@@ -389,7 +389,7 @@ HistogramChartData<size_t, float> ImageRanker::get_histogram_used_labels(const s
   size_t num_queries{ ERR_VAL<size_t>() };
 
   // Fetch queries from the DB
-  auto test_queries{ _data_manager.fetch_user_test_queries(user_query_origin, dp.get_vocab_ID()) };
+  auto test_queries{ _data_manager.fetch_user_test_queries(user_query_origin, dp.get_vocab_ID(), dp.get_ID()) };
   num_queries = test_queries.size();
 
   return dp.get_histogram_used_labels(test_queries, model_options, num_queries, num_points, accumulated);
