@@ -284,40 +284,10 @@ AutocompleteInputResult GoogleVisionDataPack::get_autocomplete_results(const std
                                                                        [[maybe_unused]] bool with_example_image,
                                                                        const std::string& model_commands) const
 {
-  auto kws = _keywords.get_near_keywords(query_prefix, result_size);
-
-  std::vector<const Keyword*> res_kws;
-
-  auto hasher{ std::hash<std::string>{} };
-
-  size_t curr_opts_hash{ hasher(model_commands) };
-
-  for (auto&& p_kw : kws)
-  {
-    if (curr_opts_hash != p_kw->last_examples_hash)
-    {
-      CnfFormula fml{ Clause{ Literal<KeywordId>{ p_kw->ID } } };
-
-      std::vector<CnfFormula> v{ fml };
-
-      // Rank frames with query "this_kw"
-      auto ranked_frames{ rank_frames(v, model_commands, NUM_EXAMPLE_FRAMES) };
-
-      p_kw->example_frames_filenames.clear();
-      for (auto&& f_ID : ranked_frames.m_frames)
-      {
-        std::string filename{ get_imageset_ptr()->operator[](f_ID).m_filename };
-        p_kw->example_frames_filenames.emplace_back(std::move(filename));
-      }
-
-      // Update hash
-      p_kw->last_examples_hash = curr_opts_hash;
-    }
-
-    res_kws.emplace_back(p_kw);
-  }
-
-  AutocompleteInputResult res{ res_kws };
+  auto kws = const_cast<const KeywordsContainer&>(_keywords).get_near_keywords(query_prefix, result_size); // NOLINT
+  cache_up_example_images(kws, model_commands);
+  
+  AutocompleteInputResult res{ kws };
 
   return res;
 }
