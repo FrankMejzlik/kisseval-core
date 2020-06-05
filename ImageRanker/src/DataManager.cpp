@@ -64,11 +64,13 @@ std::vector<UserTestQuery> DataManager::fetch_user_test_queries(eUserQueryOrigin
   SQL_query_ss << "SELECT `target_frame_ID`, `user_query` FROM `" << queries_table_name << "` ";
   SQL_query_ss << "WHERE (`user_level` = " << int(queries_origin) << " AND `vocabulary_ID` = '" << vocabulary_ID << "'";
 
-  if (!data_pack_ID.empty())
+  if (false)
+  //if (!data_pack_ID.empty())
   {
     SQL_query_ss << " AND `data_pack_ID` = '" << data_pack_ID << "'";
   }
-  if (!model_options.empty())
+  //if (!model_options.empty())
+  if (false)
   {
     SQL_query_ss << " AND `model_options` = '" << model_options << "'";
   }
